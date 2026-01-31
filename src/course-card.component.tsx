@@ -12,8 +12,6 @@ export type CourseCardColor =
   | 'pink'
   | 'red'
   | 'orange'
-  | 'yellow'
-  | 'lime'
   | 'green';
 
 export type Teacher = {
@@ -71,18 +69,6 @@ const BG: Record<
     darkBase: 'dark:from-orange-950 dark:to-orange-900',
     icon: 'text-orange-700/25',
     darkIcon: 'dark:text-orange-300/15',
-  },
-  yellow: {
-    base: 'from-yellow-100 to-yellow-200',
-    darkBase: 'dark:from-yellow-950 dark:to-yellow-900',
-    icon: 'text-yellow-800/25',
-    darkIcon: 'dark:text-yellow-300/15',
-  },
-  lime: {
-    base: 'from-lime-100 to-lime-200',
-    darkBase: 'dark:from-lime-950 dark:to-lime-900',
-    icon: 'text-lime-800/25',
-    darkIcon: 'dark:text-lime-300/15',
   },
   green: {
     base: 'from-green-100 to-green-200',
