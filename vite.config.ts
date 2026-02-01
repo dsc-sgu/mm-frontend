@@ -17,6 +17,10 @@ export default defineConfig({
       },
     }),
     tailwindcss(),
+    tanstackRouter({
+      target: 'react',
+      autoCodeSplitting: true,
+    }),
   ],
   resolve: {
     alias: {
