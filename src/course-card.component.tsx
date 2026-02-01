@@ -1,18 +1,7 @@
 import { DynamicIcon } from 'lucide-react/dynamic';
-import dynamicIconImports from 'lucide-react/dynamicIconImports';
 
 import { cn } from '@/lib/utils';
-
-export type LucideIconName = keyof typeof dynamicIconImports;
-
-export type CourseCardColor =
-  | 'blue'
-  | 'teal'
-  | 'violet'
-  | 'pink'
-  | 'red'
-  | 'orange'
-  | 'green';
+import type { CourseCardColor, LucideIconName } from './course.types';
 
 export type Teacher = {
   firstName: string;
