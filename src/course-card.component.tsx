@@ -1,7 +1,7 @@
 import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { cn } from '@/lib/utils';
-import type { CourseCardColor, LucideIconName } from './course.types';
+import type { CourseColor, LucideIconName } from './course.types';
 
 export type Teacher = {
   firstName: string;
@@ -15,12 +15,12 @@ export type CourseCardProps = {
   courseId: string;
   teachers: Teacher[];
   iconName: LucideIconName;
-  color: CourseCardColor;
+  color: CourseColor;
   className?: string;
 };
 
 const BG: Record<
-  CourseCardColor,
+  CourseColor,
   { base: string; darkBase: string; icon: string; darkIcon: string }
 > = {
   blue: {

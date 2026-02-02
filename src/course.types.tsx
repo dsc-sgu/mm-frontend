@@ -1,6 +1,6 @@
 import dynamicIconImports from 'lucide-react/dynamicIconImports';
 
-export type CourseCardColor =
+export type CourseColor =
   | 'blue'
   | 'teal'
   | 'violet'
