@@ -1,12 +1,12 @@
 import { CourseCard } from '@/course-card.component';
-import type { CourseCardColor } from '@/course.types';
+import type { CourseColor } from '@/course.types';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
 });
 
-const colors: CourseCardColor[] = [
+const colors: CourseColor[] = [
   'blue',
   'teal',
   'green',
