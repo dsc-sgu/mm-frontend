@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useIsFetching, useQuery } from '@tanstack/react-query';
 import { fetchDeadlines } from './deadlines.api.mock';
 
 export function getWeekBounds(date: Date): { start: Date; end: Date } {
@@ -32,4 +32,8 @@ export function useDeadlinesQuery({ weekStart }: UseDeadlinesQueryOptions) {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
+}
+
+export function useDeadlinesIsFetching(): boolean {
+  return useIsFetching({ queryKey: ['deadlines'] }) > 0;
 }

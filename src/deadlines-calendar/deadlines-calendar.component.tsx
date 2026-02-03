@@ -2,8 +2,13 @@ import { cn } from '@/lib/utils';
 import { useRef } from 'react';
 import { DayCell } from './day-cell.component';
 import { MonthCell } from './month-cell.component';
-import { useDeadlinesQuery } from './use-deadlines-query.hook';
+import {
+  useDeadlinesIsFetching,
+  useDeadlinesQuery,
+} from './use-deadlines-query.hook';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { useIsFetching } from '@tanstack/react-query';
+import { Spinner } from '@/components/ui/spinner';
 
 type DeadlinesCalendarProps = {
   className?: string;
@@ -98,6 +103,8 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
     getWeekStartDate(virtualItems[0]?.index)
   );
 
+  const isFetching = useDeadlinesIsFetching();
+
   return (
     <div
       className={cn(
@@ -111,7 +118,9 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
           'bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60'
         )}
       >
-        <h2 className="text-lg font-semibold capitalize">{currentMonth}</h2>
+        <h2 className="text-lg font-semibold capitalize flex items-center gap-2">
+          {currentMonth} {isFetching && <Spinner />}
+        </h2>
       </div>
 
       <div ref={parentRef} className="flex-1 overflow-auto">
