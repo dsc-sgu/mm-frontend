@@ -42,6 +42,13 @@ function getWeekStartDate(weekIndex: number): Date {
   return weekStart;
 }
 
+function formatMonthYear(date: Date): string {
+  return date.toLocaleDateString('ru-RU', {
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 function WeekRow({ weekIndex }: { weekIndex: number }) {
   const weekStart = getWeekStartDate(weekIndex);
   const { data } = useDeadlinesQuery({ weekStart });
@@ -87,6 +94,9 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
   });
 
   const virtualItems = virtualizer.getVirtualItems();
+  const currentMonth = formatMonthYear(
+    getWeekStartDate(virtualItems[0]?.index)
+  );
 
   return (
     <div
@@ -101,7 +111,7 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
           'bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60'
         )}
       >
-        <h2 className="text-lg font-semibold capitalize">ABOBA</h2>
+        <h2 className="text-lg font-semibold capitalize">{currentMonth}</h2>
       </div>
 
       <div ref={parentRef} className="flex-1 overflow-auto">
