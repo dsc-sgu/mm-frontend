@@ -53,10 +53,9 @@ function WeekRow({ weekIndex }: { weekIndex: number }) {
   });
 
   return (
-    <div className="grid gap-2 xl:grid-cols-4 md:grid-cols-3 grid-cols-2">
+    <div className="grid gap-2 xl:grid-cols-4 md:grid-cols-3 grid-cols-2 p-4">
       {allDays.map((date) => {
         const dateKey = formatDateKey(date);
-        console.log(date.getDay());
         return (
           <>
             {date.getDate() === 1 && (
@@ -84,6 +83,7 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
     estimateSize: () => WEEK_HEIGHT,
     overscan: 2,
     initialOffset: INITIAL_WEEK_INDEX * WEEK_HEIGHT,
+    measureElement: (element) => element?.getBoundingClientRect().height,
   });
 
   const virtualItems = virtualizer.getVirtualItems();
@@ -114,13 +114,14 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
         >
           {virtualItems.map((virtualWeek) => (
             <div
-              key={virtualWeek.index}
+              key={virtualWeek.key}
+              data-index={virtualWeek.index}
+              ref={virtualizer.measureElement}
               style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 width: '100%',
-                height: `${virtualWeek.size}px`,
                 transform: `translateY(${virtualWeek.start}px)`,
               }}
             >
