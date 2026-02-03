@@ -6,7 +6,7 @@ import { DayCell } from './day-cell.component';
 import { MonthCell } from './month-cell.component';
 import type { DeadlinesByDay } from './deadlines-calendar.types';
 import { useMediaQuery } from '@/use-media-query.hook';
-import { fetchDeadlines } from './deadlines.api.mock';
+import { useDeadlinesQuery } from './use-deadlines-query.hook';
 
 interface DeadlinesCalendarProps {
   className?: string;
@@ -34,7 +34,6 @@ function isToday(date: Date): boolean {
 
 function getWeekStartDate(weekIndex: number): Date {
   const today = new Date();
-
   const currentDay = today.getDay();
   const diff = currentDay === 0 ? -6 : 1 - currentDay;
   const currentWeekStart = new Date(today);
@@ -59,15 +58,102 @@ function isFirstDayOfMonth(date: Date): boolean {
   return date.getDate() === 1;
 }
 
+/**
+ * Компонент для одной недели календаря
+ */
+function WeekRow({
+  weekIndex,
+  columnsCount,
+}: {
+  weekIndex: number;
+  columnsCount: number;
+}) {
+  const weekStart = getWeekStartDate(weekIndex);
+  const { data: weekData, isLoading } = useDeadlinesQuery({ weekStart });
+
+  // Генерируем все 7 дней недели
+  const allDays = Array.from({ length: 7 }, (_, dayOffset) => {
+    const date = new Date(weekStart);
+    date.setDate(date.getDate() + dayOffset);
+    return date;
+  });
+
+  // Находим первое число месяца в этой неделе (если есть)
+  const firstDayOfMonthIndex = allDays.findIndex(isFirstDayOfMonth);
+  const hasFirstDayOfMonth = firstDayOfMonthIndex !== -1;
+  const firstDayOfMonth = hasFirstDayOfMonth
+    ? allDays[firstDayOfMonthIndex]
+    : null;
+
+  // Определяем, какие ячейки нужно отрисовать
+  const cells: JSX.Element[] = [];
+
+  // Если 1-е число попадает в видимый диапазон, показываем MonthCell
+  if (hasFirstDayOfMonth && firstDayOfMonthIndex < columnsCount) {
+    // Добавляем DayCell до MonthCell
+    for (let i = 0; i < firstDayOfMonthIndex; i++) {
+      const date = allDays[i];
+      const dateKey = formatDateKey(date);
+      const deadlines = weekData?.[dateKey] || [];
+
+      cells.push(
+        <DayCell
+          key={dateKey}
+          date={date}
+          deadlines={deadlines}
+          isToday={isToday(date)}
+        />
+      );
+    }
+
+    // Добавляем MonthCell
+    cells.push(
+      <MonthCell
+        key={`month-${formatDateKey(firstDayOfMonth!)}`}
+        date={firstDayOfMonth!}
+      />
+    );
+
+    // Добавляем оставшиеся DayCell после MonthCell
+    for (let i = firstDayOfMonthIndex + 1; i < columnsCount; i++) {
+      const date = allDays[i];
+      const dateKey = formatDateKey(date);
+      const deadlines = weekData?.[dateKey] || [];
+
+      cells.push(
+        <DayCell
+          key={dateKey}
+          date={date}
+          deadlines={deadlines}
+          isToday={isToday(date)}
+        />
+      );
+    }
+  } else {
+    // 1-го числа нет в видимом диапазоне или вообще нет в неделе
+    // Просто показываем первые columnsCount дней
+    for (let i = 0; i < columnsCount; i++) {
+      const date = allDays[i];
+      const dateKey = formatDateKey(date);
+      const deadlines = weekData?.[dateKey] || [];
+
+      cells.push(
+        <DayCell
+          key={dateKey}
+          date={date}
+          deadlines={deadlines}
+          isToday={isToday(date)}
+        />
+      );
+    }
+  }
+
+  return <>{cells}</>;
+}
+
 export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [currentMonth, setCurrentMonth] = useState('');
-
-  const [deadlinesCache, setDeadlinesCache] = useState<
-    Map<number, DeadlinesByDay>
-  >(new Map());
-
-  const [loadingWeeks, setLoadingWeeks] = useState<Set<number>>(new Set());
 
   const isLargeScreen = useMediaQuery('(min-width: 1024px)');
   const isMediumScreen = useMediaQuery('(min-width: 768px)');
@@ -83,6 +169,7 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
 
   const virtualItems = virtualizer.getVirtualItems();
 
+  // Обновляем заголовок при скролле
   useEffect(() => {
     if (virtualItems.length === 0) return;
 
@@ -91,42 +178,6 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
     setCurrentMonth(formatMonthYear(weekStart));
   }, [virtualItems]);
 
-  useEffect(() => {
-    virtualItems.forEach((virtualRow) => {
-      const weekIndex = virtualRow.index;
-
-      if (deadlinesCache.has(weekIndex) || loadingWeeks.has(weekIndex)) {
-        return;
-      }
-
-      setLoadingWeeks((prev) => new Set(prev).add(weekIndex));
-
-      const weekStart = getWeekStartDate(weekIndex);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      weekEnd.setHours(23, 59, 59, 999);
-
-      fetchDeadlines(weekStart, weekEnd)
-        .then((data) => {
-          setDeadlinesCache((prev) => new Map(prev).set(weekIndex, data));
-          setLoadingWeeks((prev) => {
-            const next = new Set(prev);
-            next.delete(weekIndex);
-            return next;
-          });
-        })
-        .catch(() => {
-          setLoadingWeeks((prev) => {
-            const next = new Set(prev);
-            next.delete(weekIndex);
-            return next;
-          });
-        });
-    });
-  }, [virtualItems, deadlinesCache, loadingWeeks]);
-
-  const isLoading = loadingWeeks.size > 0;
-
   return (
     <div
       className={cn(
@@ -134,13 +185,12 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
         className
       )}
     >
+      {/* Заголовок */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <h2 className="text-lg font-semibold capitalize">{currentMonth}</h2>
-        {isLoading && (
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-        )}
       </div>
 
+      {/* Календарь с бесконечным скроллом */}
       <div ref={parentRef} className="flex-1 overflow-auto">
         <div
           style={{
@@ -149,61 +199,34 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
             position: 'relative',
           }}
         >
-          {virtualItems.map((virtualRow) => {
-            const weekStart = getWeekStartDate(virtualRow.index);
-            const weekData = deadlinesCache.get(virtualRow.index) || {};
-
-            const days = Array.from({ length: 7 }, (_, dayOffset) => {
-              const date = new Date(weekStart);
-              date.setDate(date.getDate() + dayOffset);
-              return date;
-            });
-
-            const visibleDays = days.slice(0, columnsCount);
-
-            return (
+          {virtualItems.map((virtualRow) => (
+            <div
+              key={virtualRow.key}
+              data-index={virtualRow.index}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: `${virtualRow.size}px`,
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
               <div
-                key={virtualRow.key}
-                data-index={virtualRow.index}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: `${virtualRow.size}px`,
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
+                className={cn(
+                  'grid gap-3 p-4',
+                  columnsCount === 4 && 'grid-cols-4',
+                  columnsCount === 3 && 'grid-cols-3',
+                  columnsCount === 2 && 'grid-cols-2'
+                )}
               >
-                <div
-                  className={cn(
-                    'grid gap-3 p-4',
-                    columnsCount === 4 && 'grid-cols-4',
-                    columnsCount === 3 && 'grid-cols-3',
-                    columnsCount === 2 && 'grid-cols-2'
-                  )}
-                >
-                  {visibleDays.map((date) => {
-                    const dateKey = formatDateKey(date);
-                    const deadlines = weekData[dateKey] || [];
-
-                    // Показываем MonthCell для первого дня месяца
-                    if (isFirstDayOfMonth(date)) {
-                      return <MonthCell key={dateKey} date={date} />;
-                    }
-
-                    return (
-                      <DayCell
-                        key={dateKey}
-                        date={date}
-                        deadlines={deadlines}
-                        isToday={isToday(date)}
-                      />
-                    );
-                  })}
-                </div>
+                <WeekRow
+                  weekIndex={virtualRow.index}
+                  columnsCount={columnsCount}
+                />
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
     </div>
