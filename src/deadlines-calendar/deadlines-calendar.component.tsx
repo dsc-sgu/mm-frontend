@@ -7,8 +7,8 @@ import {
   useDeadlinesQuery,
 } from './use-deadlines-query.hook';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useIsFetching } from '@tanstack/react-query';
 import { Spinner } from '@/components/ui/spinner';
+import { useCalendarHeaderText } from './calendar-header-text.hook';
 
 type DeadlinesCalendarProps = {
   className?: string;
@@ -17,6 +17,7 @@ type DeadlinesCalendarProps = {
 const INITIAL_WEEK_INDEX = 5000;
 const TOTAL_WEEKS = 10000;
 const WEEK_HEIGHT = 300;
+const OVERSCAN = 2;
 
 // TODO: Fix DRY
 function formatDateKey(date: Date): string {
@@ -45,13 +46,6 @@ function getWeekStartDate(weekIndex: number): Date {
   weekStart.setDate(currentWeekStart.getDate() + weekOffset * 7);
 
   return weekStart;
-}
-
-function formatMonthYear(date: Date): string {
-  return date.toLocaleDateString('ru-RU', {
-    month: 'long',
-    year: 'numeric',
-  });
 }
 
 function WeekRow({ weekIndex }: { weekIndex: number }) {
@@ -93,17 +87,18 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
     count: TOTAL_WEEKS,
     getScrollElement: () => parentRef.current,
     estimateSize: () => WEEK_HEIGHT,
-    overscan: 2,
+    overscan: OVERSCAN,
     initialOffset: INITIAL_WEEK_INDEX * WEEK_HEIGHT,
     measureElement: (element) => element?.getBoundingClientRect().height,
   });
 
   const virtualItems = virtualizer.getVirtualItems();
-  const currentMonth = formatMonthYear(
-    getWeekStartDate(virtualItems[0]?.index)
-  );
-
   const isFetching = useDeadlinesIsFetching();
+
+  const visibleDates = virtualItems
+    .slice(OVERSCAN, virtualItems.length - OVERSCAN + 1)
+    .map((item) => getWeekStartDate(item.index));
+  const currentMonth = useCalendarHeaderText(visibleDates);
 
   return (
     <div
