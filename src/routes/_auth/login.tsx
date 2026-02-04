@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,9 @@ import {
 } from '@/components/ui/card';
 import * as v from 'valibot';
 import { cn } from '@/lib/utils';
+import { useLoginMutation } from '@/auth/auth.queries';
 
-export const Route = createFileRoute('/login')({
+export const Route = createFileRoute('/_auth/login')({
   component: RouteComponent,
 });
 
@@ -40,13 +41,16 @@ function RouteComponent() {
     resolver: valibotResolver(loginSchema),
   });
 
+  const navigate = useNavigate();
+  const { mutateAsync: loginMut } = useLoginMutation();
+
   const onSubmit = async (data: LoginFormData) => {
     try {
-      console.log('Login data:', data);
-      // Здесь будет логика авторизации
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // navigate({ to: '/dashboard' });
+      // TODO: Return to previous page
+      await loginMut(data);
+      navigate({ to: '/' });
     } catch (error) {
+      // TODO: Handle errors
       console.error('Login error:', error);
     }
   };

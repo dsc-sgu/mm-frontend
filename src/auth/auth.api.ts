@@ -24,3 +24,20 @@ export async function fetchSession(): Promise<FetchSessionResponse> {
     throw error;
   }
 }
+
+// TODO: Handle errors
+export async function login(req: { email: string; password: string }) {
+  return await axios.post('/api/v1/auth/login', req, { withCredentials: true });
+}
+
+// TODO: Handle errors
+export async function register(req: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  patronymic?: string;
+  username: string;
+}) {
+  return await axios.post('/api/v1/auth/register', req);
+}

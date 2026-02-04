@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Link } from '@tanstack/react-router';
 
 const MOCK_AUTHED = true;
 const mockUser = MOCK_AUTHED
@@ -41,13 +42,13 @@ export function Header() {
     >
       <div className="flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          <a
-            href="#"
+          <Link
+            to="/"
             className="text-lg font-semibold tracking-tight flex items-center"
           >
             <GitPullRequest className="mr-2 w-5" />
             MergeMinds
-          </a>
+          </Link>
         </div>
 
         <div className="flex items-center gap-1">
