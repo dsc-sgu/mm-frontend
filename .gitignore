@@ -1,4 +1,5 @@
 .tanstack
+*.local
 
 # Logs
 logs
