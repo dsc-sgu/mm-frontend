@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,9 @@ import {
 } from '@/components/ui/card';
 import * as v from 'valibot';
 import { cn } from '@/lib/utils';
+import { useRegisterMutation } from '@/auth/auth.queries';
 
-export const Route = createFileRoute('/registration')({
+export const Route = createFileRoute('/_auth/registration')({
   component: RouteComponent,
 });
 
@@ -28,7 +29,7 @@ const registrationSchema = v.pipe(
       v.string('Имя обязательно'),
       v.minLength(2, 'Минимум 2 символа')
     ),
-    middleName: v.optional(v.string()),
+    patronymic: v.optional(v.string()),
     username: v.pipe(
       v.string('Имя пользователя обязательно'),
       v.minLength(3, 'Минимум 3 символа'),
@@ -68,11 +69,14 @@ function RouteComponent() {
     resolver: valibotResolver(registrationSchema),
   });
 
+  const navigate = useNavigate();
+  const { mutateAsync: registerMut } = useRegisterMutation();
+
   const onSubmit = async (data: RegistrationFormData) => {
     try {
-      console.log('Registration data:', data);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // navigate({ to: '/login' });
+      const { confirmPassword: _, ...restData } = data;
+      await registerMut(restData);
+      navigate({ to: '/login' });
     } catch (error) {
       console.error('Registration error:', error);
     }
@@ -137,7 +141,7 @@ function RouteComponent() {
               <Input
                 id="middleName"
                 placeholder="Иванович"
-                {...register('middleName')}
+                {...register('patronymic')}
               />
             </div>
 

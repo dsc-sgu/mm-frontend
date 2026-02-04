@@ -2,7 +2,7 @@ import { CourseCard } from '@/course-card.component';
 import type { CourseColor } from '@/course.types';
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/_authenticated/')({
   component: RouteComponent,
 });
 

@@ -1,7 +1,7 @@
 import { DeadlinesCalendar } from '@/deadlines-calendar/deadlines-calendar.component';
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/calendar')({
+export const Route = createFileRoute('/_authenticated/calendar')({
   component: CalendarPage,
 });
 
