@@ -30,6 +30,16 @@ export default defineConfig(({ mode }) => {
         '/api/v1': {
           target: env.VITE_API_PROXY_TARGET_URL || 'http://localhost:8034',
           changeOrigin: true,
+
+          // TODO: FUEGO??? WTF??? You crash my VITE!!!
+          configure: (proxy, _options) => {
+            proxy.on('proxyRes', (proxyRes, _req, _res) => {
+              if (proxyRes.headers['trailer']) {
+                delete proxyRes.headers['trailer'];
+                delete proxyRes.headers['trailers'];
+              }
+            });
+          },
         },
       },
     },

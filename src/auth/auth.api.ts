@@ -41,3 +41,8 @@ export async function register(req: {
 }) {
   return await axios.post('/api/v1/auth/register', req);
 }
+
+// TODO: Handle errors
+export async function logout() {
+  await axios.post('/api/v1/auth/logout', {}, { withCredentials: true });
+}
