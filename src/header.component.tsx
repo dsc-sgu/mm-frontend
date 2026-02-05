@@ -20,18 +20,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Link } from '@tanstack/react-router';
-
-const MOCK_AUTHED = true;
-const mockUser = MOCK_AUTHED
-  ? {
-      name: 'Кудяков Артём',
-      username: 't3m8ch',
-      avatarUrl: 'https://lipsum.app/random/500x500',
-    }
-  : null;
+import { useQuery } from '@tanstack/react-query';
+import { SESSION_OPTIONS } from './auth/auth.queries';
+import type { FetchSessionResponse } from './auth/auth.api';
 
 export function Header() {
-  const isAuthed = Boolean(mockUser);
+  const { data: sessionData } = useQuery(SESSION_OPTIONS);
 
   return (
     <header
@@ -66,7 +60,7 @@ export function Header() {
             <Moon className="h-5 w-5 dark:hidden" />
           </Button>
 
-          {isAuthed && (
+          {sessionData?.status === 'AUTHORIZED' && (
             <>
               <Button
                 type="button"
@@ -96,10 +90,12 @@ export function Header() {
                   >
                     <Avatar className="h-9 w-9">
                       <AvatarImage
-                        src={mockUser?.avatarUrl}
-                        alt={mockUser?.name ?? 'Пользователь'}
+                        src={sessionData.session.avatarURL}
+                        alt={sessionData.session.username}
                       />
-                      <AvatarFallback className="text-xs">КА</AvatarFallback>
+                      <AvatarFallback className="text-xs">
+                        {sessionNameAbbreviation(sessionData)}
+                      </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
@@ -107,10 +103,10 @@ export function Header() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel className="flex flex-col">
                     <span className="text-sm font-medium leading-none">
-                      {mockUser?.name ?? 'Пользователь'}
+                      {sessionFullName(sessionData)}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      @{mockUser?.username ?? ''}
+                      @{sessionData.session.username}
                     </span>
                   </DropdownMenuLabel>
 
@@ -133,4 +129,17 @@ export function Header() {
       </div>
     </header>
   );
+}
+
+function sessionFullName({
+  session: { firstName, lastName, patronymic },
+}: Extract<FetchSessionResponse, { status: 'AUTHORIZED' }>) {
+  console.log(patronymic);
+  return `${firstName} ${lastName} ${patronymic ?? ''}`;
+}
+
+function sessionNameAbbreviation({
+  session: { firstName, lastName },
+}: Extract<FetchSessionResponse, { status: 'AUTHORIZED' }>) {
+  return lastName[0] + firstName[0];
 }
