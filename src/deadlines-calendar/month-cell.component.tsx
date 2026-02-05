@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/shadcn/lib/utils';
 import type { Season } from './deadlines-calendar.types';
 
 interface MonthCellProps {

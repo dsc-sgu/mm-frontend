@@ -1,18 +1,18 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { valibotResolver } from '@hookform/resolvers/valibot';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/shadcn/components/ui/button';
+import { Input } from '@/shadcn/components/ui/input';
+import { Label } from '@/shadcn/components/ui/label';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@/shadcn/components/ui/card';
 import * as v from 'valibot';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shadcn/lib/utils';
 import { useLoginMutation } from '@/auth/auth.queries';
 
 export const Route = createFileRoute('/_auth/login')({

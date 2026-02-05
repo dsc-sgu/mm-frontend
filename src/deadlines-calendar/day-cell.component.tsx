@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/shadcn/lib/utils';
 import { DeadlinesList } from './deadlines-list.component';
 import type { Deadline } from './deadlines-calendar.types';
 

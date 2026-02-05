@@ -1,6 +1,6 @@
 import { DynamicIcon } from 'lucide-react/dynamic';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/shadcn/lib/utils';
 import type { CourseColor, LucideIconName } from './course.types';
 
 export type Teacher = {

@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/shadcn/lib/utils';
 import { useRef } from 'react';
 import { DayCell } from './day-cell.component';
 import { MonthCell } from './month-cell.component';
@@ -7,7 +7,7 @@ import {
   useDeadlinesQuery,
 } from './use-deadlines-query.hook';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner } from '@/shadcn/components/ui/spinner';
 import { useCalendarHeaderText } from './calendar-header-text.hook';
 
 type DeadlinesCalendarProps = {

@@ -8,9 +8,13 @@ import {
   GitPullRequest,
 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/shadcn/lib/utils';
+import { Button } from '@/shadcn/components/ui/button';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/shadcn/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +22,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/shadcn/components/ui/dropdown-menu';
 import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { SESSION_OPTIONS, useLogoutMutation } from '../auth/auth.queries';

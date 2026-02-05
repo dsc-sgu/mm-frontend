@@ -3,11 +3,15 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from '@/components/ui/hover-card';
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+} from '@/shadcn/components/ui/hover-card';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+} from '@/shadcn/components/ui/drawer';
 import { useMediaQuery } from '@/use-media-query.hook';
 import type { Deadline } from './deadlines-calendar.types';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shadcn/lib/utils';
 
 interface DeadlineDetailsProps {
   deadline: Deadline;
