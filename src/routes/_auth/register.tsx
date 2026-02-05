@@ -15,7 +15,7 @@ import * as v from 'valibot';
 import { cn } from '@/lib/utils';
 import { useRegisterMutation } from '@/auth/auth.queries';
 
-export const Route = createFileRoute('/_auth/registration')({
+export const Route = createFileRoute('/_auth/register')({
   component: RouteComponent,
 });
 

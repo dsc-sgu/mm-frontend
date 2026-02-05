@@ -13,7 +13,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
-import { Route as AuthRegistrationRouteImport } from './routes/_auth/registration'
+import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -34,9 +34,9 @@ const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthRegistrationRoute = AuthRegistrationRouteImport.update({
-  id: '/registration',
-  path: '/registration',
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
@@ -48,13 +48,13 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof AuthLoginRoute
-  '/registration': typeof AuthRegistrationRoute
+  '/register': typeof AuthRegisterRoute
   '/calendar': typeof AuthenticatedCalendarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof AuthLoginRoute
-  '/registration': typeof AuthRegistrationRoute
+  '/register': typeof AuthRegisterRoute
   '/calendar': typeof AuthenticatedCalendarRoute
 }
 export interface FileRoutesById {
@@ -62,21 +62,21 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
-  '/_auth/registration': typeof AuthRegistrationRoute
+  '/_auth/register': typeof AuthRegisterRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/registration' | '/calendar'
+  fullPaths: '/' | '/login' | '/register' | '/calendar'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/registration' | '/calendar'
+  to: '/' | '/login' | '/register' | '/calendar'
   id:
     | '__root__'
     | '/_auth'
     | '/_authenticated'
     | '/_auth/login'
-    | '/_auth/registration'
+    | '/_auth/register'
     | '/_authenticated/calendar'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
@@ -116,11 +116,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCalendarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_auth/registration': {
-      id: '/_auth/registration'
-      path: '/registration'
-      fullPath: '/registration'
-      preLoaderRoute: typeof AuthRegistrationRouteImport
+    '/_auth/register': {
+      id: '/_auth/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/login': {
@@ -135,12 +135,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
-  AuthRegistrationRoute: typeof AuthRegistrationRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
-  AuthRegistrationRoute: AuthRegistrationRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
