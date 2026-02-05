@@ -21,11 +21,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { SESSION_OPTIONS } from './auth/auth.queries';
+import { SESSION_OPTIONS, useLogoutMutation } from './auth/auth.queries';
 import type { FetchSessionResponse } from './auth/auth.api';
 
 export function Header() {
   const { data: sessionData } = useQuery(SESSION_OPTIONS);
+  const { mutateAsync: logoutMut } = useLogoutMutation();
 
   return (
     <header
@@ -117,7 +118,7 @@ export function Header() {
                     Настройки
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem onClick={() => console.log('logout')}>
+                  <DropdownMenuItem onClick={async () => await logoutMut()}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Выход
                   </DropdownMenuItem>
