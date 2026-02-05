@@ -20,10 +20,6 @@ export default defineConfig(({ mode }) => {
         },
       }),
       tailwindcss(),
-      tanstackRouter({
-        target: 'react',
-        autoCodeSplitting: true,
-      }),
     ],
     server: {
       proxy: {
