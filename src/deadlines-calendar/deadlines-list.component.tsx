@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { DeadlineDetails } from './deadline-details.component';
 import type { Deadline } from './deadlines-calendar.types';
-import type { CourseColor } from '@/course.types';
+import type { CourseColor } from '@/course/course.types';
 
 type DeadlinesListProps = {
   deadlines: Deadline[];

@@ -1,4 +1,4 @@
-import { Header } from '@/header.component';
+import { Header } from '@/header/header.component';
 import type { QueryClient } from '@tanstack/react-query';
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router';
 

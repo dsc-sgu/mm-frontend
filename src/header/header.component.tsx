@@ -21,8 +21,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { SESSION_OPTIONS, useLogoutMutation } from './auth/auth.queries';
-import type { FetchSessionResponse } from './auth/auth.api';
+import { SESSION_OPTIONS, useLogoutMutation } from '../auth/auth.queries';
+import type { FetchSessionResponse } from '../auth/auth.api';
 
 export function Header() {
   const { data: sessionData } = useQuery(SESSION_OPTIONS);
