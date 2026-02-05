@@ -11,23 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shadcn/components/ui/card';
-import * as v from 'valibot';
 import { cn } from '@/shadcn/lib/utils';
 import { useLoginMutation } from '@/auth/auth.queries';
+import { loginSchema, type LoginFormData } from '@/auth/auth.schemes';
 
 export const Route = createFileRoute('/_auth/login')({
   component: RouteComponent,
 });
-
-const loginSchema = v.object({
-  email: v.pipe(
-    v.string('Email обязателен'),
-    v.email('Введите корректный email')
-  ),
-  password: v.string('Пароль обязателен'),
-});
-
-export type LoginFormData = v.InferOutput<typeof loginSchema>;
 
 function RouteComponent() {
   const {
