@@ -112,7 +112,7 @@ function RouteComponent() {
                 Нет аккаунта?{' '}
               </span>
               <Link
-                to="/registration"
+                to="/register"
                 className="text-primary hover:underline font-medium"
               >
                 Зарегистрироваться
