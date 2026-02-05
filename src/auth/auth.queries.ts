@@ -17,8 +17,8 @@ export function useLoginMutation() {
 
   return useMutation({
     mutationFn: login,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [SESSION_QUERY_KEY] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [SESSION_QUERY_KEY] });
     },
   });
 }

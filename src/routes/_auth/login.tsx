@@ -48,7 +48,7 @@ function RouteComponent() {
     try {
       // TODO: Return to previous page
       await loginMut(data);
-      navigate({ to: '/' });
+      await navigate({ to: '/' });
     } catch (error) {
       // TODO: Handle errors
       console.error('Login error:', error);
