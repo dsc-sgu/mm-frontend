@@ -24,10 +24,7 @@ const loginSchema = v.object({
     v.string('Email обязателен'),
     v.email('Введите корректный email')
   ),
-  password: v.pipe(
-    v.string('Пароль обязателен'),
-    v.minLength(6, 'Пароль должен содержать минимум 6 символов')
-  ),
+  password: v.string('Пароль обязателен'),
 });
 
 export type LoginFormData = v.InferOutput<typeof loginSchema>;
