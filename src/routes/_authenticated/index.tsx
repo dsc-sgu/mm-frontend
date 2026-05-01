@@ -2,6 +2,7 @@ import { CourseCard, CourseCardSkeleton } from '@/course/course-card.component';
 import { useCoursesQuery } from '@/course/use-courses-query.hook';
 import { DeadlinesCalendar } from '@/deadlines-calendar/deadlines-calendar.component';
 import { createFileRoute } from '@tanstack/react-router';
+import clsx from 'clsx';
 import type { ReactNode } from 'react';
 
 export const Route = createFileRoute('/_authenticated/')({
@@ -60,21 +61,17 @@ function DashboardSection({
 }: DashboardSectionProps) {
   return (
     <section
-      className={[
+      className={clsx(
         'relative flex w-full flex-col overflow-hidden rounded-[2rem] bg-background xl:min-h-0',
-        bordered ? 'border border-border/70' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+        bordered && 'border border-border/70'
+      )}
     >
       <div
-        className={[
+        className={clsx(
           'z-10 border-b border-border/70 px-6 py-5 md:px-7',
           'bg-background/70 backdrop-blur-2xl supports-backdrop-filter:bg-background/45',
-          scrollable ? 'absolute inset-x-0 top-0' : 'sticky top-0 shrink-0',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+          scrollable ? 'absolute inset-x-0 top-0' : 'sticky top-0 shrink-0'
+        )}
       >
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
           {title}
@@ -82,13 +79,11 @@ function DashboardSection({
       </div>
 
       <div
-        className={[
+        className={clsx(
           'p-4 md:p-5 xl:flex-1 xl:min-h-0',
-          scrollable ? 'pt-24 md:pt-[100px] xl:overflow-auto' : '',
-          contentClassName ?? '',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+          scrollable && 'pt-24 md:pt-[100px] xl:overflow-auto',
+          contentClassName
+        )}
       >
         {children}
       </div>
