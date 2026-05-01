@@ -1,4 +1,4 @@
-import { CourseCard } from '@/course/course-card.component';
+import { CourseCard, CourseCardSkeleton } from '@/course/course-card.component';
 import { useCoursesQuery } from '@/course/use-courses-query.hook';
 import { DeadlinesCalendar } from '@/deadlines-calendar/deadlines-calendar.component';
 import { createFileRoute } from '@tanstack/react-router';
@@ -17,7 +17,7 @@ function RouteComponent() {
         <div className="grid w-full gap-6 xl:h-full xl:min-h-0 xl:grid-cols-2">
           <DashboardSection title="Мои курсы" bordered scrollable>
             {isPending ? (
-              <SectionPlaceholder>Загружаем список курсов…</SectionPlaceholder>
+              <CourseListSkeleton />
             ) : courses.length > 0 ? (
               <div className="grid gap-4">
                 {courses.map((course) => (
@@ -93,6 +93,23 @@ function DashboardSection({
         {children}
       </div>
     </section>
+  );
+}
+
+const COURSE_SKELETON_COUNT = 4;
+
+function CourseListSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Загружаем список курсов"
+      className="grid gap-4"
+    >
+      <span className="sr-only">Загружаем список курсов…</span>
+      {Array.from({ length: COURSE_SKELETON_COUNT }).map((_, index) => (
+        <CourseCardSkeleton key={index} className="min-h-full w-full" />
+      ))}
+    </div>
   );
 }
 
