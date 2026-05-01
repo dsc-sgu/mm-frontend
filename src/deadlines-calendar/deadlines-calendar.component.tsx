@@ -1,5 +1,5 @@
 import { cn } from '@/shadcn/lib/utils';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DayCell } from './day-cell.component';
 import { MonthCell } from './month-cell.component';
 import {
@@ -7,7 +7,6 @@ import {
   useDeadlinesQuery,
 } from './use-deadlines-query.hook';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Spinner } from '@/shadcn/components/ui/spinner';
 import { useCalendarHeaderText } from './calendar-header-text.hook';
 
 type DeadlinesCalendarProps = {
@@ -18,6 +17,9 @@ const INITIAL_WEEK_INDEX = 5000;
 const TOTAL_WEEKS = 10000;
 const WEEK_HEIGHT = 300;
 const OVERSCAN = 2;
+const SHIMMER_SHOW_DELAY_MS = 120;
+const SHIMMER_HIDE_DELAY_MS = 350;
+const SHIMMER_MIN_VISIBLE_MS = 700;
 
 // TODO: Fix DRY
 function formatDateKey(date: Date): string {
@@ -46,6 +48,66 @@ function getWeekStartDate(weekIndex: number): Date {
   weekStart.setDate(currentWeekStart.getDate() + weekOffset * 7);
 
   return weekStart;
+}
+
+function useThrottledLoadingFlag(isActive: boolean): boolean {
+  const [isVisible, setIsVisible] = useState(false);
+  const shownAtRef = useRef(0);
+  const timeoutRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    window.clearTimeout(timeoutRef.current);
+
+    if (isActive) {
+      if (!isVisible) {
+        timeoutRef.current = window.setTimeout(() => {
+          shownAtRef.current = performance.now();
+          setIsVisible(true);
+        }, SHIMMER_SHOW_DELAY_MS);
+      }
+
+      return () => window.clearTimeout(timeoutRef.current);
+    }
+
+    if (isVisible) {
+      const visibleForMs = performance.now() - shownAtRef.current;
+      const delayMs = Math.max(
+        SHIMMER_HIDE_DELAY_MS,
+        SHIMMER_MIN_VISIBLE_MS - visibleForMs
+      );
+
+      timeoutRef.current = window.setTimeout(() => {
+        setIsVisible(false);
+      }, delayMs);
+    }
+
+    return () => window.clearTimeout(timeoutRef.current);
+  }, [isActive, isVisible]);
+
+  return isVisible;
+}
+
+function DeadlinesCalendarTitle({ isFetching }: { isFetching: boolean }) {
+  const title = 'Календарь дедлайнов';
+
+  return (
+    <h2 className="relative inline-block overflow-hidden text-2xl font-semibold tracking-tight text-foreground">
+      <span>{title}</span>
+      {isFetching && (
+        <>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 animate-deadlines-calendar-title-shimmer"
+          >
+            {title}
+          </span>
+          <span role="status" className="sr-only">
+            Загрузка дедлайнов
+          </span>
+        </>
+      )}
+    </h2>
+  );
 }
 
 function WeekRow({ weekIndex }: { weekIndex: number }) {
@@ -94,6 +156,7 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
 
   const virtualItems = virtualizer.getVirtualItems();
   const isFetching = useDeadlinesIsFetching();
+  const showTitleLoader = useThrottledLoadingFlag(isFetching);
 
   const visibleDates = virtualItems
     .slice(OVERSCAN, virtualItems.length - OVERSCAN + 1)
@@ -114,13 +177,9 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
         )}
       >
         <div className="min-w-0">
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Календарь дедлайнов
-          </h2>
+          <DeadlinesCalendarTitle isFetching={showTitleLoader} />
           <p className="mt-1 text-sm text-muted-foreground">{currentDate}</p>
         </div>
-
-        {isFetching && <Spinner />}
       </div>
 
       <div ref={parentRef} className="flex-1 overflow-auto pt-24 md:pt-[100px]">
