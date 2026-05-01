@@ -98,27 +98,32 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
   const visibleDates = virtualItems
     .slice(OVERSCAN, virtualItems.length - OVERSCAN + 1)
     .map((item) => getWeekStartDate(item.index));
-  const currentMonth = useCalendarHeaderText(visibleDates);
+  const currentDate = useCalendarHeaderText(visibleDates);
 
   return (
     <div
       className={cn(
-        'flex flex-col border rounded-lg overflow-hidden bg-card',
+        'relative flex min-h-0 flex-col overflow-hidden rounded-[2rem] border bg-card',
         className
       )}
     >
       <div
         className={cn(
-          'flex items-center justify-between px-4 py-3 border-b',
-          'bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60'
+          'absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-4 border-b px-5 py-4 md:px-6',
+          'bg-background/70 backdrop-blur-2xl supports-backdrop-filter:bg-background/45'
         )}
       >
-        <h2 className="text-lg font-semibold capitalize flex items-center gap-2">
-          {currentMonth} {isFetching && <Spinner />}
-        </h2>
+        <div className="min-w-0">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+            Календарь дедлайнов
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">{currentDate}</p>
+        </div>
+
+        {isFetching && <Spinner />}
       </div>
 
-      <div ref={parentRef} className="flex-1 overflow-auto">
+      <div ref={parentRef} className="flex-1 overflow-auto pt-24 md:pt-[100px]">
         <div
           style={{
             height: `${virtualizer.getTotalSize()}px`,
