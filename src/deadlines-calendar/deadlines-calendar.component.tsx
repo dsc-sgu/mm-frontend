@@ -1,5 +1,6 @@
 import { cn } from '@/shadcn/lib/utils';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
+import { useDebounce } from 'use-debounce';
 import { DayCell } from './day-cell.component';
 import { MonthCell } from './month-cell.component';
 import {
@@ -19,7 +20,6 @@ const WEEK_HEIGHT = 300;
 const OVERSCAN = 2;
 const SHIMMER_SHOW_DELAY_MS = 120;
 const SHIMMER_HIDE_DELAY_MS = 350;
-const SHIMMER_MIN_VISIBLE_MS = 700;
 
 // TODO: Fix DRY
 function formatDateKey(date: Date): string {
@@ -48,43 +48,6 @@ function getWeekStartDate(weekIndex: number): Date {
   weekStart.setDate(currentWeekStart.getDate() + weekOffset * 7);
 
   return weekStart;
-}
-
-function useThrottledLoadingFlag(isActive: boolean): boolean {
-  const [isVisible, setIsVisible] = useState(false);
-  const shownAtRef = useRef(0);
-  const timeoutRef = useRef<number | undefined>(undefined);
-
-  useEffect(() => {
-    window.clearTimeout(timeoutRef.current);
-
-    if (isActive) {
-      if (!isVisible) {
-        timeoutRef.current = window.setTimeout(() => {
-          shownAtRef.current = performance.now();
-          setIsVisible(true);
-        }, SHIMMER_SHOW_DELAY_MS);
-      }
-
-      return () => window.clearTimeout(timeoutRef.current);
-    }
-
-    if (isVisible) {
-      const visibleForMs = performance.now() - shownAtRef.current;
-      const delayMs = Math.max(
-        SHIMMER_HIDE_DELAY_MS,
-        SHIMMER_MIN_VISIBLE_MS - visibleForMs
-      );
-
-      timeoutRef.current = window.setTimeout(() => {
-        setIsVisible(false);
-      }, delayMs);
-    }
-
-    return () => window.clearTimeout(timeoutRef.current);
-  }, [isActive, isVisible]);
-
-  return isVisible;
 }
 
 function DeadlinesCalendarTitle({ isFetching }: { isFetching: boolean }) {
@@ -156,7 +119,10 @@ export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
 
   const virtualItems = virtualizer.getVirtualItems();
   const isFetching = useDeadlinesIsFetching();
-  const showTitleLoader = useThrottledLoadingFlag(isFetching);
+  const [showTitleLoader] = useDebounce(
+    isFetching,
+    isFetching ? SHIMMER_SHOW_DELAY_MS : SHIMMER_HIDE_DELAY_MS
+  );
 
   const visibleDates = virtualItems
     .slice(OVERSCAN, virtualItems.length - OVERSCAN + 1)
