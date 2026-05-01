@@ -1,14 +1,7 @@
 import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { cn } from '@/shadcn/lib/utils';
-import type { CourseColor, LucideIconName } from './course.types';
-
-export type Teacher = {
-  firstName: string;
-  lastName: string;
-  patronymic?: string | null;
-  username: string;
-};
+import type { CourseColor, LucideIconName, Teacher } from './course.types';
 
 export type CourseCardProps = {
   title: string;
