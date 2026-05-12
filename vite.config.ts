@@ -28,8 +28,8 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
 
           // TODO: FUEGO??? WTF??? You crash my VITE!!!
-          configure: (proxy, _options) => {
-            proxy.on('proxyRes', (proxyRes, _req, _res) => {
+          configure: (proxy) => {
+            proxy.on('proxyRes', (proxyRes) => {
               if (proxyRes.headers['trailer']) {
                 delete proxyRes.headers['trailer'];
                 delete proxyRes.headers['trailers'];

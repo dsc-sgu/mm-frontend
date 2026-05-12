@@ -9,6 +9,7 @@ The backend course-role API is not available yet. Frontend guards should use a m
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Add TanStack Router routes for all requested course URLs.
 - Render simple placeholder text with the page name for every newly added page.
 - Add frontend-only mocked course access data with explicit refusal reasons: course not found and not a course participant.
@@ -18,6 +19,7 @@ The backend course-role API is not available yet. Frontend guards should use a m
 - Use one course-access query key per `(courseSlug, username)` so parent and child guards reuse TanStack Query cache instead of making avoidable repeated mock calls.
 
 **Non-Goals:**
+
 - Implement real course, repository, task, commit, journal, stats, files, or attempt UI.
 - Integrate a real backend API for course membership and roles.
 - Model team submissions or participant entities beyond the current `studentUsername` route segment.
@@ -26,42 +28,54 @@ The backend course-role API is not available yet. Frontend guards should use a m
 ## Decisions
 
 ### 1. Model course access as a discriminated union with denial reasons
+
 The mock API will return `allowed`, `course-not-found`, or `not-course-participant`. This keeps guards able to distinguish reasons while still making redirect handling straightforward.
 
 **Alternatives considered:**
+
 - Return `CourseAccess | null`. Rejected because it loses the explicit reason for refusal.
 - Throw errors from the mock API. Rejected because route guards should handle expected access outcomes as control flow, not exceptional failures.
 
 ### 2. Fetch course role once and reuse it through TanStack Query cache
+
 The course layout route will call `requireCourseParticipant`, and child teacher/student routes will call `requireCourseRole` with the same course-access query key. With a stable key and `staleTime`, TanStack Query serves fresh data from memory and deduplicates in-flight requests.
 
 **Alternatives considered:**
+
 - Put all role checks only in leaf routes. Rejected because it duplicates participant checks and loses a useful course-level guard.
 - Create separate teacher/student query options. Rejected because it fragments cache keys and invites repeated fetches for the same role data.
 
 ### 3. Keep guards generic and perform route-specific checks in route files
+
 The guard layer will expose `requireCourseParticipant`, `requireCourseRole`, and param parsing helpers. Route-specific rules such as `studentUsername` membership in a course or a student viewing only their own attempt will remain in the relevant `beforeLoad`.
 
 **Alternatives considered:**
+
 - Add helpers such as `requireTeacherRepositoryAccess` and `requireAttemptReviewAccess`. Rejected as premature abstraction for placeholder pages.
 
 ### 4. Validate route params with Valibot schemas and parsing helpers
+
 Course slug and username params are strings from the URL and must match lowercase latin letters, digits, and hyphens. Numeric params also arrive as strings, so the positive integer schema validates a string and transforms it to a number.
 
 **Alternatives considered:**
+
 - Use Valibot `slug()`. Rejected because Valibot's slug regex permits underscores, while the route contract permits only hyphens.
 - Use hand-written `isValid...` functions. Rejected because the project already uses Valibot and schemas make validation behavior explicit.
 
 ### 5. Use nested route layouts for inherited access rules
-Routes with common access rules, such as `/repositories/my/**`, `/repositories/$studentUsername/**`, `/tasks/$taskId/**`, and `/attempts/$studentUsername/$attemptId/**`, will use `route.tsx` layout files so child pages inherit validation and role checks.
+
+Routes with common access rules, such as `/repositories/$studentUsername/**`, `/tasks/$taskId/**`, and `/attempts/$studentUsername/$attemptId/**`, will use `route.tsx` layout files so child pages inherit validation and role checks.
 
 **Alternatives considered:**
+
 - Repeat `beforeLoad` in every leaf route. Rejected because it increases duplication and makes later behavior changes harder.
 
 ### 6. Keep placeholder UI intentionally minimal
+
 Each placeholder page will render simple text with a page title. No shared placeholder component is necessary for this change.
 
 **Alternatives considered:**
+
 - Build a shared placeholder component with actions and metadata. Rejected because the requested interim UI only needs simple page names.
 
 ## Risks / Trade-offs

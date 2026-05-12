@@ -104,10 +104,16 @@ const MOCK_COURSES: CourseSummary[] = [
     iconName: 'rocket',
     teachers: [
       {
-        lastName: 'Руденко',
-        firstName: 'Виктор',
-        patronymic: 'Игоревич',
-        username: 'viktor_rudenko',
+        lastName: 'Архипов',
+        firstName: 'Иван',
+        patronymic: 'Сергеевич',
+        username: 'gohy279',
+      },
+      {
+        lastName: 'Кудяков',
+        firstName: 'Артём',
+        patronymic: 'Александрович',
+        username: 't3m8ch',
       },
     ],
   },

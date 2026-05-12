@@ -1,0 +1,19 @@
+import { requireCourseRole } from '@/course/course-route-guards';
+import { createFileRoute } from '@tanstack/react-router';
+
+export const Route = createFileRoute(
+  '/_authenticated/courses/$courseSlug/files'
+)({
+  async beforeLoad({ context, params }) {
+    await requireCourseRole({
+      queryClient: context.queryClient,
+      courseSlug: params.courseSlug,
+      role: 'teacher',
+    });
+  },
+  component: RouteComponent,
+});
+
+function RouteComponent() {
+  return <main className="p-6 text-2xl font-semibold">Course files page</main>;
+}
