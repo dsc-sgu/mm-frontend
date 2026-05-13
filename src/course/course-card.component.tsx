@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { cn } from '@/shadcn/lib/utils';
@@ -101,8 +102,9 @@ export function CourseCard({
       </div>
 
       <div className="relative p-6">
-        <a
-          href={`/courses/${courseId}`}
+        <Link
+          to="/courses/$courseSlug"
+          params={{ courseSlug: courseId }}
           className={cn(
             'block pr-16',
             'text-xl font-semibold leading-snug tracking-tight text-foreground hover:underline',
@@ -111,7 +113,7 @@ export function CourseCard({
           )}
         >
           {title}
-        </a>
+        </Link>
 
         <div className="mt-5 text-sm text-foreground/90">
           <div className="font-semibold text-md text-foreground/90">

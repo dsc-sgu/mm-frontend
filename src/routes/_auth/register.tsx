@@ -36,8 +36,14 @@ function RouteComponent() {
 
   const onSubmit = async (data: RegistrationFormData) => {
     try {
-      const { confirmPassword: _, ...restData } = data;
-      await registerMut(restData);
+      await registerMut({
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        password: data.password,
+        patronymic: data.patronymic,
+        username: data.username,
+      });
       navigate({ to: '/login' });
     } catch (error) {
       console.error('Registration error:', error);
