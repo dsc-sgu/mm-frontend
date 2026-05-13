@@ -3,6 +3,9 @@ import { fetchCourseAccess } from './course-access.api.mock';
 
 export const COURSE_ACCESS_QUERY_KEY = 'course-access';
 
+// NOTE: In real code, this should not accept username as an input;
+// instead, it should get the current user from the session.
+// For now, though, this is fine.
 export function courseAccessOptions({
   courseSlug,
   username,

@@ -4,6 +4,8 @@ import { redirect } from '@tanstack/react-router';
 import type { CourseRole } from './course-access.types';
 import { courseAccessOptions } from './course-access.queries';
 
+// NOTE: In real code, this should not return username.
+// For now, though, this is fine.
 async function requireAuthenticatedUsername(queryClient: QueryClient) {
   const session = await queryClient.ensureQueryData(SESSION_OPTIONS);
   if (session.status === 'NOT_AUTHORIZED') {
