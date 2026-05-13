@@ -1,7 +1,7 @@
 import { SESSION_OPTIONS } from '@/auth/auth.queries';
 import type { QueryClient } from '@tanstack/react-query';
 import { redirect } from '@tanstack/react-router';
-import type { CourseRole } from './course-access.api.mock';
+import type { CourseRole } from './course-access.types';
 import { courseAccessOptions } from './course-access.queries';
 
 async function requireAuthenticatedUsername(queryClient: QueryClient) {
