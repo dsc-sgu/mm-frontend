@@ -40,14 +40,19 @@ The mock API will return `allowed`, `course-not-found`, or `not-course-participa
 
 The course layout route will call `requireCourseParticipant`, and child teacher/student routes will call `requireCourseRole` with the same course-access query key. With a stable key and `staleTime`, TanStack Query serves fresh data from memory and deduplicates in-flight requests.
 
+The current frontend-only mock accepts `username` so the mock can emulate access for the authenticated user without a backend endpoint. The real course-access API must not accept a caller-supplied username for the current user's access check: it should derive the user from the server-side session/cookie. When replacing the mock, `fetchCourseAccess` and `courseAccessOptions` should therefore accept only course-identifying input, and session changes must invalidate or partition cached course-access data so roles cannot leak between users in one browser session.
+
 **Alternatives considered:**
 
 - Put all role checks only in leaf routes. Rejected because it duplicates participant checks and loses a useful course-level guard.
 - Create separate teacher/student query options. Rejected because it fragments cache keys and invites repeated fetches for the same role data.
+- Keep passing `username` to the real access endpoint. Rejected because access decisions for the current user must be based on trusted session state, not a client-supplied identity.
 
 ### 3. Keep guards generic and perform route-specific checks in route files
 
 The guard layer will expose `requireCourseParticipant`, `requireCourseRole`, and param parsing helpers. Route-specific rules such as `studentUsername` membership in a course or a student viewing only their own attempt will remain in the relevant `beforeLoad`.
+
+`requireAuthenticatedUsername` exists only to support the frontend mock that needs a username argument. In the real API-backed implementation, guards should not return or forward a username just to ask the backend who the current user is; the backend should read the current user from the session. If a route still needs to compare `[student-username]` with the current user for client-side redirects, that identity should come from trusted session/access context, not from a client-controlled API parameter.
 
 **Alternatives considered:**
 
@@ -80,7 +85,7 @@ Each placeholder page will render simple text with a page title. No shared place
 
 ## Risks / Trade-offs
 
-- [Mock access data may diverge from future backend semantics] → Keep mock code isolated in `course-access.api.mock.ts` and `course-access.queries.ts` so it can be replaced later.
+- [Mock access data may diverge from future backend semantics] → Keep mock code isolated in `course-access.api.mock.ts` and `course-access.queries.ts` so it can be replaced later. In particular, the mock's `username` argument is temporary; the real API must derive the current user from the session.
 - [The word `participant` is currently overloaded] → Add the requested TODO comment near `requireCourseParticipant` explaining that participant should eventually model students/teams separately from teachers.
 - [Many route files are created at once] → Keep each route minimal and rely on layouts/guards to reduce duplicated logic.
 - [Route tree generation may lag if the dev server is not running] → Do not edit `src/routeTree.gen.ts` manually; run build/dev tooling to regenerate through the TanStack Router plugin.

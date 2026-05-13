@@ -2,7 +2,7 @@
 
 ### Requirement: Course routes require authenticated course access
 
-The system SHALL provide guarded authenticated routes for course pages and redirect users away from course pages when the course does not exist or the authenticated user is not a course participant according to the frontend course-access source.
+The system SHALL provide guarded authenticated routes for course pages and redirect users away from course pages when the course does not exist or the authenticated user is not a course participant according to the frontend course-access source. The frontend-only mock MAY use the authenticated user's username as an input to emulate access, but the real API-backed course-access source SHALL derive the current user from the authenticated session instead of trusting a caller-supplied username.
 
 #### Scenario: Course participant opens course root page
 
@@ -18,6 +18,13 @@ The system SHALL provide guarded authenticated routes for course pages and redir
 
 - **WHEN** an authenticated user navigates to a course URL for a course that the course-access source reports as `not-course-participant`
 - **THEN** the system redirects the user to `/`
+
+#### Scenario: Real course-access lookup uses session identity
+
+- **WHEN** the frontend is backed by the real course-access API
+- **THEN** the frontend requests access for the course without sending a caller-chosen username
+- **AND** the backend determines the current user from the authenticated session
+- **AND** course-access query data is invalidated or partitioned on session changes so one user's access result is not reused for another user
 
 ### Requirement: Course route params are validated before page access
 

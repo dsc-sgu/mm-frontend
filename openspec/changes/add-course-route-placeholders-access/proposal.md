@@ -14,14 +14,16 @@ The application has a defined course URL map, but most course-related pages are 
 ## Capabilities
 
 ### New Capabilities
+
 - `course-route-access`: Course routes exist as guarded placeholder pages and enforce role-based frontend redirects using mocked course access data.
 
 ### Modified Capabilities
+
 - None.
 
 ## Impact
 
 - Affected code: `src/routes/_authenticated/courses/**`, `src/course/*`, and `src/course/course-card.component.tsx`.
 - Routing impact: adds many new authenticated course routes and relies on generated TanStack Router route tree updates.
-- API impact: introduces frontend-only mocked course access data until real backend endpoints are available.
+- API impact: introduces frontend-only mocked course access data until real backend endpoints are available. The mock accepts `username` only as a temporary frontend testing aid; the real API must derive the current user from the authenticated session instead of trusting a caller-supplied username.
 - Dependencies: no new external dependencies; use existing TanStack Query, TanStack Router, and Valibot.
