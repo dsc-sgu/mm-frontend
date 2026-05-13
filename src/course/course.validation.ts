@@ -7,7 +7,7 @@ const slugLikeSchema = v.pipe(
 );
 
 export const courseSlugParamSchema = slugLikeSchema;
-export const studentUsernameParamSchema = slugLikeSchema;
+export const usernameParamSchema = slugLikeSchema;
 
 export const positiveIntegerParamSchema = v.pipe(
   v.string(),
@@ -15,7 +15,7 @@ export const positiveIntegerParamSchema = v.pipe(
   v.transform(Number)
 );
 
-export function parseCourseSlugParam(courseSlug: string) {
+export function ensureValidCourseSlugOrRedirect(courseSlug: string) {
   const result = v.safeParse(courseSlugParamSchema, courseSlug);
   if (!result.success) {
     throw redirect({ to: '/' });
@@ -24,14 +24,14 @@ export function parseCourseSlugParam(courseSlug: string) {
   return result.output;
 }
 
-export function parseStudentUsernameParam({
+export function ensureValidUsernameOrRedirect({
   studentUsername,
   courseSlug,
 }: {
   studentUsername: string;
   courseSlug: string;
 }) {
-  const result = v.safeParse(studentUsernameParamSchema, studentUsername);
+  const result = v.safeParse(usernameParamSchema, studentUsername);
   if (!result.success) {
     throw redirect({
       to: '/courses/$courseSlug',
@@ -42,7 +42,7 @@ export function parseStudentUsernameParam({
   return result.output;
 }
 
-export function parsePositiveIntegerParam({
+export function ensurePositiveIntegerOrRedirect({
   value,
   courseSlug,
 }: {

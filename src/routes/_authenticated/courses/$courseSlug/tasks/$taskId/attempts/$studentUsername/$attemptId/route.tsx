@@ -1,22 +1,22 @@
 import {
-  parsePositiveIntegerParam,
-  parseStudentUsernameParam,
-} from '@/course/course-route-params';
+  ensurePositiveIntegerOrRedirect,
+  ensureValidUsernameOrRedirect,
+} from '@/course/course.validation';
 import {
   requireCourseParticipant,
   requireKnownCourseStudent,
-} from '@/course/course-route-guards';
+} from '@/course/course.guards';
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId'
 )({
   async beforeLoad({ context, params }) {
-    const studentUsername = parseStudentUsernameParam({
+    const studentUsername = ensureValidUsernameOrRedirect({
       studentUsername: params.studentUsername,
       courseSlug: params.courseSlug,
     });
-    const attemptId = parsePositiveIntegerParam({
+    const attemptId = ensurePositiveIntegerOrRedirect({
       value: params.attemptId,
       courseSlug: params.courseSlug,
     });

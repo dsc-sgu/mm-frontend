@@ -40,18 +40,17 @@ export async function requireCourseParticipant({
 export async function requireCourseRole({
   queryClient,
   courseSlug,
-  role,
+  roles,
   redirectTo = '/courses/$courseSlug',
 }: {
   queryClient: QueryClient;
   courseSlug: string;
-  role: CourseRole | CourseRole[];
+  roles: CourseRole[];
   redirectTo?: '/courses/$courseSlug' | '/courses/$courseSlug/repositories';
 }) {
   const access = await requireCourseParticipant({ queryClient, courseSlug });
-  const allowedRoles = Array.isArray(role) ? role : [role];
 
-  if (!allowedRoles.includes(access.role)) {
+  if (!roles.includes(access.role)) {
     throw redirect({
       to: redirectTo,
       params: { courseSlug },

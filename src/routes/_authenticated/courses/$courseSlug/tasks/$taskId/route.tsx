@@ -1,11 +1,11 @@
-import { parsePositiveIntegerParam } from '@/course/course-route-params';
+import { ensurePositiveIntegerOrRedirect } from '@/course/course.validation';
 import { Outlet, createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/tasks/$taskId'
 )({
   beforeLoad({ params }) {
-    const taskId = parsePositiveIntegerParam({
+    const taskId = ensurePositiveIntegerOrRedirect({
       value: params.taskId,
       courseSlug: params.courseSlug,
     });

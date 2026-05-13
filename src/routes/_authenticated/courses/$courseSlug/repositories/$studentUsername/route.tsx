@@ -1,15 +1,15 @@
-import { parseStudentUsernameParam } from '@/course/course-route-params';
+import { ensureValidUsernameOrRedirect } from '@/course/course.validation';
 import {
   requireCourseParticipant,
   requireKnownCourseStudent,
-} from '@/course/course-route-guards';
+} from '@/course/course.guards';
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/repositories/$studentUsername'
 )({
   async beforeLoad({ context, params }) {
-    const studentUsername = parseStudentUsernameParam({
+    const studentUsername = ensureValidUsernameOrRedirect({
       studentUsername: params.studentUsername,
       courseSlug: params.courseSlug,
     });

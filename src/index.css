@@ -122,7 +122,20 @@
   }
 }
 
+@keyframes router-pending-bar {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
 @layer utilities {
+  .animate-router-pending-bar {
+    animation: router-pending-bar 0.8s ease-in-out infinite;
+  }
+
   .animate-deadlines-calendar-title-shimmer {
     color: transparent;
     background-image: linear-gradient(
