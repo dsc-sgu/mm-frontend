@@ -1,5 +1,5 @@
 import { CourseCard, CourseCardSkeleton } from '@/course/course-card.component';
-import { useCoursesQuery } from '@/course/use-courses-query.hook';
+import { useCoursesQuery } from '@/course/course.queries';
 import { DeadlinesCalendar } from '@/deadlines-calendar/deadlines-calendar.component';
 import { createFileRoute } from '@tanstack/react-router';
 import clsx from 'clsx';
