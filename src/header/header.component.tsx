@@ -8,7 +8,6 @@ import {
   GitPullRequest,
 } from 'lucide-react';
 
-import { cn } from '@/shadcn/lib/utils';
 import { Button } from '@/shadcn/components/ui/button';
 import {
   Avatar,
@@ -23,34 +22,41 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shadcn/components/ui/dropdown-menu';
-import { Link } from '@tanstack/react-router';
+import { Link, useMatches } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { SESSION_OPTIONS, useLogoutMutation } from '../auth/auth.queries';
 import type { FetchSessionResponse } from '../auth/auth.api';
+import { HeaderBreadcrumbs } from './header-breadcrumbs.component';
+import { HeaderSectionNav } from './header-section-nav.component';
+import { resolveHeaderData } from './header-data.utils';
 
 export function Header() {
+  const matches = useMatches();
+  const { breadcrumbs, navItems } = resolveHeaderData(matches);
   const { data: sessionData } = useQuery(SESSION_OPTIONS);
   const { mutateAsync: logoutMut } = useLogoutMutation();
 
   return (
-    <header
-      className={cn(
-        'w-full border-b bg-background/80 backdrop-blur',
-        'supports - backdrop - filter: bg - background / 60'
-      )}
-    >
-      <div className="flex h-14 items-center justify-between px-4">
-        <div className="flex items-center gap-3">
+    <header className="w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-14 items-center justify-between gap-3 px-3 md:px-4">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <Link
             to="/"
-            className="text-lg font-semibold tracking-tight flex items-center"
+            aria-label="На главную"
+            className="flex shrink-0 items-center rounded-md px-2 py-1 text-lg font-semibold tracking-tight text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <GitPullRequest className="mr-2 w-5" />
+            <GitPullRequest className="mr-2 h-5 w-5" />
             MergeMinds
           </Link>
+
+          {breadcrumbs.length > 0 && (
+            <div className="h-5 w-px shrink-0 bg-border" aria-hidden="true" />
+          )}
+
+          <HeaderBreadcrumbs items={breadcrumbs} />
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           <Button
             type="button"
             variant="ghost"
@@ -132,6 +138,8 @@ export function Header() {
           )}
         </div>
       </div>
+
+      <HeaderSectionNav items={navItems} />
     </header>
   );
 }
@@ -139,8 +147,7 @@ export function Header() {
 function sessionFullName({
   session: { firstName, lastName, patronymic },
 }: Extract<FetchSessionResponse, { status: 'AUTHORIZED' }>) {
-  console.log(patronymic);
-  return `${firstName} ${lastName} ${patronymic ?? ''}`;
+  return [firstName, lastName, patronymic].filter(Boolean).join(' ');
 }
 
 function sessionNameAbbreviation({

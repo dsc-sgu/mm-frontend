@@ -1,8 +1,14 @@
+import { getAttemptDiffBreadcrumb } from '@/header/header-data.utils';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/'
 )({
+  staticData: {
+    header: {
+      getBreadcrumb: getAttemptDiffBreadcrumb,
+    },
+  },
   component: RouteComponent,
 });
 

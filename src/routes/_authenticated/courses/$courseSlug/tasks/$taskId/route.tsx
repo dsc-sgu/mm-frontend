@@ -1,9 +1,15 @@
 import { ensurePositiveIntegerOrRedirect } from '@/course/course.validation';
+import { getTaskBreadcrumb } from '@/header/header-data.utils';
 import { Outlet, createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/tasks/$taskId'
 )({
+  staticData: {
+    header: {
+      getBreadcrumb: getTaskBreadcrumb,
+    },
+  },
   beforeLoad({ params }) {
     const taskId = ensurePositiveIntegerOrRedirect({
       value: params.taskId,

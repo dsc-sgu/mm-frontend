@@ -1,13 +1,16 @@
 import { requireCourseRole } from '@/course/course.guards';
-import { getTaskEditBreadcrumb } from '@/header/header-data.utils';
+import { createCourseChildBreadcrumb } from '@/header/header-data.utils';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
-  '/_authenticated/courses/$courseSlug/tasks/$taskId/edit'
+  '/_authenticated/courses/$courseSlug/attempts'
 )({
   staticData: {
     header: {
-      getBreadcrumb: getTaskEditBreadcrumb,
+      getBreadcrumb: createCourseChildBreadcrumb(
+        'Попытки',
+        '/courses/$courseSlug/attempts'
+      ),
     },
   },
   async beforeLoad({ context, params }) {
@@ -21,5 +24,5 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  return <main className="p-6 text-2xl font-semibold">Task edit page</main>;
+  return <main className="p-6 text-2xl font-semibold">Attempts page</main>;
 }

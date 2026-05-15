@@ -1,4 +1,5 @@
 import { CourseCard, CourseCardSkeleton } from '@/course/course-card.component';
+import { getDashboardBreadcrumb } from '@/header/header-data.utils';
 import { useCoursesQuery } from '@/course/course.queries';
 import { DeadlinesCalendar } from '@/deadlines-calendar/deadlines-calendar.component';
 import { createFileRoute } from '@tanstack/react-router';
@@ -6,6 +7,11 @@ import clsx from 'clsx';
 import type { ReactNode } from 'react';
 
 export const Route = createFileRoute('/_authenticated/')({
+  staticData: {
+    header: {
+      getBreadcrumb: getDashboardBreadcrumb,
+    },
+  },
   component: RouteComponent,
 });
 
