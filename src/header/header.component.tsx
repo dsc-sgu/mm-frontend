@@ -28,11 +28,11 @@ import { SESSION_OPTIONS, useLogoutMutation } from '../auth/auth.queries';
 import type { FetchSessionResponse } from '../auth/auth.api';
 import { HeaderBreadcrumbs } from './header-breadcrumbs.component';
 import { HeaderSectionNav } from './header-section-nav.component';
-import { resolveHeaderData } from './header-data.utils';
+import { getHeaderState } from './header-state';
 
 export function Header() {
   const matches = useMatches();
-  const { breadcrumbs, navItems } = resolveHeaderData(matches);
+  const { breadcrumbs, navItems } = getHeaderState(matches);
   const { data: sessionData } = useQuery(SESSION_OPTIONS);
   const { mutateAsync: logoutMut } = useLogoutMutation();
 

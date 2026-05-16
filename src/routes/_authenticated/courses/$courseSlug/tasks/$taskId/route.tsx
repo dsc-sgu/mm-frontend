@@ -1,5 +1,5 @@
 import { ensurePositiveIntegerOrRedirect } from '@/course/course.validation';
-import { getTaskBreadcrumb } from '@/header/header-data.utils';
+import { getTaskBreadcrumb } from '@/course/course-header';
 import { Outlet, createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

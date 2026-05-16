@@ -1,4 +1,4 @@
-import { getRepositoryCommitsBreadcrumb } from '@/header/header-data.utils';
+import { getRepositoryCommitsBreadcrumb } from '@/course/course-header';
 import { Outlet, createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

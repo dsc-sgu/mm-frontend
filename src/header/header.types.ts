@@ -37,7 +37,7 @@ export type HeaderStaticData = {
   getNavItems?: HeaderNavItem[] | HeaderDataGetter<HeaderNavItem[]>;
 };
 
-export type ResolvedHeaderData = {
+export type HeaderState = {
   breadcrumbs: HeaderBreadcrumbItem[];
   navItems: HeaderNavItem[];
 };

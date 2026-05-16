@@ -1,4 +1,4 @@
-import { getAttemptDiffBreadcrumb } from '@/header/header-data.utils';
+import { getAttemptDiffBreadcrumb } from '@/course/course-header';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

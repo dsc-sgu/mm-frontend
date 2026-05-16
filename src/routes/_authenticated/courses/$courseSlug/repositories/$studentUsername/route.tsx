@@ -3,7 +3,7 @@ import {
   requireCourseParticipant,
   requireKnownCourseStudent,
 } from '@/course/course.guards';
-import { getStudentRepositoryBreadcrumb } from '@/header/header-data.utils';
+import { getStudentRepositoryBreadcrumb } from '@/course/course-header';
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

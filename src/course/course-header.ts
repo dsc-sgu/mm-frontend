@@ -2,65 +2,19 @@ import {
   formatAttemptLabel,
   formatAttemptReviewLabel,
   formatCommitLabel,
-} from '@/course/course-route.labels';
+} from './course-route.labels';
 import {
   getStubCourseTitle,
   getStubStudentName,
   getStubTaskTitle,
-} from '@/course/course-route.stubs';
-import type { CourseRouteContext } from '@/course/course-route.types';
+} from './course-route.stubs';
+import type { CourseRouteContext } from './course-route.types';
 import type {
   HeaderBreadcrumbItem,
   HeaderDataContext,
   HeaderDataGetter,
   HeaderNavItem,
-  HeaderRouteMatch,
-  ResolvedHeaderData,
-} from './header.types';
-
-export function resolveHeaderData(
-  matches: readonly HeaderRouteMatch[]
-): ResolvedHeaderData {
-  const currentMatch = matches.at(-1);
-
-  if (!currentMatch) {
-    return { breadcrumbs: [], navItems: [] };
-  }
-
-  const breadcrumbs: HeaderBreadcrumbItem[] = [];
-  let navItems: HeaderNavItem[] = [];
-  const headerMatches = [...matches];
-
-  for (const match of headerMatches) {
-    const context: HeaderDataContext = {
-      matches: headerMatches,
-      match,
-      currentMatch,
-    };
-    const header = match.staticData?.header;
-
-    if (header?.getBreadcrumb) {
-      breadcrumbs.push(...resolveHeaderValue(header.getBreadcrumb, context));
-    }
-
-    if (header?.getNavItems) {
-      navItems = resolveHeaderValue(header.getNavItems, context);
-    }
-  }
-
-  return { breadcrumbs, navItems };
-}
-
-function resolveHeaderValue<T>(
-  value: T[] | HeaderDataGetter<T[]>,
-  context: HeaderDataContext
-) {
-  return typeof value === 'function' ? value(context) : value;
-}
-
-export const getDashboardBreadcrumb: HeaderDataGetter<
-  HeaderBreadcrumbItem[]
-> = () => [{ label: 'Панель управления' }];
+} from '@/header/header.types';
 
 export const getCourseRootBreadcrumb: HeaderDataGetter<
   HeaderBreadcrumbItem[]
