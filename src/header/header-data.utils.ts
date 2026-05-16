@@ -18,9 +18,8 @@ type CourseLoaderData = {
 };
 
 export function resolveHeaderData(
-  rawMatches: readonly unknown[]
+  matches: readonly HeaderRouteMatch[]
 ): ResolvedHeaderData {
-  const matches = rawMatches as HeaderRouteMatch[];
   const currentMatch = matches.at(-1);
 
   if (!currentMatch) {
@@ -29,9 +28,14 @@ export function resolveHeaderData(
 
   const breadcrumbs: HeaderBreadcrumbItem[] = [];
   let navItems: HeaderNavItem[] = [];
+  const headerMatches = [...matches];
 
-  for (const match of matches) {
-    const context: HeaderDataContext = { matches, match, currentMatch };
+  for (const match of headerMatches) {
+    const context: HeaderDataContext = {
+      matches: headerMatches,
+      match,
+      currentMatch,
+    };
     const header = match.staticData?.header;
 
     if (header?.getBreadcrumb) {

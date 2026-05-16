@@ -1,4 +1,8 @@
 import type { ReactNode } from 'react';
+import type {
+  MakeRouteMatchUnion,
+  RegisteredRouter,
+} from '@tanstack/react-router';
 import '@tanstack/router-core';
 
 export type HeaderLinkTarget = {
@@ -16,16 +20,7 @@ export type HeaderNavItem = HeaderLinkTarget & {
   icon?: ReactNode;
 };
 
-export type HeaderRouteMatch = {
-  routeId: string;
-  pathname: string;
-  params: Record<string, string | undefined>;
-  loaderData?: unknown;
-  context?: unknown;
-  staticData?: {
-    header?: HeaderStaticData;
-  };
-};
+export type HeaderRouteMatch = MakeRouteMatchUnion<RegisteredRouter>;
 
 export type HeaderDataContext = {
   matches: HeaderRouteMatch[];
