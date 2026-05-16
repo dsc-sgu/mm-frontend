@@ -1,5 +1,4 @@
-import type { CourseAccessResult } from '@/course/course-access.types';
-import type { CourseSummary } from '@/course/course.types';
+import type { CourseRouteContext } from '@/course/course-route.types';
 import type {
   HeaderBreadcrumbItem,
   HeaderDataContext,
@@ -8,14 +7,6 @@ import type {
   HeaderRouteMatch,
   ResolvedHeaderData,
 } from './header.types';
-
-type CourseAccess = Extract<CourseAccessResult, { status: 'allowed' }>;
-
-type CourseLoaderData = {
-  courseSlug: string;
-  courseAccess: CourseAccess;
-  course?: CourseSummary;
-};
 
 export function resolveHeaderData(
   matches: readonly HeaderRouteMatch[]
@@ -281,13 +272,13 @@ export const getAttemptReviewBreadcrumb: HeaderDataGetter<
   ];
 };
 
-function getCourseData(context: HeaderDataContext): CourseLoaderData {
+function getCourseData(context: HeaderDataContext): CourseRouteContext {
   for (const match of context.matches) {
-    if (isCourseLoaderData(match.loaderData)) {
+    if (isCourseRouteContext(match.loaderData)) {
       return match.loaderData;
     }
 
-    if (isCourseLoaderData(match.context)) {
+    if (isCourseRouteContext(match.context)) {
       return match.context;
     }
   }
@@ -306,12 +297,12 @@ function getCourseData(context: HeaderDataContext): CourseLoaderData {
   };
 }
 
-function isCourseLoaderData(value: unknown): value is CourseLoaderData {
+function isCourseRouteContext(value: unknown): value is CourseRouteContext {
   if (!value || typeof value !== 'object') {
     return false;
   }
 
-  const data = value as Partial<CourseLoaderData>;
+  const data = value as Partial<CourseRouteContext>;
 
   return (
     typeof data.courseSlug === 'string' &&
