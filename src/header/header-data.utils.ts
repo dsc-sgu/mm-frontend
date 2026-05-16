@@ -1,3 +1,13 @@
+import {
+  formatAttemptLabel,
+  formatAttemptReviewLabel,
+  formatCommitLabel,
+} from '@/course/course-route.labels';
+import {
+  getStubCourseTitle,
+  getStubStudentName,
+  getStubTaskTitle,
+} from '@/course/course-route.stubs';
 import type { CourseRouteContext } from '@/course/course-route.types';
 import type {
   HeaderBreadcrumbItem,
@@ -182,7 +192,7 @@ export const getStudentRepositoryBreadcrumb: HeaderDataGetter<
 
   return [
     {
-      label: formatUsername(studentUsername),
+      label: getStubStudentName(studentUsername),
       to: '/courses/$courseSlug/repositories/$studentUsername',
       params: { courseSlug, studentUsername },
     },
@@ -206,7 +216,7 @@ export const getRepositoryCommitsBreadcrumb: HeaderDataGetter<
 
 export const getRepositoryCommitDetailBreadcrumb: HeaderDataGetter<
   HeaderBreadcrumbItem[]
-> = (context) => [{ label: formatCommitId(getParam(context, 'commitId')) }];
+> = (context) => [{ label: formatCommitLabel(getParam(context, 'commitId')) }];
 
 export const getTaskBreadcrumb: HeaderDataGetter<HeaderBreadcrumbItem[]> = (
   context
@@ -220,7 +230,7 @@ export const getTaskBreadcrumb: HeaderDataGetter<HeaderBreadcrumbItem[]> = (
   }
 
   const taskItem: HeaderBreadcrumbItem = {
-    label: formatTaskTitle(taskId),
+    label: getStubTaskTitle(taskId),
     to: '/courses/$courseSlug/tasks/$taskId',
     params: { courseSlug, taskId },
   };
@@ -268,7 +278,7 @@ export const getAttemptReviewBreadcrumb: HeaderDataGetter<
       to: '/courses/$courseSlug/attempts',
       params: { courseSlug },
     },
-    { label: `Оценка попытки #${attemptId}` },
+    { label: formatAttemptReviewLabel(attemptId) },
   ];
 };
 
@@ -314,7 +324,7 @@ function isCourseRouteContext(value: unknown): value is CourseRouteContext {
 
 function getCourseTitle(context: HeaderDataContext) {
   const { course, courseSlug } = getCourseData(context);
-  return course?.title ?? formatSlug(courseSlug);
+  return course?.title ?? getStubCourseTitle(courseSlug);
 }
 
 function getParam(context: HeaderDataContext, key: string) {
@@ -326,32 +336,4 @@ function getParam(context: HeaderDataContext, key: string) {
   }
 
   return '';
-}
-
-function formatTaskTitle(taskId: string) {
-  return `Лабораторная работа ${taskId}`;
-}
-
-function formatAttemptLabel(attemptId: string) {
-  return `Попытка #${attemptId}`;
-}
-
-function formatCommitId(commitId: string) {
-  return commitId.length > 7 ? commitId.slice(0, 7) : commitId;
-}
-
-function formatUsername(username: string) {
-  return username
-    .split(/[-_]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-function formatSlug(slug: string) {
-  return slug
-    .split('-')
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
 }
