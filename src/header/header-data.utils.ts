@@ -138,7 +138,7 @@ export const getCourseNavItems: HeaderDataGetter<HeaderNavItem[]> = (
   ];
 };
 
-export function createCourseChildBreadcrumb(
+export function createCourseSectionBreadcrumb(
   label: string,
   to?: string
 ): HeaderDataGetter<HeaderBreadcrumbItem[]> {

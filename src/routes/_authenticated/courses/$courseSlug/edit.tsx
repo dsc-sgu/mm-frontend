@@ -1,5 +1,5 @@
 import { requireCourseRole } from '@/course/course.guards';
-import { createCourseChildBreadcrumb } from '@/header/header-data.utils';
+import { createCourseSectionBreadcrumb } from '@/header/header-data.utils';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
@@ -7,7 +7,7 @@ export const Route = createFileRoute(
 )({
   staticData: {
     header: {
-      getBreadcrumb: createCourseChildBreadcrumb(
+      getBreadcrumb: createCourseSectionBreadcrumb(
         'Редактирование',
         '/courses/$courseSlug/edit'
       ),
