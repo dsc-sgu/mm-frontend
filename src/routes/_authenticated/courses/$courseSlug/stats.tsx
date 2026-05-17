@@ -1,4 +1,4 @@
-import { createCourseSectionBreadcrumb } from '@/course/course-header';
+import { createCourseSectionBreadcrumb } from '@/course/course-route.header';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

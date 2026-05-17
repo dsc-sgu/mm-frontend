@@ -4,7 +4,7 @@ import { requireCourseParticipant } from '@/course/course.guards';
 import {
   getCourseNavItems,
   getCourseRootBreadcrumb,
-} from '@/course/course-header';
+} from '@/course/course-route.header';
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
