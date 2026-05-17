@@ -3,11 +3,17 @@ import {
   requireCourseParticipant,
   requireKnownCourseStudent,
 } from '@/course/course.guards';
+import { getStudentRepositoryBreadcrumb } from '@/course/course-route.header';
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/repositories/$studentUsername'
 )({
+  staticData: {
+    header: {
+      getBreadcrumb: getStudentRepositoryBreadcrumb,
+    },
+  },
   async beforeLoad({ context, params }) {
     const studentUsername = ensureValidUsernameOrRedirect({
       studentUsername: params.studentUsername,

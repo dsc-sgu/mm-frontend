@@ -1,9 +1,18 @@
 import { requireCourseRole } from '@/course/course.guards';
+import { createCourseSectionBreadcrumb } from '@/course/course-route.header';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/files'
 )({
+  staticData: {
+    header: {
+      getBreadcrumb: createCourseSectionBreadcrumb(
+        'Файлы',
+        '/courses/$courseSlug/files'
+      ),
+    },
+  },
   async beforeLoad({ context, params }) {
     await requireCourseRole({
       queryClient: context.queryClient,

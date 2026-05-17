@@ -6,6 +6,11 @@ import clsx from 'clsx';
 import type { ReactNode } from 'react';
 
 export const Route = createFileRoute('/_authenticated/')({
+  staticData: {
+    header: {
+      getBreadcrumb: [{ label: 'Панель управления' }],
+    },
+  },
   component: RouteComponent,
 });
 

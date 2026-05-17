@@ -1,8 +1,17 @@
+import { createCourseSectionBreadcrumb } from '@/course/course-route.header';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/stats'
 )({
+  staticData: {
+    header: {
+      getBreadcrumb: createCourseSectionBreadcrumb(
+        'Аналитика',
+        '/courses/$courseSlug/stats'
+      ),
+    },
+  },
   component: RouteComponent,
 });
 
