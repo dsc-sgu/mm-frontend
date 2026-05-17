@@ -86,7 +86,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
           className="my-6 rounded-2xl border border-border bg-card/80 p-4 shadow-xs open:shadow-sm"
           open={block.defaultOpen}
         >
-          <summary className="cursor-pointer rounded-lg px-1 py-2 text-base font-semibold outline-none marker:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring">
+          <summary className="cursor-pointer select-none rounded-lg px-1 py-2 text-base font-semibold outline-none marker:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring">
             <CourseRichText nodes={block.title} />
           </summary>
           <CourseContentBlocks
