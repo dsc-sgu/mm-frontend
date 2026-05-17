@@ -16,33 +16,34 @@ export function getHeaderState(
     return { breadcrumbs: [], navItems: [] };
   }
 
-  const breadcrumbs: HeaderBreadcrumbItem[] = [];
-  let navItems: HeaderNavItem[] = [];
-  const headerMatches = [...matches];
+  const headerSegments: Array<{
+    breadcrumbs: HeaderBreadcrumbItem[];
+    navItems: HeaderNavItem[] | 'inherit';
+  }> = matches.map((match) => {
+    const context: HeaderDataContext = { matches, match, currentMatch };
+    const headerData = match.staticData?.header;
 
-  for (const match of headerMatches) {
-    const context: HeaderDataContext = {
-      matches: headerMatches,
-      match,
-      currentMatch,
+    return {
+      breadcrumbs: resolveHeaderValue(headerData?.getBreadcrumb ?? [], context),
+      navItems: headerData?.getNavItems
+        ? resolveHeaderValue(headerData.getNavItems, context)
+        : 'inherit',
     };
-    const header = match.staticData?.header;
+  });
 
-    if (header?.getBreadcrumb) {
-      breadcrumbs.push(...resolveHeaderValue(header.getBreadcrumb, context));
-    }
-
-    if (header?.getNavItems) {
-      navItems = resolveHeaderValue(header.getNavItems, context);
-    }
-  }
-
-  return { breadcrumbs, navItems };
+  return {
+    breadcrumbs: headerSegments.flatMap(({ breadcrumbs }) => breadcrumbs),
+    navItems: headerSegments.reduce<HeaderNavItem[]>(
+      (navItems, { navItems: nextNavItems }) =>
+        nextNavItems === 'inherit' ? navItems : nextNavItems,
+      []
+    ),
+  };
 }
 
 function resolveHeaderValue<T>(
   value: T[] | HeaderDataGetter<T[]>,
   context: HeaderDataContext
-) {
+): T[] {
   return typeof value === 'function' ? value(context) : value;
 }

@@ -23,7 +23,7 @@ export type HeaderNavItem = HeaderLinkTarget & {
 export type HeaderRouteMatch = MakeRouteMatchUnion<RegisteredRouter>;
 
 export type HeaderDataContext = {
-  matches: HeaderRouteMatch[];
+  matches: readonly HeaderRouteMatch[];
   match: HeaderRouteMatch;
   currentMatch: HeaderRouteMatch;
 };
