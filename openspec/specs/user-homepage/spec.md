@@ -34,6 +34,17 @@ The system SHALL render the existing deadlines calendar feature inside the homep
 - **THEN** the deadlines calendar is visible within the dashboard layout
 - **AND** the user can inspect deadlines using the calendar interactions already supported by the calendar component
 
+### Requirement: Deadlines calendar is not exposed through the test calendar route
+The system SHALL not expose the deadlines calendar through the standalone `/calendar` test route.
+
+#### Scenario: User opens old calendar test route
+- **WHEN** an authenticated user navigates to `/calendar`
+- **THEN** the system does not render a standalone deadlines calendar page for that route
+
+#### Scenario: User reviews deadlines from homepage after calendar route removal
+- **WHEN** the authenticated homepage loads
+- **THEN** the deadlines calendar remains visible within the dashboard layout
+
 ### Requirement: Homepage layout adapts to available viewport width
 The system SHALL keep both homepage sections usable on narrow and wide screens.
 

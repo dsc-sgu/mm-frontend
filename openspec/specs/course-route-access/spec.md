@@ -74,6 +74,16 @@ The system SHALL allow only users with the `teacher` course role to open teacher
 - **WHEN** an authenticated course student navigates to `/courses/[course-slug]/repositories`
 - **THEN** the system redirects the student to the course root page
 
+#### Scenario: Teacher opens attempts list
+
+- **WHEN** an authenticated course teacher navigates to `/courses/[course-slug]/attempts`
+- **THEN** the system renders the attempts list placeholder page
+
+#### Scenario: Student opens attempts list
+
+- **WHEN** an authenticated course student navigates to `/courses/[course-slug]/attempts`
+- **THEN** the system redirects the student to the course root page
+
 #### Scenario: Teacher opens course management pages
 
 - **WHEN** an authenticated course teacher navigates to `/courses/[course-slug]/edit`, `/courses/[course-slug]/files`, `/courses/[course-slug]/tasks/[task-id]/edit`, or an attempt review URL
