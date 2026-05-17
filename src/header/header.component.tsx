@@ -28,7 +28,7 @@ import { SESSION_OPTIONS, useLogoutMutation } from '../auth/auth.queries';
 import type { FetchSessionResponse } from '../auth/auth.api';
 import { HeaderBreadcrumbs } from './header-breadcrumbs.component';
 import { HeaderSectionNav } from './header-section-nav.component';
-import { getHeaderState } from './header-state';
+import { getHeaderState } from './header.state';
 
 export function Header() {
   const matches = useMatches();
