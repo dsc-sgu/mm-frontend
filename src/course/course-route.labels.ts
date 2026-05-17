@@ -9,13 +9,3 @@ export function formatAttemptLabel(attemptId: string) {
 export function formatAttemptReviewLabel(attemptId: string) {
   return `Оценка попытки #${attemptId}`;
 }
-
-export function formatStudentFullName(student: {
-  lastName: string;
-  firstName: string;
-  patronymic?: string | null;
-}) {
-  return [student.lastName, student.firstName, student.patronymic]
-    .filter(Boolean)
-    .join(' ');
-}
