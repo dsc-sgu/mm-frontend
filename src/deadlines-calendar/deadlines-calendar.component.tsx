@@ -108,6 +108,7 @@ function WeekRow({ weekIndex }: { weekIndex: number }) {
 export function DeadlinesCalendar({ className }: DeadlinesCalendarProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Virtual exposes imperative helpers that are safe when used directly in this component.
   const virtualizer = useVirtualizer({
     count: TOTAL_WEEKS,
     getScrollElement: () => parentRef.current,

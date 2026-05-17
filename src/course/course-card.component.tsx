@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { cn } from '@/shadcn/lib/utils';
+import { COURSE_COLOR_THEMES } from './course-theme';
 import type { CourseColor, LucideIconName, Teacher } from './course.types';
 
 export type CourseCardProps = {
@@ -11,54 +12,6 @@ export type CourseCardProps = {
   iconName: LucideIconName;
   color: CourseColor;
   className?: string;
-};
-
-const BG: Record<
-  CourseColor,
-  { base: string; darkBase: string; icon: string; darkIcon: string }
-> = {
-  blue: {
-    base: 'from-blue-100 to-blue-200',
-    darkBase: 'dark:from-blue-950 dark:to-blue-900',
-    icon: 'text-blue-700/25',
-    darkIcon: 'dark:text-blue-300/15',
-  },
-  teal: {
-    base: 'from-teal-100 to-teal-200',
-    darkBase: 'dark:from-teal-950 dark:to-teal-900',
-    icon: 'text-teal-700/25',
-    darkIcon: 'dark:text-teal-300/15',
-  },
-  violet: {
-    base: 'from-violet-100 to-violet-200',
-    darkBase: 'dark:from-violet-950 dark:to-violet-900',
-    icon: 'text-violet-700/25',
-    darkIcon: 'dark:text-violet-300/15',
-  },
-  pink: {
-    base: 'from-pink-100 to-pink-200',
-    darkBase: 'dark:from-pink-950 dark:to-pink-900',
-    icon: 'text-pink-700/25',
-    darkIcon: 'dark:text-pink-300/15',
-  },
-  red: {
-    base: 'from-red-100 to-red-200',
-    darkBase: 'dark:from-red-950 dark:to-red-900',
-    icon: 'text-red-700/25',
-    darkIcon: 'dark:text-red-300/15',
-  },
-  orange: {
-    base: 'from-orange-100 to-orange-200',
-    darkBase: 'dark:from-orange-950 dark:to-orange-900',
-    icon: 'text-orange-700/25',
-    darkIcon: 'dark:text-orange-300/15',
-  },
-  green: {
-    base: 'from-green-100 to-green-200',
-    darkBase: 'dark:from-green-950 dark:to-green-900',
-    icon: 'text-green-800/25',
-    darkIcon: 'dark:text-green-300/15',
-  },
 };
 
 function teacherFullName(t: Teacher) {
@@ -75,7 +28,7 @@ export function CourseCard({
   color,
   className,
 }: CourseCardProps) {
-  const bg = BG[color];
+  const bg = COURSE_COLOR_THEMES[color];
 
   return (
     <div

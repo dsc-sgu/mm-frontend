@@ -1,6 +1,6 @@
 import type { CourseSummary } from './course.types';
 
-const MOCK_COURSES: CourseSummary[] = [
+export const MOCK_COURSES: CourseSummary[] = [
   {
     courseId: 'algorithms-and-data-structures',
     title: 'Алгоритмы и структуры данных',
