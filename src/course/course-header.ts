@@ -1,13 +1,3 @@
-import {
-  formatAttemptLabel,
-  formatAttemptReviewLabel,
-  formatCommitLabel,
-} from './course-route.labels';
-import {
-  getStubCourseTitle,
-  getStubStudentName,
-  getStubTaskTitle,
-} from './course-route.stubs';
 import type { CourseRouteContext } from './course-route.types';
 import type {
   HeaderBreadcrumbItem,
@@ -290,4 +280,31 @@ function getParam(context: HeaderDataContext, key: string) {
   }
 
   return '';
+}
+
+export function formatCommitLabel(commitId: string) {
+  return commitId.length > 7 ? commitId.slice(0, 7) : commitId;
+}
+
+export function formatAttemptLabel(attemptId: string) {
+  return `Попытка #${attemptId}`;
+}
+
+export function formatAttemptReviewLabel(attemptId: string) {
+  return `Оценка попытки #${attemptId}`;
+}
+
+// Temporary route label stubs used until task/student/course detail APIs
+// provide real display data. Remove these functions when real data is wired.
+
+export function getStubTaskTitle(taskId: string) {
+  return `Лабораторная работа ${taskId}`;
+}
+
+export function getStubStudentName(username: string) {
+  return username;
+}
+
+export function getStubCourseTitle(courseSlug: string) {
+  return courseSlug;
 }
