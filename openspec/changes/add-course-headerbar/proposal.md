@@ -5,7 +5,7 @@ Course pages have multiple sections and deeply nested entities (repositories, co
 ## What Changes
 
 - Add a two-level application header model:
-  - first level with dashboard navigation, breadcrumb trail, theme/messages/notifications/profile actions;
+  - first level with product home navigation, breadcrumb trail, theme/messages/notifications/profile actions;
   - optional second level with contextual section navigation for course pages.
 - Add route-provided static header metadata for breadcrumbs and section navigation.
 - Render role-aware course navigation for teachers and students.
@@ -28,11 +28,13 @@ Course pages have multiple sections and deeply nested entities (repositories, co
 
 - Affected code:
   - `src/header/*`
+  - `src/course/course-route.header.ts`
+  - `src/course/course-route.types.ts`
+  - `src/course/course.queries.ts`
   - `src/routes/__root.tsx`
   - `src/routes/_authenticated/index.tsx`
   - `src/routes/_authenticated/calendar.tsx`
   - `src/routes/_authenticated/courses/**`
-  - `src/course/course.queries.ts`
 - No backend API changes.
 - No new runtime dependencies expected.
 - TanStack Router generated route tree will update after deleting `/calendar` and adding `/courses/$courseSlug/attempts`.

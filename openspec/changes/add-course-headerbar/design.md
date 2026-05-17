@@ -8,7 +8,7 @@ Course pages are nested and role-dependent. Teachers and students see different 
 
 **Goals:**
 
-- Provide a reusable two-level header component with a dashboard icon, breadcrumbs, account actions, and optional contextual nav.
+- Provide a reusable two-level header component with a product home link, breadcrumbs, account actions, and optional contextual nav.
 - Keep page-specific header state close to route definitions through typed route static metadata.
 - Build course breadcrumbs and section navigation from the active route matches, route params, course loader data, and course role.
 - Preserve the homepage deadlines calendar while removing the standalone `/calendar` test route.
@@ -46,10 +46,10 @@ Header metadata values for dynamic routes will be functions that receive active 
 
 ### Keep `Header` presentation-focused
 
-`Header` should render controls, breadcrumbs, and tabs. Route-match traversal and course-specific label construction should live in header utilities/components.
+`Header` should render controls, breadcrumbs, and tabs. Route-match traversal should live in `src/header/header.state.ts`, while course-specific breadcrumb/nav construction should live with the course route feature in `src/course/course-route.header.ts`.
 
-- Rationale: keeps the visual component readable and reusable outside course pages.
-- Alternative considered: put match parsing directly into `Header`. This is simpler for the first few routes but becomes hard to test and modify.
+- Rationale: keeps the visual component readable and reusable outside course pages, keeps the generic header module free of course-domain knowledge, and keeps course route header behavior near the course routes it describes.
+- Alternative considered: put match parsing and course route label construction directly into `Header` or a generic header utility file. This is simpler for the first few routes but becomes hard to test and modify, and turns the header module into a registry of feature-specific routing knowledge.
 
 ### Course nav is role-aware
 
@@ -61,6 +61,6 @@ Teacher course nav will include course root, attempts, repositories, journal, fi
 ## Risks / Trade-offs
 
 - **Risk:** Route metadata functions may need loose typing because TanStack match unions are complex. → **Mitigation:** centralize unsafe narrowing in small utilities and expose typed helper inputs to route metadata where possible.
-- **Risk:** Breadcrumb labels for tasks/students are placeholders until real APIs exist. → **Mitigation:** clearly format fallback labels (`Лабораторная работа {id}`, username-derived names) and isolate them behind helper functions for future replacement.
+- **Risk:** Breadcrumb labels for tasks/students are temporary stubs until real APIs exist. → **Mitigation:** keep stub label helpers local to the course route header module so they are easy to delete when task/student/course detail APIs provide real display data.
 - **Risk:** Removing `/calendar` can break external links or bookmarks. → **Mitigation:** this was a test route; the deadlines calendar remains on the homepage. If needed later, add an intentional route with spec coverage.
 - **Risk:** Header height changes can affect page viewport calculations that currently subtract `3.5rem`. → **Mitigation:** update affected layout calculations to account for the second header level where it appears, or use natural document flow where possible.

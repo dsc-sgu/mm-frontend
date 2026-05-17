@@ -2,13 +2,13 @@
 
 - [x] 1.1 Add typed header metadata models for breadcrumb items, contextual nav items, and route static header data.
 - [x] 1.2 Add TanStack Router module augmentation so `staticData.header` is type checked.
-- [x] 1.3 Add header data utility functions to aggregate active route matches into breadcrumbs and optional contextual nav.
-- [x] 1.4 Add course-specific helper functions for course titles, role detection, task labels, attempt labels, commit labels, and username display fallback.
+- [x] 1.3 Add a header state resolver to aggregate active route matches into breadcrumbs and optional contextual nav.
+- [x] 1.4 Add a course route header module for course titles, role-aware nav, route breadcrumbs, task label stubs, attempt labels, commit labels, and username display stubs.
 
 ## 2. Header UI Components
 
 - [x] 2.1 Refactor the global `Header` to read active matches with `useMatches()` and render resolved header data.
-- [x] 2.2 Replace the product-left area with a dashboard icon link plus breadcrumb area.
+- [x] 2.2 Render the product home link plus breadcrumb area in the header's left side.
 - [x] 2.3 Add a breadcrumb component that renders linkable and current-page breadcrumb items with accessible semantics.
 - [x] 2.4 Add a second-level section nav component with horizontal scrolling and active item styling.
 - [x] 2.5 Preserve theme, message, notification, and profile controls for authorized users, and keep theme switching available for unauthorized users.

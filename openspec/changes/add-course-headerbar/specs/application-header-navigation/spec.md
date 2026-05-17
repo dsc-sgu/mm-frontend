@@ -1,12 +1,12 @@
 ## ADDED Requirements
 
-### Requirement: Application header provides dashboard navigation and account actions
+### Requirement: Application header provides product home navigation and account actions
 
-The system SHALL render a global application header with a dashboard navigation control on the left and user/action controls on the right.
+The system SHALL render a global application header with a product home navigation control on the left and user/action controls on the right.
 
-#### Scenario: User activates dashboard control
+#### Scenario: User activates product home control
 
-- **WHEN** a user activates the dashboard icon in the application header
+- **WHEN** a user activates the product home control in the application header
 - **THEN** the system navigates to `/` using router navigation
 
 #### Scenario: Authorized user sees account actions
@@ -27,7 +27,7 @@ The system SHALL render a breadcrumb trail in the first header level based on th
 #### Scenario: Route provides breadcrumb metadata
 
 - **WHEN** a user navigates to a route whose active route chain provides breadcrumb metadata
-- **THEN** the header displays breadcrumb items in hierarchical order after the dashboard icon
+- **THEN** the header displays breadcrumb items in hierarchical order after the product home control
 
 #### Scenario: Breadcrumb item has a target
 
