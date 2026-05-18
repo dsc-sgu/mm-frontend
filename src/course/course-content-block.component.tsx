@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { CalendarDays, FileText, Trophy } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
+import { CourseCodeBlock } from './course-code-block.component';
 import type {
   CourseContentBlock as CourseContentBlockModel,
   CourseListBlock,
@@ -98,21 +99,11 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
       );
     case 'code':
       return (
-        <figure className="my-6 overflow-hidden rounded-2xl border border-border bg-zinc-950 text-zinc-50 shadow-sm dark:bg-zinc-950/90">
-          {(block.fileName || block.language) && (
-            <figcaption className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-2 text-xs text-zinc-300">
-              <span>{block.fileName ?? 'Фрагмент кода'}</span>
-              {block.language && (
-                <span className="uppercase tracking-wide">
-                  {block.language}
-                </span>
-              )}
-            </figcaption>
-          )}
-          <pre className="overflow-x-auto p-4 text-sm leading-7">
-            <code>{block.code}</code>
-          </pre>
-        </figure>
+        <CourseCodeBlock
+          code={block.code}
+          language={block.language}
+          fileName={block.fileName}
+        />
       );
     case 'image':
       return (
