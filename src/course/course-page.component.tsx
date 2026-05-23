@@ -61,7 +61,7 @@ export function CoursePage({ course }: CoursePageProps) {
         </div>
       </section>
 
-      <article className="rounded-3xl mt-8 border border-border bg-card px-5 pt-4 pb-5 sm:px-8 lg:px-10">
+      <article className="rounded-3xl mt-8 border border-border bg-card px-5 pt-2 pb-8 sm:px-8 lg:px-10">
         <CourseContentBlocks
           blocks={course.content}
           courseSlug={course.courseId}

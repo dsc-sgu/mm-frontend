@@ -83,7 +83,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
       return <ListBlock block={block} />;
     case 'spoiler':
       return (
-        <details className="my-4" open={block.defaultOpen}>
+        <details className="my-5" open={block.defaultOpen}>
           <summary className="cursor-pointer select-none rounded-lg px-1 text-base font-semibold outline-none marker:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring">
             <CourseRichText nodes={block.title} />
           </summary>
@@ -124,7 +124,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
             <a
               key={file.id}
               href={file.href}
-              className="flex flex-col gap-1 border border-black/10 rounded-xl bg-primary/3 hover:bg-primary/6 px-4 py-3 transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-1 border border-black/10 dark:border-white/10 rounded-xl bg-primary/3 hover:bg-primary/6 px-4 py-3 transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
             >
               <span className="font-medium text-foreground">{file.name}</span>
               {(file.size || file.mimeType) && (
@@ -141,7 +141,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
         <Link
           to="/courses/$courseSlug/tasks/$taskId"
           params={{ courseSlug, taskId: block.taskId }}
-          className="group my-4 block border border-black/10 rounded-2xl bg-primary/3 p-5 transition-colors hover:bg-primary/6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="group my-4 block border border-black/10 dark:border-white/10 rounded-2xl bg-primary/3 p-5 transition-colors hover:bg-primary/6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
