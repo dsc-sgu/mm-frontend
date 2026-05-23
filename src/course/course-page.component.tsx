@@ -20,10 +20,10 @@ export function CoursePage({ course }: CoursePageProps) {
   const theme = COURSE_COLOR_THEMES[course.color];
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-col sm:px-6 sm:py-6 lg:px-8">
       <section
         className={cn(
-          'relative overflow-hidden rounded-3xl border bg-linear-to-br p-6 sm:p-8 lg:p-10',
+          'relative overflow-hidden bg-linear-to-br px-5 py-6 sm:rounded-3xl sm:border sm:p-8 lg:p-10',
           theme.base,
           theme.darkBase,
           theme.border
@@ -32,14 +32,14 @@ export function CoursePage({ course }: CoursePageProps) {
         <DynamicIcon
           name={course.iconName}
           className={cn(
-            'pointer-events-none absolute -right-8 -top-8 size-56 rotate-12 stroke-[1.35] sm:size-72',
+            'pointer-events-none absolute -right-8 -top-8 hidden size-72 rotate-12 stroke-[1.35] xl:block',
             theme.icon,
             theme.darkIcon
           )}
           aria-hidden="true"
         />
 
-        <div className="relative max-w-3xl">
+        <div className="relative z-10 w-full sm:max-w-3xl">
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {course.title}
           </h1>
@@ -47,12 +47,12 @@ export function CoursePage({ course }: CoursePageProps) {
             {course.description}
           </p>
 
-          <div className="max-w-2xl mt-5 flex gap-4 items-center flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <div className="mt-5 flex max-w-2xl flex-col items-start gap-2 sm:flex-row sm:flex-wrap">
             {course.teachers.map((teacher) => (
               <a
                 key={teacher.username}
                 href={`/@${teacher.username}`}
-                className="w-fit rounded-lg bg-background/70 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="max-w-full truncate rounded-lg bg-background/70 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {teacherFullName(teacher)}
               </a>
@@ -61,7 +61,7 @@ export function CoursePage({ course }: CoursePageProps) {
         </div>
       </section>
 
-      <article className="rounded-3xl mt-8 border border-border bg-card px-5 pt-2 pb-8 sm:px-8 lg:px-10">
+      <article className="px-5 pt-2 pb-8 md:mt-8 md:rounded-3xl md:border md:border-border md:bg-card md:px-8 lg:px-10">
         <CourseContentBlocks
           blocks={course.content}
           courseSlug={course.courseId}

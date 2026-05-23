@@ -141,15 +141,15 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
         <Link
           to="/courses/$courseSlug/tasks/$taskId"
           params={{ courseSlug, taskId: block.taskId }}
-          className="group my-4 block border border-black/10 dark:border-white/10 rounded-2xl bg-primary/3 p-5 transition-colors hover:bg-primary/6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="group my-4 block rounded-xl border border-black/10 bg-primary/3 p-4 transition-colors hover:bg-primary/6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 md:rounded-2xl md:p-5"
         >
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="min-w-0">
+              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary md:text-sm">
                 <Trophy className="size-4" aria-hidden="true" />
                 Задание
               </div>
-              <h3 className="text-xl font-semibold tracking-tight group-hover:underline">
+              <h3 className="text-lg font-semibold tracking-tight group-hover:underline md:text-xl">
                 {block.title}
               </h3>
               {block.description && (
@@ -158,7 +158,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
                 </p>
               )}
             </div>
-            <div className="flex shrink-0 flex-col gap-2 text-sm text-muted-foreground">
+            <div className="flex shrink-0 flex-col items-start gap-2 text-sm text-muted-foreground md:items-end">
               {block.dueDate && (
                 <span className="inline-flex items-center gap-2">
                   <CalendarDays className="size-4" aria-hidden="true" />
@@ -166,7 +166,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
                 </span>
               )}
               {block.maxScore !== undefined && (
-                <span className="text-right">Макс. балл: {block.maxScore}</span>
+                <span>Макс. балл: {block.maxScore}</span>
               )}
             </div>
           </div>
