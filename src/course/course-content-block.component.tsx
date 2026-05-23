@@ -62,9 +62,9 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
     case 'heading': {
       const HeadingTag = `h${block.level}` as const;
       const headingClassName = {
-        1: 'mt-6 text-3xl font-bold tracking-tight md:text-4xl',
-        2: 'mt-6 text-2xl font-bold tracking-tight md:text-3xl',
-        3: 'mt-6 text-xl font-semibold tracking-tight md:text-2xl',
+        1: 'mt-8 text-3xl font-bold tracking-tight md:text-4xl',
+        2: 'mt-8 text-2xl font-bold tracking-tight md:text-3xl',
+        3: 'mt-8 text-xl font-semibold tracking-tight md:text-2xl',
       }[block.level];
 
       return (
