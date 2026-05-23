@@ -1,5 +1,4 @@
 import { DynamicIcon } from 'lucide-react/dynamic';
-import { BookOpen, Users } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
 import { CourseContentBlocks } from './course-content-block.component';
@@ -21,10 +20,10 @@ export function CoursePage({ course }: CoursePageProps) {
   const theme = COURSE_COLOR_THEMES[course.color];
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
       <section
         className={cn(
-          'relative overflow-hidden rounded-3xl border bg-linear-to-br p-6 shadow-sm sm:p-8 lg:p-10',
+          'relative overflow-hidden rounded-3xl border bg-linear-to-br p-6 sm:p-8 lg:p-10',
           theme.base,
           theme.darkBase,
           theme.border
@@ -41,44 +40,28 @@ export function CoursePage({ course }: CoursePageProps) {
         />
 
         <div className="relative max-w-3xl">
-          <div
-            className={cn(
-              'mb-5 inline-flex items-center gap-2 rounded-full bg-background/75 px-3 py-1 text-sm font-medium shadow-sm backdrop-blur dark:bg-background/50',
-              theme.accent
-            )}
-          >
-            <BookOpen className="size-4" aria-hidden="true" />
-            Страница курса
-          </div>
-
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {course.title}
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-8 text-foreground/85 sm:text-lg">
+          <p className="mt-4 max-w-2xl text-base leading-7 text-foreground/85 sm:text-lg">
             {course.description}
           </p>
 
-          <div className="mt-8 rounded-2xl bg-background/70 p-4 shadow-sm backdrop-blur dark:bg-background/45">
-            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground/80">
-              <Users className="size-4" aria-hidden="true" />
-              Преподаватели
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              {course.teachers.map((teacher) => (
-                <a
-                  key={teacher.username}
-                  href={`/@${teacher.username}`}
-                  className="w-fit rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground shadow-xs transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {teacherFullName(teacher)}
-                </a>
-              ))}
-            </div>
+          <div className="max-w-2xl mt-5 flex gap-4 items-center flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            {course.teachers.map((teacher) => (
+              <a
+                key={teacher.username}
+                href={`/@${teacher.username}`}
+                className="w-fit rounded-lg bg-background/70 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {teacherFullName(teacher)}
+              </a>
+            ))}
           </div>
         </div>
       </section>
 
-      <article className="rounded-3xl border border-border bg-card px-5 py-6 shadow-sm sm:px-8 lg:px-10">
+      <article className="rounded-3xl mt-8 border border-border bg-card px-5 pt-4 pb-5 sm:px-8 lg:px-10">
         <CourseContentBlocks
           blocks={course.content}
           courseSlug={course.courseId}

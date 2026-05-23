@@ -166,7 +166,7 @@ export function CourseCodeBlock({
   }, [code, highlightKey, supportedLanguage]);
 
   return (
-    <figure className="my-6 overflow-hidden rounded-2xl border border-border bg-zinc-950 text-zinc-50 shadow-sm dark:bg-zinc-950/90">
+    <figure className="my-4 overflow-hidden rounded-2xl border border-border bg-zinc-950 text-zinc-50 shadow-sm dark:bg-zinc-950/90">
       {(fileName || language) && (
         <figcaption className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-2 text-xs text-zinc-300">
           <span>{fileName ?? 'Фрагмент кода'}</span>

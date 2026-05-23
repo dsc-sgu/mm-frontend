@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { CalendarDays, FileText, Trophy } from 'lucide-react';
+import { CalendarDays, Trophy } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
 import { CourseCodeBlock } from './course-code-block.component';
@@ -38,12 +38,12 @@ function ListBlock({ block }: { block: CourseListBlock }) {
   return (
     <ListTag
       className={cn(
-        'my-5 space-y-2 pl-6 text-base leading-8 text-foreground/90',
+        'my-4 space-y-2 pl-6 text-base leading-7 text-foreground/90',
         block.variant === 'ordered' ? 'list-decimal' : 'list-disc'
       )}
     >
       {items.map((item) => (
-        <li key={item.id}>
+        <li key={item.id} className="my-1">
           <CourseRichText nodes={item.children} />
         </li>
       ))}
@@ -55,16 +55,16 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
   switch (block.type) {
     case 'paragraph':
       return (
-        <p className="my-5 text-base leading-8 text-foreground/90 md:text-lg">
+        <p className="my-4 text-base leading-7 text-foreground/90 md:text-lg">
           <CourseRichText nodes={block.children} />
         </p>
       );
     case 'heading': {
       const HeadingTag = `h${block.level}` as const;
       const headingClassName = {
-        1: 'mt-10 mb-5 text-3xl font-bold tracking-tight md:text-4xl',
-        2: 'mt-10 mb-4 text-2xl font-bold tracking-tight md:text-3xl',
-        3: 'mt-8 mb-3 text-xl font-semibold tracking-tight md:text-2xl',
+        1: 'mt-6 text-3xl font-bold tracking-tight md:text-4xl',
+        2: 'mt-6 text-2xl font-bold tracking-tight md:text-3xl',
+        3: 'mt-6 text-xl font-semibold tracking-tight md:text-2xl',
       }[block.level];
 
       return (
@@ -75,7 +75,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
     }
     case 'quote':
       return (
-        <blockquote className="my-6 rounded-r-2xl border-l-4 border-primary/70 bg-muted/60 px-5 py-4 text-base leading-8 text-foreground/85 md:text-lg">
+        <blockquote className="my-4 rounded-r-2xl border-l-4 border-primary/70 bg-muted/60 px-5 py-4 text-base leading-7 text-foreground/85 md:text-lg">
           <CourseRichText nodes={block.children} />
         </blockquote>
       );
@@ -83,17 +83,14 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
       return <ListBlock block={block} />;
     case 'spoiler':
       return (
-        <details
-          className="my-6 rounded-2xl border border-border bg-card/80 p-4 shadow-xs open:shadow-sm"
-          open={block.defaultOpen}
-        >
-          <summary className="cursor-pointer select-none rounded-lg px-1 py-2 text-base font-semibold outline-none marker:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring">
+        <details className="my-4" open={block.defaultOpen}>
+          <summary className="cursor-pointer select-none rounded-lg px-1 text-base font-semibold outline-none marker:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring">
             <CourseRichText nodes={block.title} />
           </summary>
           <CourseContentBlocks
             blocks={block.children}
             courseSlug={courseSlug}
-            className="mt-3 border-l border-border/80 pl-4"
+            className="border-l border-border/80 pl-4"
           />
         </details>
       );
@@ -107,7 +104,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
       );
     case 'image':
       return (
-        <figure className="my-8 overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+        <figure className="my-4 overflow-hidden rounded-3xl border border-border bg-card">
           <img
             src={block.src}
             alt={block.alt}
@@ -122,27 +119,21 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
       );
     case 'files':
       return (
-        <section className="my-6 rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <h3 className="mb-3 flex items-center gap-2 text-base font-semibold">
-            <FileText className="size-5 text-primary" aria-hidden="true" />
-            Файлы
-          </h3>
-          <div className="grid gap-2">
-            {block.files.map((file) => (
-              <a
-                key={file.id}
-                href={file.href}
-                className="flex flex-col gap-1 rounded-xl border border-border/70 bg-background px-4 py-3 transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
-              >
-                <span className="font-medium text-foreground">{file.name}</span>
-                {(file.size || file.mimeType) && (
-                  <span className="text-sm text-muted-foreground">
-                    {[file.size, file.mimeType].filter(Boolean).join(' • ')}
-                  </span>
-                )}
-              </a>
-            ))}
-          </div>
+        <section className="grid gap-2 my-4">
+          {block.files.map((file) => (
+            <a
+              key={file.id}
+              href={file.href}
+              className="flex flex-col gap-1 border border-black/10 rounded-xl bg-primary/3 hover:bg-primary/6 px-4 py-3 transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
+            >
+              <span className="font-medium text-foreground">{file.name}</span>
+              {(file.size || file.mimeType) && (
+                <span className="text-sm text-muted-foreground">
+                  {[file.size, file.mimeType].filter(Boolean).join(' • ')}
+                </span>
+              )}
+            </a>
+          ))}
         </section>
       );
     case 'assignment':
@@ -150,7 +141,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
         <Link
           to="/courses/$courseSlug/tasks/$taskId"
           params={{ courseSlug, taskId: block.taskId }}
-          className="group my-6 block rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="group my-4 block border border-black/10 rounded-2xl bg-primary/3 p-5 transition-colors hover:bg-primary/6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -175,7 +166,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
                 </span>
               )}
               {block.maxScore !== undefined && (
-                <span>Макс. балл: {block.maxScore}</span>
+                <span className="text-right">Макс. балл: {block.maxScore}</span>
               )}
             </div>
           </div>
@@ -190,7 +181,7 @@ export function CourseContentBlocks({
   className,
 }: CourseContentBlocksProps) {
   return (
-    <div className={cn('space-y-1', className)}>
+    <div className={className}>
       {sortByRank(blocks).map((block) => (
         <CourseContentBlock
           key={block.id}
