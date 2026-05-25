@@ -50,11 +50,6 @@ function getBundledLanguages() {
   return bundledLanguagesPromise;
 }
 
-function normalizeLanguage(language?: string | null): string | null {
-  const normalized = language?.trim().toLowerCase();
-  return normalized || null;
-}
-
 async function ensureLanguageLoaded(language: string) {
   const cachedPromise = languageLoadPromises.get(language);
 
@@ -86,9 +81,7 @@ export async function highlightCourseCode(
   code: string,
   language?: string | null
 ): Promise<HighlightCourseCodeResult> {
-  const normalizedLanguage = normalizeLanguage(language);
-
-  if (!normalizedLanguage) {
+  if (!language) {
     return {
       status: 'failed',
       reason: 'missing-language',
@@ -96,7 +89,7 @@ export async function highlightCourseCode(
   }
 
   try {
-    const isLanguageLoaded = await ensureLanguageLoaded(normalizedLanguage);
+    const isLanguageLoaded = await ensureLanguageLoaded(language);
 
     if (!isLanguageLoaded) {
       return {
@@ -107,7 +100,7 @@ export async function highlightCourseCode(
 
     const highlighter = await getCourseHighlighter();
     const html = highlighter.codeToHtml(code, {
-      lang: normalizedLanguage,
+      lang: language,
       themes: {
         light: 'github-light',
         dark: 'github-dark',
