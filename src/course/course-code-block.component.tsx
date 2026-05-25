@@ -2,19 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
-
-type CourseCodeBlockProps = {
-  code: string;
-  language?: string;
-  fileName?: string;
-};
-
-type HighlightResult = {
-  key: string;
-  html: string | null;
-};
-
-type CopyState = 'idle' | 'copied' | 'failed';
+import type {
+  CopyState,
+  CourseCodeBlockProps,
+  HighlightResult,
+} from './course-code-block.types';
 
 const codeBlockClassName = cn(
   'course-code-block my-4 overflow-hidden rounded-2xl',
