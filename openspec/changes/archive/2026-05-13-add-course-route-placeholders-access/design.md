@@ -1,6 +1,6 @@
 ## Context
 
-The project uses TanStack Router file-based routes, TanStack Query, React, Tailwind CSS, and Valibot. Authenticated pages are already protected by `src/routes/_authenticated.tsx`, and the dashboard route uses mocked course data through `src/course/course.api.mock.ts` and `src/course/use-courses-query.hook.ts`.
+The project uses TanStack Router file-based routes, TanStack Query, React, Tailwind CSS, and Valibot. Authenticated pages are already protected by `src/routes/_authenticated.tsx`, and the dashboard route uses mocked course data through `src/course/course.api.mock.ts` and `src/course/course.queries.ts`.
 
 The course URL map is broader than the current implementation: the `src/routes/_authenticated/courses/` directory is empty, while course cards already link to `/courses/{courseId}`. The application therefore needs route files now, even if each page only renders a placeholder until the final UI is implemented.
 
@@ -85,7 +85,7 @@ Each placeholder page will render simple text with a page title. No shared place
 
 ## Risks / Trade-offs
 
-- [Mock access data may diverge from future backend semantics] → Keep mock code isolated in `course-access.api.mock.ts` and `course-access.queries.ts` so it can be replaced later. In particular, the mock's `username` argument is temporary; the real API must derive the current user from the session.
+- [Mock access data may diverge from future backend semantics] → Keep mock code isolated in `src/course/access/course-access.api.mock.ts` and `src/course/access/course-access.queries.ts` so it can be replaced later. In particular, the mock's `username` argument is temporary; the real API must derive the current user from the session.
 - [The word `participant` is currently overloaded] → Add the requested TODO comment near `requireCourseParticipant` explaining that participant should eventually model students/teams separately from teachers.
 - [Many route files are created at once] → Keep each route minimal and rely on layouts/guards to reduce duplicated logic.
 - [Route tree generation may lag if the dev server is not running] → Do not edit `src/routeTree.gen.ts` manually; run build/dev tooling to regenerate through the TanStack Router plugin.

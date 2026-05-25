@@ -13,7 +13,7 @@ The system SHALL provide guarded authenticated routes for course pages and redir
 #### Scenario: Course participant opens course root page
 
 - **WHEN** an authenticated course participant navigates to `/courses/[course-slug]`
-- **THEN** the system renders the course root placeholder page
+- **THEN** the system renders the course root page
 
 #### Scenario: User opens unavailable course
 
@@ -31,6 +31,16 @@ The system SHALL provide guarded authenticated routes for course pages and redir
 - **THEN** the frontend requests access for the course without sending a caller-chosen username
 - **AND** the backend determines the current user from the authenticated session
 - **AND** course-access query data is invalidated or partitioned on session changes so one user's access result is not reused for another user
+
+### Requirement: Course access modules are isolated by capability
+
+The system SHALL keep course-access API, query, and type code in a dedicated course access submodule instead of the flat course module root.
+
+#### Scenario: Developer updates course access integration
+
+- **WHEN** route guards or route data types need course-access query options or access result types
+- **THEN** they import those modules from `src/course/access/`
+- **AND** the flat `src/course/` module root remains reserved for shared course utilities, route guards, and cross-feature course code
 
 ### Requirement: Course route params are validated before page access
 

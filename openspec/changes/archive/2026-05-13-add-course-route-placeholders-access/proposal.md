@@ -23,7 +23,7 @@ The application has a defined course URL map, but most course-related pages are 
 
 ## Impact
 
-- Affected code: `src/routes/_authenticated/courses/**`, `src/course/*`, and `src/course/course-card.component.tsx`.
+- Affected code: `src/routes/_authenticated/courses/**`, `src/course/access/*`, shared course modules under `src/course/*`, and `src/course/course-card.component.tsx`.
 - Routing impact: adds many new authenticated course routes and relies on generated TanStack Router route tree updates.
 - API impact: introduces frontend-only mocked course access data until real backend endpoints are available. The mock accepts `username` only as a temporary frontend testing aid; the real API must derive the current user from the authenticated session instead of trusting a caller-supplied username.
 - Dependencies: no new external dependencies; use existing TanStack Query, TanStack Router, and Valibot.

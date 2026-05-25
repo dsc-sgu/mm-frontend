@@ -20,6 +20,14 @@ The system SHALL render the course root page using frontend mock course page dat
 - **WHEN** the course root page is waiting for mock course page data
 - **THEN** the page displays a loading state instead of placeholder text
 
+### Requirement: Course page modules are isolated by capability
+The system SHALL keep course page API, query, component, and type code in a dedicated course page submodule instead of the flat course module root.
+
+#### Scenario: Course root route renders the course page
+- **WHEN** the course root route needs the course page component or query hook
+- **THEN** it imports them from `src/course/page/`
+- **AND** shared renderers outside the page submodule import course page content types from `src/course/page/`
+
 ### Requirement: Course content uses rank-ordered editable block data
 The system SHALL model course page content as serializable content blocks with stable identifiers and LexoRank-style sibling ordering.
 

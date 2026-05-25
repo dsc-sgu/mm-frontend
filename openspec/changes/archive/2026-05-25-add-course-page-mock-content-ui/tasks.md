@@ -1,11 +1,11 @@
 ## 1. Content Model and Mock API
 
 - [x] 1.1 Export shared course mock summary data from `src/course/course.api.mock.ts` for reuse by the course page mock API.
-- [x] 1.2 Add editor-friendly course page content types with rich text nodes, supported block unions, stable `id`, and LexoRank-style `rank` fields.
+- [x] 1.2 Add editor-friendly course page content types in `src/course/page/course-page.types.ts` with rich text nodes, supported block unions, stable `id`, and LexoRank-style `rank` fields.
 - [x] 1.3 Add stable IDs to rich text nodes so inline rendering does not rely on array indexes as React keys.
 - [x] 1.4 Add local rank sorting logic that orders sibling items by `rank` and uses `id` as a deterministic tie-breaker.
-- [x] 1.5 Implement `fetchCoursePage` mock API with descriptions and representative course content, excluding video blocks.
-- [x] 1.6 Add React Query options and hook for loading course page mock data by course slug.
+- [x] 1.5 Implement `fetchCoursePage` mock API in `src/course/page/course-page.api.mock.ts` with descriptions and representative course content, excluding video blocks.
+- [x] 1.6 Add React Query options and hook in `src/course/page/course-page.queries.ts` for loading course page mock data by course slug.
 
 ## 2. Rendering Components
 
@@ -18,7 +18,7 @@
 
 ## 3. Course Page UI and Route Integration
 
-- [x] 3.1 Build the course page component with a hero section showing title, description, teachers, icon, and course color styling.
+- [x] 3.1 Build the course page component in `src/course/page/course-page.component.tsx` with a hero section showing title, description, teachers, icon, and course color styling.
 - [x] 3.2 Build a loading state for the course page route and rely on the parent course route redirect for unavailable courses.
 - [x] 3.3 Replace the course root placeholder route with query-backed rendering of the new course page UI.
 - [x] 3.4 Ensure the page is responsive and readable in light and dark themes.

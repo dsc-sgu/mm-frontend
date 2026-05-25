@@ -23,7 +23,7 @@ Course root pages currently render placeholder text, but users need an actual co
 
 ## Impact
 
-- Affected code: `src/course/*`, `src/code-block/*`, `src/index.css`, `src/routes/_authenticated/courses/$courseSlug/index.tsx`, and shared course mock data.
-- Adds frontend-only mock API/query modules for course page content.
+- Affected code: `src/course/page/*`, shared course modules under `src/course/*`, `src/code-block/*`, `src/index.css`, `src/routes/_authenticated/courses/$courseSlug/index.tsx`, and shared course mock data.
+- Adds frontend-only mock API/query modules for course page content under `src/course/page/`.
 - Adds renderer components for rich text and course content blocks.
 - No backend API, database, auth, or dependency changes are required.
