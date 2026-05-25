@@ -92,17 +92,3 @@ export function CoursePageLoading() {
     </main>
   );
 }
-
-export function CoursePageNotFound() {
-  return (
-    <main className="mx-auto flex min-h-[50vh] w-full max-w-3xl items-center justify-center px-4 py-10 text-center sm:px-6 lg:px-8">
-      <section className="rounded-3xl border border-border bg-card p-8 shadow-sm">
-        <h1 className="text-2xl font-bold tracking-tight">Курс не найден</h1>
-        <p className="mt-3 text-muted-foreground">
-          Не удалось загрузить материалы этого курса. Проверьте ссылку или
-          вернитесь к списку курсов.
-        </p>
-      </section>
-    </main>
-  );
-}

@@ -1,8 +1,4 @@
-import {
-  CoursePage,
-  CoursePageLoading,
-  CoursePageNotFound,
-} from '@/course/course-page.component';
+import { CoursePage, CoursePageLoading } from '@/course/course-page.component';
 import { useCoursePageQuery } from '@/course/course-page.queries';
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -19,7 +15,7 @@ function RouteComponent() {
   }
 
   if (!course) {
-    return <CoursePageNotFound />;
+    return null;
   }
 
   return <CoursePage course={course} />;
