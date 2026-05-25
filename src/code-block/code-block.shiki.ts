@@ -1,4 +1,4 @@
-async function createCourseHighlighter() {
+async function createCodeBlockHighlighter() {
   const [
     { createHighlighterCore },
     { createJavaScriptRegexEngine },
@@ -18,30 +18,30 @@ async function createCourseHighlighter() {
   });
 }
 
-let highlighterPromise: ReturnType<typeof createCourseHighlighter> | null =
+let highlighterPromise: ReturnType<typeof createCodeBlockHighlighter> | null =
   null;
 let bundledLanguagesPromise: Promise<typeof import('shiki/langs')> | null =
   null;
 
-export type HighlightCourseCodeResult =
+export type HighlightCodeResult =
   | {
       status: 'highlighted';
       html: string;
     }
   | {
       status: 'failed';
-      reason: HighlightCourseCodeFailureReason;
+      reason: HighlightCodeFailureReason;
     };
 
-type HighlightCourseCodeFailureReason =
+type HighlightCodeFailureReason =
   | 'missing-language'
   | 'unsupported-language'
   | 'highlight-error';
 
 const languageLoadPromises = new Map<string, Promise<boolean>>();
 
-function getCourseHighlighter() {
-  highlighterPromise ??= createCourseHighlighter();
+function getCodeBlockHighlighter() {
+  highlighterPromise ??= createCodeBlockHighlighter();
   return highlighterPromise;
 }
 
@@ -60,7 +60,7 @@ async function ensureLanguageLoaded(language: string) {
   const loadPromise = (async () => {
     const [{ bundledLanguages }, highlighter] = await Promise.all([
       getBundledLanguages(),
-      getCourseHighlighter(),
+      getCodeBlockHighlighter(),
     ]);
     const loadLanguage =
       bundledLanguages[language as keyof typeof bundledLanguages];
@@ -77,10 +77,10 @@ async function ensureLanguageLoaded(language: string) {
   return loadPromise;
 }
 
-export async function highlightCourseCode(
+export async function highlightCode(
   code: string,
   language?: string | null
-): Promise<HighlightCourseCodeResult> {
+): Promise<HighlightCodeResult> {
   if (!language) {
     return {
       status: 'failed',
@@ -98,7 +98,7 @@ export async function highlightCourseCode(
       };
     }
 
-    const highlighter = await getCourseHighlighter();
+    const highlighter = await getCodeBlockHighlighter();
     const html = highlighter.codeToHtml(code, {
       lang: language,
       themes: {

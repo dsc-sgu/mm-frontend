@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router';
 import { CalendarDays, Trophy } from 'lucide-react';
 
+import { CodeBlock } from '@/code-block/code-block.component';
 import { cn } from '@/shadcn/lib/utils';
-import { CourseCodeBlock } from './course-code-block.component';
 import type {
   CourseContentBlock as CourseContentBlockModel,
   CourseListBlock,
@@ -96,7 +96,7 @@ function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
       );
     case 'code':
       return (
-        <CourseCodeBlock
+        <CodeBlock
           code={block.code}
           language={block.language}
           fileName={block.fileName}

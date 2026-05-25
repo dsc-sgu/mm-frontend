@@ -132,7 +132,7 @@
 }
 
 @layer utilities {
-  .dark .course-code-block .shiki span {
+  .dark .code-block .shiki span {
     color: var(--shiki-dark) !important;
   }
 

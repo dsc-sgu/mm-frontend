@@ -5,7 +5,7 @@ import { cn } from '@/shadcn/lib/utils';
 
 type CopyState = 'idle' | 'copied' | 'failed';
 
-type CourseCodeBlockCopyBtnProps = {
+type CodeBlockCopyBtnProps = {
   code: string;
 };
 
@@ -19,7 +19,7 @@ const copyButtonClassName = cn(
   'dark:hover:bg-white/10 dark:focus-visible:ring-white/40'
 );
 
-export function CourseCodeBlockCopyBtn({ code }: CourseCodeBlockCopyBtnProps) {
+export function CodeBlockCopyBtn({ code }: CodeBlockCopyBtnProps) {
   const [copyState, setCopyState] = useState<CopyState>('idle');
   const copyResetTimeoutRef = useRef<number | null>(null);
 

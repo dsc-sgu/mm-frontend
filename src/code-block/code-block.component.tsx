@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 
 import { cn } from '@/shadcn/lib/utils';
-import { CourseCodeBlockCopyBtn } from './course-code-block-copy-btn.component';
-import { highlightCourseCode } from './course-code-block.shiki';
-import type { CourseCodeBlockProps } from './course-code-block.types';
+import { CodeBlockCopyBtn } from './code-block-copy-btn.component';
+import { highlightCode } from './code-block.shiki';
+import type { CodeBlockProps } from './code-block.types';
 
 const codeBlockClassName = cn(
-  'course-code-block my-4 overflow-hidden rounded-2xl',
+  'code-block my-4 overflow-hidden rounded-2xl',
   'border border-border bg-slate-50 text-slate-950',
   'dark:bg-zinc-950/90 dark:text-zinc-50'
 );
@@ -29,9 +29,12 @@ const highlightedCodeClassName = cn(
   '[&>pre]:[-webkit-text-size-adjust:none]'
 );
 
-type CourseCodeBlockBodyProps = Pick<CourseCodeBlockProps, 'code' | 'language'>;
+type CodeBlockBodyProps = {
+  code: string;
+  language?: string;
+};
 
-function CourseCodeBlockBody({ code, language }: CourseCodeBlockBodyProps) {
+function CodeBlockBody({ code, language }: CodeBlockBodyProps) {
   const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,7 +44,7 @@ function CourseCodeBlockBody({ code, language }: CourseCodeBlockBodyProps) {
     // prevents stale highlight results from overwriting newer state.
     let isCurrent = true;
 
-    highlightCourseCode(code, language).then((result) => {
+    highlightCode(code, language).then((result) => {
       if (!isCurrent) {
         return;
       }
@@ -70,11 +73,7 @@ function CourseCodeBlockBody({ code, language }: CourseCodeBlockBodyProps) {
   );
 }
 
-export function CourseCodeBlock({
-  code,
-  language,
-  fileName,
-}: CourseCodeBlockProps) {
+export function CodeBlock({ code, language, fileName }: CodeBlockProps) {
   const displayFileName = fileName ?? 'Фрагмент кода';
   const codeBodyKey = `${language ?? 'plain'}\u0000${code}`;
 
@@ -88,10 +87,10 @@ export function CourseCodeBlock({
           <span className="truncate">{displayFileName}</span>
         </div>
 
-        <CourseCodeBlockCopyBtn code={code} />
+        <CodeBlockCopyBtn code={code} />
       </figcaption>
 
-      <CourseCodeBlockBody key={codeBodyKey} code={code} language={language} />
+      <CodeBlockBody key={codeBodyKey} code={code} language={language} />
     </figure>
   );
 }
