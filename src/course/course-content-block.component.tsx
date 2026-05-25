@@ -7,7 +7,7 @@ import type {
   CourseContentBlockItem,
   CourseListBlock,
   RankedContent,
-} from './course-page.types';
+} from './page/course-page.types';
 import { CourseRichText } from './course-rich-text.component';
 
 function sortRankedContent<T extends RankedContent>(items: readonly T[]) {

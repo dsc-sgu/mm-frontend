@@ -1,10 +1,10 @@
 import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { cn } from '@/shadcn/lib/utils';
-import { CourseContentBlocks } from './course-content-block.component';
+import { CourseContentBlocks } from '../course-content-block.component';
 import type { CoursePage as CoursePageModel } from './course-page.types';
-import { COURSE_COLORS } from './course.colors';
-import type { Teacher } from './course.types';
+import { COURSE_COLORS } from '../course.colors';
+import type { Teacher } from '../course.types';
 
 function teacherFullName(teacher: Teacher) {
   return [teacher.lastName, teacher.firstName, teacher.patronymic || '']

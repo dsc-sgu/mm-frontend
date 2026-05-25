@@ -1,8 +1,8 @@
 import { SESSION_OPTIONS } from '@/auth/auth.queries';
 import type { QueryClient } from '@tanstack/react-query';
 import { redirect } from '@tanstack/react-router';
-import type { CourseRole } from './course-access.types';
-import { courseAccessOptions } from './course-access.queries';
+import type { CourseRole } from './access/course-access.types';
+import { courseAccessOptions } from './access/course-access.queries';
 
 // NOTE: In real code, this should not return username.
 // For now, though, this is fine.

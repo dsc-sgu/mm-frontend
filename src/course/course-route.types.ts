@@ -1,4 +1,4 @@
-import type { CourseAccessResult } from './course-access.types';
+import type { CourseAccessResult } from './access/course-access.types';
 import type { CourseSummary } from './course.types';
 
 export type AllowedCourseAccess = Extract<
