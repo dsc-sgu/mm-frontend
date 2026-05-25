@@ -52,7 +52,7 @@ export type CourseListBlock = RankedContent & {
 export type CourseSpoilerBlock = RankedContent & {
   type: 'spoiler';
   title: RichTextNode[];
-  children: CourseContentBlock[];
+  children: CourseContentBlockItem[];
   defaultOpen?: boolean;
 };
 
@@ -92,7 +92,9 @@ export type CourseAssignmentBlock = RankedContent & {
   maxScore?: number;
 };
 
-export type CourseContentBlock =
+// TODO: Надо что-то сделать с неймингом DTOшек и компонентов,
+// и что у них могут быть коллизии
+export type CourseContentBlockItem =
   | CourseParagraphBlock
   | CourseHeadingBlock
   | CourseQuoteBlock
@@ -105,5 +107,5 @@ export type CourseContentBlock =
 
 export type CoursePage = CourseSummary & {
   description: string;
-  content: CourseContentBlock[];
+  content: CourseContentBlockItem[];
 };

@@ -4,22 +4,11 @@ import { CalendarDays, Trophy } from 'lucide-react';
 import { CodeBlock } from '@/code-block/code-block.component';
 import { cn } from '@/shadcn/lib/utils';
 import type {
-  CourseContentBlock as CourseContentBlockModel,
+  CourseContentBlockItem,
   CourseListBlock,
 } from './course-page.types';
 import { sortByRank } from './course-page.utils';
 import { CourseRichText } from './course-rich-text.component';
-
-type CourseContentBlocksProps = {
-  blocks: CourseContentBlockModel[];
-  courseSlug: string;
-  className?: string;
-};
-
-type CourseContentBlockProps = {
-  block: CourseContentBlockModel;
-  courseSlug: string;
-};
 
 function formatDueDate(value: string) {
   return new Intl.DateTimeFormat('ru-RU', {
@@ -51,7 +40,13 @@ function ListBlock({ block }: { block: CourseListBlock }) {
   );
 }
 
-function CourseContentBlock({ block, courseSlug }: CourseContentBlockProps) {
+function CourseContentBlock({
+  block,
+  courseSlug,
+}: {
+  block: CourseContentBlockItem;
+  courseSlug: string;
+}) {
   switch (block.type) {
     case 'paragraph':
       return (
@@ -179,7 +174,11 @@ export function CourseContentBlocks({
   blocks,
   courseSlug,
   className,
-}: CourseContentBlocksProps) {
+}: {
+  blocks: CourseContentBlockItem[];
+  courseSlug: string;
+  className?: string;
+}) {
   return (
     <div className={className}>
       {sortByRank(blocks).map((block) => (

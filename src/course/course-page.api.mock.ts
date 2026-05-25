@@ -1,5 +1,5 @@
 import { MOCK_COURSES } from './course.api.mock';
-import type { CourseContentBlock, CoursePage } from './course-page.types';
+import type { CourseContentBlockItem, CoursePage } from './course-page.types';
 import type { CourseSummary } from './course.types';
 
 const COURSE_DESCRIPTIONS: Record<string, string> = {
@@ -19,7 +19,7 @@ const COURSE_DESCRIPTIONS: Record<string, string> = {
     'Обзор современных технологий разработки: командная работа, веб-платформы, облачная инфраструктура и безопасная доставка изменений.',
 };
 
-function buildCourseContent(course: CourseSummary): CourseContentBlock[] {
+function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
   return [
     {
       id: `${course.courseId}:intro`,

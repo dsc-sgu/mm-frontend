@@ -6,17 +6,13 @@ import type { CoursePage as CoursePageModel } from './course-page.types';
 import { COURSE_COLORS } from './course.colors';
 import type { Teacher } from './course.types';
 
-type CoursePageProps = {
-  course: CoursePageModel;
-};
-
 function teacherFullName(teacher: Teacher) {
   return [teacher.lastName, teacher.firstName, teacher.patronymic || '']
     .filter(Boolean)
     .join(' ');
 }
 
-export function CoursePage({ course }: CoursePageProps) {
+export function CoursePage({ course }: { course: CoursePageModel }) {
   const theme = COURSE_COLORS[course.color];
 
   return (
