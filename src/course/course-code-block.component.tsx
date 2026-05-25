@@ -16,6 +16,40 @@ type HighlightResult = {
 
 type CopyState = 'idle' | 'copied' | 'failed';
 
+const codeBlockClassName = cn(
+  'course-code-block my-4 overflow-hidden rounded-2xl',
+  'border border-border bg-slate-50 text-slate-950',
+  'dark:bg-zinc-950/90 dark:text-zinc-50'
+);
+
+const captionClassName = cn(
+  'flex items-center justify-between gap-4 border-b px-4 py-2',
+  'border-black/10 text-xs text-slate-600',
+  'dark:border-white/10 dark:text-zinc-300'
+);
+
+const languageBadgeClassName = cn(
+  'shrink-0 rounded-full px-2 py-0.5 uppercase tracking-wide',
+  'bg-black/5 text-slate-600',
+  'dark:bg-white/10 dark:text-zinc-300'
+);
+
+const copyButtonClassName = cn(
+  'inline-flex shrink-0 cursor-pointer items-center gap-1.5',
+  'rounded-lg border px-2.5 py-1 text-xs font-medium',
+  'border-black/10 bg-white text-slate-700 transition-colors',
+  'hover:bg-slate-100 focus-visible:outline-none',
+  'focus-visible:ring-2 focus-visible:ring-slate-400/40',
+  'dark:border-white/10 dark:bg-white/5 dark:text-zinc-200',
+  'dark:hover:bg-white/10 dark:focus-visible:ring-white/40'
+);
+
+const highlightedCodeClassName = cn(
+  '[&>pre]:overflow-x-auto [&>pre]:!bg-transparent [&>pre]:p-4',
+  '[&>pre]:text-sm [&>pre]:leading-7',
+  '[&>pre]:[-webkit-text-size-adjust:none]'
+);
+
 async function createCourseHighlighter() {
   const [
     { createHighlighterCore },
@@ -122,6 +156,7 @@ export function CourseCodeBlock({
   const [copyState, setCopyState] = useState<CopyState>('idle');
   const copyResetTimeoutRef = useRef<number | null>(null);
   const normalizedLanguage = normalizeLanguage(language);
+  const displayFileName = fileName ?? 'Фрагмент кода';
   const highlightKey = `${normalizedLanguage ?? 'plain'}\u0000${code}`;
   const highlightedHtml =
     highlightResult?.key === highlightKey ? highlightResult.html : null;
@@ -167,21 +202,19 @@ export function CourseCodeBlock({
   }
 
   return (
-    <figure className="course-code-block my-4 overflow-hidden rounded-2xl border border-border bg-slate-50 text-slate-950 dark:bg-zinc-950/90 dark:text-zinc-50">
-      <figcaption className="flex items-center justify-between gap-4 border-b border-black/10 px-4 py-2 text-xs text-slate-600 dark:border-white/10 dark:text-zinc-300">
+    <figure className={codeBlockClassName}>
+      <figcaption className={captionClassName}>
         <div className="flex min-w-0 items-center gap-2">
           {language && (
-            <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 uppercase tracking-wide text-slate-600 dark:bg-white/10 dark:text-zinc-300">
-              {language}
-            </span>
+            <span className={languageBadgeClassName}>{language}</span>
           )}
-          <span className="truncate">{fileName ?? 'Фрагмент кода'}</span>
+          <span className="truncate">{displayFileName}</span>
         </div>
 
         <button
           type="button"
           onClick={handleCopy}
-          className="cursor-pointer inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-black/10 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 dark:focus-visible:ring-white/40"
+          className={copyButtonClassName}
           aria-label="Скопировать код"
         >
           {copyState === 'copied' ? (
@@ -199,10 +232,7 @@ export function CourseCodeBlock({
 
       {highlightedHtml ? (
         <div
-          className={cn(
-            '[&>pre]:overflow-x-auto [&>pre]:!bg-transparent [&>pre]:p-4',
-            '[&>pre]:text-sm [&>pre]:leading-7 [&>pre]:[-webkit-text-size-adjust:none]'
-          )}
+          className={highlightedCodeClassName}
           dangerouslySetInnerHTML={{ __html: highlightedHtml }}
         />
       ) : (
