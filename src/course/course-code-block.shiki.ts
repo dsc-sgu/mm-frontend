@@ -23,6 +23,21 @@ let highlighterPromise: ReturnType<typeof createCourseHighlighter> | null =
 let bundledLanguagesPromise: Promise<typeof import('shiki/langs')> | null =
   null;
 
+export type HighlightCourseCodeResult =
+  | {
+      status: 'highlighted';
+      html: string;
+    }
+  | {
+      status: 'failed';
+      reason: HighlightCourseCodeFailureReason;
+    };
+
+type HighlightCourseCodeFailureReason =
+  | 'missing-language'
+  | 'unsupported-language'
+  | 'highlight-error';
+
 const languageLoadPromises = new Map<string, Promise<boolean>>();
 
 function getCourseHighlighter() {
@@ -33,6 +48,11 @@ function getCourseHighlighter() {
 function getBundledLanguages() {
   bundledLanguagesPromise ??= import('shiki/langs');
   return bundledLanguagesPromise;
+}
+
+function normalizeLanguage(language?: string | null): string | null {
+  const normalized = language?.trim().toLowerCase();
+  return normalized || null;
 }
 
 async function ensureLanguageLoaded(language: string) {
@@ -64,30 +84,45 @@ async function ensureLanguageLoaded(language: string) {
 
 export async function highlightCourseCode(
   code: string,
-  language: string | null
-) {
-  if (!language) {
-    return null;
+  language?: string | null
+): Promise<HighlightCourseCodeResult> {
+  const normalizedLanguage = normalizeLanguage(language);
+
+  if (!normalizedLanguage) {
+    return {
+      status: 'failed',
+      reason: 'missing-language',
+    };
   }
 
   try {
-    const isLanguageLoaded = await ensureLanguageLoaded(language);
+    const isLanguageLoaded = await ensureLanguageLoaded(normalizedLanguage);
 
     if (!isLanguageLoaded) {
-      return null;
+      return {
+        status: 'failed',
+        reason: 'unsupported-language',
+      };
     }
 
     const highlighter = await getCourseHighlighter();
-
-    return highlighter.codeToHtml(code, {
-      lang: language,
+    const html = highlighter.codeToHtml(code, {
+      lang: normalizedLanguage,
       themes: {
         light: 'github-light',
         dark: 'github-dark',
       },
       defaultColor: 'light',
     });
+
+    return {
+      status: 'highlighted',
+      html,
+    };
   } catch {
-    return null;
+    return {
+      status: 'failed',
+      reason: 'highlight-error',
+    };
   }
 }

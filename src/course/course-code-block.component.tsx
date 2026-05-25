@@ -66,9 +66,12 @@ export function CourseCodeBlock({
   useEffect(() => {
     let isMounted = true;
 
-    highlightCourseCode(code, normalizedLanguage).then((html) => {
+    highlightCourseCode(code, normalizedLanguage).then((result) => {
       if (isMounted) {
-        setHighlightResult({ key: highlightKey, html });
+        setHighlightResult({
+          key: highlightKey,
+          html: result.status === 'highlighted' ? result.html : null,
+        });
       }
     });
 
