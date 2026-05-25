@@ -132,6 +132,10 @@
 }
 
 @layer utilities {
+  .dark .code-block .shiki span {
+    color: var(--shiki-dark) !important;
+  }
+
   .animate-router-pending-bar {
     animation: router-pending-bar 0.8s ease-in-out infinite;
   }

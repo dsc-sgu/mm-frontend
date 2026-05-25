@@ -1,3 +1,5 @@
+import { CoursePage, CoursePageLoading } from '@/course/course-page.component';
+import { useCoursePageQuery } from '@/course/course-page.queries';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authenticated/courses/$courseSlug/')({
@@ -5,5 +7,16 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug/')({
 });
 
 function RouteComponent() {
-  return <main className="p-6 text-2xl font-semibold">Course root page</main>;
+  const { courseSlug } = Route.useParams();
+  const { data: course, isPending } = useCoursePageQuery(courseSlug);
+
+  if (isPending) {
+    return <CoursePageLoading />;
+  }
+
+  if (!course) {
+    return null;
+  }
+
+  return <CoursePage course={course} />;
 }
