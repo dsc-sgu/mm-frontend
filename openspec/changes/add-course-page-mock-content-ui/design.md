@@ -2,15 +2,15 @@
 
 The authenticated course route tree and access guards already exist. The route `/courses/$courseSlug` currently passes through course access checks and then renders only a placeholder. Course summary mock data already exists for dashboard cards, including title, teachers, icon, and color. The new course root page needs to reuse that summary data, add a mock-only description and structured content, and render a production-quality read-only page.
 
-The content model should anticipate a later Notion-like editor. That means content must be serializable, normalized enough to support reordering, and independent from React components. Blocks need stable IDs, type discriminators, and LexoRank-style `rank` strings for sibling ordering. UI renderers should sort by `rank` rather than relying on array order.
+The content model should anticipate a later Notion-like editor. That means content must be serializable, normalized enough to support reordering, and independent from React components. Blocks need stable IDs, rich-text nodes need stable IDs, and blocks/list items need LexoRank-style `rank` strings for sibling ordering. UI renderers should sort by `rank` rather than relying on array order.
 
 ## Goals / Non-Goals
 
 **Goals:**
 - Implement a mock-backed course root page UI for authenticated course participants.
-- Define an editor-friendly block content model with stable `id` and sibling `rank` fields.
+- Define an editor-friendly block content model with stable block/rich-text `id` fields and sibling `rank` fields.
 - Render rich text marks and links in content blocks.
-- Render paragraphs, headings, quotes, ordered and unordered lists, collapsible spoilers, code blocks, images, file lists, and assignment cards.
+- Render paragraphs, headings, quotes, ordered and unordered lists, collapsible spoilers, highlighted/copyable code blocks, images, file lists, and assignment cards.
 - Keep the mock API isolated from the real backend API.
 - Reuse existing course summary/card visual language where practical.
 
@@ -23,9 +23,9 @@ The content model should anticipate a later Notion-like editor. That means conte
 
 ## Decisions
 
-### 1. Use a discriminated union block model with `id` and `rank`
+### 1. Use discriminated content and rich-text nodes with stable IDs
 
-Each content block will include `id`, `rank`, and `type`. The `type` field selects the block payload and renderer. The `rank` field is a string order key comparable lexicographically for sibling ordering.
+Each content block will include `id`, `rank`, and `type`. The `type` field selects the block payload and renderer. The `rank` field is a string order key comparable lexicographically for sibling ordering. Each inline rich-text node also includes a stable `id` so React rendering does not depend on array indexes as keys.
 
 Alternatives considered:
 - **Array index ordering only:** simpler for read-only UI, but fragile for future editor insertions and reorder operations.
@@ -33,13 +33,13 @@ Alternatives considered:
 
 The chosen shape mirrors editor needs while remaining easy to mock.
 
-### 2. Sort at render/query boundary with a small reusable helper
+### 2. Sort at the rendering boundary with local rank logic
 
-A `sortByRank` helper will return a copy sorted by `rank`, with `id` as a deterministic tie-breaker. Renderers will use it for top-level blocks, spoiler children, and list items.
+The course content renderer will sort a copy of sibling items by `rank`, with `id` as a deterministic tie-breaker. It will use the same local sorting function for top-level blocks, spoiler children, and list items.
 
 Alternatives considered:
 - **Pre-sort mock arrays only:** hides ordering assumptions and fails when later APIs return unsorted data.
-- **Sort in every component inline:** duplicates logic and risks inconsistent tie-breaking.
+- **Shared `utils` helper:** avoids duplication, but creates a low-signal utility bucket for logic that is currently local to course content rendering.
 
 ### 3. Keep rich text separate from block types
 
@@ -59,15 +59,23 @@ Alternatives considered:
 
 ### 5. Isolate page composition from block rendering
 
-The implementation will split into mock API/query modules, rich-text renderer, block renderer, and page-level component. The route will only handle query states and render the page component.
+The implementation will split into mock API/query modules, rich-text renderer, block renderer, reusable code block module, and page-level component. The route will only handle query states and render the page component.
 
 Alternatives considered:
 - **Implement all rendering inside the route file:** faster initially, but difficult to maintain and harder to reuse in an editor preview.
 
+### 6. Use a reusable code block module for code rendering
+
+Course code content will render through a generic `CodeBlock` component instead of a course-specific component. Shiki setup, lazy language loading, and highlight failure handling will live outside the React page/block renderer. Highlight failures will fall back to plain preformatted code so course content remains readable.
+
+Alternatives considered:
+- **Render code directly in the course block renderer:** simpler initially, but couples Shiki loading and copy behavior to course content UI.
+- **Bundle a fixed set of languages:** predictable, but excludes many Shiki aliases and increases upfront bundle work.
+
 ## Risks / Trade-offs
 
 - [Mock content diverges from future backend schema] → Keep the model minimal, serializable, and editor-oriented so backend integration can map to it or evolve it with limited UI churn.
-- [LexoRank values in mock data are only illustrative] → Treat `rank` as an opaque string and centralize sorting; do not implement rank generation in this read-only change.
+- [LexoRank values in mock data are only illustrative] → Treat `rank` as an opaque string and keep sorting at the rendering boundary; do not implement rank generation in this read-only change.
 - [Recursive spoilers could render very deep trees] → Current mock data will keep nesting shallow; future editor/backend validation can enforce depth limits if needed.
 - [Native `<details>` styling varies by browser] → Use Tailwind classes and semantic markup; accept minor native differences for accessibility and low complexity.
 - [Course hero duplicates some card styling] → Extract shared color theme constants to avoid color drift between dashboard cards and course hero.

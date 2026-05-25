@@ -14,10 +14,6 @@ The system SHALL render the course root page using frontend mock course page dat
 - **WHEN** the course root page is waiting for mock course page data
 - **THEN** the page displays a loading state instead of placeholder text
 
-#### Scenario: Course page mock data cannot find the course
-- **WHEN** the course root page mock API reports the requested course as not found
-- **THEN** the page displays a course not found state instead of rendering empty content
-
 ### Requirement: Course content uses rank-ordered editable block data
 The system SHALL model course page content as serializable content blocks with stable identifiers and LexoRank-style sibling ordering.
 
@@ -34,6 +30,11 @@ The system SHALL model course page content as serializable content blocks with s
 - **WHEN** a list block contains list items
 - **THEN** the list renders sibling items ordered by their `rank` values
 
+#### Scenario: Rich text nodes are keyed by stable IDs
+- **WHEN** inline rich text is modeled for any content block
+- **THEN** each rich text node has a stable `id`
+- **AND** the renderer uses the stable `id` instead of the node array index as the React key
+
 ### Requirement: Course content renders supported block types
 The system SHALL render the supported course content block types in the course root page content area.
 
@@ -49,6 +50,16 @@ The system SHALL render the supported course content block types in the course r
 - **WHEN** course content includes a code block
 - **THEN** the page renders the code in a preformatted code area
 - **AND** the page shows the language or file name when that metadata is provided
+- **AND** the page provides an action to copy the code text
+
+#### Scenario: Code highlighting is available
+- **WHEN** course content includes a code block with a supported language id
+- **THEN** the page lazy-loads the language grammar and renders highlighted code
+- **AND** the highlighted code supports both light and dark color themes
+
+#### Scenario: Code highlighting is unavailable
+- **WHEN** course content includes a code block without a language or with an unsupported language id
+- **THEN** the page renders the plain preformatted code instead of failing the page
 
 #### Scenario: Image block is present
 - **WHEN** course content includes an image block

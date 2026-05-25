@@ -6,9 +6,10 @@ Course root pages currently render placeholder text, but users need an actual co
 
 - Replace the course root placeholder with a full course page UI backed by a frontend mock API.
 - Add a course hero section that shows course title, description, teachers, icon, and existing course color styling.
-- Add an editor-friendly block content model with stable block IDs and LexoRank-style `rank` ordering for sibling blocks.
+- Add an editor-friendly block content model with stable block IDs, stable rich-text node IDs, and LexoRank-style `rank` ordering for sibling blocks.
 - Render course content blocks for paragraphs, three heading levels, quotes, ordered and unordered lists, collapsible spoilers, code blocks, images, files, and assignments.
 - Render inline rich text with bold, italic, internal links, and external links.
+- Render code blocks with lazy-loaded Shiki highlighting, light/dark themes, a copy action, and a plain-code fallback.
 - Do not add video blocks in this change.
 - Do not integrate with the real backend API in this change.
 
@@ -22,7 +23,7 @@ Course root pages currently render placeholder text, but users need an actual co
 
 ## Impact
 
-- Affected code: `src/course/*`, `src/routes/_authenticated/courses/$courseSlug/index.tsx`, and shared course mock data.
+- Affected code: `src/course/*`, `src/code-block/*`, `src/index.css`, `src/routes/_authenticated/courses/$courseSlug/index.tsx`, and shared course mock data.
 - Adds frontend-only mock API/query modules for course page content.
 - Adds renderer components for rich text and course content blocks.
 - No backend API, database, auth, or dependency changes are required.
