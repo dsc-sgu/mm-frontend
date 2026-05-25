@@ -9,7 +9,7 @@ export type CourseColorTheme = {
   accent: string;
 };
 
-export const COURSE_COLOR_THEMES: Record<CourseColor, CourseColorTheme> = {
+export const COURSE_COLORS: Record<CourseColor, CourseColorTheme> = {
   blue: {
     base: 'from-blue-100 to-blue-200',
     darkBase: 'dark:from-blue-950 dark:to-blue-900',

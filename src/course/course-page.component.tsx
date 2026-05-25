@@ -3,7 +3,7 @@ import { DynamicIcon } from 'lucide-react/dynamic';
 import { cn } from '@/shadcn/lib/utils';
 import { CourseContentBlocks } from './course-content-block.component';
 import type { CoursePage as CoursePageModel } from './course-page.types';
-import { COURSE_COLOR_THEMES } from './course-theme';
+import { COURSE_COLORS } from './course.colors';
 import type { Teacher } from './course.types';
 
 type CoursePageProps = {
@@ -17,7 +17,7 @@ function teacherFullName(teacher: Teacher) {
 }
 
 export function CoursePage({ course }: CoursePageProps) {
-  const theme = COURSE_COLOR_THEMES[course.color];
+  const theme = COURSE_COLORS[course.color];
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col sm:px-6 sm:py-6 lg:px-8">

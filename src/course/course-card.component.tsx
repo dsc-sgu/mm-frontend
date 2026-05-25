@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { cn } from '@/shadcn/lib/utils';
-import { COURSE_COLOR_THEMES } from './course-theme';
+import { COURSE_COLORS } from './course.colors';
 import type { CourseColor, LucideIconName, Teacher } from './course.types';
 
 export type CourseCardProps = {
@@ -28,7 +28,7 @@ export function CourseCard({
   color,
   className,
 }: CourseCardProps) {
-  const bg = COURSE_COLOR_THEMES[color];
+  const bg = COURSE_COLORS[color];
 
   return (
     <div
