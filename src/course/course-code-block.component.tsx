@@ -16,121 +16,85 @@ type HighlightResult = {
 
 type CopyState = 'idle' | 'copied' | 'failed';
 
-type SupportedLanguage =
-  | 'bash'
-  | 'css'
-  | 'html'
-  | 'javascript'
-  | 'json'
-  | 'jsx'
-  | 'markdown'
-  | 'python'
-  | 'tsx'
-  | 'typescript'
-  | 'yaml';
-
-const LANGUAGE_ALIASES: Record<string, SupportedLanguage> = {
-  bash: 'bash',
-  css: 'css',
-  html: 'html',
-  js: 'javascript',
-  javascript: 'javascript',
-  json: 'json',
-  jsx: 'jsx',
-  markdown: 'markdown',
-  md: 'markdown',
-  py: 'python',
-  python: 'python',
-  shell: 'bash',
-  sh: 'bash',
-  ts: 'typescript',
-  tsx: 'tsx',
-  typescript: 'typescript',
-  yaml: 'yaml',
-  yml: 'yaml',
-  zsh: 'bash',
-};
-
 async function createCourseHighlighter() {
   const [
     { createHighlighterCore },
     { createJavaScriptRegexEngine },
     githubDark,
-    bash,
-    css,
-    html,
-    javascript,
-    json,
-    jsx,
-    markdown,
-    python,
-    tsx,
-    typescript,
-    yaml,
   ] = await Promise.all([
     import('shiki/core'),
     import('shiki/engine/javascript'),
     import('@shikijs/themes/github-dark'),
-    import('@shikijs/langs/bash'),
-    import('@shikijs/langs/css'),
-    import('@shikijs/langs/html'),
-    import('@shikijs/langs/javascript'),
-    import('@shikijs/langs/json'),
-    import('@shikijs/langs/jsx'),
-    import('@shikijs/langs/markdown'),
-    import('@shikijs/langs/python'),
-    import('@shikijs/langs/tsx'),
-    import('@shikijs/langs/typescript'),
-    import('@shikijs/langs/yaml'),
   ]);
 
   return createHighlighterCore({
     engine: createJavaScriptRegexEngine(),
     themes: [githubDark.default],
-    langs: [
-      bash.default,
-      css.default,
-      html.default,
-      javascript.default,
-      json.default,
-      jsx.default,
-      markdown.default,
-      python.default,
-      tsx.default,
-      typescript.default,
-      yaml.default,
-    ],
+    langs: [],
   });
 }
 
 let highlighterPromise: ReturnType<typeof createCourseHighlighter> | null =
   null;
+let bundledLanguagesPromise: Promise<typeof import('shiki/langs')> | null =
+  null;
+
+const languageLoadPromises = new Map<string, Promise<boolean>>();
 
 function getCourseHighlighter() {
   highlighterPromise ??= createCourseHighlighter();
   return highlighterPromise;
 }
 
-function getSupportedLanguage(language?: string): SupportedLanguage | null {
-  if (!language) {
-    return null;
-  }
-
-  const normalized = language.trim().toLowerCase();
-
-  if (!normalized) {
-    return null;
-  }
-
-  return LANGUAGE_ALIASES[normalized] ?? null;
+function getBundledLanguages() {
+  bundledLanguagesPromise ??= import('shiki/langs');
+  return bundledLanguagesPromise;
 }
 
-async function highlightCode(code: string, language: SupportedLanguage | null) {
+function normalizeLanguage(language?: string): string | null {
+  const normalized = language?.trim().toLowerCase();
+  return normalized || null;
+}
+
+async function ensureLanguageLoaded(language: string) {
+  const cachedPromise = languageLoadPromises.get(language);
+
+  if (cachedPromise) {
+    return cachedPromise;
+  }
+
+  const loadPromise = (async () => {
+    const [{ bundledLanguages }, highlighter] = await Promise.all([
+      getBundledLanguages(),
+      getCourseHighlighter(),
+    ]);
+    const loadLanguage =
+      bundledLanguages[language as keyof typeof bundledLanguages];
+
+    if (!loadLanguage) {
+      return false;
+    }
+
+    await highlighter.loadLanguage(loadLanguage);
+    return true;
+  })();
+
+  languageLoadPromises.set(language, loadPromise);
+  return loadPromise;
+}
+
+async function highlightCode(code: string, language: string | null) {
   if (!language) {
     return null;
   }
 
   try {
+    const isLanguageLoaded = await ensureLanguageLoaded(language);
+
+    if (!isLanguageLoaded) {
+      return null;
+    }
+
     const highlighter = await getCourseHighlighter();
 
     return highlighter.codeToHtml(code, {
@@ -151,15 +115,15 @@ export function CourseCodeBlock({
     useState<HighlightResult | null>(null);
   const [copyState, setCopyState] = useState<CopyState>('idle');
   const copyResetTimeoutRef = useRef<number | null>(null);
-  const supportedLanguage = getSupportedLanguage(language);
-  const highlightKey = `${supportedLanguage ?? 'plain'}\u0000${code}`;
+  const normalizedLanguage = normalizeLanguage(language);
+  const highlightKey = `${normalizedLanguage ?? 'plain'}\u0000${code}`;
   const highlightedHtml =
     highlightResult?.key === highlightKey ? highlightResult.html : null;
 
   useEffect(() => {
     let isMounted = true;
 
-    highlightCode(code, supportedLanguage).then((html) => {
+    highlightCode(code, normalizedLanguage).then((html) => {
       if (isMounted) {
         setHighlightResult({ key: highlightKey, html });
       }
@@ -168,7 +132,7 @@ export function CourseCodeBlock({
     return () => {
       isMounted = false;
     };
-  }, [code, highlightKey, supportedLanguage]);
+  }, [code, highlightKey, normalizedLanguage]);
 
   useEffect(() => {
     return () => {
