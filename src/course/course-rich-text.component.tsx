@@ -18,17 +18,17 @@ function applyMarks(node: RichTextNode, children: ReactNode) {
   }, children);
 }
 
-function renderNode(node: RichTextNode, index: number) {
+function renderNode(node: RichTextNode) {
   const content = applyMarks(node, node.text);
 
   if (node.type === 'text') {
-    return <span key={index}>{content}</span>;
+    return <span key={node.id}>{content}</span>;
   }
 
   if (node.linkType === 'external') {
     return (
       <a
-        key={index}
+        key={node.id}
         href={node.href}
         target="_blank"
         rel="noreferrer"
@@ -41,7 +41,7 @@ function renderNode(node: RichTextNode, index: number) {
 
   return (
     <a
-      key={index}
+      key={node.id}
       href={node.href}
       className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
     >

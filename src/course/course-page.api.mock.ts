@@ -26,16 +26,32 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       rank: 'a0',
       type: 'heading',
       level: 2,
-      children: [{ type: 'text', text: 'О курсе' }],
+      children: [
+        {
+          id: `${course.courseId}:intro:title`,
+          type: 'text',
+          text: 'О курсе',
+        },
+      ],
     },
     {
       id: `${course.courseId}:welcome`,
       rank: 'b0',
       type: 'paragraph',
       children: [
-        { type: 'text', text: 'Добро пожаловать на курс ' },
-        { type: 'text', text: course.title, marks: ['bold'] },
         {
+          id: `${course.courseId}:welcome:lead`,
+          type: 'text',
+          text: 'Добро пожаловать на курс ',
+        },
+        {
+          id: `${course.courseId}:welcome:title`,
+          type: 'text',
+          text: course.title,
+          marks: ['bold'],
+        },
+        {
+          id: `${course.courseId}:welcome:body`,
           type: 'text',
           text: '. Здесь собраны материалы, задания и ориентиры, которые помогут двигаться по темам последовательно.',
         },
@@ -46,7 +62,13 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       rank: 'c0',
       type: 'heading',
       level: 3,
-      children: [{ type: 'text', text: 'Что получится к концу модуля' }],
+      children: [
+        {
+          id: `${course.courseId}:outcomes:title`,
+          type: 'text',
+          text: 'Что получится к концу модуля',
+        },
+      ],
     },
     {
       id: `${course.courseId}:outcomes-list`,
@@ -59,6 +81,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
           rank: 'b0',
           children: [
             {
+              id: `${course.courseId}:outcomes-list:practice:text`,
               type: 'text',
               text: 'Разобрать ключевые понятия на коротких практических примерах.',
             },
@@ -69,6 +92,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
           rank: 'c0',
           children: [
             {
+              id: `${course.courseId}:outcomes-list:project:text`,
               type: 'text',
               text: 'Собрать мини-проект и оформить решение для проверки.',
             },
@@ -79,6 +103,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
           rank: 'a0',
           children: [
             {
+              id: `${course.courseId}:outcomes-list:discussion:text`,
               type: 'text',
               text: 'Научиться объяснять решения и обсуждать компромиссы.',
             },
@@ -92,6 +117,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       type: 'quote',
       children: [
         {
+          id: `${course.courseId}:quote:text`,
           type: 'text',
           text: 'Материалы курса лучше проходить небольшими итерациями: прочитать, попробовать, получить обратную связь и улучшить решение.',
           marks: ['italic'],
@@ -103,7 +129,13 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       rank: 'f0',
       type: 'heading',
       level: 3,
-      children: [{ type: 'text', text: 'Рекомендуемый порядок работы' }],
+      children: [
+        {
+          id: `${course.courseId}:workflow:title`,
+          type: 'text',
+          text: 'Рекомендуемый порядок работы',
+        },
+      ],
     },
     {
       id: `${course.courseId}:workflow-list`,
@@ -116,6 +148,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
           rank: 'a0',
           children: [
             {
+              id: `${course.courseId}:workflow-list:lecture:text`,
               type: 'text',
               text: 'Просмотрите конспект и отметьте непонятные места.',
             },
@@ -126,6 +159,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
           rank: 'b0',
           children: [
             {
+              id: `${course.courseId}:workflow-list:practice:text`,
               type: 'text',
               text: 'Выполните практикум и приложите результат к заданию.',
             },
@@ -136,6 +170,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
           rank: 'c0',
           children: [
             {
+              id: `${course.courseId}:workflow-list:review:text`,
               type: 'text',
               text: 'Сверьтесь с чек-листом и отправьте работу на ревью.',
             },
@@ -147,7 +182,13 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       id: `${course.courseId}:spoiler`,
       rank: 'h0',
       type: 'spoiler',
-      title: [{ type: 'text', text: 'Подсказки для первого задания' }],
+      title: [
+        {
+          id: `${course.courseId}:spoiler:title`,
+          type: 'text',
+          text: 'Подсказки для первого задания',
+        },
+      ],
       defaultOpen: false,
       children: [
         {
@@ -156,6 +197,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
           type: 'paragraph',
           children: [
             {
+              id: `${course.courseId}:spoiler:note:text`,
               type: 'text',
               text: 'Начните с маленького примера и проверьте граничные случаи до основного решения.',
             },
@@ -166,14 +208,23 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
           rank: 'a0',
           type: 'paragraph',
           children: [
-            { type: 'text', text: 'Если застряли, откройте ' },
             {
+              id: `${course.courseId}:spoiler:link:before`,
+              type: 'text',
+              text: 'Если застряли, откройте ',
+            },
+            {
+              id: `${course.courseId}:spoiler:link:files`,
               type: 'link',
               text: 'страницу файлов курса',
               href: `/courses/${course.courseId}/files`,
               linkType: 'internal',
             },
-            { type: 'text', text: ' и найдите дополнительные материалы.' },
+            {
+              id: `${course.courseId}:spoiler:link:after`,
+              type: 'text',
+              text: ' и найдите дополнительные материалы.',
+            },
           ],
         },
       ],
@@ -194,6 +245,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       alt: 'Рабочее место студента с ноутбуком и заметками',
       caption: [
         {
+          id: `${course.courseId}:image:caption`,
           type: 'text',
           text: 'Материалы курса рассчитаны на работу в браузере, редакторе кода и системе контроля версий.',
         },
@@ -228,6 +280,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       title: 'Вводное практическое задание',
       description: [
         {
+          id: `${course.courseId}:assignment:description`,
           type: 'text',
           text: 'Покажите, что окружение готово, и отправьте первый небольшой результат.',
         },
@@ -240,8 +293,13 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       rank: 'm0',
       type: 'paragraph',
       children: [
-        { type: 'text', text: 'Для дополнительного чтения используйте ' },
         {
+          id: `${course.courseId}:external:before`,
+          type: 'text',
+          text: 'Для дополнительного чтения используйте ',
+        },
+        {
+          id: `${course.courseId}:external:mdn`,
           type: 'link',
           text: 'MDN Web Docs',
           href: 'https://developer.mozilla.org/',
@@ -249,6 +307,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
           marks: ['bold'],
         },
         {
+          id: `${course.courseId}:external:after`,
           type: 'text',
           text: ' и материалы, которые преподаватели публикуют в течение семестра.',
         },

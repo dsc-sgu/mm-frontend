@@ -3,12 +3,14 @@ import type { CourseSummary } from './course.types';
 export type RichTextMark = 'bold' | 'italic';
 
 export type RichTextTextNode = {
+  id: string;
   type: 'text';
   text: string;
   marks?: RichTextMark[];
 };
 
 export type RichTextLinkNode = {
+  id: string;
   type: 'link';
   text: string;
   href: string;
