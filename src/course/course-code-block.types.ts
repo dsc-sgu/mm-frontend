@@ -4,9 +4,4 @@ export type CourseCodeBlockProps = {
   fileName?: string;
 };
 
-export type HighlightResult = {
-  key: string;
-  html: string | null;
-};
-
 export type CopyState = 'idle' | 'copied' | 'failed';

@@ -6,7 +6,6 @@ import { highlightCourseCode } from './course-code-block.shiki';
 import type {
   CopyState,
   CourseCodeBlockProps,
-  HighlightResult,
 } from './course-code-block.types';
 
 const codeBlockClassName = cn(
@@ -43,9 +42,45 @@ const highlightedCodeClassName = cn(
   '[&>pre]:[-webkit-text-size-adjust:none]'
 );
 
-function normalizeLanguage(language?: string): string | null {
-  const normalized = language?.trim().toLowerCase();
-  return normalized || null;
+type CourseCodeBlockBodyProps = Pick<CourseCodeBlockProps, 'code' | 'language'>;
+
+function CourseCodeBlockBody({ code, language }: CourseCodeBlockBodyProps) {
+  const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Shiki highlighting is asynchronous. While a request is pending, this
+    // component can receive new code/language props or unmount. React runs the
+    // cleanup of the previous effect before starting the next one, so this flag
+    // prevents stale highlight results from overwriting newer state.
+    let isCurrent = true;
+
+    highlightCourseCode(code, language).then((result) => {
+      if (!isCurrent) {
+        return;
+      }
+
+      setHighlightedHtml(result.status === 'highlighted' ? result.html : null);
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [code, language]);
+
+  if (highlightedHtml) {
+    return (
+      <div
+        className={highlightedCodeClassName}
+        dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+      />
+    );
+  }
+
+  return (
+    <pre className="overflow-x-auto p-4 text-sm leading-7">
+      <code>{code}</code>
+    </pre>
+  );
 }
 
 export function CourseCodeBlock({
@@ -53,32 +88,10 @@ export function CourseCodeBlock({
   language,
   fileName,
 }: CourseCodeBlockProps) {
-  const [highlightResult, setHighlightResult] =
-    useState<HighlightResult | null>(null);
   const [copyState, setCopyState] = useState<CopyState>('idle');
   const copyResetTimeoutRef = useRef<number | null>(null);
-  const normalizedLanguage = normalizeLanguage(language);
   const displayFileName = fileName ?? 'Фрагмент кода';
-  const highlightKey = `${normalizedLanguage ?? 'plain'}\u0000${code}`;
-  const highlightedHtml =
-    highlightResult?.key === highlightKey ? highlightResult.html : null;
-
-  useEffect(() => {
-    let isMounted = true;
-
-    highlightCourseCode(code, normalizedLanguage).then((result) => {
-      if (isMounted) {
-        setHighlightResult({
-          key: highlightKey,
-          html: result.status === 'highlighted' ? result.html : null,
-        });
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [code, highlightKey, normalizedLanguage]);
+  const codeBodyKey = `${language ?? 'plain'}\u0000${code}`;
 
   useEffect(() => {
     return () => {
@@ -135,16 +148,7 @@ export function CourseCodeBlock({
         </button>
       </figcaption>
 
-      {highlightedHtml ? (
-        <div
-          className={highlightedCodeClassName}
-          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-        />
-      ) : (
-        <pre className="overflow-x-auto p-4 text-sm leading-7">
-          <code>{code}</code>
-        </pre>
-      )}
+      <CourseCodeBlockBody key={codeBodyKey} code={code} language={language} />
     </figure>
   );
 }
