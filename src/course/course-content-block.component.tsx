@@ -6,9 +6,21 @@ import { cn } from '@/shadcn/lib/utils';
 import type {
   CourseContentBlockItem,
   CourseListBlock,
+  RankedContent,
 } from './course-page.types';
-import { sortByRank } from './course-page.utils';
 import { CourseRichText } from './course-rich-text.component';
+
+function sortRankedContent<T extends RankedContent>(items: readonly T[]) {
+  return [...items].sort((a, b) => {
+    const rankOrder = a.rank.localeCompare(b.rank);
+
+    if (rankOrder !== 0) {
+      return rankOrder;
+    }
+
+    return a.id.localeCompare(b.id);
+  });
+}
 
 function formatDueDate(value: string) {
   return new Intl.DateTimeFormat('ru-RU', {
@@ -21,7 +33,7 @@ function formatDueDate(value: string) {
 }
 
 function ListBlock({ block }: { block: CourseListBlock }) {
-  const items = sortByRank(block.items);
+  const items = sortRankedContent(block.items);
   const ListTag = block.variant === 'ordered' ? 'ol' : 'ul';
 
   return (
@@ -181,7 +193,7 @@ export function CourseContentBlocks({
 }) {
   return (
     <div className={className}>
-      {sortByRank(blocks).map((block) => (
+      {sortRankedContent(blocks).map((block) => (
         <CourseContentBlock
           key={block.id}
           block={block}
