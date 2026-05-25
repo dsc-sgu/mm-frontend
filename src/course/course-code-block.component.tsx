@@ -21,15 +21,17 @@ async function createCourseHighlighter() {
     { createHighlighterCore },
     { createJavaScriptRegexEngine },
     githubDark,
+    githubLight,
   ] = await Promise.all([
     import('shiki/core'),
     import('shiki/engine/javascript'),
     import('@shikijs/themes/github-dark'),
+    import('@shikijs/themes/github-light'),
   ]);
 
   return createHighlighterCore({
     engine: createJavaScriptRegexEngine(),
-    themes: [githubDark.default],
+    themes: [githubDark.default, githubLight.default],
     langs: [],
   });
 }
@@ -99,7 +101,11 @@ async function highlightCode(code: string, language: string | null) {
 
     return highlighter.codeToHtml(code, {
       lang: language,
-      theme: 'github-dark',
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark',
+      },
+      defaultColor: 'light',
     });
   } catch {
     return null;
@@ -161,11 +167,11 @@ export function CourseCodeBlock({
   }
 
   return (
-    <figure className="my-4 overflow-hidden rounded-2xl border border-border bg-zinc-950 text-zinc-50 shadow-sm dark:bg-zinc-950/90">
-      <figcaption className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-2 text-xs text-zinc-300">
+    <figure className="course-code-block my-4 overflow-hidden rounded-2xl border border-border bg-slate-50 text-slate-950 dark:bg-zinc-950/90 dark:text-zinc-50">
+      <figcaption className="flex items-center justify-between gap-4 border-b border-black/10 px-4 py-2 text-xs text-slate-600 dark:border-white/10 dark:text-zinc-300">
         <div className="flex min-w-0 items-center gap-2">
           {language && (
-            <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 uppercase tracking-wide text-zinc-300">
+            <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 uppercase tracking-wide text-slate-600 dark:bg-white/10 dark:text-zinc-300">
               {language}
             </span>
           )}
@@ -175,7 +181,7 @@ export function CourseCodeBlock({
         <button
           type="button"
           onClick={handleCopy}
-          className="cursor-pointer inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-zinc-200 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+          className="cursor-pointer inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-black/10 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 dark:focus-visible:ring-white/40"
           aria-label="Скопировать код"
         >
           {copyState === 'copied' ? (
