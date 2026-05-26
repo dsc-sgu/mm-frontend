@@ -347,7 +347,7 @@ function AttemptCard({
   return (
     <article
       className={cn(
-        'rounded-3xl border bg-card p-5 transition-all hover:-translate-y-0.5',
+        'rounded-3xl border bg-card p-5 transition-colors',
         selected ? 'border-primary ring-2 ring-primary/15' : 'border-border'
       )}
     >
