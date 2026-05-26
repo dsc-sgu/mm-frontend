@@ -211,7 +211,6 @@ function AttemptsFilterSidebar({
             <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               <Filter className="size-4" /> Фильтры
             </p>
-            <h2 className="mt-1 text-xl font-semibold">Попытки</h2>
           </div>
           <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
             {attemptsCount}
