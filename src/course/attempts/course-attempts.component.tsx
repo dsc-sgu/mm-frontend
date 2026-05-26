@@ -204,8 +204,8 @@ function AttemptsFilterSidebar({
   );
 
   return (
-    <aside className="lg:sticky lg:top-20 lg:self-start">
-      <div className="rounded-3xl border border-border bg-card p-4 shadow-sm lg:w-80">
+    <aside className="lg:sticky lg:top-4 lg:self-start">
+      <div className="rounded-3xl border border-border bg-card p-4 shadow-sm lg:max-h-[calc(100dvh-2rem)] lg:w-80 lg:overflow-y-auto">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
