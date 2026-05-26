@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ArrowDown,
-  ArrowUp,
-  CheckCircle2,
-  Clock3,
   Eye,
   FileCheck2,
   Filter,
@@ -319,15 +315,63 @@ function AttemptsFilterSidebar({
   );
 }
 
-function AttemptMetadata({ attempt }: { attempt: CourseAttempt }) {
+function AttemptTitle({ attempt }: { attempt: CourseAttempt }) {
+  return (
+    <span>
+      Попытка #{attempt.attemptNumber}{' '}
+      <span className="text-muted-foreground mx-2 font-normal">|</span>{' '}
+      {attempt.task.title}
+    </span>
+  );
+}
+
+function AttemptDiffStats({ attempt }: { attempt: CourseAttempt }) {
+  return (
+    <div className="flex shrink-0 items-center gap-3 text-sm font-semibold sm:text-base">
+      <span className="text-emerald-700 dark:text-emerald-300">
+        +{attempt.diff.addedLines}
+      </span>
+      <span className="text-rose-700 dark:text-rose-300">
+        −{attempt.diff.deletedLines}
+      </span>
+    </div>
+  );
+}
+
+function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
   const timing = getTimingLabel(attempt);
 
   return (
-    <div className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-4">
-      <span>{attempt.student.fullName}</span>
-      <span>{getGroupLabel(attempt)}</span>
-      <span>Сдано {formatDateTime(attempt.submittedAt)}</span>
-      <span className={timing.className}>{timing.label}</span>
+    <div className="mt-1 text-base leading-7 text-muted-foreground">
+      <p>
+        <span className="font-medium text-foreground">
+          {attempt.student.fullName}
+        </span>{' '}
+        <span className="ml-3">Группа «{getGroupLabel(attempt)}»</span>
+      </p>
+      <p>
+        Отправлено {formatDateTime(attempt.submittedAt)}{' '}
+        <span className={cn('font-semibold', timing.className)}>
+          {timing.label}
+        </span>
+      </p>
+      {attempt.grade ? (
+        <p className="text-foreground">
+          Оценено {formatDateTime(attempt.grade.gradedAt)} преподавателем{' '}
+          {attempt.grade.gradedBy} ({attempt.grade.score}/
+          {attempt.grade.maxScore})
+        </p>
+      ) : (
+        <p className="font-semibold text-orange-600 dark:text-orange-300">
+          Не оценено
+        </p>
+      )}
+      {attempt.reviewLock ? (
+        <p className="inline-flex items-center gap-2 font-medium text-amber-700 dark:text-amber-300">
+          <LockKeyhole className="size-4" /> На проверке у{' '}
+          {attempt.reviewLock.teacherName}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -346,39 +390,34 @@ function AttemptCard({
   return (
     <article
       className={cn(
-        'rounded-3xl border bg-card p-5 transition-colors',
+        'rounded-2xl border bg-card px-6 py-5 transition-colors sm:px-7 sm:py-6',
         selected ? 'border-primary ring-2 ring-primary/15' : 'border-border'
       )}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 gap-3">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-4">
           <Checkbox
             checked={selected}
             onCheckedChange={(value) => onSelectedChange(value === true)}
             aria-label={`Выбрать попытку ${attempt.task.title}`}
-            className="mt-1"
+            className="mt-1.5 size-5 rounded-md"
           />
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold text-secondary-foreground">
-                Попытка #{attempt.attemptNumber}
-              </span>
-              <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:bg-sky-950 dark:text-sky-200">
-                {attempt.task.maxScore} б. максимум
-              </span>
-              {attempt.reviewLock ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-200">
-                  <LockKeyhole className="size-3" /> На проверке
-                </span>
-              ) : null}
-            </div>
-            <h3 className="mt-2 text-lg font-semibold tracking-tight">
-              {attempt.task.title}
+            <h3 className="text-2xl font-semibold leading-tight tracking-tight">
+              <AttemptTitle attempt={attempt} />
             </h3>
+            <AttemptDetails attempt={attempt} />
           </div>
         </div>
+        <AttemptDiffStats attempt={attempt} />
+      </div>
 
-        <Button asChild variant={selected ? 'outline' : 'default'}>
+      <div className="mt-2 pl-9">
+        <Button
+          asChild
+          variant="outline"
+          className="h-12 rounded-xl px-5 text-base font-semibold"
+        >
           <a
             href={
               selected
@@ -395,28 +434,6 @@ function AttemptCard({
           </a>
         </Button>
       </div>
-
-      <AttemptMetadata attempt={attempt} />
-
-      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-        <span className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-3 py-1.5 font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200">
-          <ArrowUp className="size-4" /> +{attempt.diff.addedLines}
-        </span>
-        <span className="inline-flex items-center gap-1 rounded-xl bg-rose-50 px-3 py-1.5 font-medium text-rose-700 dark:bg-rose-950 dark:text-rose-200">
-          <ArrowDown className="size-4" /> −{attempt.diff.deletedLines}
-        </span>
-        {attempt.grade ? (
-          <span className="inline-flex items-center gap-1 rounded-xl bg-primary/10 px-3 py-1.5 font-medium text-foreground">
-            <CheckCircle2 className="size-4" /> {attempt.grade.score}/
-            {attempt.grade.maxScore}, {attempt.grade.gradedBy},{' '}
-            {formatDateTime(attempt.grade.gradedAt)}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-xl bg-muted px-3 py-1.5 font-medium text-muted-foreground">
-            <Clock3 className="size-4" /> Без оценки
-          </span>
-        )}
-      </div>
     </article>
   );
 }
@@ -431,49 +448,33 @@ function QuickGradingCard({
   onDraftScoreChange: (score: string) => void;
 }) {
   return (
-    <article className="rounded-3xl border border-border bg-card p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold">
-              Попытка #{attempt.attemptNumber}
-            </span>
-            {attempt.reviewLock ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-200">
-                <LockKeyhole className="size-3" />{' '}
-                {attempt.reviewLock.teacherName}
-              </span>
-            ) : null}
-          </div>
-          <h3 className="mt-2 text-lg font-semibold tracking-tight">
-            {attempt.task.title}
+    <article className="rounded-[2rem] border border-border bg-card px-6 py-5 sm:px-7 sm:py-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h3 className="text-2xl font-semibold leading-tight tracking-tight">
+            <AttemptTitle attempt={attempt} />
           </h3>
+          <AttemptDetails attempt={attempt} />
         </div>
-        <label className="w-full sm:w-48">
-          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Балл из {attempt.task.maxScore}
-          </span>
-          <Input
-            type="number"
-            min={0}
-            max={attempt.task.maxScore}
-            step={1}
-            value={draftScore}
-            disabled={Boolean(attempt.reviewLock)}
-            onChange={(event) => onDraftScoreChange(event.target.value)}
-            placeholder="—"
-            className="mt-1 text-lg font-semibold"
-          />
-        </label>
+        <AttemptDiffStats attempt={attempt} />
       </div>
 
-      <AttemptMetadata attempt={attempt} />
-
-      {attempt.reviewLock ? (
-        <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-100">
-          Оценка недоступна: попытку проверяет {attempt.reviewLock.teacherName}.
-        </p>
-      ) : null}
+      <label className="mt-6 flex items-center gap-3">
+        <Input
+          type="number"
+          min={0}
+          max={attempt.task.maxScore}
+          step={1}
+          value={draftScore}
+          disabled={Boolean(attempt.reviewLock)}
+          onChange={(event) => onDraftScoreChange(event.target.value)}
+          placeholder="—"
+          className="h-14 w-28 rounded-xl text-center text-2xl font-semibold"
+        />
+        <span className="text-2xl font-semibold text-muted-foreground">
+          / {attempt.task.maxScore}
+        </span>
+      </label>
     </article>
   );
 }
