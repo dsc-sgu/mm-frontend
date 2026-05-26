@@ -205,7 +205,7 @@ function AttemptsFilterSidebar({
 
   return (
     <aside className="lg:sticky lg:top-4 lg:self-start">
-      <div className="rounded-3xl border border-border bg-card p-4 shadow-sm lg:max-h-[calc(100dvh-2rem)] lg:w-80 lg:overflow-y-auto">
+      <div className="rounded-3xl border border-border bg-card p-4 lg:max-h-[calc(100dvh-2rem)] lg:w-80 lg:overflow-y-auto">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -347,7 +347,7 @@ function AttemptCard({
   return (
     <article
       className={cn(
-        'rounded-3xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md',
+        'rounded-3xl border bg-card p-5 transition-all hover:-translate-y-0.5',
         selected ? 'border-primary ring-2 ring-primary/15' : 'border-border'
       )}
     >
@@ -432,7 +432,7 @@ function QuickGradingCard({
   onDraftScoreChange: (score: string) => void;
 }) {
   return (
-    <article className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+    <article className="rounded-3xl border border-border bg-card p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
