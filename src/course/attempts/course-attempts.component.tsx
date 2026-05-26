@@ -404,7 +404,13 @@ function AttemptCard({
           />
           <div className="min-w-0">
             <h3 className="text-2xl font-semibold leading-tight tracking-tight">
-              <AttemptTitle attempt={attempt} />
+              <button
+                type="button"
+                className="select-none text-left focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => onSelectedChange(!selected)}
+              >
+                <AttemptTitle attempt={attempt} />
+              </button>
             </h3>
             <AttemptDetails attempt={attempt} />
           </div>
