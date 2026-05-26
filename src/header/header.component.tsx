@@ -85,6 +85,11 @@ function ToggleThemeBtn() {
       title="Переключить тему"
       onClick={() => {
         document.documentElement.classList.toggle('dark');
+        if (document.documentElement.classList.contains('dark')) {
+          localStorage.setItem('theme', 'dark');
+        } else {
+          localStorage.setItem('theme', 'light');
+        }
       }}
     >
       <Sun className="hidden h-5 w-5 dark:block" />
