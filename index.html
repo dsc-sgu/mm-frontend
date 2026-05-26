@@ -4,17 +4,14 @@
     <meta charset="UTF-8" />
     <script>
       if (localStorage.getItem('theme') == 'dark') {
-        console.log('nigerTheme');
         document.documentElement.classList.add('dark');
       } else if (localStorage.getItem('theme') == 'light') {
         document.documentElement.classList.remove('dark');
-        console.log('whiteTheme');
       } else {
         document.documentElement.classList.toggle(
           'dark',
           window.matchMedia('(prefers-color-scheme: dark)').matches
         );
-        console.log('systemTheme');
       }
     </script>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
