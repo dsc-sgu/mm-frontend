@@ -41,17 +41,24 @@ export function scoreDraftTextSizeClass(value: string): string {
   return 'text-sm md:text-sm';
 }
 
-export function scoreDraftValidationError(
-  attempt: CourseAttempt,
+export function scoreDraftMaxScoreError(
+  maxScore: number,
   draft: string | undefined
 ): string | null {
   if (!draft) {
     return null;
   }
 
-  if (Number(draft) > attempt.task.maxScore) {
-    return `Вы не можете поставить оценку выше ${attempt.task.maxScore}`;
+  if (Number(draft) > maxScore) {
+    return `Вы не можете поставить оценку выше ${maxScore}`;
   }
 
   return null;
+}
+
+export function scoreDraftValidationError(
+  attempt: CourseAttempt,
+  draft: string | undefined
+): string | null {
+  return scoreDraftMaxScoreError(attempt.task.maxScore, draft);
 }

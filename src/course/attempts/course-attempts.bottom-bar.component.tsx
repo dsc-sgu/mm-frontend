@@ -1,14 +1,22 @@
+import { useState } from 'react';
 import { Save, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shadcn/components/ui/popover';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/shadcn/components/ui/tooltip';
+import { scoreDraftMaxScoreError } from './course-attempts.grading';
 import { selectedBulkDisableReason } from './course-attempts.selection';
+import { CourseAttemptsScoreField } from './course-attempts.score-field.component';
 import type { CourseAttempt } from './course-attempts.types';
 
 export function BottomActionBar({
@@ -22,7 +30,7 @@ export function BottomActionBar({
   onSelectAll,
   onClearSelection,
   onStartQuickGradingAll,
-  onStartQuickGradingSelection,
+  onSaveSelectedBulkGrade,
   onExitQuickGrading,
   onFeedbackTextVisibleChange,
   onSaveQuickGrades,
@@ -37,13 +45,27 @@ export function BottomActionBar({
   onSelectAll: () => void;
   onClearSelection: () => void;
   onStartQuickGradingAll: () => void;
-  onStartQuickGradingSelection: () => void;
+  onSaveSelectedBulkGrade: (score: number) => Promise<void>;
   onExitQuickGrading: () => void;
   onFeedbackTextVisibleChange: (visible: boolean) => void;
   onSaveQuickGrades: () => void;
 }) {
+  const [bulkGradePopoverOpen, setBulkGradePopoverOpen] = useState(false);
+  const [bulkDraftScore, setBulkDraftScore] = useState('');
   const bulkReason = selectedBulkDisableReason(selectedAttempts);
   const hasSelection = selectedAttempts.length > 0;
+  const bulkMaxScore = selectedAttempts[0]?.task.maxScore ?? 0;
+  const bulkDraftError = scoreDraftMaxScoreError(bulkMaxScore, bulkDraftScore);
+
+  async function saveSelectedBulkGrade() {
+    if (!bulkDraftScore || bulkDraftError) {
+      return;
+    }
+
+    await onSaveSelectedBulkGrade(Number(bulkDraftScore));
+    setBulkDraftScore('');
+    setBulkGradePopoverOpen(false);
+  }
 
   return (
     <TooltipProvider>
@@ -104,27 +126,74 @@ export function BottomActionBar({
               >
                 <X className="size-4" /> Очистить выбор
               </Button>
-              <Tooltip open={bulkReason ? undefined : false}>
-                <TooltipTrigger asChild>
-                  <span
-                    tabIndex={bulkReason ? 0 : -1}
-                    title={bulkReason ?? undefined}
-                    className="inline-flex"
-                  >
-                    <Button
-                      type="button"
-                      disabled={Boolean(bulkReason)}
-                      onClick={onStartQuickGradingSelection}
-                      className="h-10"
+              {bulkReason ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      tabIndex={0}
+                      title={bulkReason}
+                      className="inline-flex"
                     >
+                      <Button type="button" disabled className="h-10">
+                        Оценить
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>{bulkReason}</TooltipContent>
+                </Tooltip>
+              ) : (
+                <Popover
+                  open={bulkGradePopoverOpen}
+                  onOpenChange={setBulkGradePopoverOpen}
+                >
+                  <PopoverTrigger asChild>
+                    <Button type="button" className="h-10">
                       Оценить
                     </Button>
-                  </span>
-                </TooltipTrigger>
-                {bulkReason ? (
-                  <TooltipContent>{bulkReason}</TooltipContent>
-                ) : null}
-              </Tooltip>
+                  </PopoverTrigger>
+                  <PopoverContent side="top" align="center" className="w-96">
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-semibold">
+                          Оценить выбранные попытки
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Выбрано попыток: {selectedAttempts.length}
+                        </p>
+                      </div>
+                      <CourseAttemptsScoreField
+                        value={bulkDraftScore}
+                        maxScore={bulkMaxScore}
+                        changed={bulkDraftScore !== ''}
+                        ariaLabel="Общий балл для выбранных попыток"
+                        onChange={setBulkDraftScore}
+                        className="h-auto flex-wrap"
+                      />
+                      {/* TODO(issue #25): добавить поле общего текста отзыва для выбранных попыток. */}
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setBulkGradePopoverOpen(false)}
+                        >
+                          Отмена
+                        </Button>
+                        <Button
+                          type="button"
+                          disabled={
+                            !bulkDraftScore ||
+                            Boolean(bulkDraftError) ||
+                            savePending
+                          }
+                          onClick={saveSelectedBulkGrade}
+                        >
+                          <Save className="size-4" /> Сохранить
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
               <Button type="button" variant="outline" className="h-10">
                 Продлить дедлайн
               </Button>

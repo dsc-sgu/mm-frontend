@@ -99,6 +99,26 @@ export function CourseAttemptsPage({
     setFeedbackTextVisible(false);
   }
 
+  async function saveSelectedBulkGrade(score: number) {
+    const updates = selectedAttempts
+      .filter((attempt) => !attempt.reviewLock)
+      .map((attempt) => ({
+        attemptId: attempt.id,
+        score,
+      }));
+
+    if (updates.length === 0) {
+      return;
+    }
+
+    await saveQuickGradesMutation.mutateAsync({
+      courseSlug,
+      updates,
+      clearFeedbackText: false,
+    });
+    setSelectedAttemptIds([]);
+  }
+
   async function saveQuickGrades() {
     if (hasDraftValidationErrors) {
       return;
@@ -212,9 +232,7 @@ export function CourseAttemptsPage({
             }
             onClearSelection={() => setSelectedAttemptIds([])}
             onStartQuickGradingAll={() => startQuickGrading(attempts)}
-            onStartQuickGradingSelection={() =>
-              startQuickGrading(selectedAttempts)
-            }
+            onSaveSelectedBulkGrade={saveSelectedBulkGrade}
             onExitQuickGrading={exitQuickGrading}
             onFeedbackTextVisibleChange={setFeedbackTextVisible}
             onSaveQuickGrades={saveQuickGrades}
