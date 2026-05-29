@@ -394,51 +394,50 @@ function AttemptCard({
       )}
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-start gap-4">
+        <div className="flex min-w-0 items-center gap-2">
           <Checkbox
             checked={selected}
             onCheckedChange={(value) => onSelectedChange(value === true)}
             aria-label={`Выбрать попытку ${attempt.task.title}`}
             className="mt-1.5 size-5 rounded-md"
           />
-          <div className="min-w-0">
-            <h3 className="text-2xl font-semibold leading-tight tracking-tight">
-              <button
-                type="button"
-                className="select-none text-left focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                onClick={() => onSelectedChange(!selected)}
-              >
-                <AttemptTitle attempt={attempt} />
-              </button>
-            </h3>
-            <AttemptDetails attempt={attempt} />
-          </div>
+          <h3 className="text-2xl font-semibold leading-tight tracking-tight">
+            <button
+              type="button"
+              className="select-none text-left focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => onSelectedChange(!selected)}
+            >
+              <AttemptTitle attempt={attempt} />
+            </button>
+          </h3>
         </div>
         <AttemptDiffStats attempt={attempt} />
       </div>
 
-      <div className="mt-2 pl-9">
-        <Button
-          asChild
-          variant="outline"
-          className="h-12 rounded-xl px-5 text-base font-semibold"
-        >
-          <a
-            href={
-              selected
-                ? getAttemptDiffHref(courseSlug, attempt)
-                : getAttemptReviewHref(courseSlug, attempt)
-            }
-          >
-            {selected ? (
-              <Eye className="size-4" />
-            ) : (
-              <FileCheck2 className="size-4" />
-            )}
-            {selected ? 'Посмотреть' : 'Оценить'}
-          </a>
-        </Button>
+      <div className="min-w-0">
+        <AttemptDetails attempt={attempt} />
       </div>
+
+      <Button
+        asChild
+        variant="outline"
+        className="h-12 mt-2 rounded-xl px-5 text-base font-semibold"
+      >
+        <a
+          href={
+            selected
+              ? getAttemptDiffHref(courseSlug, attempt)
+              : getAttemptReviewHref(courseSlug, attempt)
+          }
+        >
+          {selected ? (
+            <Eye className="size-4" />
+          ) : (
+            <FileCheck2 className="size-4" />
+          )}
+          {selected ? 'Посмотреть' : 'Оценить'}
+        </a>
+      </Button>
     </article>
   );
 }
@@ -453,7 +452,7 @@ function QuickGradingCard({
   onDraftScoreChange: (score: string) => void;
 }) {
   return (
-    <article className="rounded-[2rem] border border-border bg-card px-6 py-5 sm:px-7 sm:py-6">
+    <article className="rounded-2xl border border-border bg-card px-6 py-5 sm:px-7 sm:py-6">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <AttemptTitle attempt={attempt} />
@@ -474,7 +473,7 @@ function QuickGradingCard({
           disabled={Boolean(attempt.reviewLock)}
           onChange={(event) => onDraftScoreChange(event.target.value)}
           placeholder="—"
-          className="h-10 w-20 rounded-xl text-center text-xl md:text-xl font-semibold"
+          className="h-12 w-20 rounded-xl text-center text-xl md:text-xl font-semibold"
         />
         <span className="text-xl font-semibold text-muted-foreground">
           / {attempt.task.maxScore}
