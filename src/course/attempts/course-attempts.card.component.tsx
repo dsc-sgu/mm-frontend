@@ -4,7 +4,11 @@ import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import { Input } from '@/shadcn/components/ui/input';
 import { cn } from '@/shadcn/lib/utils';
-import { scoreDraftChanged } from './course-attempts.grading';
+import {
+  normalizeScoreDraftInput,
+  scoreDraftChanged,
+  scoreDraftTextSizeClass,
+} from './course-attempts.grading';
 import {
   getAttemptDiffHref,
   getAttemptReviewHref,
@@ -123,10 +127,19 @@ export function AttemptCard(props: AttemptCardProps) {
               step={1}
               value={props.draftScore}
               disabled={Boolean(attempt.reviewLock)}
-              onChange={(event) => props.onDraftScoreChange(event.target.value)}
+              onChange={(event) => {
+                const nextDraftScore = normalizeScoreDraftInput(
+                  event.target.value
+                );
+
+                if (nextDraftScore !== null) {
+                  props.onDraftScoreChange(nextDraftScore);
+                }
+              }}
               placeholder="—"
               className={cn(
-                'h-12 w-20 rounded-xl text-center text-xl font-semibold transition-colors md:text-xl',
+                'h-12 w-24 rounded-xl px-2 text-center font-semibold transition-colors',
+                scoreDraftTextSizeClass(props.draftScore),
                 draftScoreChanged &&
                   'border-orange-400 bg-orange-50 text-orange-950 focus-visible:border-orange-500 focus-visible:ring-orange-400/35 dark:border-orange-500/70 dark:bg-orange-950/35 dark:text-orange-100 dark:focus-visible:border-orange-400 dark:focus-visible:ring-orange-400/30'
               )}
