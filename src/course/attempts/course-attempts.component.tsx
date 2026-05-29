@@ -317,11 +317,10 @@ function AttemptsFilterSidebar({
 
 function AttemptTitle({ attempt }: { attempt: CourseAttempt }) {
   return (
-    <span>
-      Попытка #{attempt.attemptNumber}{' '}
-      <span className="text-muted-foreground mx-2 font-normal">|</span>{' '}
-      {attempt.task.title}
-    </span>
+    <h3 className="text-xl leading-tight tracking-tight">
+      <span className="font-semibold">Попытка #{attempt.attemptNumber}: </span>
+      <span className="font-normal">{attempt.task.title}</span>
+    </h3>
   );
 }
 
@@ -457,9 +456,7 @@ function QuickGradingCard({
     <article className="rounded-[2rem] border border-border bg-card px-6 py-5 sm:px-7 sm:py-6">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h3 className="text-2xl font-semibold leading-tight tracking-tight">
-            <AttemptTitle attempt={attempt} />
-          </h3>
+          <AttemptTitle attempt={attempt} />
           <AttemptDetails attempt={attempt} />
         </div>
         <AttemptDiffStats attempt={attempt} />
