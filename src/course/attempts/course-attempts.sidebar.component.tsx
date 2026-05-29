@@ -61,7 +61,7 @@ function FilterOption({
   return (
     <label
       htmlFor={id}
-      className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+      className="flex select-none cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-accent"
     >
       <Checkbox
         id={id}
