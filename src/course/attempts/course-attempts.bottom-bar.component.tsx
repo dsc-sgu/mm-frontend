@@ -76,7 +76,7 @@ export function BottomActionBar({
 
   return (
     <TooltipProvider>
-      <div className="sticky bottom-4 z-10 mt-6 rounded-3xl border border-border bg-background/92 p-3 shadow-xl backdrop-blur supports-[backdrop-filter]:bg-background/75">
+      <div className="fixed inset-x-3 bottom-2 z-50 mx-auto max-w-7xl rounded-2xl border border-border bg-background/92 p-2 shadow-xl backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:inset-x-6 sm:bottom-4 sm:rounded-3xl sm:p-3 lg:left-[max(2rem,calc((100vw-80rem)/2+23.5rem))] lg:right-[max(2rem,calc((100vw-80rem)/2+2rem))]">
         {quickGrading ? (
           <div
             key="quick-grading-actions"
@@ -84,14 +84,16 @@ export function BottomActionBar({
           >
             <p className="text-sm font-semibold">Быстрая оценка</p>
             <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:flex-wrap lg:items-center lg:justify-end">
-              <label className="flex min-w-0 cursor-pointer items-center gap-2 px-3 text-sm font-medium min-[480px]:col-span-2 lg:col-span-1">
+              <label className="flex min-w-0 cursor-pointer items-center gap-2 px-2 text-sm font-medium min-[480px]:col-span-2 sm:px-3 lg:col-span-1">
                 <Checkbox
                   checked={feedbackTextVisible}
                   onCheckedChange={(value) =>
                     onFeedbackTextVisibleChange(value === true)
                   }
                 />
-                <span className="select-none">Показать поле текста отзыва</span>
+                <span className="min-w-0 select-none break-words leading-snug">
+                  Показать поле текста отзыва
+                </span>
               </label>
               {/* TODO(issue #25): define and implement the quick grading feedback textarea design here. */}
               <Button
@@ -119,15 +121,15 @@ export function BottomActionBar({
             key="selection-actions"
             className="flex min-h-10 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
           >
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold">
+            <div className="flex min-w-0 items-center justify-between gap-3">
+              <p className="min-w-0 text-sm font-semibold">
                 Выбрано попыток: {selectedAttempts.length}
               </p>
               <Button
                 type="button"
                 variant="ghost"
                 onClick={onClearSelection}
-                className="h-10 px-3 lg:hidden"
+                className="h-10 shrink-0 px-2 sm:px-3 lg:hidden"
               >
                 <X className="size-4" /> Очистить
               </Button>
@@ -227,7 +229,7 @@ export function BottomActionBar({
             key="idle-actions"
             className="flex min-h-10 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
           >
-            <p className="text-sm text-muted-foreground">
+            <p className="min-w-0 break-words text-sm text-muted-foreground">
               Выберите отдельные попытки или запустите оценку всех видимых.
             </p>
             <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:items-center">

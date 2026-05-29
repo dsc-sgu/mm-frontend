@@ -151,8 +151,8 @@ export function CourseAttemptsPage({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mt-6 grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
+    <main className="mx-auto flex w-full max-w-7xl flex-col overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
+      <div className="mt-4 grid min-w-0 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
         <AttemptsFilterSidebar
           appliedFilters={normalizedAppliedFilters}
           draftFilters={draftFilters}
@@ -169,7 +169,7 @@ export function CourseAttemptsPage({
           }}
         />
 
-        <section className="min-w-0">
+        <section className="min-w-0 overflow-hidden pb-44 sm:pb-36">
           {attemptsQuery.isPending ? (
             <div className="space-y-3" aria-busy="true">
               {[0, 1, 2].map((item) => (
