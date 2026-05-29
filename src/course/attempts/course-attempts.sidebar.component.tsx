@@ -127,6 +127,12 @@ export function AttemptsFilterSidebar({
       )
     );
 
+  function applyFilters() {
+    onApplyFilters();
+    setTaskSearch('');
+    setStudentSearch('');
+  }
+
   return (
     <aside className="lg:sticky lg:top-4 lg:self-start">
       <div className="rounded-3xl border border-border bg-card p-4 lg:max-h-[calc(100dvh-2rem)] lg:w-80 lg:overflow-y-auto">
@@ -234,7 +240,7 @@ export function AttemptsFilterSidebar({
           type="button"
           className="mt-6 w-full"
           disabled={applyDisabled}
-          onClick={onApplyFilters}
+          onClick={applyFilters}
         >
           Применить
         </Button>
