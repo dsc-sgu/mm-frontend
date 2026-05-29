@@ -8,6 +8,7 @@ import {
   normalizeScoreDraftInput,
   scoreDraftChanged,
   scoreDraftTextSizeClass,
+  scoreDraftValidationError,
 } from './course-attempts.grading';
 import {
   getAttemptDiffHref,
@@ -43,6 +44,11 @@ export function AttemptCard(props: AttemptCardProps) {
     props.mode === 'quick-grading'
       ? scoreDraftChanged(attempt, props.draftScore)
       : false;
+  const draftScoreError =
+    props.mode === 'quick-grading'
+      ? scoreDraftValidationError(attempt, props.draftScore)
+      : null;
+  const draftScoreErrorId = `attempt-${attempt.id}-score-error`;
 
   return (
     <article
@@ -118,7 +124,6 @@ export function AttemptCard(props: AttemptCardProps) {
           </Button>
         ) : (
           <label className="flex h-12 items-center gap-3">
-            {/*TODO: Добавить валидацию*/}
             <Input
               type="text"
               inputMode="decimal"
@@ -127,6 +132,8 @@ export function AttemptCard(props: AttemptCardProps) {
               step={1}
               value={props.draftScore}
               disabled={Boolean(attempt.reviewLock)}
+              aria-invalid={Boolean(draftScoreError)}
+              aria-describedby={draftScoreError ? draftScoreErrorId : undefined}
               onChange={(event) => {
                 const nextDraftScore = normalizeScoreDraftInput(
                   event.target.value
@@ -141,12 +148,22 @@ export function AttemptCard(props: AttemptCardProps) {
                 'h-12 w-24 rounded-xl px-2 text-center font-semibold transition-colors',
                 scoreDraftTextSizeClass(props.draftScore),
                 draftScoreChanged &&
-                  'border-orange-400 bg-orange-50 text-orange-950 focus-visible:border-orange-500 focus-visible:ring-orange-400/35 dark:border-orange-500/70 dark:bg-orange-950/35 dark:text-orange-100 dark:focus-visible:border-orange-400 dark:focus-visible:ring-orange-400/30'
+                  'border-orange-400 bg-orange-50 text-orange-950 focus-visible:border-orange-500 focus-visible:ring-orange-400/35 dark:border-orange-500/70 dark:bg-orange-950/35 dark:text-orange-100 dark:focus-visible:border-orange-400 dark:focus-visible:ring-orange-400/30',
+                draftScoreError &&
+                  'border-destructive bg-destructive/10 text-destructive focus-visible:border-destructive focus-visible:ring-destructive/30 dark:bg-destructive/20'
               )}
             />
             <span className="text-xl font-semibold text-muted-foreground">
               / {attempt.task.maxScore}
             </span>
+            {draftScoreError ? (
+              <span
+                id={draftScoreErrorId}
+                className="whitespace-nowrap text-sm font-medium text-destructive"
+              >
+                {draftScoreError}
+              </span>
+            ) : null}
           </label>
         )}
       </div>

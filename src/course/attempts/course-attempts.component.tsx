@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { normalizeCourseAttemptsFilters } from './course-attempts.filters';
-import { scoreDraftChanged, scoreValue } from './course-attempts.grading';
+import {
+  scoreDraftChanged,
+  scoreDraftValidationError,
+  scoreValue,
+} from './course-attempts.grading';
 import {
   useCourseAttemptsQuery,
   useSaveQuickGradesMutation,
@@ -60,6 +64,9 @@ export function CourseAttemptsPage({
   const hasDraftChanges = quickGradingAttempts.some((attempt) =>
     scoreDraftChanged(attempt, draftScores[attempt.id])
   );
+  const hasDraftValidationErrors = quickGradingAttempts.some((attempt) =>
+    Boolean(scoreDraftValidationError(attempt, draftScores[attempt.id]))
+  );
 
   useEffect(() => {
     setDraftFilters(normalizedAppliedFilters);
@@ -93,6 +100,10 @@ export function CourseAttemptsPage({
   }
 
   async function saveQuickGrades() {
+    if (hasDraftValidationErrors) {
+      return;
+    }
+
     const updates = quickGradingAttempts
       .filter(
         (attempt) =>
@@ -101,10 +112,7 @@ export function CourseAttemptsPage({
       )
       .map((attempt) => ({
         attemptId: attempt.id,
-        score: Math.min(
-          attempt.task.maxScore,
-          Math.max(0, Number(draftScores[attempt.id] || 0))
-        ),
+        score: Math.max(0, Number(draftScores[attempt.id] || 0)),
       }));
 
     if (updates.length === 0) {
@@ -196,6 +204,7 @@ export function CourseAttemptsPage({
             selectedAttempts={selectedAttempts}
             quickGrading={isQuickGrading}
             hasDraftChanges={hasDraftChanges}
+            hasDraftValidationErrors={hasDraftValidationErrors}
             feedbackTextVisible={feedbackTextVisible}
             savePending={saveQuickGradesMutation.isPending}
             onSelectAll={() =>
