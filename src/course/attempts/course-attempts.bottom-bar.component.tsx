@@ -83,24 +83,22 @@ export function BottomActionBar({
             className="grid min-h-10 gap-3 lg:grid-cols-[minmax(12rem,1fr)_auto] lg:items-center"
           >
             <p className="text-sm font-semibold">Быстрая оценка</p>
-            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-              <label className="flex min-w-0 cursor-pointer items-center gap-2 px-3 text-sm font-medium">
+            <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:flex-wrap lg:items-center lg:justify-end">
+              <label className="flex min-w-0 cursor-pointer items-center gap-2 px-3 text-sm font-medium min-[480px]:col-span-2 lg:col-span-1">
                 <Checkbox
                   checked={feedbackTextVisible}
                   onCheckedChange={(value) =>
                     onFeedbackTextVisibleChange(value === true)
                   }
                 />
-                <span className="whitespace-nowrap select-none">
-                  Показать поле текста отзыва
-                </span>
+                <span className="select-none">Показать поле текста отзыва</span>
               </label>
               {/* TODO(issue #25): define and implement the quick grading feedback textarea design here. */}
               <Button
                 type="button"
                 variant="outline"
                 onClick={onExitQuickGrading}
-                className="h-10 whitespace-nowrap"
+                className="h-10 w-full whitespace-nowrap lg:w-auto"
               >
                 Выйти из быстрой оценки
               </Button>
@@ -110,7 +108,7 @@ export function BottomActionBar({
                   !hasDraftChanges || hasDraftValidationErrors || savePending
                 }
                 onClick={onSaveQuickGrades}
-                className="h-10 whitespace-nowrap"
+                className="h-10 w-full whitespace-nowrap lg:w-auto"
               >
                 <Save className="size-4" /> Сохранить
               </Button>
@@ -121,15 +119,25 @@ export function BottomActionBar({
             key="selection-actions"
             className="flex min-h-10 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
           >
-            <p className="text-sm font-semibold">
-              Выбрано попыток: {selectedAttempts.length}
-            </p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold">
+                Выбрано попыток: {selectedAttempts.length}
+              </p>
               <Button
                 type="button"
                 variant="ghost"
                 onClick={onClearSelection}
-                className="h-10"
+                className="h-10 px-3 lg:hidden"
+              >
+                <X className="size-4" /> Очистить
+              </Button>
+            </div>
+            <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:items-center">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClearSelection}
+                className="hidden h-10 lg:inline-flex"
               >
                 <X className="size-4" /> Очистить выбор
               </Button>
@@ -139,9 +147,9 @@ export function BottomActionBar({
                     <span
                       tabIndex={0}
                       title={bulkReason}
-                      className="inline-flex"
+                      className="inline-flex w-full lg:w-auto"
                     >
-                      <Button type="button" disabled className="h-10">
+                      <Button type="button" disabled className="h-10 w-full">
                         Оценить
                       </Button>
                     </span>
@@ -154,11 +162,15 @@ export function BottomActionBar({
                   onOpenChange={setBulkPopoverOpen}
                 >
                   <PopoverTrigger asChild>
-                    <Button type="button" className="h-10">
+                    <Button type="button" className="h-10 w-full lg:w-auto">
                       Оценить
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent side="top" align="center" className="w-96">
+                  <PopoverContent
+                    side="top"
+                    align="center"
+                    className="w-[calc(100vw-2rem)] max-w-96"
+                  >
                     <div className="space-y-4">
                       <div className="space-y-1">
                         <h3 className="text-sm font-semibold">
@@ -201,7 +213,11 @@ export function BottomActionBar({
                   </PopoverContent>
                 </Popover>
               )}
-              <Button type="button" variant="outline" className="h-10">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 w-full lg:w-auto"
+              >
                 Продлить дедлайн
               </Button>
             </div>
@@ -214,13 +230,13 @@ export function BottomActionBar({
             <p className="text-sm text-muted-foreground">
               Выберите отдельные попытки или запустите оценку всех видимых.
             </p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:items-center">
               <Button
                 type="button"
                 variant="outline"
                 disabled={attempts.length === 0}
                 onClick={onSelectAll}
-                className="h-10"
+                className="h-10 w-full lg:w-auto"
               >
                 Выбрать всё
               </Button>
@@ -228,7 +244,7 @@ export function BottomActionBar({
                 type="button"
                 disabled={attempts.length === 0}
                 onClick={onStartQuickGradingAll}
-                className="h-10"
+                className="h-10 w-full lg:w-auto"
               >
                 Быстрая оценка
               </Button>
