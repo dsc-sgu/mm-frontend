@@ -57,14 +57,21 @@ export function BottomActionBar({
   const bulkMaxScore = selectedAttempts[0]?.task.maxScore ?? 0;
   const bulkDraftError = scoreDraftMaxScoreError(bulkMaxScore, bulkDraftScore);
 
+  function setBulkPopoverOpen(open: boolean) {
+    if (open) {
+      setBulkDraftScore('');
+    }
+
+    setBulkGradePopoverOpen(open);
+  }
+
   async function saveSelectedBulkGrade() {
     if (!bulkDraftScore || bulkDraftError) {
       return;
     }
 
     await onSaveSelectedBulkGrade(Number(bulkDraftScore));
-    setBulkDraftScore('');
-    setBulkGradePopoverOpen(false);
+    setBulkPopoverOpen(false);
   }
 
   return (
@@ -144,7 +151,7 @@ export function BottomActionBar({
               ) : (
                 <Popover
                   open={bulkGradePopoverOpen}
-                  onOpenChange={setBulkGradePopoverOpen}
+                  onOpenChange={setBulkPopoverOpen}
                 >
                   <PopoverTrigger asChild>
                     <Button type="button" className="h-10">
@@ -174,7 +181,7 @@ export function BottomActionBar({
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => setBulkGradePopoverOpen(false)}
+                          onClick={() => setBulkPopoverOpen(false)}
                         >
                           Отмена
                         </Button>
