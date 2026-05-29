@@ -465,9 +465,11 @@ function QuickGradingCard({
         <AttemptDiffStats attempt={attempt} />
       </div>
 
-      <label className="mt-6 flex items-center gap-3">
+      <label className="mt-2 flex items-center gap-3">
+        {/*TODO: Добавить валидацию*/}
         <Input
-          type="number"
+          type="text"
+          inputMode="decimal"
           min={0}
           max={attempt.task.maxScore}
           step={1}
@@ -475,9 +477,9 @@ function QuickGradingCard({
           disabled={Boolean(attempt.reviewLock)}
           onChange={(event) => onDraftScoreChange(event.target.value)}
           placeholder="—"
-          className="h-14 w-28 rounded-xl text-center text-2xl font-semibold"
+          className="h-10 w-20 rounded-xl text-center text-xl md:text-xl font-semibold"
         />
-        <span className="text-2xl font-semibold text-muted-foreground">
+        <span className="text-xl font-semibold text-muted-foreground">
           / {attempt.task.maxScore}
         </span>
       </label>
