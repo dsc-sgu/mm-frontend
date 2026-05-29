@@ -32,7 +32,8 @@ type AttemptCardProps =
 
 export function AttemptCard(props: AttemptCardProps) {
   const { attempt } = props;
-  const selected = props.mode === 'default' ? props.selected : false;
+  const isDefaultMode = props.mode === 'default';
+  const selected = isDefaultMode ? props.selected : false;
 
   return (
     <article
@@ -42,18 +43,28 @@ export function AttemptCard(props: AttemptCardProps) {
       )}
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-2">
-          {props.mode === 'default' ? (
+        <div className="flex min-w-0 items-center">
+          <div
+            className={cn(
+              'grid shrink-0 place-items-center overflow-hidden transition-[width,opacity,margin] duration-200 ease-out',
+              isDefaultMode ? 'mr-2 w-5 opacity-100' : 'mr-0 w-0 opacity-0'
+            )}
+            aria-hidden={!isDefaultMode}
+          >
             <Checkbox
-              checked={props.selected}
-              onCheckedChange={(value) =>
-                props.onSelectedChange(value === true)
-              }
+              checked={selected}
+              disabled={!isDefaultMode}
+              tabIndex={isDefaultMode ? undefined : -1}
+              onCheckedChange={(value) => {
+                if (props.mode === 'default') {
+                  props.onSelectedChange(value === true);
+                }
+              }}
               aria-label={`Выбрать попытку ${attempt.task.title}`}
-              className="size-5 rounded-md"
+              className="size-5 rounded-md transition-opacity duration-200"
             />
-          ) : null}
-          <h3 className="text-xl font-semibold leading-tight tracking-tight">
+          </div>
+          <h3 className="text-xl font-semibold leading-tight tracking-tight transition-transform duration-200 ease-out">
             {props.mode === 'default' ? (
               <button
                 type="button"
