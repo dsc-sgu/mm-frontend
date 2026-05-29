@@ -60,7 +60,7 @@ export function BottomActionBar({
                     onFeedbackTextVisibleChange(value === true)
                   }
                 />
-                <span className="whitespace-nowrap">
+                <span className="whitespace-nowrap select-none">
                   Показать поле текста отзыва
                 </span>
               </label>
