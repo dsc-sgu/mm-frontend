@@ -4,6 +4,7 @@ import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import { Input } from '@/shadcn/components/ui/input';
 import { cn } from '@/shadcn/lib/utils';
+import { scoreDraftChanged } from './course-attempts.grading';
 import {
   getAttemptDiffHref,
   getAttemptReviewHref,
@@ -34,6 +35,10 @@ export function AttemptCard(props: AttemptCardProps) {
   const { attempt } = props;
   const isDefaultMode = props.mode === 'default';
   const selected = isDefaultMode ? props.selected : false;
+  const draftScoreChanged =
+    props.mode === 'quick-grading'
+      ? scoreDraftChanged(attempt, props.draftScore)
+      : false;
 
   return (
     <article
@@ -120,7 +125,11 @@ export function AttemptCard(props: AttemptCardProps) {
               disabled={Boolean(attempt.reviewLock)}
               onChange={(event) => props.onDraftScoreChange(event.target.value)}
               placeholder="—"
-              className="h-12 w-20 rounded-xl text-center text-xl font-semibold md:text-xl"
+              className={cn(
+                'h-12 w-20 rounded-xl text-center text-xl font-semibold transition-colors md:text-xl',
+                draftScoreChanged &&
+                  'border-orange-400 bg-orange-50 text-orange-950 focus-visible:border-orange-500 focus-visible:ring-orange-400/35 dark:border-orange-500/70 dark:bg-orange-950/35 dark:text-orange-100 dark:focus-visible:border-orange-400 dark:focus-visible:ring-orange-400/30'
+              )}
             />
             <span className="text-xl font-semibold text-muted-foreground">
               / {attempt.task.maxScore}
