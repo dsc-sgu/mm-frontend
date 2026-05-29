@@ -47,10 +47,13 @@ export function BottomActionBar({
     <TooltipProvider>
       <div className="sticky bottom-4 z-10 mt-6 rounded-3xl border border-border bg-background/92 p-3 shadow-xl backdrop-blur supports-[backdrop-filter]:bg-background/75">
         {quickGrading ? (
-          <div className="grid gap-4 lg:grid-cols-[minmax(12rem,1fr)_auto] lg:items-center">
+          <div
+            key="quick-grading-actions"
+            className="grid min-h-10 gap-3 lg:grid-cols-[minmax(12rem,1fr)_auto] lg:items-center"
+          >
             <p className="text-sm font-semibold">Быстрая оценка</p>
             <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-              <label className="flex h-10 min-w-0 cursor-pointer items-center gap-2 bg-background px-3 text-sm font-medium">
+              <label className="flex min-w-0 cursor-pointer items-center gap-2 px-3 text-sm font-medium">
                 <Checkbox
                   checked={feedbackTextVisible}
                   onCheckedChange={(value) =>
@@ -81,12 +84,20 @@ export function BottomActionBar({
             </div>
           </div>
         ) : hasSelection ? (
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            key="selection-actions"
+            className="flex min-h-10 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+          >
             <p className="text-sm font-semibold">
               Выбрано попыток: {selectedAttempts.length}
             </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Button type="button" variant="ghost" onClick={onClearSelection}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClearSelection}
+                className="h-10"
+              >
                 <X className="size-4" /> Очистить выбор
               </Button>
               <Tooltip open={bulkReason ? undefined : false}>
@@ -100,6 +111,7 @@ export function BottomActionBar({
                       type="button"
                       disabled={Boolean(bulkReason)}
                       onClick={onStartQuickGradingSelection}
+                      className="h-10"
                     >
                       Оценить
                     </Button>
@@ -109,13 +121,16 @@ export function BottomActionBar({
                   <TooltipContent>{bulkReason}</TooltipContent>
                 ) : null}
               </Tooltip>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" className="h-10">
                 Продлить дедлайн
               </Button>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            key="idle-actions"
+            className="flex min-h-10 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+          >
             <p className="text-sm text-muted-foreground">
               Выберите отдельные попытки или запустите оценку всех видимых.
             </p>
@@ -125,6 +140,7 @@ export function BottomActionBar({
                 variant="outline"
                 disabled={attempts.length === 0}
                 onClick={onSelectAll}
+                className="h-10"
               >
                 Выбрать всё
               </Button>
@@ -132,6 +148,7 @@ export function BottomActionBar({
                 type="button"
                 disabled={attempts.length === 0}
                 onClick={onStartQuickGradingAll}
+                className="h-10"
               >
                 Быстрая оценка
               </Button>
