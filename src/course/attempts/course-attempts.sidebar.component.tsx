@@ -4,6 +4,12 @@ import { Filter, Search } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import { Input } from '@/shadcn/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/shadcn/components/ui/tooltip';
 import { cn } from '@/shadcn/lib/utils';
 import {
   areCourseAttemptsFiltersEqual,
@@ -91,6 +97,7 @@ interface AttemptsFiltersContentProps {
   onAfterReset?: () => void;
   showHeader?: boolean;
   variant?: 'sidebar' | 'drawer';
+  filterActionsDisabledReason?: string;
 }
 
 export function AttemptsFiltersContent({
@@ -107,26 +114,28 @@ export function AttemptsFiltersContent({
   onAfterReset,
   showHeader = true,
   variant = 'sidebar',
+  filterActionsDisabledReason,
 }: AttemptsFiltersContentProps) {
   const isDrawer = variant === 'drawer';
+  const filterActionsDisabled = Boolean(filterActionsDisabledReason);
   const [taskSearch, setTaskSearch] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
 
-  const applyDisabled = areCourseAttemptsFiltersEqual(
-    draftFilters,
-    appliedFilters
-  );
+  const applyDisabled =
+    filterActionsDisabled ||
+    areCourseAttemptsFiltersEqual(draftFilters, appliedFilters);
   const resetDisabled =
-    areCourseAttemptsFiltersEqual(
+    filterActionsDisabled ||
+    (areCourseAttemptsFiltersEqual(
       draftFilters,
       EMPTY_COURSE_ATTEMPTS_FILTERS
     ) &&
-    areCourseAttemptsFiltersEqual(
-      appliedFilters,
-      EMPTY_COURSE_ATTEMPTS_FILTERS
-    ) &&
-    taskSearch.trim() === '' &&
-    studentSearch.trim() === '';
+      areCourseAttemptsFiltersEqual(
+        appliedFilters,
+        EMPTY_COURSE_ATTEMPTS_FILTERS
+      ) &&
+      taskSearch.trim() === '' &&
+      studentSearch.trim() === '');
   const visibleTasks = tasks
     .filter((task) =>
       task.title.toLowerCase().includes(taskSearch.toLowerCase().trim())
@@ -289,25 +298,64 @@ export function AttemptsFiltersContent({
         </section>
       </div>
 
-      <div
-        className={cn(
-          'mt-6 grid grid-cols-2 gap-2',
-          isDrawer &&
-            'sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/80'
-        )}
-      >
-        <Button type="button" disabled={applyDisabled} onClick={applyFilters}>
-          Применить
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={resetDisabled}
-          onClick={resetFilters}
+      <TooltipProvider>
+        <div
+          className={cn(
+            'mt-6 grid grid-cols-2 gap-2',
+            isDrawer &&
+              'sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/80'
+          )}
         >
-          Сбросить
-        </Button>
-      </div>
+          {filterActionsDisabledReason ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0} className="inline-flex w-full">
+                  <Button type="button" disabled className="w-full">
+                    Применить
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{filterActionsDisabledReason}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              type="button"
+              disabled={applyDisabled}
+              onClick={applyFilters}
+              className="w-full"
+            >
+              Применить
+            </Button>
+          )}
+          {filterActionsDisabledReason ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0} className="inline-flex w-full">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled
+                    className="w-full"
+                  >
+                    Сбросить
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{filterActionsDisabledReason}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={resetDisabled}
+              onClick={resetFilters}
+              className="w-full"
+            >
+              Сбросить
+            </Button>
+          )}
+        </div>
+      </TooltipProvider>
     </>
   );
 }
