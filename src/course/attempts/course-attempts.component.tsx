@@ -167,7 +167,7 @@ export function CourseAttemptsPage({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
+    <main className="mx-auto flex w-full max-w-7xl flex-col px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
       <div className="mt-4 grid min-w-0 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
         <AttemptsFilterSidebar
           appliedFilters={normalizedAppliedFilters}
