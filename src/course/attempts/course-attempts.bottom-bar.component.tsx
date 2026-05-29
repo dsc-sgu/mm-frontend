@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Filter, Save, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
-import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import {
   Popover,
   PopoverContent,
@@ -25,7 +24,6 @@ export function BottomActionBar({
   quickGrading,
   hasDraftChanges,
   hasDraftValidationErrors,
-  feedbackTextVisible,
   savePending,
   onSelectAll,
   onClearSelection,
@@ -33,7 +31,6 @@ export function BottomActionBar({
   onOpenFilters,
   onSaveSelectedBulkGrade,
   onExitQuickGrading,
-  onFeedbackTextVisibleChange,
   onSaveQuickGrades,
 }: {
   attempts: CourseAttempt[];
@@ -97,18 +94,6 @@ export function BottomActionBar({
           >
             <p className="text-sm font-semibold">Быстрая оценка</p>
             <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:flex-wrap lg:items-center lg:justify-end">
-              <label className="flex min-w-0 cursor-pointer items-center gap-2 px-2 text-sm font-medium min-[480px]:col-span-2 sm:px-3 lg:col-span-1">
-                <Checkbox
-                  checked={feedbackTextVisible}
-                  onCheckedChange={(value) =>
-                    onFeedbackTextVisibleChange(value === true)
-                  }
-                />
-                <span className="min-w-0 select-none break-words leading-snug">
-                  Показать поле текста отзыва
-                </span>
-              </label>
-              {/* TODO(issue #25): define and implement the quick grading feedback textarea design here. */}
               <Button
                 type="button"
                 variant="outline"
