@@ -77,16 +77,8 @@ function FilterOption({
   );
 }
 
-export function AttemptsFilterSidebar({
-  appliedFilters,
-  draftFilters,
-  attemptsCount,
-  tasks,
-  students,
-  onDraftFiltersChange,
-  onApplyFilters,
-  onResetFilters,
-}: {
+interface AttemptsFiltersContentProps {
+  idPrefix: string;
   appliedFilters: CourseAttemptsFilters;
   draftFilters: CourseAttemptsFilters;
   attemptsCount: number;
@@ -95,7 +87,28 @@ export function AttemptsFilterSidebar({
   onDraftFiltersChange: (filters: CourseAttemptsFilters) => void;
   onApplyFilters: () => void;
   onResetFilters: () => void;
-}) {
+  onAfterApply?: () => void;
+  onAfterReset?: () => void;
+  showHeader?: boolean;
+  variant?: 'sidebar' | 'drawer';
+}
+
+export function AttemptsFiltersContent({
+  idPrefix,
+  appliedFilters,
+  draftFilters,
+  attemptsCount,
+  tasks,
+  students,
+  onDraftFiltersChange,
+  onApplyFilters,
+  onResetFilters,
+  onAfterApply,
+  onAfterReset,
+  showHeader = true,
+  variant = 'sidebar',
+}: AttemptsFiltersContentProps) {
+  const isDrawer = variant === 'drawer';
   const [taskSearch, setTaskSearch] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
 
@@ -147,6 +160,7 @@ export function AttemptsFilterSidebar({
     onApplyFilters();
     setTaskSearch('');
     setStudentSearch('');
+    onAfterApply?.();
   }
 
   function resetFilters() {
@@ -154,11 +168,12 @@ export function AttemptsFilterSidebar({
     onResetFilters();
     setTaskSearch('');
     setStudentSearch('');
+    onAfterReset?.();
   }
 
   return (
-    <aside className="min-w-0 lg:sticky lg:top-4 lg:self-start">
-      <div className="w-full max-w-full overflow-hidden rounded-2xl border border-border bg-card p-3 sm:rounded-3xl sm:p-4 lg:max-h-[calc(100dvh-2rem)] lg:w-80 lg:overflow-y-auto">
+    <>
+      {showHeader ? (
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -169,109 +184,144 @@ export function AttemptsFilterSidebar({
             {attemptsCount}
           </span>
         </div>
+      ) : null}
 
-        <div className="mt-5 space-y-6">
-          <section>
-            <h3 className="text-sm font-semibold">Задания</h3>
-            <div className="relative mt-2">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={taskSearch}
-                onChange={(event) => setTaskSearch(event.target.value)}
-                placeholder="Найти задание"
-                className="pl-9"
-              />
-            </div>
-            <div className="mt-2 max-h-44 space-y-1 overflow-y-auto pr-1">
-              {visibleTasks.map((task) => (
-                <FilterOption
-                  key={task.id}
-                  id={`task-filter-${task.id}`}
-                  label={`${task.title} · ${task.maxScore} б.`}
-                  checked={draftFilters.tasks.includes(task.id)}
-                  onCheckedChange={() =>
-                    onDraftFiltersChange({
-                      ...draftFilters,
-                      tasks: toggleToken(draftFilters.tasks, task.id),
-                    })
-                  }
-                />
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-sm font-semibold">Студенты</h3>
-            <div className="relative mt-2">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={studentSearch}
-                onChange={(event) => setStudentSearch(event.target.value)}
-                placeholder="ФИО или username"
-                className="pl-9"
-              />
-            </div>
-            <div className="mt-2 max-h-48 space-y-1 overflow-y-auto pr-1">
-              {visibleStudents.map((student) => (
-                <FilterOption
-                  key={student.username}
-                  id={`student-filter-${student.username}`}
-                  label={`${student.fullName} · ${student.group}`}
-                  checked={draftFilters.students.includes(student.username)}
-                  onCheckedChange={() =>
-                    onDraftFiltersChange({
-                      ...draftFilters,
-                      students: toggleToken(
-                        draftFilters.students,
-                        student.username
-                      ),
-                    })
-                  }
-                />
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-sm font-semibold">Оценена</h3>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {GRADED_FILTER_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() =>
-                    onDraftFiltersChange({
-                      ...draftFilters,
-                      graded: option.value,
-                    })
-                  }
-                  className={cn(
-                    'rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    draftFilters.graded === option.value
-                      ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
-                      : 'border-border bg-background'
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        <div className="mt-6 grid grid-cols-2 gap-2">
-          <Button type="button" disabled={applyDisabled} onClick={applyFilters}>
-            Применить
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={resetDisabled}
-            onClick={resetFilters}
+      <div className={cn(showHeader ? 'mt-5' : 'mt-0', 'space-y-6')}>
+        <section>
+          <h3 className="text-sm font-semibold">Задания</h3>
+          <div className="relative mt-2">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={taskSearch}
+              onChange={(event) => setTaskSearch(event.target.value)}
+              placeholder="Найти задание"
+              className="pl-9"
+            />
+          </div>
+          <div
+            className={cn(
+              'mt-2 space-y-1 pr-1',
+              isDrawer
+                ? 'max-h-[clamp(1rem,11dvh,12rem)] overflow-y-auto'
+                : 'max-h-44 overflow-y-auto'
+            )}
           >
-            Сбросить
-          </Button>
-        </div>
+            {visibleTasks.map((task) => (
+              <FilterOption
+                key={task.id}
+                id={`${idPrefix}-task-filter-${task.id}`}
+                label={`${task.title} · ${task.maxScore} б.`}
+                checked={draftFilters.tasks.includes(task.id)}
+                onCheckedChange={() =>
+                  onDraftFiltersChange({
+                    ...draftFilters,
+                    tasks: toggleToken(draftFilters.tasks, task.id),
+                  })
+                }
+              />
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-sm font-semibold">Студенты</h3>
+          <div className="relative mt-2">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={studentSearch}
+              onChange={(event) => setStudentSearch(event.target.value)}
+              placeholder="ФИО или username"
+              className="pl-9"
+            />
+          </div>
+          <div
+            className={cn(
+              'mt-2 space-y-1 pr-1',
+              isDrawer
+                ? 'max-h-[clamp(1rem,11dvh,12rem)] overflow-y-auto'
+                : 'max-h-48 overflow-y-auto'
+            )}
+          >
+            {visibleStudents.map((student) => (
+              <FilterOption
+                key={student.username}
+                id={`${idPrefix}-student-filter-${student.username}`}
+                label={`${student.fullName} · ${student.group}`}
+                checked={draftFilters.students.includes(student.username)}
+                onCheckedChange={() =>
+                  onDraftFiltersChange({
+                    ...draftFilters,
+                    students: toggleToken(
+                      draftFilters.students,
+                      student.username
+                    ),
+                  })
+                }
+              />
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-sm font-semibold">Оценена</h3>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {GRADED_FILTER_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() =>
+                  onDraftFiltersChange({
+                    ...draftFilters,
+                    graded: option.value,
+                  })
+                }
+                className={cn(
+                  'rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  draftFilters.graded === option.value
+                    ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
+                    : 'border-border bg-background'
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <div
+        className={cn(
+          'mt-6 grid grid-cols-2 gap-2',
+          isDrawer &&
+            'sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/80'
+        )}
+      >
+        <Button type="button" disabled={applyDisabled} onClick={applyFilters}>
+          Применить
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={resetDisabled}
+          onClick={resetFilters}
+        >
+          Сбросить
+        </Button>
+      </div>
+    </>
+  );
+}
+
+export function AttemptsFilterSidebar(
+  props: Omit<
+    AttemptsFiltersContentProps,
+    'idPrefix' | 'onAfterApply' | 'onAfterReset' | 'variant'
+  >
+) {
+  return (
+    <aside className="hidden min-w-0 lg:sticky lg:top-4 lg:block lg:self-start">
+      <div className="w-full max-w-full overflow-hidden rounded-2xl border border-border bg-card p-3 sm:rounded-3xl sm:p-4 lg:max-h-[calc(100dvh-2rem)] lg:w-80 lg:overflow-y-auto">
+        <AttemptsFiltersContent idPrefix="desktop" {...props} />
       </div>
     </aside>
   );
