@@ -10,274 +10,159 @@ import type {
 const MOCK_TASKS: CourseAttemptTask[] = [
   { id: '1', title: 'Вводное практическое задание', maxScore: 10 },
   { id: '2', title: 'Анализ pull request и диффов', maxScore: 10 },
-  { id: '3', title: 'Итоговый мини-проект', maxScore: 25 },
+  { id: '3', title: 'Работа с ветками Git', maxScore: 8 },
+  { id: '4', title: 'Покрытие кода тестами', maxScore: 12 },
+  { id: '5', title: 'Проектирование REST API', maxScore: 15 },
+  { id: '6', title: 'Рефакторинг legacy-модуля', maxScore: 15 },
+  { id: '7', title: 'Оптимизация SQL-запросов', maxScore: 20 },
+  { id: '8', title: 'Интеграция с очередью сообщений', maxScore: 20 },
+  { id: '9', title: 'Настройка CI/CD pipeline', maxScore: 10 },
+  { id: '10', title: 'Безопасность пользовательского ввода', maxScore: 18 },
+  { id: '11', title: 'Наблюдаемость и логирование', maxScore: 12 },
+  { id: '12', title: 'Итоговый мини-проект', maxScore: 25 },
 ];
 
-const STUDENTS_BY_COURSE: Record<string, CourseAttemptStudent[]> = {
-  'algorithms-and-data-structures': [
-    {
-      username: 'student',
-      fullName: 'Сергей Студентов',
-      group: 'БПИ-231',
-      subgroup: '1',
-    },
-    {
-      username: 'alice',
-      fullName: 'Алиса Миронова',
-      group: 'БПИ-231',
-      subgroup: '2',
-    },
-    {
-      username: 'bob',
-      fullName: 'Борис Иванов',
-      group: 'БПИ-232',
-      subgroup: '1',
-    },
-    {
-      username: 'ivan-ivanov',
-      fullName: 'Иван Иванов',
-      group: 'БПИ-232',
-      subgroup: '2',
-    },
-  ],
-  databases: [
-    {
-      username: 'student',
-      fullName: 'Сергей Студентов',
-      group: 'БПИ-231',
-      subgroup: '1',
-    },
-    {
-      username: 'alice',
-      fullName: 'Алиса Миронова',
-      group: 'БПИ-231',
-      subgroup: '2',
-    },
-    {
-      username: 'petr-petrov',
-      fullName: 'Пётр Петров',
-      group: 'БПИ-233',
-      subgroup: '1',
-    },
-  ],
-  'programming-languages': [
-    {
-      username: 'student',
-      fullName: 'Сергей Студентов',
-      group: 'БПИ-231',
-      subgroup: '1',
-    },
-    {
-      username: 'bob',
-      fullName: 'Борис Иванов',
-      group: 'БПИ-232',
-      subgroup: '1',
-    },
-    {
-      username: 'maria-ivanova',
-      fullName: 'Мария Иванова',
-      group: 'БПИ-234',
-      subgroup: '2',
-    },
-  ],
-  'frontend-engineering': [
-    {
-      username: 'student',
-      fullName: 'Сергей Студентов',
-      group: 'БПИ-231',
-      subgroup: '1',
-    },
-    {
-      username: 'alice',
-      fullName: 'Алиса Миронова',
-      group: 'БПИ-231',
-      subgroup: '2',
-    },
-    {
-      username: 'frontend-student',
-      fullName: 'Никита Вёрсткин',
-      group: 'БПИ-235',
-      subgroup: '1',
-    },
-  ],
-  'operating-systems': [
-    {
-      username: 'student',
-      fullName: 'Сергей Студентов',
-      group: 'БПИ-231',
-      subgroup: '1',
-    },
-    {
-      username: 'bob',
-      fullName: 'Борис Иванов',
-      group: 'БПИ-232',
-      subgroup: '1',
-    },
-    {
-      username: 'os-student',
-      fullName: 'Ольга Системина',
-      group: 'БПИ-236',
-      subgroup: '2',
-    },
-  ],
-  'computer-networks': [
-    {
-      username: 'student',
-      fullName: 'Сергей Студентов',
-      group: 'БПИ-231',
-      subgroup: '1',
-    },
-    {
-      username: 'alice',
-      fullName: 'Алиса Миронова',
-      group: 'БПИ-231',
-      subgroup: '2',
-    },
-    {
-      username: 'network-student',
-      fullName: 'Надежда Сетевая',
-      group: 'БПИ-237',
-      subgroup: '1',
-    },
-  ],
-  'modern-information-technologies': [
-    {
-      username: 'student',
-      fullName: 'Сергей Студентов',
-      group: 'БПИ-231',
-      subgroup: '1',
-    },
-    {
-      username: 'mit-student',
-      fullName: 'Мила Технологова',
-      group: 'БПИ-238',
-      subgroup: '2',
-    },
-    {
-      username: 'bob',
-      fullName: 'Борис Иванов',
-      group: 'БПИ-232',
-      subgroup: '1',
-    },
-  ],
-};
-
-const FALLBACK_STUDENTS: CourseAttemptStudent[] = [
-  {
-    username: 'student',
-    fullName: 'Сергей Студентов',
-    group: 'БПИ-231',
-    subgroup: '1',
-  },
+const FIRST_NAMES = [
+  'Сергей',
+  'Алиса',
+  'Борис',
+  'Иван',
+  'Мария',
+  'Никита',
+  'Ольга',
+  'Пётр',
+  'Надежда',
+  'Мила',
+  'Артём',
+  'Екатерина',
+  'Даниил',
+  'Анна',
+  'Максим',
 ];
 
+const LAST_NAMES = [
+  'Студентов',
+  'Миронова',
+  'Иванов',
+  'Петрова',
+  'Смирнов',
+  'Кузнецова',
+  'Попов',
+  'Васильева',
+  'Соколов',
+  'Новикова',
+  'Фёдоров',
+  'Морозова',
+  'Волков',
+  'Алексеева',
+  'Лебедев',
+  'Семёнова',
+  'Егоров',
+  'Павлова',
+  'Козлов',
+  'Орлова',
+];
+
+const USERNAMES = ['student', 'alice', 'bob'];
+
+const FEEDBACK_TEXTS = [
+  'Хороший старт, стоит уточнить обработку ошибок.',
+  'Зачтено, но дедлайн был превышен.',
+  'Отлично разобраны крайние случаи.',
+  'Черновой отзыв будет заменён после финального ревью.',
+  'Сильная работа, нужно упростить README.',
+  '',
+];
+
+const TEACHERS = [
+  'Елизавета Громова',
+  'Павел Ковалев',
+  'Артём Кудяков',
+  'Инна Батраева',
+];
+
+const MOCK_STUDENTS = buildMockStudents();
 const attemptsByCourse = new Map<string, CourseAttempt[]>();
 
-function getStudents(courseSlug: string): CourseAttemptStudent[] {
-  return STUDENTS_BY_COURSE[courseSlug] ?? FALLBACK_STUDENTS;
+function buildMockStudents(): CourseAttemptStudent[] {
+  return Array.from({ length: 60 }, (_, index) => ({
+    username:
+      USERNAMES[index] ?? `student-${String(index + 1).padStart(2, '0')}`,
+    fullName: `${FIRST_NAMES[index % FIRST_NAMES.length]} ${LAST_NAMES[index % LAST_NAMES.length]}`,
+    group: `БПИ-${231 + (index % 8)}`,
+    subgroup: String((index % 2) + 1),
+  }));
+}
+
+function getStudents(): CourseAttemptStudent[] {
+  return MOCK_STUDENTS;
 }
 
 function buildAttempts(courseSlug: string): CourseAttempt[] {
-  const students = getStudents(courseSlug);
-  const [
-    firstStudent,
-    secondStudent = firstStudent,
-    thirdStudent = firstStudent,
-  ] = students;
-  const [introTask, diffTask, projectTask] = MOCK_TASKS;
+  const attempts: CourseAttempt[] = [];
+  const students = getStudents();
+  const baseSubmittedMs = Date.UTC(2026, 4, 20, 9, 30, 0);
 
-  return [
-    {
-      id: `${courseSlug}:attempt:1`,
-      attemptNumber: 1,
-      task: introTask,
-      student: firstStudent,
-      submittedAt: '2026-05-20T13:25:00Z',
-      deadlineAt: '2026-05-21T20:59:00Z',
-      diff: { addedLines: 128, deletedLines: 14 },
-      grade: null,
-      feedbackText: 'Хороший старт, стоит уточнить обработку ошибок.',
-      reviewLock: null,
-    },
-    {
-      id: `${courseSlug}:attempt:2`,
-      attemptNumber: 2,
-      task: introTask,
-      student: secondStudent,
-      submittedAt: '2026-05-22T07:42:00Z',
-      deadlineAt: '2026-05-21T20:59:00Z',
-      diff: { addedLines: 86, deletedLines: 7 },
-      grade: {
-        score: 8,
-        maxScore: introTask.maxScore,
-        gradedAt: '2026-05-23T10:15:00Z',
-        gradedBy: 'Елизавета Громова',
-      },
-      feedbackText: 'Зачтено, но дедлайн был превышен.',
-      reviewLock: null,
-    },
-    {
-      id: `${courseSlug}:attempt:3`,
-      attemptNumber: 1,
-      task: diffTask,
-      student: thirdStudent,
-      submittedAt: '2026-05-24T15:10:00Z',
-      deadlineAt: '2026-05-25T20:59:00Z',
-      diff: { addedLines: 204, deletedLines: 61 },
-      grade: null,
-      feedbackText: '',
-      reviewLock: {
-        teacherName: 'Инна Батраева',
-        lockedAt: '2026-05-25T09:20:00Z',
-      },
-    },
-    {
-      id: `${courseSlug}:attempt:4`,
-      attemptNumber: 3,
-      task: diffTask,
-      student: firstStudent,
-      submittedAt: '2026-05-25T18:40:00Z',
-      deadlineAt: '2026-05-25T20:59:00Z',
-      diff: { addedLines: 52, deletedLines: 19 },
-      grade: {
-        score: 9,
-        maxScore: diffTask.maxScore,
-        gradedAt: '2026-05-26T08:35:00Z',
-        gradedBy: 'Павел Ковалев',
-      },
-      feedbackText: 'Отлично разобраны крайние случаи.',
-      reviewLock: null,
-    },
-    {
-      id: `${courseSlug}:attempt:5`,
-      attemptNumber: 1,
-      task: projectTask,
-      student: secondStudent,
-      submittedAt: '2026-05-26T12:05:00Z',
-      deadlineAt: '2026-05-30T20:59:00Z',
-      diff: { addedLines: 642, deletedLines: 103 },
-      grade: null,
-      feedbackText: 'Черновой отзыв будет заменён после финального ревью.',
-      reviewLock: null,
-    },
-    {
-      id: `${courseSlug}:attempt:6`,
-      attemptNumber: 2,
-      task: projectTask,
-      student: thirdStudent,
-      submittedAt: '2026-05-31T06:30:00Z',
-      deadlineAt: '2026-05-30T20:59:00Z',
-      diff: { addedLines: 318, deletedLines: 75 },
-      grade: {
-        score: 21,
-        maxScore: projectTask.maxScore,
-        gradedAt: '2026-06-01T11:45:00Z',
-        gradedBy: 'Артём Кудяков',
-      },
-      feedbackText: 'Сильная работа, нужно упростить README.',
-      reviewLock: null,
-    },
-  ];
+  students.forEach((student, studentIndex) => {
+    const attemptsPerStudent = studentIndex % 4 === 0 ? 3 : 2;
+
+    for (
+      let attemptIndex = 0;
+      attemptIndex < attemptsPerStudent;
+      attemptIndex += 1
+    ) {
+      const serial = attempts.length + 1;
+      const task =
+        MOCK_TASKS[(studentIndex * 2 + attemptIndex * 3) % MOCK_TASKS.length];
+      const submittedMs =
+        baseSubmittedMs +
+        (studentIndex * 9 + attemptIndex * 31) * 60 * 60 * 1000;
+      const submittedLate = (studentIndex + attemptIndex) % 5 === 0;
+      const deadlineMs =
+        submittedMs + (submittedLate ? -6 : 28) * 60 * 60 * 1000;
+      const graded = (studentIndex + attemptIndex) % 3 === 0;
+      const locked = !graded && (studentIndex + attemptIndex) % 17 === 0;
+      const scoreRatio =
+        0.55 + ((studentIndex * 7 + attemptIndex * 11) % 40) / 100;
+      const score = Number((task.maxScore * scoreRatio).toFixed(1));
+
+      attempts.push({
+        id: `${courseSlug}:attempt:${serial}`,
+        attemptNumber: ((studentIndex + attemptIndex) % 3) + 1,
+        task,
+        student,
+        submittedAt: new Date(submittedMs).toISOString(),
+        deadlineAt: new Date(deadlineMs).toISOString(),
+        diff: {
+          addedLines: 24 + ((studentIndex * 37 + attemptIndex * 83) % 720),
+          deletedLines: 2 + ((studentIndex * 19 + attemptIndex * 29) % 180),
+        },
+        grade: graded
+          ? {
+              score,
+              maxScore: task.maxScore,
+              gradedAt: new Date(
+                submittedMs + 18 * 60 * 60 * 1000
+              ).toISOString(),
+              gradedBy:
+                TEACHERS[(studentIndex + attemptIndex) % TEACHERS.length],
+            }
+          : null,
+        feedbackText:
+          FEEDBACK_TEXTS[(studentIndex + attemptIndex) % FEEDBACK_TEXTS.length],
+        reviewLock: locked
+          ? {
+              teacherName: TEACHERS[(studentIndex + 3) % TEACHERS.length],
+              lockedAt: new Date(
+                submittedMs + 2 * 60 * 60 * 1000
+              ).toISOString(),
+            }
+          : null,
+      });
+    }
+  });
+
+  return attempts;
 }
 
 function getCourseAttempts(courseSlug: string): CourseAttempt[] {
@@ -326,7 +211,7 @@ export async function fetchCourseAttemptsList({
   return {
     attempts: filterAttempts(attempts, filters),
     tasks: MOCK_TASKS,
-    students: getStudents(courseSlug),
+    students: getStudents(),
   };
 }
 
