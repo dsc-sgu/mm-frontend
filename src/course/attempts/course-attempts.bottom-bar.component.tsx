@@ -16,6 +16,7 @@ export function BottomActionBar({
   selectedAttempts,
   quickGrading,
   hasDraftChanges,
+  hasDraftValidationErrors,
   feedbackTextVisible,
   savePending,
   onSelectAll,
@@ -30,6 +31,7 @@ export function BottomActionBar({
   selectedAttempts: CourseAttempt[];
   quickGrading: boolean;
   hasDraftChanges: boolean;
+  hasDraftValidationErrors: boolean;
   feedbackTextVisible: boolean;
   savePending: boolean;
   onSelectAll: () => void;
@@ -75,7 +77,9 @@ export function BottomActionBar({
               </Button>
               <Button
                 type="button"
-                disabled={!hasDraftChanges || savePending}
+                disabled={
+                  !hasDraftChanges || hasDraftValidationErrors || savePending
+                }
                 onClick={onSaveQuickGrades}
                 className="h-10 whitespace-nowrap"
               >
