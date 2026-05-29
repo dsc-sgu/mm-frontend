@@ -97,7 +97,6 @@ export function BottomActionBar({
           >
             <p className="text-sm font-semibold">Быстрая оценка</p>
             <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:flex-wrap lg:items-center lg:justify-end">
-              {filtersButton}
               <label className="flex min-w-0 cursor-pointer items-center gap-2 px-2 text-sm font-medium min-[480px]:col-span-2 sm:px-3 lg:col-span-1">
                 <Checkbox
                   checked={feedbackTextVisible}
@@ -149,7 +148,6 @@ export function BottomActionBar({
               </Button>
             </div>
             <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:items-center">
-              {filtersButton}
               <Button
                 type="button"
                 variant="ghost"

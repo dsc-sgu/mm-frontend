@@ -81,6 +81,11 @@ export function CourseAttemptsPage({
   const hasDraftValidationErrors = quickGradingAttempts.some((attempt) =>
     Boolean(scoreDraftValidationError(attempt, draftScores[attempt.id]))
   );
+  const filterActionsDisabledReason = isQuickGrading
+    ? 'Фильтры недоступны во время быстрой оценки. Выйдите из режима быстрой оценки.'
+    : selectedAttempts.length > 0
+      ? 'Фильтры недоступны, пока выбраны попытки. Очистите выбор.'
+      : undefined;
 
   useEffect(() => {
     setDraftFilters(normalizedAppliedFilters);
@@ -170,6 +175,7 @@ export function CourseAttemptsPage({
           attemptsCount={attempts.length}
           tasks={tasks}
           students={students}
+          filterActionsDisabledReason={filterActionsDisabledReason}
           onDraftFiltersChange={(filters) =>
             setDraftFilters(normalizeCourseAttemptsFilters(filters))
           }
@@ -265,6 +271,7 @@ export function CourseAttemptsPage({
                     attemptsCount={attempts.length}
                     tasks={tasks}
                     students={students}
+                    filterActionsDisabledReason={filterActionsDisabledReason}
                     onDraftFiltersChange={(filters) =>
                       setDraftFilters(normalizeCourseAttemptsFilters(filters))
                     }
