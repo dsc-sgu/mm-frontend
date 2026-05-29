@@ -523,28 +523,26 @@ function BottomActionBar({
     <TooltipProvider>
       <div className="sticky bottom-4 z-10 mt-6 rounded-3xl border border-border bg-background/92 p-3 shadow-xl backdrop-blur supports-[backdrop-filter]:bg-background/75">
         {quickGrading ? (
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm font-semibold">Быстрая оценка</p>
-              <p className="text-sm text-muted-foreground">
-                Изменения сохраняются в мок-данных без сброса фильтров.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <label className="flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-sm">
+          <div className="grid gap-4 lg:grid-cols-[minmax(12rem,1fr)_auto] lg:items-center">
+            <p className="text-sm font-semibold">Быстрая оценка</p>
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+              <label className="flex h-10 min-w-0 cursor-pointer items-center gap-2 bg-background px-3 text-sm font-medium">
                 <Checkbox
                   checked={feedbackTextVisible}
                   onCheckedChange={(value) =>
                     onFeedbackTextVisibleChange(value === true)
                   }
                 />
-                Показать поле текста отзыва
+                <span className="whitespace-nowrap">
+                  Показать поле текста отзыва
+                </span>
               </label>
               {/* TODO(issue #25): define and implement the quick grading feedback textarea design here. */}
               <Button
                 type="button"
                 variant="outline"
                 onClick={onExitQuickGrading}
+                className="h-10 whitespace-nowrap"
               >
                 Выйти из быстрой оценки
               </Button>
@@ -552,6 +550,7 @@ function BottomActionBar({
                 type="button"
                 disabled={!hasDraftChanges || savePending}
                 onClick={onSaveQuickGrades}
+                className="h-10 whitespace-nowrap"
               >
                 <Save className="size-4" /> Сохранить
               </Button>
