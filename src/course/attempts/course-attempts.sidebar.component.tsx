@@ -27,6 +27,23 @@ function toggleToken(tokens: string[], token: string): string[] {
     : [...tokens, token].sort((a, b) => a.localeCompare(b));
 }
 
+function compareSelectedFirst<T>(
+  firstItem: T,
+  secondItem: T,
+  selectedTokens: string[],
+  getToken: (item: T) => string,
+  getLabel: (item: T) => string
+): number {
+  const firstSelected = selectedTokens.includes(getToken(firstItem));
+  const secondSelected = selectedTokens.includes(getToken(secondItem));
+
+  if (firstSelected !== secondSelected) {
+    return firstSelected ? -1 : 1;
+  }
+
+  return getLabel(firstItem).localeCompare(getLabel(secondItem));
+}
+
 function FilterOption({
   id,
   label,
@@ -81,14 +98,34 @@ export function AttemptsFilterSidebar({
     draftFilters,
     appliedFilters
   );
-  const visibleTasks = tasks.filter((task) =>
-    task.title.toLowerCase().includes(taskSearch.toLowerCase().trim())
-  );
-  const visibleStudents = students.filter((student) =>
-    `${student.fullName} ${student.username}`
-      .toLowerCase()
-      .includes(studentSearch.toLowerCase().trim())
-  );
+  const visibleTasks = tasks
+    .filter((task) =>
+      task.title.toLowerCase().includes(taskSearch.toLowerCase().trim())
+    )
+    .sort((firstTask, secondTask) =>
+      compareSelectedFirst(
+        firstTask,
+        secondTask,
+        appliedFilters.tasks,
+        (task) => task.id,
+        (task) => task.title
+      )
+    );
+  const visibleStudents = students
+    .filter((student) =>
+      `${student.fullName} ${student.username}`
+        .toLowerCase()
+        .includes(studentSearch.toLowerCase().trim())
+    )
+    .sort((firstStudent, secondStudent) =>
+      compareSelectedFirst(
+        firstStudent,
+        secondStudent,
+        appliedFilters.students,
+        (student) => student.username,
+        (student) => student.fullName
+      )
+    );
 
   return (
     <aside className="lg:sticky lg:top-4 lg:self-start">
