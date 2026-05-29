@@ -10,10 +10,10 @@ import type { CourseAttempt } from './course-attempts.types';
 
 export function AttemptTitle({ attempt }: { attempt: CourseAttempt }) {
   return (
-    <h3 className="text-xl leading-tight tracking-tight">
+    <>
       <span className="font-semibold">Попытка #{attempt.attemptNumber}: </span>
       <span className="font-normal">{attempt.task.title}</span>
-    </h3>
+    </>
   );
 }
 
