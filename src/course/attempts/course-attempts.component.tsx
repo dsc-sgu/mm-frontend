@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { normalizeCourseAttemptsFilters } from './course-attempts.filters';
+import {
+  EMPTY_COURSE_ATTEMPTS_FILTERS,
+  normalizeCourseAttemptsFilters,
+} from './course-attempts.filters';
 import {
   scoreDraftChanged,
   scoreDraftValidationError,
@@ -160,6 +163,10 @@ export function CourseAttemptsPage({
             setDraftFilters(normalizeCourseAttemptsFilters(filters))
           }
           onApplyFilters={() => onApplyFilters(draftFilters)}
+          onResetFilters={() => {
+            setDraftFilters(EMPTY_COURSE_ATTEMPTS_FILTERS);
+            onApplyFilters(EMPTY_COURSE_ATTEMPTS_FILTERS);
+          }}
         />
 
         <section className="min-w-0">
