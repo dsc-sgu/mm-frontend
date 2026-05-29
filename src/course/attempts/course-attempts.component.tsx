@@ -9,7 +9,6 @@ import {
 import { AttemptCard } from './course-attempts.card.component';
 import { BottomActionBar } from './course-attempts.bottom-bar.component';
 import { AttemptsFilterSidebar } from './course-attempts.sidebar.component';
-import { QuickGradingCard } from './course-attempts.quick-card.component';
 import type {
   CourseAttempt,
   CourseAttemptsFilters,
@@ -155,8 +154,9 @@ export function CourseAttemptsPage({
           ) : isQuickGrading ? (
             <div className="space-y-3">
               {quickGradingAttempts.map((attempt) => (
-                <QuickGradingCard
+                <AttemptCard
                   key={attempt.id}
+                  mode="quick-grading"
                   attempt={attempt}
                   draftScore={draftScores[attempt.id] ?? ''}
                   onDraftScoreChange={(score) =>
@@ -173,6 +173,7 @@ export function CourseAttemptsPage({
               {attempts.map((attempt) => (
                 <AttemptCard
                   key={attempt.id}
+                  mode="default"
                   attempt={attempt}
                   courseSlug={courseSlug}
                   selected={selectedAttemptIds.includes(attempt.id)}
