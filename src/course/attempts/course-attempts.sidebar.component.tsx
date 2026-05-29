@@ -5,7 +5,10 @@ import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import { Input } from '@/shadcn/components/ui/input';
 import { cn } from '@/shadcn/lib/utils';
-import { areCourseAttemptsFiltersEqual } from './course-attempts.filters';
+import {
+  areCourseAttemptsFiltersEqual,
+  EMPTY_COURSE_ATTEMPTS_FILTERS,
+} from './course-attempts.filters';
 import type {
   CourseAttempt,
   CourseAttemptGradedFilter,
@@ -82,6 +85,7 @@ export function AttemptsFilterSidebar({
   students,
   onDraftFiltersChange,
   onApplyFilters,
+  onResetFilters,
 }: {
   appliedFilters: CourseAttemptsFilters;
   draftFilters: CourseAttemptsFilters;
@@ -90,6 +94,7 @@ export function AttemptsFilterSidebar({
   students: CourseAttempt['student'][];
   onDraftFiltersChange: (filters: CourseAttemptsFilters) => void;
   onApplyFilters: () => void;
+  onResetFilters: () => void;
 }) {
   const [taskSearch, setTaskSearch] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
@@ -98,6 +103,17 @@ export function AttemptsFilterSidebar({
     draftFilters,
     appliedFilters
   );
+  const resetDisabled =
+    areCourseAttemptsFiltersEqual(
+      draftFilters,
+      EMPTY_COURSE_ATTEMPTS_FILTERS
+    ) &&
+    areCourseAttemptsFiltersEqual(
+      appliedFilters,
+      EMPTY_COURSE_ATTEMPTS_FILTERS
+    ) &&
+    taskSearch.trim() === '' &&
+    studentSearch.trim() === '';
   const visibleTasks = tasks
     .filter((task) =>
       task.title.toLowerCase().includes(taskSearch.toLowerCase().trim())
@@ -129,6 +145,13 @@ export function AttemptsFilterSidebar({
 
   function applyFilters() {
     onApplyFilters();
+    setTaskSearch('');
+    setStudentSearch('');
+  }
+
+  function resetFilters() {
+    onDraftFiltersChange(EMPTY_COURSE_ATTEMPTS_FILTERS);
+    onResetFilters();
     setTaskSearch('');
     setStudentSearch('');
   }
@@ -236,14 +259,19 @@ export function AttemptsFilterSidebar({
           </section>
         </div>
 
-        <Button
-          type="button"
-          className="mt-6 w-full"
-          disabled={applyDisabled}
-          onClick={applyFilters}
-        >
-          Применить
-        </Button>
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          <Button type="button" disabled={applyDisabled} onClick={applyFilters}>
+            Применить
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={resetDisabled}
+            onClick={resetFilters}
+          >
+            Сбросить
+          </Button>
+        </div>
       </div>
     </aside>
   );
