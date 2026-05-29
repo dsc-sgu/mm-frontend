@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, X } from 'lucide-react';
+import { Filter, Save, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
@@ -30,6 +30,7 @@ export function BottomActionBar({
   onSelectAll,
   onClearSelection,
   onStartQuickGradingAll,
+  onOpenFilters,
   onSaveSelectedBulkGrade,
   onExitQuickGrading,
   onFeedbackTextVisibleChange,
@@ -45,6 +46,7 @@ export function BottomActionBar({
   onSelectAll: () => void;
   onClearSelection: () => void;
   onStartQuickGradingAll: () => void;
+  onOpenFilters: () => void;
   onSaveSelectedBulkGrade: (score: number) => Promise<void>;
   onExitQuickGrading: () => void;
   onFeedbackTextVisibleChange: (visible: boolean) => void;
@@ -74,6 +76,17 @@ export function BottomActionBar({
     setBulkPopoverOpen(false);
   }
 
+  const filtersButton = (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={onOpenFilters}
+      className="h-10 w-full lg:hidden"
+    >
+      <Filter className="size-4" /> Фильтры
+    </Button>
+  );
+
   return (
     <TooltipProvider>
       <div className="fixed inset-x-3 bottom-2 z-50 mx-auto max-w-7xl rounded-2xl border border-border bg-background/92 p-2 shadow-xl backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:inset-x-6 sm:bottom-4 sm:rounded-3xl sm:p-3 lg:left-[max(2rem,calc((100vw-80rem)/2+23.5rem))] lg:right-[max(2rem,calc((100vw-80rem)/2+2rem))]">
@@ -84,6 +97,7 @@ export function BottomActionBar({
           >
             <p className="text-sm font-semibold">Быстрая оценка</p>
             <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:flex-wrap lg:items-center lg:justify-end">
+              {filtersButton}
               <label className="flex min-w-0 cursor-pointer items-center gap-2 px-2 text-sm font-medium min-[480px]:col-span-2 sm:px-3 lg:col-span-1">
                 <Checkbox
                   checked={feedbackTextVisible}
@@ -135,6 +149,7 @@ export function BottomActionBar({
               </Button>
             </div>
             <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:items-center">
+              {filtersButton}
               <Button
                 type="button"
                 variant="ghost"
@@ -232,7 +247,8 @@ export function BottomActionBar({
             <p className="min-w-0 break-words text-sm text-muted-foreground">
               Выберите отдельные попытки или запустите оценку всех видимых.
             </p>
-            <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:items-center">
+            <div className="grid gap-2 min-[496px]:grid-cols-3 lg:flex lg:items-center">
+              {filtersButton}
               <Button
                 type="button"
                 variant="outline"

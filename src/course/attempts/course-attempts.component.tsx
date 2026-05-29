@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Filter } from 'lucide-react';
 
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/shadcn/components/ui/drawer';
 import {
   EMPTY_COURSE_ATTEMPTS_FILTERS,
   normalizeCourseAttemptsFilters,
@@ -15,7 +22,10 @@ import {
 } from './course-attempts.queries';
 import { AttemptCard } from './course-attempts.card.component';
 import { BottomActionBar } from './course-attempts.bottom-bar.component';
-import { AttemptsFilterSidebar } from './course-attempts.sidebar.component';
+import {
+  AttemptsFilterSidebar,
+  AttemptsFiltersContent,
+} from './course-attempts.sidebar.component';
 import type {
   CourseAttempt,
   CourseAttemptsFilters,
@@ -47,6 +57,7 @@ export function CourseAttemptsPage({
   >([]);
   const [draftScores, setDraftScores] = useState<Record<string, string>>({});
   const [feedbackTextVisible, setFeedbackTextVisible] = useState(false);
+  const [filtersDrawerOpen, setFiltersDrawerOpen] = useState(false);
 
   const attemptsQuery = useCourseAttemptsQuery({
     courseSlug,
@@ -183,7 +194,7 @@ export function CourseAttemptsPage({
             <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
               <h2 className="text-xl font-semibold">Попытки не найдены</h2>
               <p className="mt-2 text-muted-foreground">
-                Измените фильтры в боковой панели и нажмите «Применить».
+                Измените фильтры и нажмите «Применить».
               </p>
             </div>
           ) : isQuickGrading ? (
@@ -226,6 +237,50 @@ export function CourseAttemptsPage({
             </div>
           )}
 
+          <div className="lg:hidden">
+            <Drawer
+              open={filtersDrawerOpen}
+              onOpenChange={setFiltersDrawerOpen}
+            >
+              <DrawerContent className="rounded-t-3xl">
+                <DrawerHeader className="shrink-0 px-4 pb-3 pt-5 text-left">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <DrawerTitle className="flex items-center gap-2 text-base">
+                        <Filter className="size-4" /> Фильтры попыток
+                      </DrawerTitle>
+                    </div>
+                    <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
+                      {attempts.length}
+                    </span>
+                  </div>
+                </DrawerHeader>
+                <div className="min-h-0 flex-1 overflow-y-auto px-4 scroll-pb-24 overscroll-contain">
+                  <AttemptsFiltersContent
+                    idPrefix="mobile"
+                    showHeader={false}
+                    variant="drawer"
+                    appliedFilters={normalizedAppliedFilters}
+                    draftFilters={draftFilters}
+                    attemptsCount={attempts.length}
+                    tasks={tasks}
+                    students={students}
+                    onDraftFiltersChange={(filters) =>
+                      setDraftFilters(normalizeCourseAttemptsFilters(filters))
+                    }
+                    onApplyFilters={() => onApplyFilters(draftFilters)}
+                    onResetFilters={() => {
+                      setDraftFilters(EMPTY_COURSE_ATTEMPTS_FILTERS);
+                      onApplyFilters(EMPTY_COURSE_ATTEMPTS_FILTERS);
+                    }}
+                    onAfterApply={() => setFiltersDrawerOpen(false)}
+                    onAfterReset={() => setFiltersDrawerOpen(false)}
+                  />
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </div>
+
           <BottomActionBar
             attempts={attempts}
             selectedAttempts={selectedAttempts}
@@ -239,6 +294,7 @@ export function CourseAttemptsPage({
             }
             onClearSelection={() => setSelectedAttemptIds([])}
             onStartQuickGradingAll={() => startQuickGrading(attempts)}
+            onOpenFilters={() => setFiltersDrawerOpen(true)}
             onSaveSelectedBulkGrade={saveSelectedBulkGrade}
             onExitQuickGrading={exitQuickGrading}
             onFeedbackTextVisibleChange={setFeedbackTextVisible}
