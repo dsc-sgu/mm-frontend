@@ -61,7 +61,7 @@ function FilterOption({
   return (
     <label
       htmlFor={id}
-      className="flex select-none cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+      className="flex min-w-0 select-none cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-accent"
     >
       <Checkbox
         id={id}
@@ -72,7 +72,7 @@ function FilterOption({
           }
         }}
       />
-      <span className="truncate">{label}</span>
+      <span className="min-w-0 truncate">{label}</span>
     </label>
   );
 }
@@ -157,8 +157,8 @@ export function AttemptsFilterSidebar({
   }
 
   return (
-    <aside className="lg:sticky lg:top-4 lg:self-start">
-      <div className="rounded-3xl border border-border bg-card p-4 lg:max-h-[calc(100dvh-2rem)] lg:w-80 lg:overflow-y-auto">
+    <aside className="min-w-0 lg:sticky lg:top-4 lg:self-start">
+      <div className="w-full max-w-full overflow-hidden rounded-2xl border border-border bg-card p-3 sm:rounded-3xl sm:p-4 lg:max-h-[calc(100dvh-2rem)] lg:w-80 lg:overflow-y-auto">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">

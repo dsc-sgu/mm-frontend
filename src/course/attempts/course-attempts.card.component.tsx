@@ -43,16 +43,16 @@ export function AttemptCard(props: AttemptCardProps) {
   return (
     <article
       className={cn(
-        'rounded-2xl border bg-card px-6 py-5 transition-colors sm:px-7 sm:py-6',
+        'max-w-full overflow-hidden rounded-2xl border bg-card px-4 py-4 transition-colors sm:px-7 sm:py-6',
         selected ? 'border-primary ring-2 ring-primary/15' : 'border-border'
       )}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center">
+      <div className="grid min-w-0 gap-2 sm:flex sm:items-start sm:justify-between sm:gap-4">
+        <div className="flex min-w-0 items-start">
           <div
             className={cn(
-              'grid shrink-0 place-items-center overflow-hidden transition-[width,opacity,margin] duration-200 ease-out',
-              isDefaultMode ? 'mr-2 w-5 opacity-100' : 'mr-0 w-0 opacity-0'
+              'mr-2 mt-[0.1875rem] grid w-5 shrink-0 place-items-center overflow-hidden transition-[opacity,transform] duration-200 ease-out sm:mt-1',
+              isDefaultMode ? 'scale-100 opacity-100' : 'scale-75 opacity-0'
             )}
             aria-hidden={!isDefaultMode}
           >
@@ -69,11 +69,16 @@ export function AttemptCard(props: AttemptCardProps) {
               className="size-5 rounded-md transition-opacity duration-200"
             />
           </div>
-          <h3 className="text-xl font-semibold leading-tight tracking-tight transition-transform duration-200 ease-out">
+          <h3
+            className={cn(
+              'min-w-0 break-words text-lg font-semibold leading-tight tracking-tight transition-transform duration-200 ease-out sm:text-xl',
+              isDefaultMode ? 'translate-x-0' : '-translate-x-7'
+            )}
+          >
             {props.mode === 'default' ? (
               <button
                 type="button"
-                className="select-none text-left focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="block min-w-0 break-words text-left select-none focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 onClick={() => props.onSelectedChange(!props.selected)}
               >
                 <AttemptTitle attempt={attempt} />
@@ -83,14 +88,26 @@ export function AttemptCard(props: AttemptCardProps) {
             )}
           </h3>
         </div>
-        <AttemptDiffStats attempt={attempt} />
+        <div
+          className={cn(
+            'pl-7 transition-transform duration-200 ease-out sm:pl-0',
+            isDefaultMode ? 'translate-x-0' : '-translate-x-7 sm:translate-x-0'
+          )}
+        >
+          <AttemptDiffStats attempt={attempt} />
+        </div>
       </div>
 
       <div className="min-w-0">
         <AttemptDetails attempt={attempt} />
       </div>
 
-      <div className="mt-2 flex h-12 items-center">
+      <div
+        className={cn(
+          'mt-2 flex items-center',
+          props.mode === 'default' ? 'h-12' : 'min-h-12'
+        )}
+      >
         {props.mode === 'default' ? (
           <Button
             asChild

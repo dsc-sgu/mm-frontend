@@ -50,7 +50,7 @@ export function scoreDraftMaxScoreError(
   }
 
   if (Number(draft) > maxScore) {
-    return `Вы не можете поставить оценку выше ${maxScore}`;
+    return `Не больше ${maxScore}`;
   }
 
   return null;
