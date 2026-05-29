@@ -327,7 +327,7 @@ function AttemptTitle({ attempt }: { attempt: CourseAttempt }) {
 
 function AttemptDiffStats({ attempt }: { attempt: CourseAttempt }) {
   return (
-    <div className="flex shrink-0 items-center gap-3 text-sm font-semibold sm:text-base">
+    <div className="flex shrink-0 items-center gap-3 font-medium text-sm">
       <span className="text-emerald-700 dark:text-emerald-300">
         +{attempt.diff.addedLines}
       </span>
