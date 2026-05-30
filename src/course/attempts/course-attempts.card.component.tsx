@@ -35,15 +35,14 @@ type AttemptCardProps =
     };
 
 export function AttemptCard(props: AttemptCardProps) {
-  const { attempt } = props;
   const isDefaultMode = props.mode === 'default';
-  const hasDefaultCheckbox = !attempt.reviewLock;
+  const hasDefaultCheckbox = !props.attempt.reviewLock;
   const canSelect = isDefaultMode && hasDefaultCheckbox;
   const hasSelectionSlot = hasDefaultCheckbox;
   const selected = canSelect ? props.selected : false;
   const draftScoreChanged =
     props.mode === 'quick-grading'
-      ? scoreDraftChanged(attempt, props.draftScore)
+      ? scoreDraftChanged(props.attempt, props.draftScore)
       : false;
 
   return (
@@ -73,7 +72,7 @@ export function AttemptCard(props: AttemptCardProps) {
                       props.onSelectedChange(value === true);
                     }
                   }}
-                  aria-label={`Выбрать попытку ${attempt.task.title}`}
+                  aria-label={`Выбрать попытку ${props.attempt.task.title}`}
                   className="size-5 rounded-md transition-opacity duration-200"
                 />
               ) : null}
@@ -93,10 +92,10 @@ export function AttemptCard(props: AttemptCardProps) {
                 className="block min-w-0 cursor-pointer break-words text-left select-none focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 onClick={() => props.onSelectedChange(!selected)}
               >
-                <AttemptTitle attempt={attempt} />
+                <AttemptTitle attempt={props.attempt} />
               </button>
             ) : (
-              <AttemptTitle attempt={attempt} />
+              <AttemptTitle attempt={props.attempt} />
             )}
           </h3>
         </div>
@@ -107,12 +106,12 @@ export function AttemptCard(props: AttemptCardProps) {
             isDefaultMode ? 'translate-x-0' : '-translate-x-7 sm:translate-x-0'
           )}
         >
-          <AttemptDiffStats attempt={attempt} />
+          <AttemptDiffStats attempt={props.attempt} />
         </div>
       </div>
 
       <div className="min-w-0">
-        <AttemptDetails attempt={attempt} />
+        <AttemptDetails attempt={props.attempt} />
       </div>
 
       <div
@@ -130,8 +129,8 @@ export function AttemptCard(props: AttemptCardProps) {
             <a
               href={
                 selected
-                  ? getAttemptDiffHref(props.courseSlug, attempt)
-                  : getAttemptReviewHref(props.courseSlug, attempt)
+                  ? getAttemptDiffHref(props.courseSlug, props.attempt)
+                  : getAttemptReviewHref(props.courseSlug, props.attempt)
               }
             >
               {selected ? (
@@ -145,10 +144,10 @@ export function AttemptCard(props: AttemptCardProps) {
         ) : (
           <CourseAttemptsScoreField
             value={props.draftScore}
-            maxScore={attempt.task.maxScore}
+            maxScore={props.attempt.task.maxScore}
             changed={draftScoreChanged}
-            disabled={Boolean(attempt.reviewLock)}
-            ariaLabel={`Балл за попытку ${attempt.task.title}`}
+            disabled={Boolean(props.attempt.reviewLock)}
+            ariaLabel={`Балл за попытку ${props.attempt.task.title}`}
             onChange={props.onDraftScoreChange}
           />
         )}
