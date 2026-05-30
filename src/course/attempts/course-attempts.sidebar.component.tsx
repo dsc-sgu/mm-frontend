@@ -247,7 +247,25 @@ export function AttemptsFiltersContent({
 
       <div className={cn(showHeader ? 'mt-5' : 'mt-0', 'space-y-6')}>
         <section>
-          <h3 className="text-sm font-semibold">Задания</h3>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold">Задания</h3>
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              disabled={
+                filterActionsDisabled || draftFilters.tasks.length === 0
+              }
+              onClick={() =>
+                onDraftFiltersChange({
+                  ...draftFilters,
+                  tasks: [],
+                })
+              }
+            >
+              Сбросить
+            </Button>
+          </div>
           <div className="relative mt-2">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -287,7 +305,25 @@ export function AttemptsFiltersContent({
         </section>
 
         <section>
-          <h3 className="text-sm font-semibold">Студенты</h3>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold">Студенты</h3>
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              disabled={
+                filterActionsDisabled || draftFilters.students.length === 0
+              }
+              onClick={() =>
+                onDraftFiltersChange({
+                  ...draftFilters,
+                  students: [],
+                })
+              }
+            >
+              Сбросить
+            </Button>
+          </div>
           <div className="relative mt-2">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
