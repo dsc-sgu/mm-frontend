@@ -4,10 +4,6 @@ import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import { cn } from '@/shadcn/lib/utils';
 import { scoreDraftChanged } from './course-attempts.grading';
-import {
-  getAttemptDiffHref,
-  getAttemptReviewHref,
-} from './course-attempts.navigation';
 import { CourseAttemptsScoreField } from './course-attempts.score-field.component';
 import type {
   CourseAttempt,
@@ -307,4 +303,18 @@ function getGroupLabel(attempt: CourseAttempt): string {
   ]
     .filter(Boolean)
     .join(' · ');
+}
+
+function getAttemptDiffHref(
+  courseSlug: string,
+  attempt: CourseAttempt
+): string {
+  return `/courses/${courseSlug}/tasks/${attempt.task.id}/attempts/${attempt.student.username}/${attempt.attemptNumber}`;
+}
+
+function getAttemptReviewHref(
+  courseSlug: string,
+  attempt: CourseAttempt
+): string {
+  return `${getAttemptDiffHref(courseSlug, attempt)}/review`;
 }
