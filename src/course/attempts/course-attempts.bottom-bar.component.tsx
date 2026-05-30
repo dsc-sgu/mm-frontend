@@ -48,17 +48,6 @@ export function BottomActionBar({
   const hasSelection = selectedAttempts.length > 0;
   const hasSelectableAttempts = attempts.some(isAttemptSelectable);
 
-  const filtersButton = (
-    <Button
-      type="button"
-      variant="outline"
-      onClick={onOpenFilters}
-      className="h-10 w-full lg:hidden"
-    >
-      <Filter className="size-4" /> Фильтры
-    </Button>
-  );
-
   return (
     <TooltipProvider>
       <div className="fixed inset-x-3 bottom-2 z-50 mx-auto max-w-7xl rounded-2xl border border-border bg-background/92 p-2 shadow-xl backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:inset-x-6 sm:bottom-4 sm:rounded-3xl sm:p-3 lg:left-[max(2rem,calc((100vw-80rem)/2+23.5rem))] lg:right-[max(2rem,calc((100vw-80rem)/2+2rem))]">
@@ -152,7 +141,14 @@ export function BottomActionBar({
               Выберите отдельные попытки или запустите оценку всех видимых.
             </p>
             <div className="grid gap-2 min-[496px]:grid-cols-3 lg:flex lg:items-center">
-              {filtersButton}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onOpenFilters}
+                className="h-10 w-full lg:hidden"
+              >
+                <Filter className="size-4" /> Фильтры
+              </Button>
               <Button
                 type="button"
                 variant="outline"
