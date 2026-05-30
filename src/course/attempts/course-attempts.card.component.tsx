@@ -35,9 +35,7 @@ type AttemptCardProps =
     };
 
 export function AttemptCard(props: AttemptCardProps) {
-  const hasDefaultCheckbox = !props.attempt.reviewLock;
-  const canSelect = props.mode === 'default' && hasDefaultCheckbox;
-  const hasSelectionSlot = hasDefaultCheckbox;
+  const canSelect = props.mode === 'default' && !props.attempt.reviewLock;
   const selected = canSelect ? props.selected : false;
   const draftScoreChanged =
     props.mode === 'quick-grading'
@@ -53,7 +51,7 @@ export function AttemptCard(props: AttemptCardProps) {
     >
       <div className="grid min-w-0 gap-2 sm:flex sm:items-start sm:justify-between sm:gap-4">
         <div className="flex min-w-0 items-start">
-          {hasSelectionSlot ? (
+          {!props.attempt.reviewLock ? (
             <div
               className={cn(
                 'mr-2 mt-[0.1875rem] grid w-5 shrink-0 place-items-center overflow-hidden transition-[opacity,transform] duration-200 ease-out sm:mt-1',
@@ -78,7 +76,7 @@ export function AttemptCard(props: AttemptCardProps) {
           <h3
             className={cn(
               'min-w-0 break-words text-lg font-semibold leading-tight tracking-tight transition-transform duration-200 ease-out sm:text-xl',
-              props.mode !== 'default' && hasSelectionSlot
+              props.mode !== 'default' && !props.attempt.reviewLock
                 ? '-translate-x-7'
                 : 'translate-x-0'
             )}
@@ -99,7 +97,7 @@ export function AttemptCard(props: AttemptCardProps) {
         <div
           className={cn(
             'transition-transform duration-200 ease-out',
-            hasSelectionSlot ? 'pl-7 sm:pl-0' : 'pl-0',
+            !props.attempt.reviewLock ? 'pl-7 sm:pl-0' : 'pl-0',
             props.mode === 'default'
               ? 'translate-x-0'
               : '-translate-x-7 sm:translate-x-0'
