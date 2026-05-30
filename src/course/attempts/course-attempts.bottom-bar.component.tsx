@@ -137,13 +137,6 @@ export function BottomActionBar({
                   Поставить максимум
                 </Button>
               )}
-              <Button
-                type="button"
-                variant="outline"
-                className="h-10 w-full lg:w-auto"
-              >
-                Продлить дедлайн
-              </Button>
             </div>
           </div>
         ) : (
