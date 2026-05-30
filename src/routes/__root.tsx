@@ -1,5 +1,6 @@
 import { Header } from '@/header/header.component';
 import { RouterPending } from '@/router-pending.component';
+import { Toaster } from '@/shadcn/components/ui/sonner';
 import type { QueryClient } from '@tanstack/react-query';
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router';
 
@@ -17,6 +18,7 @@ function RootComponent() {
       <RouterPending />
       <Header />
       <Outlet />
+      <Toaster position="top-right" />
     </>
   );
 }
