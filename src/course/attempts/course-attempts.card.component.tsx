@@ -87,7 +87,7 @@ export function AttemptCard(props: AttemptCardProps) {
             {canSelect ? (
               <button
                 type="button"
-                className="block min-w-0 break-words text-left select-none focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="block min-w-0 cursor-pointer break-words text-left select-none focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 onClick={() => props.onSelectedChange(!selected)}
               >
                 <AttemptTitle attempt={attempt} />
