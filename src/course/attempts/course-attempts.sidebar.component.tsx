@@ -234,12 +234,12 @@ export function AttemptsFiltersContent({
           </div>
           {loading ? (
             <span
-              className="h-7 w-12 animate-pulse rounded-full bg-muted"
+              className="h-7 w-24 animate-pulse rounded-full bg-muted"
               aria-label="Загрузка количества попыток"
             />
           ) : (
             <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
-              {attemptsCount}
+              Попыток: {attemptsCount}
             </span>
           )}
         </div>
