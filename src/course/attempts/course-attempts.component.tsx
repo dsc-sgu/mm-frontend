@@ -407,9 +407,16 @@ export function CourseAttemptsPage({
                         <Filter className="size-4" /> Фильтры попыток
                       </DrawerTitle>
                     </div>
-                    <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
-                      {attempts.length}
-                    </span>
+                    {attemptsQuery.isPending ? (
+                      <span
+                        className="h-7 w-24 animate-pulse rounded-full bg-muted"
+                        aria-label="Загрузка количества попыток"
+                      />
+                    ) : (
+                      <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
+                        Попыток: {attempts.length}
+                      </span>
+                    )}
                   </div>
                 </DrawerHeader>
                 <div className="min-h-0 flex-1 overflow-y-auto px-4 scroll-pb-24 overscroll-contain">
