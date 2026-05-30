@@ -316,6 +316,7 @@ export function CourseAttemptsPage({
           appliedFilters={normalizedAppliedFilters}
           draftFilters={draftFilters}
           attemptsCount={attempts.length}
+          loading={attemptsQuery.isPending}
           tasks={tasks}
           students={students}
           filterActionsDisabledReason={filterActionsDisabledReason}
@@ -419,6 +420,7 @@ export function CourseAttemptsPage({
                     appliedFilters={normalizedAppliedFilters}
                     draftFilters={draftFilters}
                     attemptsCount={attempts.length}
+                    loading={attemptsQuery.isPending}
                     tasks={tasks}
                     students={students}
                     filterActionsDisabledReason={filterActionsDisabledReason}
