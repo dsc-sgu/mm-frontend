@@ -256,12 +256,12 @@ export function CourseAttemptsPage({
     setFeedbackTextVisible(false);
   }
 
-  async function saveSelectedBulkGrade(score: number) {
+  async function saveSelectedMaxGrade() {
     const updates = selectedAttempts
       .filter((attempt) => !attempt.reviewLock)
       .map((attempt) => ({
         attemptId: attempt.id,
-        score,
+        score: attempt.task.maxScore,
       }));
 
     if (updates.length === 0) {
@@ -440,7 +440,7 @@ export function CourseAttemptsPage({
             onClearSelection={() => setSelectedAttemptIds([])}
             onStartQuickGradingAll={() => startQuickGrading(attempts)}
             onOpenFilters={() => setFiltersDrawerOpen(true)}
-            onSaveSelectedBulkGrade={saveSelectedBulkGrade}
+            onSaveSelectedMaxGrade={saveSelectedMaxGrade}
             onExitQuickGrading={exitQuickGrading}
             onFeedbackTextVisibleChange={setFeedbackTextVisible}
             onSaveQuickGrades={saveQuickGrades}
