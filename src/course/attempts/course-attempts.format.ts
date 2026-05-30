@@ -6,16 +6,25 @@ const DATE_TIME_FORMAT = new Intl.DateTimeFormat('ru-RU', {
   hour: '2-digit',
   minute: '2-digit',
 });
+const dateTimeFormatCache = new Map<string, string>();
 
 export function formatDateTime(value: string): string {
-  return DATE_TIME_FORMAT.format(new Date(value));
+  const cached = dateTimeFormatCache.get(value);
+
+  if (cached) {
+    return cached;
+  }
+
+  const formatted = DATE_TIME_FORMAT.format(new Date(value));
+  dateTimeFormatCache.set(value, formatted);
+  return formatted;
 }
 
 export function getTimingLabel(attempt: CourseAttempt): {
   label: string;
   className: string;
 } {
-  const late = new Date(attempt.submittedAt) > new Date(attempt.deadlineAt);
+  const late = Date.parse(attempt.submittedAt) > Date.parse(attempt.deadlineAt);
 
   return late
     ? {

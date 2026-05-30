@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
 
 import {
@@ -41,6 +41,10 @@ interface CourseAttemptsPageProps {
   onApplyFilters: (filters: CourseAttemptsFilters) => void;
 }
 
+function courseAttemptsFiltersKey(filters: CourseAttemptsFilters) {
+  return `${filters.graded}|${filters.tasks.join(',')}|${filters.students.join(',')}`;
+}
+
 export function CourseAttemptsPage({
   courseSlug,
   appliedFilters,
@@ -50,7 +54,18 @@ export function CourseAttemptsPage({
     () => normalizeCourseAttemptsFilters(appliedFilters),
     [appliedFilters]
   );
-  const [draftFilters, setDraftFilters] = useState(normalizedAppliedFilters);
+  const appliedFiltersKey = useMemo(
+    () => courseAttemptsFiltersKey(normalizedAppliedFilters),
+    [normalizedAppliedFilters]
+  );
+  const [draftFiltersState, setDraftFiltersState] = useState(() => ({
+    appliedFiltersKey,
+    filters: normalizedAppliedFilters,
+  }));
+  const draftFilters =
+    draftFiltersState.appliedFiltersKey === appliedFiltersKey
+      ? draftFiltersState.filters
+      : normalizedAppliedFilters;
   const [selectedAttemptIds, setSelectedAttemptIds] = useState<string[]>([]);
   const [quickGradingAttemptIds, setQuickGradingAttemptIds] = useState<
     string[]
@@ -68,18 +83,37 @@ export function CourseAttemptsPage({
   const attempts = attemptsQuery.data?.attempts ?? EMPTY_ATTEMPTS;
   const tasks = attemptsQuery.data?.tasks ?? EMPTY_TASKS;
   const students = attemptsQuery.data?.students ?? EMPTY_STUDENTS;
-  const selectedAttempts = attempts.filter((attempt) =>
-    selectedAttemptIds.includes(attempt.id)
+  const selectedAttemptIdSet = useMemo(
+    () => new Set(selectedAttemptIds),
+    [selectedAttemptIds]
   );
-  const quickGradingAttempts = attempts.filter((attempt) =>
-    quickGradingAttemptIds.includes(attempt.id)
+  const quickGradingAttemptIdSet = useMemo(
+    () => new Set(quickGradingAttemptIds),
+    [quickGradingAttemptIds]
+  );
+  const selectedAttempts = useMemo(
+    () => attempts.filter((attempt) => selectedAttemptIdSet.has(attempt.id)),
+    [attempts, selectedAttemptIdSet]
+  );
+  const quickGradingAttempts = useMemo(
+    () =>
+      attempts.filter((attempt) => quickGradingAttemptIdSet.has(attempt.id)),
+    [attempts, quickGradingAttemptIdSet]
   );
   const isQuickGrading = quickGradingAttemptIds.length > 0;
-  const hasDraftChanges = quickGradingAttempts.some((attempt) =>
-    scoreDraftChanged(attempt, draftScores[attempt.id])
+  const hasDraftChanges = useMemo(
+    () =>
+      quickGradingAttempts.some((attempt) =>
+        scoreDraftChanged(attempt, draftScores[attempt.id])
+      ),
+    [draftScores, quickGradingAttempts]
   );
-  const hasDraftValidationErrors = quickGradingAttempts.some((attempt) =>
-    Boolean(scoreDraftValidationError(attempt, draftScores[attempt.id]))
+  const hasDraftValidationErrors = useMemo(
+    () =>
+      quickGradingAttempts.some((attempt) =>
+        Boolean(scoreDraftValidationError(attempt, draftScores[attempt.id]))
+      ),
+    [draftScores, quickGradingAttempts]
   );
   const filterActionsDisabledReason = isQuickGrading
     ? 'Фильтры недоступны во время быстрой оценки. Выйдите из режима быстрой оценки.'
@@ -87,19 +121,12 @@ export function CourseAttemptsPage({
       ? 'Фильтры недоступны, пока выбраны попытки. Очистите выбор.'
       : undefined;
 
-  useEffect(() => {
-    setDraftFilters(normalizedAppliedFilters);
-  }, [normalizedAppliedFilters]);
-
-  useEffect(() => {
-    const visibleIds = new Set(attempts.map((attempt) => attempt.id));
-    setSelectedAttemptIds((current) =>
-      current.filter((attemptId) => visibleIds.has(attemptId))
-    );
-    setQuickGradingAttemptIds((current) =>
-      current.filter((attemptId) => visibleIds.has(attemptId))
-    );
-  }, [attempts]);
+  function setDraftFilters(filters: CourseAttemptsFilters) {
+    setDraftFiltersState({
+      appliedFiltersKey,
+      filters: normalizeCourseAttemptsFilters(filters),
+    });
+  }
 
   function startQuickGrading(targetAttempts: CourseAttempt[]) {
     setQuickGradingAttemptIds(targetAttempts.map((attempt) => attempt.id));
@@ -228,7 +255,7 @@ export function CourseAttemptsPage({
                   mode="default"
                   attempt={attempt}
                   courseSlug={courseSlug}
-                  selected={selectedAttemptIds.includes(attempt.id)}
+                  selected={selectedAttemptIdSet.has(attempt.id)}
                   onSelectedChange={(checked) =>
                     setSelectedAttemptIds((current) =>
                       checked

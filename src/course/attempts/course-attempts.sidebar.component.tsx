@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Filter, Search } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -39,12 +39,12 @@ function toggleToken(tokens: string[], token: string): string[] {
 function compareSelectedFirst<T>(
   firstItem: T,
   secondItem: T,
-  selectedTokens: string[],
+  selectedTokens: ReadonlySet<string>,
   getToken: (item: T) => string,
   getLabel: (item: T) => string
 ): number {
-  const firstSelected = selectedTokens.includes(getToken(firstItem));
-  const secondSelected = selectedTokens.includes(getToken(secondItem));
+  const firstSelected = selectedTokens.has(getToken(firstItem));
+  const secondSelected = selectedTokens.has(getToken(secondItem));
 
   if (firstSelected !== secondSelected) {
     return firstSelected ? -1 : 1;
@@ -136,34 +136,52 @@ export function AttemptsFiltersContent({
       ) &&
       taskSearch.trim() === '' &&
       studentSearch.trim() === '');
-  const visibleTasks = tasks
-    .filter((task) =>
-      task.title.toLowerCase().includes(taskSearch.toLowerCase().trim())
-    )
-    .sort((firstTask, secondTask) =>
-      compareSelectedFirst(
-        firstTask,
-        secondTask,
-        appliedFilters.tasks,
-        (task) => task.id,
-        (task) => task.title
-      )
-    );
-  const visibleStudents = students
-    .filter((student) =>
-      `${student.fullName} ${student.username}`
-        .toLowerCase()
-        .includes(studentSearch.toLowerCase().trim())
-    )
-    .sort((firstStudent, secondStudent) =>
-      compareSelectedFirst(
-        firstStudent,
-        secondStudent,
-        appliedFilters.students,
-        (student) => student.username,
-        (student) => student.fullName
-      )
-    );
+  const appliedTaskSet = useMemo(
+    () => new Set(appliedFilters.tasks),
+    [appliedFilters.tasks]
+  );
+  const appliedStudentSet = useMemo(
+    () => new Set(appliedFilters.students),
+    [appliedFilters.students]
+  );
+  const normalizedTaskSearch = taskSearch.toLowerCase().trim();
+  const normalizedStudentSearch = studentSearch.toLowerCase().trim();
+  const visibleTasks = useMemo(
+    () =>
+      tasks
+        .filter((task) =>
+          task.title.toLowerCase().includes(normalizedTaskSearch)
+        )
+        .sort((firstTask, secondTask) =>
+          compareSelectedFirst(
+            firstTask,
+            secondTask,
+            appliedTaskSet,
+            (task) => task.id,
+            (task) => task.title
+          )
+        ),
+    [appliedTaskSet, normalizedTaskSearch, tasks]
+  );
+  const visibleStudents = useMemo(
+    () =>
+      students
+        .filter((student) =>
+          `${student.fullName} ${student.username}`
+            .toLowerCase()
+            .includes(normalizedStudentSearch)
+        )
+        .sort((firstStudent, secondStudent) =>
+          compareSelectedFirst(
+            firstStudent,
+            secondStudent,
+            appliedStudentSet,
+            (student) => student.username,
+            (student) => student.fullName
+          )
+        ),
+    [appliedStudentSet, normalizedStudentSearch, students]
+  );
 
   function applyFilters() {
     onApplyFilters();

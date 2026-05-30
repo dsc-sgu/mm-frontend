@@ -7,6 +7,7 @@ import {
 import { requireCourseRole } from '@/course/course.guards';
 import { createCourseSectionBreadcrumb } from '@/course/course-route.header';
 import { createFileRoute } from '@tanstack/react-router';
+import { useCallback, useMemo } from 'react';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/attempts'
@@ -35,13 +36,22 @@ function RouteComponent() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
 
+  const appliedFilters = useMemo(
+    () => filtersFromCourseAttemptsSearch(search),
+    [search]
+  );
+  const handleApplyFilters = useCallback(
+    (filters: typeof appliedFilters) => {
+      void navigate({ search: searchFromCourseAttemptsFilters(filters) });
+    },
+    [navigate]
+  );
+
   return (
     <CourseAttemptsPage
       courseSlug={courseSlug}
-      appliedFilters={filtersFromCourseAttemptsSearch(search)}
-      onApplyFilters={(filters) => {
-        void navigate({ search: searchFromCourseAttemptsFilters(filters) });
-      }}
+      appliedFilters={appliedFilters}
+      onApplyFilters={handleApplyFilters}
     />
   );
 }
