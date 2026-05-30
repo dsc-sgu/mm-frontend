@@ -24,6 +24,7 @@ import {
   scoreDraftValidationError,
   scoreValue,
 } from './course-attempts.grading';
+import { isAttemptSelectable } from './course-attempts.selection';
 import {
   useCourseAttemptsQuery,
   useSaveQuickGradesMutation,
@@ -203,7 +204,11 @@ export function CourseAttemptsPage({
     [quickGradingAttemptIds]
   );
   const selectedAttempts = useMemo(
-    () => attempts.filter((attempt) => selectedAttemptIdSet.has(attempt.id)),
+    () =>
+      attempts.filter(
+        (attempt) =>
+          selectedAttemptIdSet.has(attempt.id) && isAttemptSelectable(attempt)
+      ),
     [attempts, selectedAttemptIdSet]
   );
   const quickGradingAttempts = useMemo(
@@ -258,7 +263,7 @@ export function CourseAttemptsPage({
 
   async function saveSelectedMaxGrade() {
     const updates = selectedAttempts
-      .filter((attempt) => !attempt.reviewLock)
+      .filter(isAttemptSelectable)
       .map((attempt) => ({
         attemptId: attempt.id,
         score: attempt.task.maxScore,
@@ -366,16 +371,23 @@ export function CourseAttemptsPage({
                   mode="default"
                   attempt={attempt}
                   courseSlug={courseSlug}
-                  selected={selectedAttemptIdSet.has(attempt.id)}
-                  onSelectedChange={(checked) =>
+                  selected={
+                    isAttemptSelectable(attempt) &&
+                    selectedAttemptIdSet.has(attempt.id)
+                  }
+                  onSelectedChange={(checked) => {
+                    if (!isAttemptSelectable(attempt)) {
+                      return;
+                    }
+
                     setSelectedAttemptIds((current) =>
                       checked
                         ? Array.from(new Set([...current, attempt.id]))
                         : current.filter(
                             (attemptId) => attemptId !== attempt.id
                           )
-                    )
-                  }
+                    );
+                  }}
                 />
               )}
             />
@@ -435,7 +447,11 @@ export function CourseAttemptsPage({
             feedbackTextVisible={feedbackTextVisible}
             savePending={saveQuickGradesMutation.isPending}
             onSelectAll={() =>
-              setSelectedAttemptIds(attempts.map((attempt) => attempt.id))
+              setSelectedAttemptIds(
+                attempts
+                  .filter(isAttemptSelectable)
+                  .map((attempt) => attempt.id)
+              )
             }
             onClearSelection={() => setSelectedAttemptIds([])}
             onStartQuickGradingAll={() => startQuickGrading(attempts)}
