@@ -7,7 +7,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/shadcn/components/ui/tooltip';
-import { selectedLockedAttemptsReason } from './course-attempts.selection';
+import {
+  isAttemptSelectable,
+  selectedLockedAttemptsReason,
+} from './course-attempts.selection';
 import type { CourseAttempt } from './course-attempts.types';
 
 export function BottomActionBar({
@@ -43,6 +46,7 @@ export function BottomActionBar({
 }) {
   const maxGradeReason = selectedLockedAttemptsReason(selectedAttempts);
   const hasSelection = selectedAttempts.length > 0;
+  const hasSelectableAttempts = attempts.some(isAttemptSelectable);
 
   const filtersButton = (
     <Button
@@ -152,7 +156,7 @@ export function BottomActionBar({
               <Button
                 type="button"
                 variant="outline"
-                disabled={attempts.length === 0}
+                disabled={!hasSelectableAttempts}
                 onClick={onSelectAll}
                 className="h-10 w-full lg:w-auto"
               >

@@ -34,7 +34,10 @@ type AttemptCardProps =
 export function AttemptCard(props: AttemptCardProps) {
   const { attempt } = props;
   const isDefaultMode = props.mode === 'default';
-  const selected = isDefaultMode ? props.selected : false;
+  const hasDefaultCheckbox = !attempt.reviewLock;
+  const canSelect = isDefaultMode && hasDefaultCheckbox;
+  const hasSelectionSlot = hasDefaultCheckbox;
+  const selected = canSelect ? props.selected : false;
   const draftScoreChanged =
     props.mode === 'quick-grading'
       ? scoreDraftChanged(attempt, props.draftScore)
@@ -49,37 +52,41 @@ export function AttemptCard(props: AttemptCardProps) {
     >
       <div className="grid min-w-0 gap-2 sm:flex sm:items-start sm:justify-between sm:gap-4">
         <div className="flex min-w-0 items-start">
-          <div
-            className={cn(
-              'mr-2 mt-[0.1875rem] grid w-5 shrink-0 place-items-center overflow-hidden transition-[opacity,transform] duration-200 ease-out sm:mt-1',
-              isDefaultMode ? 'scale-100 opacity-100' : 'scale-75 opacity-0'
-            )}
-            aria-hidden={!isDefaultMode}
-          >
-            <Checkbox
-              checked={selected}
-              disabled={!isDefaultMode}
-              tabIndex={isDefaultMode ? undefined : -1}
-              onCheckedChange={(value) => {
-                if (props.mode === 'default') {
-                  props.onSelectedChange(value === true);
-                }
-              }}
-              aria-label={`Выбрать попытку ${attempt.task.title}`}
-              className="size-5 rounded-md transition-opacity duration-200"
-            />
-          </div>
+          {hasSelectionSlot ? (
+            <div
+              className={cn(
+                'mr-2 mt-[0.1875rem] grid w-5 shrink-0 place-items-center overflow-hidden transition-[opacity,transform] duration-200 ease-out sm:mt-1',
+                canSelect ? 'scale-100 opacity-100' : 'scale-75 opacity-0'
+              )}
+              aria-hidden={!canSelect}
+            >
+              {canSelect ? (
+                <Checkbox
+                  checked={selected}
+                  onCheckedChange={(value) => {
+                    if (props.mode === 'default') {
+                      props.onSelectedChange(value === true);
+                    }
+                  }}
+                  aria-label={`Выбрать попытку ${attempt.task.title}`}
+                  className="size-5 rounded-md transition-opacity duration-200"
+                />
+              ) : null}
+            </div>
+          ) : null}
           <h3
             className={cn(
               'min-w-0 break-words text-lg font-semibold leading-tight tracking-tight transition-transform duration-200 ease-out sm:text-xl',
-              isDefaultMode ? 'translate-x-0' : '-translate-x-7'
+              !isDefaultMode && hasSelectionSlot
+                ? '-translate-x-7'
+                : 'translate-x-0'
             )}
           >
-            {props.mode === 'default' ? (
+            {canSelect ? (
               <button
                 type="button"
                 className="block min-w-0 break-words text-left select-none focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                onClick={() => props.onSelectedChange(!props.selected)}
+                onClick={() => props.onSelectedChange(!selected)}
               >
                 <AttemptTitle attempt={attempt} />
               </button>
@@ -90,7 +97,8 @@ export function AttemptCard(props: AttemptCardProps) {
         </div>
         <div
           className={cn(
-            'pl-7 transition-transform duration-200 ease-out sm:pl-0',
+            'transition-transform duration-200 ease-out',
+            hasSelectionSlot ? 'pl-7 sm:pl-0' : 'pl-0',
             isDefaultMode ? 'translate-x-0' : '-translate-x-7 sm:translate-x-0'
           )}
         >
@@ -116,17 +124,17 @@ export function AttemptCard(props: AttemptCardProps) {
           >
             <a
               href={
-                props.selected
+                selected
                   ? getAttemptDiffHref(props.courseSlug, attempt)
                   : getAttemptReviewHref(props.courseSlug, attempt)
               }
             >
-              {props.selected ? (
+              {selected ? (
                 <Eye className="size-4" />
               ) : (
                 <FileCheck2 className="size-4" />
               )}
-              {props.selected ? 'Посмотреть' : 'Оценить'}
+              {selected ? 'Посмотреть' : 'Оценить'}
             </a>
           </Button>
         ) : (
