@@ -6,7 +6,10 @@ import {
   getGroupLabel,
   getTimingLabel,
 } from './course-attempts.format';
-import type { CourseAttempt } from './course-attempts.types';
+import type {
+  CourseAttempt,
+  CourseAttemptGrade,
+} from './course-attempts.types';
 
 export function AttemptTitle({ attempt }: { attempt: CourseAttempt }) {
   return (
@@ -15,6 +18,18 @@ export function AttemptTitle({ attempt }: { attempt: CourseAttempt }) {
       <span className="font-normal break-words">{attempt.task.title}</span>
     </>
   );
+}
+
+function getGradeClassName(grade: CourseAttemptGrade): string {
+  if (grade.score === 0) {
+    return 'font-semibold text-rose-700 dark:text-rose-300';
+  }
+
+  if (grade.score === grade.maxScore) {
+    return 'font-semibold text-emerald-700 dark:text-emerald-300';
+  }
+
+  return 'font-semibold text-amber-700 dark:text-amber-300';
 }
 
 export function AttemptDiffStats({ attempt }: { attempt: CourseAttempt }) {
@@ -62,8 +77,10 @@ export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
             Оценено {formatDateTime(attempt.grade.gradedAt)}
           </span>
           <span className="-mt-0.5 whitespace-nowrap sm:mt-0">
-            преподавателем {attempt.grade.gradedBy} ({attempt.grade.score}/
-            {attempt.grade.maxScore})
+            преподавателем {attempt.grade.gradedBy}{' '}
+            <span className={getGradeClassName(attempt.grade)}>
+              ({attempt.grade.score}/{attempt.grade.maxScore})
+            </span>
           </span>
         </p>
       ) : (
