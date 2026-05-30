@@ -53,6 +53,29 @@ function compareSelectedFirst<T>(
   return getLabel(firstItem).localeCompare(getLabel(secondItem));
 }
 
+function FilterOptionsSkeleton({ rows = 7 }: { rows?: number }) {
+  return (
+    <div className="space-y-1" aria-hidden="true">
+      {Array.from({ length: rows }).map((_, index) => {
+        const width = index % 3 === 0 ? 78 : index % 3 === 1 ? 92 : 64;
+
+        return (
+          <div
+            key={index}
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5"
+          >
+            <div className="size-4 shrink-0 animate-pulse rounded bg-muted" />
+            <div
+              className="h-5 animate-pulse rounded bg-muted"
+              style={{ width: `${width}%` }}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function FilterOption({
   id,
   label,
@@ -88,6 +111,7 @@ interface AttemptsFiltersContentProps {
   appliedFilters: CourseAttemptsFilters;
   draftFilters: CourseAttemptsFilters;
   attemptsCount: number;
+  loading: boolean;
   tasks: CourseAttempt['task'][];
   students: CourseAttempt['student'][];
   onDraftFiltersChange: (filters: CourseAttemptsFilters) => void;
@@ -105,6 +129,7 @@ export function AttemptsFiltersContent({
   appliedFilters,
   draftFilters,
   attemptsCount,
+  loading,
   tasks,
   students,
   onDraftFiltersChange,
@@ -207,9 +232,16 @@ export function AttemptsFiltersContent({
               <Filter className="size-4" /> Фильтры
             </p>
           </div>
-          <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
-            {attemptsCount}
-          </span>
+          {loading ? (
+            <span
+              className="h-7 w-12 animate-pulse rounded-full bg-muted"
+              aria-label="Загрузка количества попыток"
+            />
+          ) : (
+            <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
+              {attemptsCount}
+            </span>
+          )}
         </div>
       ) : null}
 
@@ -233,20 +265,24 @@ export function AttemptsFiltersContent({
                 : 'max-h-44 overflow-y-auto'
             )}
           >
-            {visibleTasks.map((task) => (
-              <FilterOption
-                key={task.id}
-                id={`${idPrefix}-task-filter-${task.id}`}
-                label={`${task.title} · ${task.maxScore} б.`}
-                checked={draftFilters.tasks.includes(task.id)}
-                onCheckedChange={() =>
-                  onDraftFiltersChange({
-                    ...draftFilters,
-                    tasks: toggleToken(draftFilters.tasks, task.id),
-                  })
-                }
-              />
-            ))}
+            {loading ? (
+              <FilterOptionsSkeleton />
+            ) : (
+              visibleTasks.map((task) => (
+                <FilterOption
+                  key={task.id}
+                  id={`${idPrefix}-task-filter-${task.id}`}
+                  label={`${task.title} · ${task.maxScore} б.`}
+                  checked={draftFilters.tasks.includes(task.id)}
+                  onCheckedChange={() =>
+                    onDraftFiltersChange({
+                      ...draftFilters,
+                      tasks: toggleToken(draftFilters.tasks, task.id),
+                    })
+                  }
+                />
+              ))
+            )}
           </div>
         </section>
 
@@ -269,23 +305,27 @@ export function AttemptsFiltersContent({
                 : 'max-h-48 overflow-y-auto'
             )}
           >
-            {visibleStudents.map((student) => (
-              <FilterOption
-                key={student.username}
-                id={`${idPrefix}-student-filter-${student.username}`}
-                label={`${student.fullName} · ${student.group}`}
-                checked={draftFilters.students.includes(student.username)}
-                onCheckedChange={() =>
-                  onDraftFiltersChange({
-                    ...draftFilters,
-                    students: toggleToken(
-                      draftFilters.students,
-                      student.username
-                    ),
-                  })
-                }
-              />
-            ))}
+            {loading ? (
+              <FilterOptionsSkeleton />
+            ) : (
+              visibleStudents.map((student) => (
+                <FilterOption
+                  key={student.username}
+                  id={`${idPrefix}-student-filter-${student.username}`}
+                  label={`${student.fullName} · ${student.group}`}
+                  checked={draftFilters.students.includes(student.username)}
+                  onCheckedChange={() =>
+                    onDraftFiltersChange({
+                      ...draftFilters,
+                      students: toggleToken(
+                        draftFilters.students,
+                        student.username
+                      ),
+                    })
+                  }
+                />
+              ))
+            )}
           </div>
         </section>
 
