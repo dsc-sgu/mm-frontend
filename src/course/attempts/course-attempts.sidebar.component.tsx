@@ -379,7 +379,7 @@ export function AttemptsFiltersContent({
                   })
                 }
                 className={cn(
-                  'rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'cursor-pointer rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   draftFilters.graded === option.value
                     ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
                     : 'border-border bg-background'
