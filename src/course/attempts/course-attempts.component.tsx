@@ -44,10 +44,6 @@ import type {
   CourseAttemptsFilters,
 } from './course-attempts.types';
 
-const EMPTY_ATTEMPTS: CourseAttempt[] = [];
-const EMPTY_TASKS: CourseAttempt['task'][] = [];
-const EMPTY_STUDENTS: CourseAttempt['student'][] = [];
-
 const VIRTUAL_ATTEMPT_ESTIMATED_HEIGHT = 220;
 const VIRTUAL_ATTEMPT_OVERSCAN = 6;
 const VIRTUAL_ATTEMPT_GAP = 12;
@@ -184,6 +180,9 @@ function renderLockedSelectionToastDescription(attempts: CourseAttempt[]) {
   );
 }
 
+// 'attempts' variable is used in memo variables
+const EMPTY_ATTEMPTS: CourseAttempt[] = [];
+
 export function CourseAttemptsPage({
   courseSlug,
   appliedFilters,
@@ -220,8 +219,8 @@ export function CourseAttemptsPage({
   const saveQuickGradesMutation = useSaveQuickGradesMutation();
 
   const attempts = attemptsQuery.data?.attempts ?? EMPTY_ATTEMPTS;
-  const tasks = attemptsQuery.data?.tasks ?? EMPTY_TASKS;
-  const students = attemptsQuery.data?.students ?? EMPTY_STUDENTS;
+  const tasks = attemptsQuery.data?.tasks ?? [];
+  const students = attemptsQuery.data?.students ?? [];
   const selectedAttemptIdSet = useMemo(
     () => new Set(selectedAttemptIds),
     [selectedAttemptIds]
