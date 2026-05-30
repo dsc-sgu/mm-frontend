@@ -49,9 +49,7 @@ export function AttemptCard(props: AttemptCardProps) {
     <article
       className={cn(
         'max-w-full overflow-hidden rounded-2xl border bg-card px-4 py-4 transition-colors sm:px-7 sm:py-6',
-        selected
-          ? 'border-primary shadow-[0_0_0_2px_hsl(var(--primary)/0.15)]'
-          : 'border-border'
+        selected ? 'border-primary' : 'border-border'
       )}
     >
       <div className="grid min-w-0 gap-2 sm:flex sm:items-start sm:justify-between sm:gap-4">
