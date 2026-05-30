@@ -1,5 +1,17 @@
 # React + TypeScript + Vite
 
+## Mock authorization
+
+To run the frontend with mock authorization, add this to `.env.local` and restart the Vite dev server:
+
+```env
+VITE_MOCK_AUTH=true
+```
+
+In mock mode, login accepts any form credentials that pass client-side validation. The password is ignored, and the app signs in as `mit-teacher`, a teacher for the “Современные информационные технологии” course.
+
+Remove the flag or set it to `false` to use the real `/api/v1/auth/*` backend endpoints.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
