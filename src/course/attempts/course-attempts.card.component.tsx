@@ -35,9 +35,8 @@ type AttemptCardProps =
     };
 
 export function AttemptCard(props: AttemptCardProps) {
-  const isDefaultMode = props.mode === 'default';
   const hasDefaultCheckbox = !props.attempt.reviewLock;
-  const canSelect = isDefaultMode && hasDefaultCheckbox;
+  const canSelect = props.mode === 'default' && hasDefaultCheckbox;
   const hasSelectionSlot = hasDefaultCheckbox;
   const selected = canSelect ? props.selected : false;
   const draftScoreChanged =
@@ -79,7 +78,7 @@ export function AttemptCard(props: AttemptCardProps) {
           <h3
             className={cn(
               'min-w-0 break-words text-lg font-semibold leading-tight tracking-tight transition-transform duration-200 ease-out sm:text-xl',
-              !isDefaultMode && hasSelectionSlot
+              props.mode !== 'default' && hasSelectionSlot
                 ? '-translate-x-7'
                 : 'translate-x-0'
             )}
@@ -101,7 +100,9 @@ export function AttemptCard(props: AttemptCardProps) {
           className={cn(
             'transition-transform duration-200 ease-out',
             hasSelectionSlot ? 'pl-7 sm:pl-0' : 'pl-0',
-            isDefaultMode ? 'translate-x-0' : '-translate-x-7 sm:translate-x-0'
+            props.mode === 'default'
+              ? 'translate-x-0'
+              : '-translate-x-7 sm:translate-x-0'
           )}
         >
           <AttemptDiffStats attempt={props.attempt} />
