@@ -31,7 +31,7 @@ const MOCK_COURSE_ACCESS: Record<string, MockCourseAccess> = {
     students: ['t3m8ch', 'student', 'network-student', 'alice'],
   },
   'modern-information-technologies': {
-    teachers: ['gohy279', 't3m8ch', 'teacher'],
+    teachers: ['gohy279', 't3m8ch', 'teacher', 'mit-teacher'],
     students: ['student', 'mit-student', 'bob'],
   },
 };
