@@ -1,3 +1,7 @@
+import {
+  applyReviewLockUpdatesToAttempts,
+  type CourseAttemptReviewLockUpdate,
+} from './course-attempts.lock-updates';
 import type {
   CourseAttempt,
   CourseAttemptStudent,
@@ -213,6 +217,44 @@ export async function fetchCourseAttemptsList({
     tasks: MOCK_TASKS,
     students: getStudents(),
   };
+}
+
+export function createMockReviewLockUpdates(
+  courseSlug: string
+): CourseAttemptReviewLockUpdate[] {
+  const attempts = getCourseAttempts(courseSlug);
+  const lockedAttempts = attempts.filter((attempt) => attempt.reviewLock);
+  const unlockedAttempts = attempts.filter(
+    (attempt) => !attempt.grade && !attempt.reviewLock
+  );
+  const shouldUnlock = lockedAttempts.length > 0 && Math.random() < 0.35;
+
+  const targetAttempt = shouldUnlock
+    ? lockedAttempts[Math.floor(Math.random() * lockedAttempts.length)]
+    : unlockedAttempts[Math.floor(Math.random() * unlockedAttempts.length)];
+
+  if (!targetAttempt) {
+    return [];
+  }
+
+  const updates: CourseAttemptReviewLockUpdate[] = [
+    {
+      attemptId: targetAttempt.id,
+      reviewLock: shouldUnlock
+        ? null
+        : {
+            teacherName: TEACHERS[Math.floor(Math.random() * TEACHERS.length)],
+            lockedAt: new Date().toISOString(),
+          },
+    },
+  ];
+
+  attemptsByCourse.set(
+    courseSlug,
+    applyReviewLockUpdatesToAttempts(attempts, updates)
+  );
+
+  return updates;
 }
 
 export async function saveQuickGrades({

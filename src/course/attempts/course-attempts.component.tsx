@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -8,6 +9,7 @@ import {
 } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Filter } from 'lucide-react';
+import { toast } from 'sonner';
 
 import {
   Drawer,
@@ -29,6 +31,8 @@ import {
   useCourseAttemptsQuery,
   useSaveQuickGradesMutation,
 } from './course-attempts.queries';
+import { useCourseAttemptReviewLockUpdates } from './course-attempts.lock-updates.hook';
+import type { CourseAttemptReviewLockUpdate } from './course-attempts.lock-updates';
 import { AttemptCard } from './course-attempts.card.component';
 import { BottomActionBar } from './course-attempts.bottom-bar.component';
 import {
@@ -157,6 +161,29 @@ function courseAttemptsFiltersKey(filters: CourseAttemptsFilters) {
   return `${filters.graded}|${filters.tasks.join(',')}|${filters.students.join(',')}`;
 }
 
+function renderLockedSelectionToastDescription(attempts: CourseAttempt[]) {
+  const visibleAttempts = attempts.slice(0, 3);
+  const hiddenAttemptsCount = attempts.length - visibleAttempts.length;
+
+  return (
+    <div className="max-w-full space-y-2 overflow-hidden">
+      <p>
+        {attempts.length === 1
+          ? 'Попытка снята с выбора, потому что её взяли на проверку.'
+          : `С выбора снято попыток: ${attempts.length}. Их взяли на проверку.`}
+      </p>
+      <ul className="max-w-full space-y-1 overflow-hidden">
+        {visibleAttempts.map((attempt) => (
+          <li key={attempt.id} className="max-w-full break-words">
+            {attempt.task.title} — {attempt.student.fullName}
+          </li>
+        ))}
+        {hiddenAttemptsCount > 0 ? <li>И ещё: {hiddenAttemptsCount}</li> : null}
+      </ul>
+    </div>
+  );
+}
+
 export function CourseAttemptsPage({
   courseSlug,
   appliedFilters,
@@ -199,6 +226,10 @@ export function CourseAttemptsPage({
     () => new Set(selectedAttemptIds),
     [selectedAttemptIds]
   );
+  const attemptById = useMemo(
+    () => new Map(attempts.map((attempt) => [attempt.id, attempt])),
+    [attempts]
+  );
   const quickGradingAttemptIdSet = useMemo(
     () => new Set(quickGradingAttemptIds),
     [quickGradingAttemptIds]
@@ -236,6 +267,53 @@ export function CourseAttemptsPage({
     : selectedAttempts.length > 0
       ? 'Фильтры недоступны, пока выбраны попытки. Очистите выбор.'
       : undefined;
+
+  const selectedAttemptIdsRef = useRef(selectedAttemptIds);
+  const attemptByIdRef = useRef(attemptById);
+
+  useEffect(() => {
+    selectedAttemptIdsRef.current = selectedAttemptIds;
+    attemptByIdRef.current = attemptById;
+  }, [attemptById, selectedAttemptIds]);
+
+  const handleReviewLockUpdates = useCallback(
+    (updates: CourseAttemptReviewLockUpdate[]) => {
+      const lockedAttemptIds = new Set(
+        updates
+          .filter((update) => update.reviewLock)
+          .map((update) => update.attemptId)
+      );
+
+      if (lockedAttemptIds.size === 0) {
+        return;
+      }
+
+      const lockedSelectedAttempts = selectedAttemptIdsRef.current
+        .filter((attemptId) => lockedAttemptIds.has(attemptId))
+        .map((attemptId) => attemptByIdRef.current.get(attemptId))
+        .filter((attempt): attempt is CourseAttempt => Boolean(attempt));
+
+      if (lockedSelectedAttempts.length === 0) {
+        return;
+      }
+
+      setSelectedAttemptIds((current) =>
+        current.filter((attemptId) => !lockedAttemptIds.has(attemptId))
+      );
+      toast.warning('Выбор обновлён', {
+        description: renderLockedSelectionToastDescription(
+          lockedSelectedAttempts
+        ),
+      });
+    },
+    []
+  );
+
+  useCourseAttemptReviewLockUpdates({
+    courseSlug,
+    enabled: !attemptsQuery.isPending,
+    onUpdates: handleReviewLockUpdates,
+  });
 
   function setDraftFilters(filters: CourseAttemptsFilters) {
     setDraftFiltersState({
