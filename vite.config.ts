@@ -4,6 +4,8 @@ import path from 'path';
 import tailwindcss from '@tailwindcss/vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 
+const profiling = process.env.PROFILING === 'true';
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -42,7 +44,17 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+
+        ...(profiling
+          ? {
+              'react-dom/client': 'react-dom/profiling',
+            }
+          : {}),
       },
+    },
+    build: {
+      sourcemap: profiling,
+      minify: profiling ? false : 'esbuild',
     },
   };
 });
