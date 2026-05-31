@@ -33,7 +33,6 @@ export function BottomActionBar({
   quickGrading: boolean;
   hasDraftChanges: boolean;
   hasDraftValidationErrors: boolean;
-  feedbackTextVisible: boolean;
   savePending: boolean;
   onSelectAll: () => void;
   onClearSelection: () => void;
@@ -41,7 +40,6 @@ export function BottomActionBar({
   onOpenFilters: () => void;
   onSaveSelectedMaxGrade: () => Promise<void>;
   onExitQuickGrading: () => void;
-  onFeedbackTextVisibleChange: (visible: boolean) => void;
   onSaveQuickGrades: () => void;
 }) {
   const maxGradeReason = selectedLockedAttemptsReason(selectedAttempts);

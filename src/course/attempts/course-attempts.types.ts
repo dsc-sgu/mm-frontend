@@ -51,7 +51,6 @@ export interface CourseAttempt {
   deadlineAt: string;
   diff: CourseAttemptDiffStats;
   grade: CourseAttemptGrade | null;
-  feedbackText: string;
   reviewLock: CourseAttemptReviewLock | null;
 }
 
@@ -67,5 +66,4 @@ export interface SaveQuickGradesInput {
     attemptId: string;
     score: number;
   }>;
-  clearFeedbackText: boolean;
 }
