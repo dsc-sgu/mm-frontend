@@ -1,5 +1,10 @@
 import type { CourseAttempt } from './course-attempts.types';
 
+export interface QuickGradeUpdate {
+  attemptId: string;
+  score: number;
+}
+
 export function scoreValue(attempt: CourseAttempt): string {
   return attempt.grade ? String(attempt.grade.score) : '';
 }
@@ -65,4 +70,28 @@ export function scoreDraftValidationError(
   }
 
   return scoreDraftMaxScoreError(attempt.task.maxScore, draft);
+}
+
+export function createQuickGradeUpdate({
+  attemptId,
+  attempt,
+  draftScore,
+}: {
+  attemptId: string;
+  attempt: CourseAttempt | undefined;
+  draftScore: string;
+}): QuickGradeUpdate | null {
+  if (
+    !attempt ||
+    attempt.reviewLock ||
+    !scoreDraftChanged(attempt, draftScore) ||
+    scoreDraftValidationError(attempt, draftScore)
+  ) {
+    return null;
+  }
+
+  return {
+    attemptId,
+    score: Math.max(0, Number(draftScore)),
+  };
 }
