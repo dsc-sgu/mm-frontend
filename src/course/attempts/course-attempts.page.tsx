@@ -18,7 +18,12 @@ import { useCourseAttemptsReviewLockSelectionSync } from './course-attempts.revi
 import { isAttemptSelectable } from './course-attempts.selection';
 import { useCourseAttemptsSelection } from './course-attempts.selection.hook';
 import { AttemptCard } from './course-attempts.card.component';
-import { BottomActionBar } from './course-attempts.bottom-bar.component';
+import {
+  BottomActionBar,
+  IdleBottomActions,
+  QuickGradingBottomActions,
+  SelectionBottomActions,
+} from './course-attempts.bottom-bar.component';
 import {
   AttemptsFilterSidebar,
   AttemptsFiltersContent,
@@ -188,33 +193,32 @@ export function CourseAttemptsPage({
             </Drawer>
           </div>
 
-          {grading.quickGrading ? (
-            <BottomActionBar
-              mode="quick-grading"
-              hasDraftChanges={grading.hasDraftChanges}
-              hasDraftValidationErrors={grading.hasDraftValidationErrors}
-              savePending={grading.savePending}
-              onExitQuickGrading={grading.exitQuickGrading}
-              onSaveQuickGrades={grading.saveQuickGrades}
-            />
-          ) : selectedAttemptsCount > 0 ? (
-            <BottomActionBar
-              mode="selection"
-              selectedCount={selectedAttemptsCount}
-              savePending={grading.savePending}
-              onClearSelection={selection.clearSelection}
-              onSaveSelectedMaxGrade={grading.saveSelectedMaxGrade}
-            />
-          ) : (
-            <BottomActionBar
-              mode="idle"
-              hasAttempts={attempts.length > 0}
-              hasSelectableAttempts={hasSelectableAttempts}
-              onSelectAll={selection.selectAll}
-              onStartQuickGradingAll={grading.startQuickGrading}
-              onOpenFilters={() => setFiltersDrawerOpen(true)}
-            />
-          )}
+          <BottomActionBar>
+            {grading.quickGrading ? (
+              <QuickGradingBottomActions
+                hasDraftChanges={grading.hasDraftChanges}
+                hasDraftValidationErrors={grading.hasDraftValidationErrors}
+                savePending={grading.savePending}
+                onExitQuickGrading={grading.exitQuickGrading}
+                onSaveQuickGrades={grading.saveQuickGrades}
+              />
+            ) : selectedAttemptsCount > 0 ? (
+              <SelectionBottomActions
+                selectedCount={selectedAttemptsCount}
+                savePending={grading.savePending}
+                onClearSelection={selection.clearSelection}
+                onSaveSelectedMaxGrade={grading.saveSelectedMaxGrade}
+              />
+            ) : (
+              <IdleBottomActions
+                hasAttempts={attempts.length > 0}
+                hasSelectableAttempts={hasSelectableAttempts}
+                onSelectAll={selection.selectAll}
+                onStartQuickGradingAll={grading.startQuickGrading}
+                onOpenFilters={() => setFiltersDrawerOpen(true)}
+              />
+            )}
+          </BottomActionBar>
         </section>
       </div>
     </main>
