@@ -80,21 +80,23 @@ export function CourseAttemptsPage({
       ? 'Фильтры недоступны, пока выбраны попытки. Очистите выбор.'
       : undefined;
 
+  const filtersPanel = {
+    appliedFilters: filters.normalizedAppliedFilters,
+    draftFilters: filters.draftFilters,
+    attemptsCount: attempts.length,
+    loading: attemptsQuery.isPending,
+    tasks,
+    students,
+    filterActionsDisabledReason,
+    onDraftFiltersChange: filters.setDraftFilters,
+    onApplyFilters: filters.applyDraftFilters,
+    onResetFilters: filters.resetFilters,
+  };
+
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
       <div className="mt-4 grid min-w-0 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
-        <AttemptsFilterSidebar
-          appliedFilters={filters.normalizedAppliedFilters}
-          draftFilters={filters.draftFilters}
-          attemptsCount={attempts.length}
-          loading={attemptsQuery.isPending}
-          tasks={tasks}
-          students={students}
-          filterActionsDisabledReason={filterActionsDisabledReason}
-          onDraftFiltersChange={filters.setDraftFilters}
-          onApplyFilters={filters.applyDraftFilters}
-          onResetFilters={filters.resetFilters}
-        />
+        <AttemptsFilterSidebar panel={filtersPanel} />
 
         <section className="min-w-0 overflow-hidden pb-44 sm:pb-36">
           {attemptsQuery.isPending ? (
@@ -173,18 +175,9 @@ export function CourseAttemptsPage({
                 <div className="min-h-0 flex-1 overflow-y-auto px-4 scroll-pb-24 overscroll-contain">
                   <AttemptsFiltersContent
                     idPrefix="mobile"
+                    panel={filtersPanel}
                     showHeader={false}
                     variant="drawer"
-                    appliedFilters={filters.normalizedAppliedFilters}
-                    draftFilters={filters.draftFilters}
-                    attemptsCount={attempts.length}
-                    loading={attemptsQuery.isPending}
-                    tasks={tasks}
-                    students={students}
-                    filterActionsDisabledReason={filterActionsDisabledReason}
-                    onDraftFiltersChange={filters.setDraftFilters}
-                    onApplyFilters={filters.applyDraftFilters}
-                    onResetFilters={filters.resetFilters}
                     onAfterApply={() => setFiltersDrawerOpen(false)}
                     onAfterReset={() => setFiltersDrawerOpen(false)}
                   />
