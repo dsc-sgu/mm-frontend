@@ -8,6 +8,7 @@ import { requireCourseRole } from '@/course/course.guards';
 import { createCourseSectionBreadcrumb } from '@/course/course-route.header';
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useMemo } from 'react';
+import type { CourseAttemptsFilters } from '@/course/attempts/course-attempts.types';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/attempts'
@@ -41,7 +42,7 @@ function RouteComponent() {
     [search]
   );
   const handleApplyFilters = useCallback(
-    (filters: typeof appliedFilters) => {
+    (filters: CourseAttemptsFilters) => {
       void navigate({ search: searchFromCourseAttemptsFilters(filters) });
     },
     [navigate]
