@@ -106,41 +106,48 @@ function FilterOption({
   );
 }
 
-interface AttemptsFiltersContentProps {
-  idPrefix: string;
+interface AttemptsFiltersPanel {
   appliedFilters: CourseAttemptsFilters;
   draftFilters: CourseAttemptsFilters;
   attemptsCount: number;
   loading: boolean;
   tasks: CourseAttempt['task'][];
   students: CourseAttempt['student'][];
+  filterActionsDisabledReason?: string;
   onDraftFiltersChange: (filters: CourseAttemptsFilters) => void;
   onApplyFilters: () => void;
   onResetFilters: () => void;
+}
+
+interface AttemptsFiltersContentProps {
+  idPrefix: string;
+  panel: AttemptsFiltersPanel;
   onAfterApply?: () => void;
   onAfterReset?: () => void;
   showHeader?: boolean;
   variant?: 'sidebar' | 'drawer';
-  filterActionsDisabledReason?: string;
 }
 
 export function AttemptsFiltersContent({
   idPrefix,
-  appliedFilters,
-  draftFilters,
-  attemptsCount,
-  loading,
-  tasks,
-  students,
-  onDraftFiltersChange,
-  onApplyFilters,
-  onResetFilters,
+  panel,
   onAfterApply,
   onAfterReset,
   showHeader = true,
   variant = 'sidebar',
-  filterActionsDisabledReason,
 }: AttemptsFiltersContentProps) {
+  const {
+    appliedFilters,
+    draftFilters,
+    attemptsCount,
+    loading,
+    tasks,
+    students,
+    filterActionsDisabledReason,
+    onDraftFiltersChange,
+    onApplyFilters,
+    onResetFilters,
+  } = panel;
   const isDrawer = variant === 'drawer';
   const filterActionsDisabled = Boolean(filterActionsDisabledReason);
   const [taskSearch, setTaskSearch] = useState('');
