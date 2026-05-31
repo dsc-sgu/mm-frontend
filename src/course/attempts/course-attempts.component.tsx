@@ -24,9 +24,10 @@ import {
   normalizeCourseAttemptsFilters,
 } from './course-attempts.filters';
 import {
-  scoreDraftChanged,
+  createQuickGradeUpdate,
   scoreDraftValidationError,
   scoreValue,
+  type QuickGradeUpdate,
 } from './course-attempts.grading';
 import { isAttemptSelectable } from './course-attempts.selection';
 import {
@@ -198,24 +199,17 @@ export function CourseAttemptsPage({
       return;
     }
 
-    const updates: Array<{ attemptId: string; score: number }> = [];
-
-    draftScoresByAttemptId.forEach((draftScore, attemptId) => {
-      const attempt = attemptById.get(attemptId);
-
-      if (
-        !attempt ||
-        attempt.reviewLock ||
-        !scoreDraftChanged(attempt, draftScore)
-      ) {
-        return;
-      }
-
-      updates.push({
-        attemptId,
-        score: Math.max(0, Number(draftScore)),
-      });
-    });
+    const updates = draftScoresByAttemptId
+      .entrySeq()
+      .map(([attemptId, draftScore]) =>
+        createQuickGradeUpdate({
+          attemptId,
+          attempt: attemptById.get(attemptId),
+          draftScore,
+        })
+      )
+      .filter((update): update is QuickGradeUpdate => update !== null)
+      .toArray();
 
     if (updates.length === 0) {
       return;
