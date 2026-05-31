@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { Map as ImmutableMap, Set as ImmutableSet } from 'immutable';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Filter } from 'lucide-react';
 import { toast } from 'sonner';
@@ -65,11 +66,13 @@ export function CourseAttemptsPage({
 }: CourseAttemptsPageProps) {
   const { normalizedAppliedFilters, draftFilters, setDraftFilters } =
     useCourseAttemptsDraftFilters(appliedFilters);
-  const [selectedAttemptIds, setSelectedAttemptIds] = useState<string[]>([]);
+  const [selectedAttemptIds, setSelectedAttemptIds] = useState(() =>
+    ImmutableSet<string>()
+  );
   const [quickGrading, setQuickGrading] = useState(false);
-  const [draftScoresByAttemptId, setDraftScoresByAttemptId] = useState<
-    Record<string, string>
-  >({});
+  const [draftScoresByAttemptId, setDraftScoresByAttemptId] = useState(() =>
+    ImmutableMap<string, string>()
+  );
   const [filtersDrawerOpen, setFiltersDrawerOpen] = useState(false);
 
   const attemptsQuery = useCourseAttemptsQuery({
@@ -82,10 +85,6 @@ export function CourseAttemptsPage({
   const attempts = attemptsQuery.data?.attempts ?? EMPTY_ATTEMPTS;
   const tasks = attemptsQuery.data?.tasks ?? [];
   const students = attemptsQuery.data?.students ?? [];
-  const selectedAttemptIdSet = useMemo(
-    () => new Set(selectedAttemptIds),
-    [selectedAttemptIds]
-  );
   const attemptById = useMemo(
     () => new Map(attempts.map((attempt) => [attempt.id, attempt])),
     [attempts]
@@ -94,14 +93,14 @@ export function CourseAttemptsPage({
     () =>
       attempts.filter(
         (attempt) =>
-          selectedAttemptIdSet.has(attempt.id) && isAttemptSelectable(attempt)
+          selectedAttemptIds.has(attempt.id) && isAttemptSelectable(attempt)
       ),
-    [attempts, selectedAttemptIdSet]
+    [attempts, selectedAttemptIds]
   );
-  const hasDraftChanges = Object.keys(draftScoresByAttemptId).length > 0;
+  const hasDraftChanges = !draftScoresByAttemptId.isEmpty();
   const hasDraftValidationErrors = useMemo(
     () =>
-      Object.entries(draftScoresByAttemptId).some(([attemptId, draftScore]) => {
+      draftScoresByAttemptId.some((draftScore, attemptId) => {
         const attempt = attemptById.get(attemptId);
 
         return attempt
@@ -139,7 +138,8 @@ export function CourseAttemptsPage({
       const lockedSelectedAttempts = selectedAttemptIdsRef.current
         .filter((attemptId) => lockedAttemptIds.has(attemptId))
         .map((attemptId) => attemptByIdRef.current.get(attemptId))
-        .filter((attempt): attempt is CourseAttempt => Boolean(attempt));
+        .filter((attempt): attempt is CourseAttempt => Boolean(attempt))
+        .toArray();
 
       if (lockedSelectedAttempts.length === 0) {
         return;
@@ -165,13 +165,13 @@ export function CourseAttemptsPage({
 
   function startQuickGrading() {
     setQuickGrading(true);
-    setDraftScoresByAttemptId({});
-    setSelectedAttemptIds([]);
+    setDraftScoresByAttemptId(ImmutableMap<string, string>());
+    setSelectedAttemptIds(ImmutableSet<string>());
   }
 
   function exitQuickGrading() {
     setQuickGrading(false);
-    setDraftScoresByAttemptId({});
+    setDraftScoresByAttemptId(ImmutableMap<string, string>());
   }
 
   async function saveSelectedMaxGrade() {
@@ -190,7 +190,7 @@ export function CourseAttemptsPage({
       courseSlug,
       updates,
     });
-    setSelectedAttemptIds([]);
+    setSelectedAttemptIds(ImmutableSet<string>());
   }
 
   async function saveQuickGrades() {
@@ -198,26 +198,27 @@ export function CourseAttemptsPage({
       return;
     }
 
-    const updates = Object.entries(draftScoresByAttemptId)
-      .map(([attemptId, draftScore]) => {
-        const attempt = attemptById.get(attemptId);
+    const updates = draftScoresByAttemptId.reduce<
+      Array<{ attemptId: string; score: number }>
+    >((currentUpdates, draftScore, attemptId) => {
+      const attempt = attemptById.get(attemptId);
 
-        if (
-          !attempt ||
-          attempt.reviewLock ||
-          !scoreDraftChanged(attempt, draftScore)
-        ) {
-          return null;
-        }
+      if (
+        !attempt ||
+        attempt.reviewLock ||
+        !scoreDraftChanged(attempt, draftScore)
+      ) {
+        return currentUpdates;
+      }
 
-        return {
+      return [
+        ...currentUpdates,
+        {
           attemptId,
           score: Math.max(0, Number(draftScore || 0)),
-        };
-      })
-      .filter((update): update is { attemptId: string; score: number } =>
-        Boolean(update)
-      );
+        },
+      ];
+    }, []);
 
     if (updates.length === 0) {
       return;
@@ -276,22 +277,15 @@ export function CourseAttemptsPage({
                   mode="quick-grading"
                   attempt={attempt}
                   draftScore={
-                    Object.hasOwn(draftScoresByAttemptId, attempt.id)
-                      ? draftScoresByAttemptId[attempt.id]
-                      : scoreValue(attempt)
+                    draftScoresByAttemptId.get(attempt.id) ??
+                    scoreValue(attempt)
                   }
                   onDraftScoreChange={(score) =>
-                    setDraftScoresByAttemptId((current) => {
-                      const next = { ...current };
-
-                      if (score === scoreValue(attempt)) {
-                        delete next[attempt.id];
-                      } else {
-                        next[attempt.id] = score;
-                      }
-
-                      return next;
-                    })
+                    setDraftScoresByAttemptId((current) =>
+                      score === scoreValue(attempt)
+                        ? current.remove(attempt.id)
+                        : current.set(attempt.id, score)
+                    )
                   }
                 />
               )}
@@ -306,7 +300,7 @@ export function CourseAttemptsPage({
                   courseSlug={courseSlug}
                   selected={
                     isAttemptSelectable(attempt) &&
-                    selectedAttemptIdSet.has(attempt.id)
+                    selectedAttemptIds.has(attempt.id)
                   }
                   onSelectedChange={(checked) => {
                     if (!isAttemptSelectable(attempt)) {
@@ -315,10 +309,8 @@ export function CourseAttemptsPage({
 
                     setSelectedAttemptIds((current) =>
                       checked
-                        ? Array.from(new Set([...current, attempt.id]))
-                        : current.filter(
-                            (attemptId) => attemptId !== attempt.id
-                          )
+                        ? current.add(attempt.id)
+                        : current.remove(attempt.id)
                     );
                   }}
                 />
@@ -388,12 +380,16 @@ export function CourseAttemptsPage({
             savePending={saveQuickGradesMutation.isPending}
             onSelectAll={() =>
               setSelectedAttemptIds(
-                attempts
-                  .filter(isAttemptSelectable)
-                  .map((attempt) => attempt.id)
+                ImmutableSet(
+                  attempts
+                    .filter(isAttemptSelectable)
+                    .map((attempt) => attempt.id)
+                )
               )
             }
-            onClearSelection={() => setSelectedAttemptIds([])}
+            onClearSelection={() =>
+              setSelectedAttemptIds(ImmutableSet<string>())
+            }
             onStartQuickGradingAll={startQuickGrading}
             onOpenFilters={() => setFiltersDrawerOpen(true)}
             onSaveSelectedMaxGrade={saveSelectedMaxGrade}
