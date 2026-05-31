@@ -60,5 +60,9 @@ export function scoreDraftValidationError(
   attempt: CourseAttempt,
   draft: string | undefined
 ): string | null {
+  if (attempt.grade && draft === '') {
+    return 'Введите балл или верните прежнее значение';
+  }
+
   return scoreDraftMaxScoreError(attempt.task.maxScore, draft);
 }
