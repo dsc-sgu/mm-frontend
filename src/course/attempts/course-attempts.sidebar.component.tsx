@@ -30,104 +30,6 @@ const GRADED_FILTER_OPTIONS: Array<{
   { value: 'yes', label: 'Да' },
 ];
 
-function toggleToken(tokens: string[], token: string): string[] {
-  return tokens.includes(token)
-    ? tokens.filter((item) => item !== token)
-    : [...tokens, token].sort((a, b) => a.localeCompare(b));
-}
-
-function compareSelectedFirst<T>(
-  firstItem: T,
-  secondItem: T,
-  selectedTokens: ReadonlySet<string>,
-  getToken: (item: T) => string,
-  getLabel: (item: T) => string
-): number {
-  const firstSelected = selectedTokens.has(getToken(firstItem));
-  const secondSelected = selectedTokens.has(getToken(secondItem));
-
-  if (firstSelected !== secondSelected) {
-    return firstSelected ? -1 : 1;
-  }
-
-  return getLabel(firstItem).localeCompare(getLabel(secondItem));
-}
-
-function FilterOptionsSkeleton({ rows = 7 }: { rows?: number }) {
-  return (
-    <div className="space-y-1" aria-hidden="true">
-      {Array.from({ length: rows }).map((_, index) => {
-        const width = index % 3 === 0 ? 78 : index % 3 === 1 ? 92 : 64;
-
-        return (
-          <div
-            key={index}
-            className="flex items-center gap-2 rounded-lg px-2 py-1.5"
-          >
-            <div className="size-4 shrink-0 animate-pulse rounded bg-muted" />
-            <div
-              className="h-5 animate-pulse rounded bg-muted"
-              style={{ width: `${width}%` }}
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function FilterOption({
-  id,
-  label,
-  checked,
-  onCheckedChange,
-}: {
-  id: string;
-  label: string;
-  checked: boolean;
-  onCheckedChange: () => void;
-}) {
-  return (
-    <label
-      htmlFor={id}
-      className="flex min-w-0 select-none cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-accent"
-    >
-      <Checkbox
-        id={id}
-        checked={checked}
-        onCheckedChange={(value) => {
-          if (value !== 'indeterminate') {
-            onCheckedChange();
-          }
-        }}
-      />
-      <span className="min-w-0 truncate">{label}</span>
-    </label>
-  );
-}
-
-interface AttemptsFiltersPanel {
-  appliedFilters: CourseAttemptsFilters;
-  draftFilters: CourseAttemptsFilters;
-  attemptsCount: number;
-  loading: boolean;
-  tasks: CourseAttempt['task'][];
-  students: CourseAttempt['student'][];
-  filterActionsDisabledReason?: string;
-  onDraftFiltersChange: (filters: CourseAttemptsFilters) => void;
-  onApplyFilters: () => void;
-  onResetFilters: () => void;
-}
-
-interface AttemptsFiltersContentProps {
-  idPrefix: string;
-  panel: AttemptsFiltersPanel;
-  onAfterApply?: () => void;
-  onAfterReset?: () => void;
-  showHeader?: boolean;
-  variant?: 'sidebar' | 'drawer';
-}
-
 export function AttemptsFiltersContent({
   idPrefix,
   panel,
@@ -148,7 +50,6 @@ export function AttemptsFiltersContent({
     onApplyFilters,
     onResetFilters,
   } = panel;
-  const isDrawer = variant === 'drawer';
   const filterActionsDisabled = Boolean(filterActionsDisabledReason);
   const [taskSearch, setTaskSearch] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
@@ -233,230 +134,90 @@ export function AttemptsFiltersContent({
   return (
     <>
       {showHeader ? (
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              <Filter className="size-4" /> Фильтры
-            </p>
-          </div>
-          {loading ? (
-            <span
-              className="h-7 w-24 animate-pulse rounded-full bg-muted"
-              aria-label="Загрузка количества попыток"
-            />
-          ) : (
-            <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
-              Попыток: {attemptsCount}
-            </span>
-          )}
-        </div>
+        <AttemptsFiltersHeader
+          attemptsCount={attemptsCount}
+          loading={loading}
+        />
       ) : null}
 
       <div className={cn(showHeader ? 'mt-5' : 'mt-0', 'space-y-6')}>
-        <section>
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold">Задания</h3>
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              disabled={
-                filterActionsDisabled || draftFilters.tasks.length === 0
-              }
-              onClick={() =>
-                onDraftFiltersChange({
-                  ...draftFilters,
-                  tasks: [],
-                })
-              }
-            >
-              Сбросить
-            </Button>
-          </div>
-          <div className="relative mt-2">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={taskSearch}
-              onChange={(event) => setTaskSearch(event.target.value)}
-              placeholder="Найти задание"
-              className="pl-9"
-            />
-          </div>
-          <div
-            className={cn(
-              'mt-2 space-y-1 pr-1',
-              isDrawer
-                ? 'max-h-[clamp(1rem,11dvh,12rem)] overflow-y-auto'
-                : 'max-h-44 overflow-y-auto'
-            )}
-          >
-            {loading ? (
-              <FilterOptionsSkeleton />
-            ) : (
-              visibleTasks.map((task) => (
-                <FilterOption
-                  key={task.id}
-                  id={`${idPrefix}-task-filter-${task.id}`}
-                  label={`${task.title} · ${task.maxScore} б.`}
-                  checked={draftFilters.tasks.includes(task.id)}
-                  onCheckedChange={() =>
-                    onDraftFiltersChange({
-                      ...draftFilters,
-                      tasks: toggleToken(draftFilters.tasks, task.id),
-                    })
-                  }
-                />
-              ))
-            )}
-          </div>
-        </section>
+        <SearchableFilterSection
+          title="Задания"
+          search={taskSearch}
+          searchPlaceholder="Найти задание"
+          idPrefix={idPrefix}
+          idSegment="task"
+          loading={loading}
+          filterActionsDisabled={filterActionsDisabled}
+          selectedTokens={draftFilters.tasks}
+          options={visibleTasks}
+          variant={variant}
+          sidebarListClassName="max-h-44 overflow-y-auto"
+          getToken={(task) => task.id}
+          getLabel={(task) => `${task.title} · ${task.maxScore} б.`}
+          onSearchChange={setTaskSearch}
+          onClear={() =>
+            onDraftFiltersChange({
+              ...draftFilters,
+              tasks: [],
+            })
+          }
+          onToggle={(taskId) =>
+            onDraftFiltersChange({
+              ...draftFilters,
+              tasks: toggleToken(draftFilters.tasks, taskId),
+            })
+          }
+        />
 
-        <section>
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold">Студенты</h3>
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              disabled={
-                filterActionsDisabled || draftFilters.students.length === 0
-              }
-              onClick={() =>
-                onDraftFiltersChange({
-                  ...draftFilters,
-                  students: [],
-                })
-              }
-            >
-              Сбросить
-            </Button>
-          </div>
-          <div className="relative mt-2">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={studentSearch}
-              onChange={(event) => setStudentSearch(event.target.value)}
-              placeholder="ФИО или username"
-              className="pl-9"
-            />
-          </div>
-          <div
-            className={cn(
-              'mt-2 space-y-1 pr-1',
-              isDrawer
-                ? 'max-h-[clamp(1rem,11dvh,12rem)] overflow-y-auto'
-                : 'max-h-48 overflow-y-auto'
-            )}
-          >
-            {loading ? (
-              <FilterOptionsSkeleton />
-            ) : (
-              visibleStudents.map((student) => (
-                <FilterOption
-                  key={student.username}
-                  id={`${idPrefix}-student-filter-${student.username}`}
-                  label={`${student.fullName} · ${student.group}`}
-                  checked={draftFilters.students.includes(student.username)}
-                  onCheckedChange={() =>
-                    onDraftFiltersChange({
-                      ...draftFilters,
-                      students: toggleToken(
-                        draftFilters.students,
-                        student.username
-                      ),
-                    })
-                  }
-                />
-              ))
-            )}
-          </div>
-        </section>
+        <SearchableFilterSection
+          title="Студенты"
+          search={studentSearch}
+          searchPlaceholder="ФИО или username"
+          idPrefix={idPrefix}
+          idSegment="student"
+          loading={loading}
+          filterActionsDisabled={filterActionsDisabled}
+          selectedTokens={draftFilters.students}
+          options={visibleStudents}
+          variant={variant}
+          sidebarListClassName="max-h-48 overflow-y-auto"
+          getToken={(student) => student.username}
+          getLabel={(student) => `${student.fullName} · ${student.group}`}
+          onSearchChange={setStudentSearch}
+          onClear={() =>
+            onDraftFiltersChange({
+              ...draftFilters,
+              students: [],
+            })
+          }
+          onToggle={(studentUsername) =>
+            onDraftFiltersChange({
+              ...draftFilters,
+              students: toggleToken(draftFilters.students, studentUsername),
+            })
+          }
+        />
 
-        <section>
-          <h3 className="text-sm font-semibold">Оценена</h3>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {GRADED_FILTER_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() =>
-                  onDraftFiltersChange({
-                    ...draftFilters,
-                    graded: option.value,
-                  })
-                }
-                className={cn(
-                  'cursor-pointer rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  draftFilters.graded === option.value
-                    ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'border-border bg-background'
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </section>
+        <GradedFilterSection
+          graded={draftFilters.graded}
+          onGradedChange={(graded) =>
+            onDraftFiltersChange({
+              ...draftFilters,
+              graded,
+            })
+          }
+        />
       </div>
 
-      <TooltipProvider>
-        <div
-          className={cn(
-            'mt-6 grid grid-cols-2 gap-2',
-            isDrawer &&
-              'sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/80'
-          )}
-        >
-          {filterActionsDisabledReason ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span tabIndex={0} className="inline-flex w-full">
-                  <Button type="button" disabled className="w-full">
-                    Применить
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{filterActionsDisabledReason}</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Button
-              type="button"
-              disabled={applyDisabled}
-              onClick={applyFilters}
-              className="w-full"
-            >
-              Применить
-            </Button>
-          )}
-          {filterActionsDisabledReason ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span tabIndex={0} className="inline-flex w-full">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled
-                    className="w-full"
-                  >
-                    Сбросить
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{filterActionsDisabledReason}</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={resetDisabled}
-              onClick={resetFilters}
-              className="w-full"
-            >
-              Сбросить
-            </Button>
-          )}
-        </div>
-      </TooltipProvider>
+      <AttemptsFiltersActions
+        applyDisabled={applyDisabled}
+        resetDisabled={resetDisabled}
+        filterActionsDisabledReason={filterActionsDisabledReason}
+        variant={variant}
+        onApply={applyFilters}
+        onReset={resetFilters}
+      />
     </>
   );
 }
@@ -474,4 +235,330 @@ export function AttemptsFilterSidebar(
       </div>
     </aside>
   );
+}
+
+function toggleToken(tokens: string[], token: string): string[] {
+  return tokens.includes(token)
+    ? tokens.filter((item) => item !== token)
+    : [...tokens, token].sort((a, b) => a.localeCompare(b));
+}
+
+function compareSelectedFirst<T>(
+  firstItem: T,
+  secondItem: T,
+  selectedTokens: ReadonlySet<string>,
+  getToken: (item: T) => string,
+  getLabel: (item: T) => string
+): number {
+  const firstSelected = selectedTokens.has(getToken(firstItem));
+  const secondSelected = selectedTokens.has(getToken(secondItem));
+
+  if (firstSelected !== secondSelected) {
+    return firstSelected ? -1 : 1;
+  }
+
+  return getLabel(firstItem).localeCompare(getLabel(secondItem));
+}
+
+function FilterOptionsSkeleton({ rows = 7 }: { rows?: number }) {
+  return (
+    <div className="space-y-1" aria-hidden="true">
+      {Array.from({ length: rows }).map((_, index) => {
+        const width = index % 3 === 0 ? 78 : index % 3 === 1 ? 92 : 64;
+
+        return (
+          <div
+            key={index}
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5"
+          >
+            <div className="size-4 shrink-0 animate-pulse rounded bg-muted" />
+            <div
+              className="h-5 animate-pulse rounded bg-muted"
+              style={{ width: `${width}%` }}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FilterOption({
+  id,
+  label,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onCheckedChange: () => void;
+}) {
+  return (
+    <label
+      htmlFor={id}
+      className="flex min-w-0 select-none cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+    >
+      <Checkbox
+        id={id}
+        checked={checked}
+        onCheckedChange={(value) => {
+          if (value !== 'indeterminate') {
+            onCheckedChange();
+          }
+        }}
+      />
+      <span className="min-w-0 truncate">{label}</span>
+    </label>
+  );
+}
+
+function AttemptsFiltersHeader({
+  attemptsCount,
+  loading,
+}: {
+  attemptsCount: number;
+  loading: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <Filter className="size-4" /> Фильтры
+        </p>
+      </div>
+      {loading ? (
+        <span
+          className="h-7 w-24 animate-pulse rounded-full bg-muted"
+          aria-label="Загрузка количества попыток"
+        />
+      ) : (
+        <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
+          Попыток: {attemptsCount}
+        </span>
+      )}
+    </div>
+  );
+}
+
+type AttemptsFiltersVariant = 'sidebar' | 'drawer';
+
+function SearchableFilterSection<T>({
+  title,
+  search,
+  searchPlaceholder,
+  idPrefix,
+  idSegment,
+  loading,
+  filterActionsDisabled,
+  selectedTokens,
+  options,
+  variant,
+  sidebarListClassName,
+  getToken,
+  getLabel,
+  onSearchChange,
+  onClear,
+  onToggle,
+}: {
+  title: string;
+  search: string;
+  searchPlaceholder: string;
+  idPrefix: string;
+  idSegment: string;
+  loading: boolean;
+  filterActionsDisabled: boolean;
+  selectedTokens: string[];
+  options: T[];
+  variant: AttemptsFiltersVariant;
+  sidebarListClassName: string;
+  getToken: (option: T) => string;
+  getLabel: (option: T) => string;
+  onSearchChange: (search: string) => void;
+  onClear: () => void;
+  onToggle: (token: string) => void;
+}) {
+  return (
+    <section>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <Button
+          type="button"
+          variant="ghost"
+          size="xs"
+          disabled={filterActionsDisabled || selectedTokens.length === 0}
+          onClick={onClear}
+        >
+          Сбросить
+        </Button>
+      </div>
+      <div className="relative mt-2">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder={searchPlaceholder}
+          className="pl-9"
+        />
+      </div>
+      <div
+        className={cn(
+          'mt-2 space-y-1 pr-1',
+          variant === 'drawer'
+            ? 'max-h-[clamp(1rem,11dvh,12rem)] overflow-y-auto'
+            : sidebarListClassName
+        )}
+      >
+        {loading ? (
+          <FilterOptionsSkeleton />
+        ) : (
+          options.map((option) => {
+            const token = getToken(option);
+
+            return (
+              <FilterOption
+                key={token}
+                id={`${idPrefix}-${idSegment}-filter-${token}`}
+                label={getLabel(option)}
+                checked={selectedTokens.includes(token)}
+                onCheckedChange={() => onToggle(token)}
+              />
+            );
+          })
+        )}
+      </div>
+    </section>
+  );
+}
+
+function GradedFilterSection({
+  graded,
+  onGradedChange,
+}: {
+  graded: CourseAttemptGradedFilter;
+  onGradedChange: (graded: CourseAttemptGradedFilter) => void;
+}) {
+  return (
+    <section>
+      <h3 className="text-sm font-semibold">Оценена</h3>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {GRADED_FILTER_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onGradedChange(option.value)}
+            className={cn(
+              'cursor-pointer rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              graded === option.value
+                ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
+                : 'border-border bg-background'
+            )}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AttemptsFiltersActions({
+  applyDisabled,
+  resetDisabled,
+  filterActionsDisabledReason,
+  variant,
+  onApply,
+  onReset,
+}: {
+  applyDisabled: boolean;
+  resetDisabled: boolean;
+  filterActionsDisabledReason?: string;
+  variant: AttemptsFiltersVariant;
+  onApply: () => void;
+  onReset: () => void;
+}) {
+  const isDrawer = variant === 'drawer';
+
+  return (
+    <TooltipProvider>
+      <div
+        className={cn(
+          'mt-6 grid grid-cols-2 gap-2',
+          isDrawer &&
+            'sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/80'
+        )}
+      >
+        {filterActionsDisabledReason ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0} className="inline-flex w-full">
+                <Button type="button" disabled className="w-full">
+                  Применить
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{filterActionsDisabledReason}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <Button
+            type="button"
+            disabled={applyDisabled}
+            onClick={onApply}
+            className="w-full"
+          >
+            Применить
+          </Button>
+        )}
+        {filterActionsDisabledReason ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0} className="inline-flex w-full">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled
+                  className="w-full"
+                >
+                  Сбросить
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{filterActionsDisabledReason}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={resetDisabled}
+            onClick={onReset}
+            className="w-full"
+          >
+            Сбросить
+          </Button>
+        )}
+      </div>
+    </TooltipProvider>
+  );
+}
+
+interface AttemptsFiltersPanel {
+  appliedFilters: CourseAttemptsFilters;
+  draftFilters: CourseAttemptsFilters;
+  attemptsCount: number;
+  loading: boolean;
+  tasks: CourseAttempt['task'][];
+  students: CourseAttempt['student'][];
+  filterActionsDisabledReason?: string;
+  onDraftFiltersChange: (filters: CourseAttemptsFilters) => void;
+  onApplyFilters: () => void;
+  onResetFilters: () => void;
+}
+
+interface AttemptsFiltersContentProps {
+  idPrefix: string;
+  panel: AttemptsFiltersPanel;
+  onAfterApply?: () => void;
+  onAfterReset?: () => void;
+  showHeader?: boolean;
+  variant?: AttemptsFiltersVariant;
 }
