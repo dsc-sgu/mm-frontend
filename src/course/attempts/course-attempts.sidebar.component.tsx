@@ -51,6 +51,12 @@ export function AttemptsFiltersContent({
     onResetFilters,
   } = panel;
   const filterActionsDisabled = Boolean(filterActionsDisabledReason);
+  const filterSectionContext = {
+    idPrefix,
+    loading,
+    filterActionsDisabled,
+    variant,
+  };
   const [taskSearch, setTaskSearch] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
 
@@ -141,60 +147,30 @@ export function AttemptsFiltersContent({
       ) : null}
 
       <div className={cn(showHeader ? 'mt-5' : 'mt-0', 'space-y-6')}>
-        <SearchableFilterSection
-          title="Задания"
+        <TasksFilterSection
+          context={filterSectionContext}
           search={taskSearch}
-          searchPlaceholder="Найти задание"
-          idPrefix={idPrefix}
-          idSegment="task"
-          loading={loading}
-          filterActionsDisabled={filterActionsDisabled}
-          selectedTokens={draftFilters.tasks}
-          options={visibleTasks}
-          variant={variant}
-          sidebarListClassName="max-h-44 overflow-y-auto"
-          getToken={(task) => task.id}
-          getLabel={(task) => `${task.title} · ${task.maxScore} б.`}
+          tasks={visibleTasks}
+          selectedTaskIds={draftFilters.tasks}
           onSearchChange={setTaskSearch}
-          onClear={() =>
+          onSelectedTaskIdsChange={(tasks) =>
             onDraftFiltersChange({
               ...draftFilters,
-              tasks: [],
-            })
-          }
-          onToggle={(taskId) =>
-            onDraftFiltersChange({
-              ...draftFilters,
-              tasks: toggleToken(draftFilters.tasks, taskId),
+              tasks,
             })
           }
         />
 
-        <SearchableFilterSection
-          title="Студенты"
+        <StudentsFilterSection
+          context={filterSectionContext}
           search={studentSearch}
-          searchPlaceholder="ФИО или username"
-          idPrefix={idPrefix}
-          idSegment="student"
-          loading={loading}
-          filterActionsDisabled={filterActionsDisabled}
-          selectedTokens={draftFilters.students}
-          options={visibleStudents}
-          variant={variant}
-          sidebarListClassName="max-h-48 overflow-y-auto"
-          getToken={(student) => student.username}
-          getLabel={(student) => `${student.fullName} · ${student.group}`}
+          students={visibleStudents}
+          selectedStudentUsernames={draftFilters.students}
           onSearchChange={setStudentSearch}
-          onClear={() =>
+          onSelectedStudentUsernamesChange={(students) =>
             onDraftFiltersChange({
               ...draftFilters,
-              students: [],
-            })
-          }
-          onToggle={(studentUsername) =>
-            onDraftFiltersChange({
-              ...draftFilters,
-              students: toggleToken(draftFilters.students, studentUsername),
+              students,
             })
           }
         />
@@ -343,51 +319,40 @@ function AttemptsFiltersHeader({
 
 type AttemptsFiltersVariant = 'sidebar' | 'drawer';
 
-function SearchableFilterSection<T>({
-  title,
-  search,
-  searchPlaceholder,
-  idPrefix,
-  idSegment,
-  loading,
-  filterActionsDisabled,
-  selectedTokens,
-  options,
-  variant,
-  sidebarListClassName,
-  getToken,
-  getLabel,
-  onSearchChange,
-  onClear,
-  onToggle,
-}: {
-  title: string;
-  search: string;
-  searchPlaceholder: string;
+interface FilterSectionContext {
   idPrefix: string;
-  idSegment: string;
   loading: boolean;
   filterActionsDisabled: boolean;
-  selectedTokens: string[];
-  options: T[];
   variant: AttemptsFiltersVariant;
-  sidebarListClassName: string;
-  getToken: (option: T) => string;
-  getLabel: (option: T) => string;
+}
+
+function TasksFilterSection({
+  context,
+  search,
+  tasks,
+  selectedTaskIds,
+  onSearchChange,
+  onSelectedTaskIdsChange,
+}: {
+  context: FilterSectionContext;
+  search: string;
+  tasks: CourseAttempt['task'][];
+  selectedTaskIds: string[];
   onSearchChange: (search: string) => void;
-  onClear: () => void;
-  onToggle: (token: string) => void;
+  onSelectedTaskIdsChange: (taskIds: string[]) => void;
 }) {
+  const { idPrefix, loading, filterActionsDisabled, variant } = context;
+
   return (
     <section>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">{title}</h3>
+        <h3 className="text-sm font-semibold">Задания</h3>
         <Button
           type="button"
           variant="ghost"
           size="xs"
-          disabled={filterActionsDisabled || selectedTokens.length === 0}
-          onClick={onClear}
+          disabled={filterActionsDisabled || selectedTaskIds.length === 0}
+          onClick={() => onSelectedTaskIdsChange([])}
         >
           Сбросить
         </Button>
@@ -397,7 +362,7 @@ function SearchableFilterSection<T>({
         <Input
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={searchPlaceholder}
+          placeholder="Найти задание"
           className="pl-9"
         />
       </div>
@@ -406,25 +371,95 @@ function SearchableFilterSection<T>({
           'mt-2 space-y-1 pr-1',
           variant === 'drawer'
             ? 'max-h-[clamp(1rem,11dvh,12rem)] overflow-y-auto'
-            : sidebarListClassName
+            : 'max-h-44 overflow-y-auto'
         )}
       >
         {loading ? (
           <FilterOptionsSkeleton />
         ) : (
-          options.map((option) => {
-            const token = getToken(option);
+          tasks.map((task) => (
+            <FilterOption
+              key={task.id}
+              id={`${idPrefix}-task-filter-${task.id}`}
+              label={`${task.title} · ${task.maxScore} б.`}
+              checked={selectedTaskIds.includes(task.id)}
+              onCheckedChange={() =>
+                onSelectedTaskIdsChange(toggleToken(selectedTaskIds, task.id))
+              }
+            />
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
 
-            return (
-              <FilterOption
-                key={token}
-                id={`${idPrefix}-${idSegment}-filter-${token}`}
-                label={getLabel(option)}
-                checked={selectedTokens.includes(token)}
-                onCheckedChange={() => onToggle(token)}
-              />
-            );
-          })
+function StudentsFilterSection({
+  context,
+  search,
+  students,
+  selectedStudentUsernames,
+  onSearchChange,
+  onSelectedStudentUsernamesChange,
+}: {
+  context: FilterSectionContext;
+  search: string;
+  students: CourseAttempt['student'][];
+  selectedStudentUsernames: string[];
+  onSearchChange: (search: string) => void;
+  onSelectedStudentUsernamesChange: (studentUsernames: string[]) => void;
+}) {
+  const { idPrefix, loading, filterActionsDisabled, variant } = context;
+
+  return (
+    <section>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold">Студенты</h3>
+        <Button
+          type="button"
+          variant="ghost"
+          size="xs"
+          disabled={
+            filterActionsDisabled || selectedStudentUsernames.length === 0
+          }
+          onClick={() => onSelectedStudentUsernamesChange([])}
+        >
+          Сбросить
+        </Button>
+      </div>
+      <div className="relative mt-2">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="ФИО или username"
+          className="pl-9"
+        />
+      </div>
+      <div
+        className={cn(
+          'mt-2 space-y-1 pr-1',
+          variant === 'drawer'
+            ? 'max-h-[clamp(1rem,11dvh,12rem)] overflow-y-auto'
+            : 'max-h-48 overflow-y-auto'
+        )}
+      >
+        {loading ? (
+          <FilterOptionsSkeleton />
+        ) : (
+          students.map((student) => (
+            <FilterOption
+              key={student.username}
+              id={`${idPrefix}-student-filter-${student.username}`}
+              label={`${student.fullName} · ${student.group}`}
+              checked={selectedStudentUsernames.includes(student.username)}
+              onCheckedChange={() =>
+                onSelectedStudentUsernamesChange(
+                  toggleToken(selectedStudentUsernames, student.username)
+                )
+              }
+            />
+          ))
         )}
       </div>
     </section>
