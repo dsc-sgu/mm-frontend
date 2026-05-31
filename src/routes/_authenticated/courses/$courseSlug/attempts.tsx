@@ -1,4 +1,4 @@
-import { CourseAttemptsPage } from '@/course/attempts/course-attempts.component';
+import { CourseAttemptsPage } from '@/course/attempts/course-attempts.page';
 import {
   filtersFromCourseAttemptsSearch,
   searchFromCourseAttemptsFilters,
