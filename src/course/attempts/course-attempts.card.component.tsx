@@ -26,6 +26,7 @@ type AttemptCardProps =
       attempt: CourseAttempt;
       draftScore: string;
       onDraftScoreChange: (score: string) => void;
+      onDraftScoreReset: () => void;
     };
 
 export function AttemptCard(props: AttemptCardProps) {
@@ -144,7 +145,9 @@ export function AttemptCard(props: AttemptCardProps) {
             disabled={Boolean(props.attempt.reviewLock)}
             ariaLabel={`Балл за попытку ${props.attempt.task.title}`}
             error={draftScoreError}
+            resetAriaLabel={`Вернуть прежний балл за попытку`}
             onChange={props.onDraftScoreChange}
+            onReset={draftScoreChanged ? props.onDraftScoreReset : undefined}
           />
         )}
       </div>
