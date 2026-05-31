@@ -33,11 +33,19 @@ export function courseAttemptsQueryOptions({
 export function useCourseAttemptsQuery({
   courseSlug,
   filters,
+  refetchPaused = false,
 }: {
   courseSlug: string;
   filters: CourseAttemptsFilters;
+  refetchPaused?: boolean;
 }) {
-  return useQuery(courseAttemptsQueryOptions({ courseSlug, filters }));
+  return useQuery({
+    ...courseAttemptsQueryOptions({ courseSlug, filters }),
+    enabled: !refetchPaused,
+    refetchOnMount: !refetchPaused,
+    refetchOnReconnect: !refetchPaused,
+    refetchOnWindowFocus: !refetchPaused,
+  });
 }
 
 export function useSaveQuickGradesMutation() {

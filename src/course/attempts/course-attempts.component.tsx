@@ -66,15 +66,16 @@ export function CourseAttemptsPage({
   const { normalizedAppliedFilters, draftFilters, setDraftFilters } =
     useCourseAttemptsDraftFilters(appliedFilters);
   const [selectedAttemptIds, setSelectedAttemptIds] = useState<string[]>([]);
-  const [quickGradingAttemptIds, setQuickGradingAttemptIds] = useState<
-    string[]
-  >([]);
-  const [draftScores, setDraftScores] = useState<Record<string, string>>({});
+  const [quickGrading, setQuickGrading] = useState(false);
+  const [draftScoresByAttemptId, setDraftScoresByAttemptId] = useState<
+    Record<string, string>
+  >({});
   const [filtersDrawerOpen, setFiltersDrawerOpen] = useState(false);
 
   const attemptsQuery = useCourseAttemptsQuery({
     courseSlug,
     filters: normalizedAppliedFilters,
+    refetchPaused: quickGrading,
   });
   const saveQuickGradesMutation = useSaveQuickGradesMutation();
 
@@ -89,10 +90,6 @@ export function CourseAttemptsPage({
     () => new Map(attempts.map((attempt) => [attempt.id, attempt])),
     [attempts]
   );
-  const quickGradingAttemptIdSet = useMemo(
-    () => new Set(quickGradingAttemptIds),
-    [quickGradingAttemptIds]
-  );
   const selectedAttempts = useMemo(
     () =>
       attempts.filter(
@@ -101,27 +98,19 @@ export function CourseAttemptsPage({
       ),
     [attempts, selectedAttemptIdSet]
   );
-  const quickGradingAttempts = useMemo(
-    () =>
-      attempts.filter((attempt) => quickGradingAttemptIdSet.has(attempt.id)),
-    [attempts, quickGradingAttemptIdSet]
-  );
-  const isQuickGrading = quickGradingAttemptIds.length > 0;
-  const hasDraftChanges = useMemo(
-    () =>
-      quickGradingAttempts.some((attempt) =>
-        scoreDraftChanged(attempt, draftScores[attempt.id])
-      ),
-    [draftScores, quickGradingAttempts]
-  );
+  const hasDraftChanges = Object.keys(draftScoresByAttemptId).length > 0;
   const hasDraftValidationErrors = useMemo(
     () =>
-      quickGradingAttempts.some((attempt) =>
-        Boolean(scoreDraftValidationError(attempt, draftScores[attempt.id]))
-      ),
-    [draftScores, quickGradingAttempts]
+      Object.entries(draftScoresByAttemptId).some(([attemptId, draftScore]) => {
+        const attempt = attemptById.get(attemptId);
+
+        return attempt
+          ? Boolean(scoreDraftValidationError(attempt, draftScore))
+          : false;
+      }),
+    [attemptById, draftScoresByAttemptId]
   );
-  const filterActionsDisabledReason = isQuickGrading
+  const filterActionsDisabledReason = quickGrading
     ? 'Фильтры недоступны во время быстрой оценки. Выйдите из режима быстрой оценки.'
     : selectedAttempts.length > 0
       ? 'Фильтры недоступны, пока выбраны попытки. Очистите выбор.'
@@ -174,19 +163,15 @@ export function CourseAttemptsPage({
     onUpdates: handleReviewLockUpdates,
   });
 
-  function startQuickGrading(targetAttempts: CourseAttempt[]) {
-    setQuickGradingAttemptIds(targetAttempts.map((attempt) => attempt.id));
-    setDraftScores(
-      Object.fromEntries(
-        targetAttempts.map((attempt) => [attempt.id, scoreValue(attempt)])
-      )
-    );
+  function startQuickGrading() {
+    setQuickGrading(true);
+    setDraftScoresByAttemptId({});
     setSelectedAttemptIds([]);
   }
 
   function exitQuickGrading() {
-    setQuickGradingAttemptIds([]);
-    setDraftScores({});
+    setQuickGrading(false);
+    setDraftScoresByAttemptId({});
   }
 
   async function saveSelectedMaxGrade() {
@@ -213,16 +198,26 @@ export function CourseAttemptsPage({
       return;
     }
 
-    const updates = quickGradingAttempts
-      .filter(
-        (attempt) =>
-          !attempt.reviewLock &&
-          scoreDraftChanged(attempt, draftScores[attempt.id])
-      )
-      .map((attempt) => ({
-        attemptId: attempt.id,
-        score: Math.max(0, Number(draftScores[attempt.id] || 0)),
-      }));
+    const updates = Object.entries(draftScoresByAttemptId)
+      .map(([attemptId, draftScore]) => {
+        const attempt = attemptById.get(attemptId);
+
+        if (
+          !attempt ||
+          attempt.reviewLock ||
+          !scoreDraftChanged(attempt, draftScore)
+        ) {
+          return null;
+        }
+
+        return {
+          attemptId,
+          score: Math.max(0, Number(draftScore || 0)),
+        };
+      })
+      .filter((update): update is { attemptId: string; score: number } =>
+        Boolean(update)
+      );
 
     if (updates.length === 0) {
       return;
@@ -273,19 +268,30 @@ export function CourseAttemptsPage({
                 Измените фильтры и нажмите «Применить».
               </p>
             </div>
-          ) : isQuickGrading ? (
+          ) : quickGrading ? (
             <VirtualizedAttemptsList
-              attempts={quickGradingAttempts}
+              attempts={attempts}
               renderAttempt={(attempt) => (
                 <AttemptCard
                   mode="quick-grading"
                   attempt={attempt}
-                  draftScore={draftScores[attempt.id] ?? ''}
+                  draftScore={
+                    Object.hasOwn(draftScoresByAttemptId, attempt.id)
+                      ? draftScoresByAttemptId[attempt.id]
+                      : scoreValue(attempt)
+                  }
                   onDraftScoreChange={(score) =>
-                    setDraftScores((current) => ({
-                      ...current,
-                      [attempt.id]: score,
-                    }))
+                    setDraftScoresByAttemptId((current) => {
+                      const next = { ...current };
+
+                      if (score === scoreValue(attempt)) {
+                        delete next[attempt.id];
+                      } else {
+                        next[attempt.id] = score;
+                      }
+
+                      return next;
+                    })
                   }
                 />
               )}
@@ -376,7 +382,7 @@ export function CourseAttemptsPage({
           <BottomActionBar
             attempts={attempts}
             selectedAttempts={selectedAttempts}
-            quickGrading={isQuickGrading}
+            quickGrading={quickGrading}
             hasDraftChanges={hasDraftChanges}
             hasDraftValidationErrors={hasDraftValidationErrors}
             savePending={saveQuickGradesMutation.isPending}
@@ -388,7 +394,7 @@ export function CourseAttemptsPage({
               )
             }
             onClearSelection={() => setSelectedAttemptIds([])}
-            onStartQuickGradingAll={() => startQuickGrading(attempts)}
+            onStartQuickGradingAll={startQuickGrading}
             onOpenFilters={() => setFiltersDrawerOpen(true)}
             onSaveSelectedMaxGrade={saveSelectedMaxGrade}
             onExitQuickGrading={exitQuickGrading}
