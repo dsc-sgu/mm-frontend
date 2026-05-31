@@ -70,7 +70,6 @@ export function CourseAttemptsPage({
     string[]
   >([]);
   const [draftScores, setDraftScores] = useState<Record<string, string>>({});
-  const [feedbackTextVisible, setFeedbackTextVisible] = useState(false);
   const [filtersDrawerOpen, setFiltersDrawerOpen] = useState(false);
 
   const attemptsQuery = useCourseAttemptsQuery({
@@ -183,13 +182,11 @@ export function CourseAttemptsPage({
       )
     );
     setSelectedAttemptIds([]);
-    setFeedbackTextVisible(false);
   }
 
   function exitQuickGrading() {
     setQuickGradingAttemptIds([]);
     setDraftScores({});
-    setFeedbackTextVisible(false);
   }
 
   async function saveSelectedMaxGrade() {
@@ -207,7 +204,6 @@ export function CourseAttemptsPage({
     await saveQuickGradesMutation.mutateAsync({
       courseSlug,
       updates,
-      clearFeedbackText: false,
     });
     setSelectedAttemptIds([]);
   }
@@ -235,7 +231,6 @@ export function CourseAttemptsPage({
     await saveQuickGradesMutation.mutateAsync({
       courseSlug,
       updates,
-      clearFeedbackText: !feedbackTextVisible,
     });
     exitQuickGrading();
   }
@@ -384,7 +379,6 @@ export function CourseAttemptsPage({
             quickGrading={isQuickGrading}
             hasDraftChanges={hasDraftChanges}
             hasDraftValidationErrors={hasDraftValidationErrors}
-            feedbackTextVisible={feedbackTextVisible}
             savePending={saveQuickGradesMutation.isPending}
             onSelectAll={() =>
               setSelectedAttemptIds(
@@ -398,7 +392,6 @@ export function CourseAttemptsPage({
             onOpenFilters={() => setFiltersDrawerOpen(true)}
             onSaveSelectedMaxGrade={saveSelectedMaxGrade}
             onExitQuickGrading={exitQuickGrading}
-            onFeedbackTextVisibleChange={setFeedbackTextVisible}
             onSaveQuickGrades={saveQuickGrades}
           />
         </section>

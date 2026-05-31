@@ -69,15 +69,6 @@ const LAST_NAMES = [
 
 const USERNAMES = ['student', 'alice', 'bob'];
 
-const FEEDBACK_TEXTS = [
-  'Хороший старт, стоит уточнить обработку ошибок.',
-  'Зачтено, но дедлайн был превышен.',
-  'Отлично разобраны крайние случаи.',
-  'Черновой отзыв будет заменён после финального ревью.',
-  'Сильная работа, нужно упростить README.',
-  '',
-];
-
 const TEACHERS = [
   'Елизавета Громова',
   'Павел Ковалев',
@@ -152,8 +143,6 @@ function buildAttempts(courseSlug: string): CourseAttempt[] {
                 TEACHERS[(studentIndex + attemptIndex) % TEACHERS.length],
             }
           : null,
-        feedbackText:
-          FEEDBACK_TEXTS[(studentIndex + attemptIndex) % FEEDBACK_TEXTS.length],
         reviewLock: locked
           ? {
               teacherName: TEACHERS[(studentIndex + 3) % TEACHERS.length],
@@ -260,7 +249,6 @@ export function createMockReviewLockUpdates(
 export async function saveQuickGrades({
   courseSlug,
   updates,
-  clearFeedbackText,
 }: SaveQuickGradesInput): Promise<CourseAttempt[]> {
   await new Promise((resolve) => setTimeout(resolve, 220));
 
@@ -283,7 +271,6 @@ export async function saveQuickGrades({
         gradedAt: now,
         gradedBy: 'Текущий преподаватель',
       },
-      feedbackText: clearFeedbackText ? '' : attempt.feedbackText,
     };
   });
 
