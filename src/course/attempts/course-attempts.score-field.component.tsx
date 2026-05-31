@@ -4,7 +4,6 @@ import { Input } from '@/shadcn/components/ui/input';
 import { cn } from '@/shadcn/lib/utils';
 import {
   normalizeScoreDraftInput,
-  scoreDraftMaxScoreError,
   scoreDraftTextSizeClass,
 } from './course-attempts.grading';
 
@@ -14,6 +13,7 @@ interface CourseAttemptsScoreFieldProps {
   changed?: boolean;
   disabled?: boolean;
   ariaLabel?: string;
+  error?: string | null;
   className?: string;
   inputClassName?: string;
   onChange: (value: string) => void;
@@ -25,12 +25,12 @@ export function CourseAttemptsScoreField({
   changed = false,
   disabled = false,
   ariaLabel = 'Балл',
+  error = null,
   className,
   inputClassName,
   onChange,
 }: CourseAttemptsScoreFieldProps) {
   const generatedErrorId = useId();
-  const error = scoreDraftMaxScoreError(maxScore, value);
   const errorId = `${generatedErrorId}-score-error`;
 
   return (

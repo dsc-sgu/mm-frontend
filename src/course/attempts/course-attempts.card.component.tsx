@@ -3,7 +3,10 @@ import { Eye, FileCheck2, LockKeyhole } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import { cn } from '@/shadcn/lib/utils';
-import { scoreDraftChanged } from './course-attempts.grading';
+import {
+  scoreDraftChanged,
+  scoreDraftValidationError,
+} from './course-attempts.grading';
 import { CourseAttemptsScoreField } from './course-attempts.score-field.component';
 import type {
   CourseAttempt,
@@ -32,6 +35,10 @@ export function AttemptCard(props: AttemptCardProps) {
     props.mode === 'quick-grading'
       ? scoreDraftChanged(props.attempt, props.draftScore)
       : false;
+  const draftScoreError =
+    props.mode === 'quick-grading'
+      ? scoreDraftValidationError(props.attempt, props.draftScore)
+      : null;
 
   return (
     <article
@@ -136,6 +143,7 @@ export function AttemptCard(props: AttemptCardProps) {
             changed={draftScoreChanged}
             disabled={Boolean(props.attempt.reviewLock)}
             ariaLabel={`Балл за попытку ${props.attempt.task.title}`}
+            error={draftScoreError}
             onChange={props.onDraftScoreChange}
           />
         )}

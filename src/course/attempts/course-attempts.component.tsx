@@ -198,9 +198,9 @@ export function CourseAttemptsPage({
       return;
     }
 
-    const updates = draftScoresByAttemptId.reduce<
-      Array<{ attemptId: string; score: number }>
-    >((currentUpdates, draftScore, attemptId) => {
+    const updates: Array<{ attemptId: string; score: number }> = [];
+
+    draftScoresByAttemptId.forEach((draftScore, attemptId) => {
       const attempt = attemptById.get(attemptId);
 
       if (
@@ -208,17 +208,14 @@ export function CourseAttemptsPage({
         attempt.reviewLock ||
         !scoreDraftChanged(attempt, draftScore)
       ) {
-        return currentUpdates;
+        return;
       }
 
-      return [
-        ...currentUpdates,
-        {
-          attemptId,
-          score: Math.max(0, Number(draftScore || 0)),
-        },
-      ];
-    }, []);
+      updates.push({
+        attemptId,
+        score: Math.max(0, Number(draftScore)),
+      });
+    });
 
     if (updates.length === 0) {
       return;

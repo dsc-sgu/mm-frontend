@@ -54,7 +54,14 @@ export function BottomActionBar({
             key="quick-grading-actions"
             className="grid min-h-10 gap-3 lg:grid-cols-[minmax(12rem,1fr)_auto] lg:items-center"
           >
-            <p className="text-sm font-semibold">Быстрая оценка</p>
+            <div className="grid gap-1">
+              <p className="text-sm font-semibold">Быстрая оценка</p>
+              {hasDraftValidationErrors ? (
+                <p className="text-sm font-medium text-destructive">
+                  Исправьте ошибки в полях оценки.
+                </p>
+              ) : null}
+            </div>
             <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:flex-wrap lg:items-center lg:justify-end">
               <Button
                 type="button"
