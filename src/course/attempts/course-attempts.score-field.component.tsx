@@ -1,5 +1,7 @@
 import { useId } from 'react';
+import { RotateCcw } from 'lucide-react';
 
+import { Button } from '@/shadcn/components/ui/button';
 import { Input } from '@/shadcn/components/ui/input';
 import { cn } from '@/shadcn/lib/utils';
 import {
@@ -14,9 +16,11 @@ interface CourseAttemptsScoreFieldProps {
   disabled?: boolean;
   ariaLabel?: string;
   error?: string | null;
+  resetAriaLabel?: string;
   className?: string;
   inputClassName?: string;
   onChange: (value: string) => void;
+  onReset?: () => void;
 }
 
 export function CourseAttemptsScoreField({
@@ -26,15 +30,17 @@ export function CourseAttemptsScoreField({
   disabled = false,
   ariaLabel = 'Балл',
   error = null,
+  resetAriaLabel = 'Вернуть прежний балл',
   className,
   inputClassName,
   onChange,
+  onReset,
 }: CourseAttemptsScoreFieldProps) {
   const generatedErrorId = useId();
   const errorId = `${generatedErrorId}-score-error`;
 
   return (
-    <label className={cn('grid min-h-12 min-w-0 gap-y-1', className)}>
+    <div className={cn('grid min-h-12 min-w-0 gap-y-1', className)}>
       <span className="flex min-w-0 items-center gap-3">
         <Input
           type="text"
@@ -68,6 +74,20 @@ export function CourseAttemptsScoreField({
         <span className="shrink-0 text-xl font-semibold text-muted-foreground">
           / {maxScore}
         </span>
+        {onReset ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            disabled={disabled}
+            aria-label={resetAriaLabel}
+            title={resetAriaLabel}
+            onClick={onReset}
+            className="rounded-xl text-muted-foreground hover:text-foreground"
+          >
+            <RotateCcw className="size-4" />
+          </Button>
+        ) : null}
       </span>
       {error ? (
         <span
@@ -77,6 +97,6 @@ export function CourseAttemptsScoreField({
           {error}
         </span>
       ) : null}
-    </label>
+    </div>
   );
 }

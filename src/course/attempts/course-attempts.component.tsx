@@ -284,6 +284,11 @@ export function CourseAttemptsPage({
                         : current.set(attempt.id, score)
                     )
                   }
+                  onDraftScoreReset={() =>
+                    setDraftScoresByAttemptId((current) =>
+                      current.remove(attempt.id)
+                    )
+                  }
                 />
               )}
             />
