@@ -18,6 +18,7 @@ import {
   DrawerTitle,
 } from '@/shadcn/components/ui/drawer';
 import {
+  areCourseAttemptsFiltersEqual,
   EMPTY_COURSE_ATTEMPTS_FILTERS,
   normalizeCourseAttemptsFilters,
 } from './course-attempts.filters';
@@ -62,22 +63,8 @@ export function CourseAttemptsPage({
   appliedFilters,
   onApplyFilters,
 }: CourseAttemptsPageProps) {
-  const normalizedAppliedFilters = useMemo(
-    () => normalizeCourseAttemptsFilters(appliedFilters),
-    [appliedFilters]
-  );
-  const appliedFiltersKey = useMemo(
-    () => courseAttemptsFiltersKey(normalizedAppliedFilters),
-    [normalizedAppliedFilters]
-  );
-  const [draftFiltersState, setDraftFiltersState] = useState(() => ({
-    appliedFiltersKey,
-    filters: normalizedAppliedFilters,
-  }));
-  const draftFilters =
-    draftFiltersState.appliedFiltersKey === appliedFiltersKey
-      ? draftFiltersState.filters
-      : normalizedAppliedFilters;
+  const { normalizedAppliedFilters, draftFilters, setDraftFilters } =
+    useCourseAttemptsDraftFilters(appliedFilters);
   const [selectedAttemptIds, setSelectedAttemptIds] = useState<string[]>([]);
   const [quickGradingAttemptIds, setQuickGradingAttemptIds] = useState<
     string[]
@@ -187,13 +174,6 @@ export function CourseAttemptsPage({
     enabled: !attemptsQuery.isPending,
     onUpdates: handleReviewLockUpdates,
   });
-
-  function setDraftFilters(filters: CourseAttemptsFilters) {
-    setDraftFiltersState({
-      appliedFiltersKey,
-      filters: normalizeCourseAttemptsFilters(filters),
-    });
-  }
 
   function startQuickGrading(targetAttempts: CourseAttempt[]) {
     setQuickGradingAttemptIds(targetAttempts.map((attempt) => attempt.id));
@@ -427,6 +407,42 @@ export function CourseAttemptsPage({
   );
 }
 
+function useCourseAttemptsDraftFilters(appliedFilters: CourseAttemptsFilters) {
+  const normalizedAppliedFilters = useMemo(
+    () => normalizeCourseAttemptsFilters(appliedFilters),
+    [appliedFilters]
+  );
+  const [draftState, setDraftState] = useState(() => ({
+    baseAppliedFilters: normalizedAppliedFilters,
+    draftFilters: normalizedAppliedFilters,
+  }));
+
+  // If filters changed outside of this component, for example via URL navigation,
+  // discard the stale draft and start from the new applied filters.
+  const draftFilters = areCourseAttemptsFiltersEqual(
+    draftState.baseAppliedFilters,
+    normalizedAppliedFilters
+  )
+    ? draftState.draftFilters
+    : normalizedAppliedFilters;
+
+  const setDraftFilters = useCallback(
+    (filters: CourseAttemptsFilters) => {
+      setDraftState({
+        baseAppliedFilters: normalizedAppliedFilters,
+        draftFilters: normalizeCourseAttemptsFilters(filters),
+      });
+    },
+    [normalizedAppliedFilters]
+  );
+
+  return {
+    normalizedAppliedFilters,
+    draftFilters,
+    setDraftFilters,
+  };
+}
+
 function useElementPageOffsetTop<TElement extends HTMLElement>() {
   const elementRef = useRef<TElement | null>(null);
   const [offsetTop, setOffsetTop] = useState(0);
@@ -524,10 +540,6 @@ function VirtualizedAttemptsList({
       })}
     </div>
   );
-}
-
-function courseAttemptsFiltersKey(filters: CourseAttemptsFilters) {
-  return `${filters.graded}|${filters.tasks.join(',')}|${filters.students.join(',')}`;
 }
 
 function renderLockedSelectionToastDescription(attempts: CourseAttempt[]) {
