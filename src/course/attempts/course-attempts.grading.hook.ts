@@ -6,7 +6,7 @@ import {
   scoreDraftValidationError,
   scoreValue,
   type QuickGradeUpdate,
-} from './course-attempts.grading';
+} from '@/course/grading';
 import { isAttemptSelectable } from './course-attempts.selection';
 import { useSaveQuickGradesMutation } from './course-attempts.queries';
 import type { CourseAttempt } from './course-attempts.types';

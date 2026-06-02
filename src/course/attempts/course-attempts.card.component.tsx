@@ -4,10 +4,10 @@ import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import { cn } from '@/shadcn/lib/utils';
 import {
+  CourseAttemptsScoreField,
   scoreDraftChanged,
   scoreDraftValidationError,
-} from './course-attempts.grading';
-import { CourseAttemptsScoreField } from './course-attempts.score-field.component';
+} from '@/course/grading';
 import type {
   CourseAttempt,
   CourseAttemptGrade,
