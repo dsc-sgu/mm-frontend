@@ -1,3 +1,4 @@
+import { AttemptReviewPage } from '@/course/attempt-review/attempt-review.page';
 import { requireCourseRole } from '@/course/course.guards';
 import { getAttemptReviewBreadcrumb } from '@/course/course-route.header';
 import { createFileRoute } from '@tanstack/react-router';
@@ -21,7 +22,15 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
+  const params = Route.useParams();
+
   return (
-    <main className="p-6 text-2xl font-semibold">Attempt review page</main>
+    <AttemptReviewPage
+      mode="editable"
+      courseSlug={params.courseSlug}
+      taskId={params.taskId}
+      studentUsername={params.studentUsername}
+      attemptId={Number(params.attemptId)}
+    />
   );
 }

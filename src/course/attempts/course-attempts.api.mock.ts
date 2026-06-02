@@ -246,6 +246,65 @@ export function createMockReviewLockUpdates(
   return updates;
 }
 
+export function findMockCourseAttempt({
+  courseSlug,
+  taskId,
+  studentUsername,
+  attemptNumber,
+}: {
+  courseSlug: string;
+  taskId: string;
+  studentUsername: string;
+  attemptNumber: number;
+}): CourseAttempt | undefined {
+  return getCourseAttempts(courseSlug).find(
+    (attempt) =>
+      attempt.task.id === taskId &&
+      attempt.student.username === studentUsername &&
+      attempt.attemptNumber === attemptNumber
+  );
+}
+
+export function upsertMockCourseAttemptGrade({
+  courseSlug,
+  taskId,
+  studentUsername,
+  attemptNumber,
+  score,
+  gradedAt,
+  gradedBy,
+}: {
+  courseSlug: string;
+  taskId: string;
+  studentUsername: string;
+  attemptNumber: number;
+  score: number;
+  gradedAt: string;
+  gradedBy: string;
+}): void {
+  const updatedAttempts = getCourseAttempts(courseSlug).map((attempt) => {
+    if (
+      attempt.task.id !== taskId ||
+      attempt.student.username !== studentUsername ||
+      attempt.attemptNumber !== attemptNumber
+    ) {
+      return attempt;
+    }
+
+    return {
+      ...attempt,
+      grade: {
+        score,
+        maxScore: attempt.task.maxScore,
+        gradedAt,
+        gradedBy,
+      },
+    };
+  });
+
+  attemptsByCourse.set(courseSlug, updatedAttempts);
+}
+
 export async function saveQuickGrades({
   courseSlug,
   updates,
