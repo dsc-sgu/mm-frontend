@@ -8,12 +8,70 @@ import {
 } from 'lucide-react';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 
+const TOAST_EDGE_OFFSET = 16;
+const TOAST_HEADER_GAP = 12;
+
 function getDocumentTheme(): ToasterProps['theme'] {
   return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
 }
 
-const Toaster = ({ ...props }: ToasterProps) => {
+function getTopToastOffset() {
+  const headerBottom = document
+    .querySelector('header')
+    ?.getBoundingClientRect().bottom;
+
+  return Math.max(
+    TOAST_EDGE_OFFSET,
+    Math.ceil((headerBottom ?? 0) + TOAST_HEADER_GAP)
+  );
+}
+
+function useTopToastOffset() {
+  const [topOffset, setTopOffset] = useState(getTopToastOffset);
+
+  useEffect(() => {
+    let animationFrameId = 0;
+
+    const updateOffset = () => {
+      animationFrameId = 0;
+      const nextOffset = getTopToastOffset();
+
+      setTopOffset((currentOffset) =>
+        currentOffset === nextOffset ? currentOffset : nextOffset
+      );
+    };
+
+    const scheduleUpdate = () => {
+      if (animationFrameId === 0) {
+        animationFrameId = window.requestAnimationFrame(updateOffset);
+      }
+    };
+
+    const header = document.querySelector('header');
+    const resizeObserver = header ? new ResizeObserver(scheduleUpdate) : null;
+
+    resizeObserver?.observe(header as Element);
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+    scheduleUpdate();
+
+    return () => {
+      if (animationFrameId !== 0) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+
+      resizeObserver?.disconnect();
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+    };
+  }, []);
+
+  return topOffset;
+}
+
+const Toaster = ({ offset, mobileOffset, ...props }: ToasterProps) => {
   const [theme, setTheme] = useState<ToasterProps['theme']>(getDocumentTheme);
+  const topOffset = useTopToastOffset();
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -32,6 +90,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme}
       className="toaster group"
+      offset={offset ?? { top: topOffset }}
+      mobileOffset={mobileOffset ?? { top: topOffset }}
       toastOptions={{
         classNames: {
           toast:
