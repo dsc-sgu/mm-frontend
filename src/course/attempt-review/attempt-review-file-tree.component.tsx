@@ -1,17 +1,20 @@
 import { useEffect, useMemo } from 'react';
 import { FileTree, useFileTree } from '@pierre/trees/react';
 
+import { cn } from '@/shadcn/lib/utils';
 import type { AttemptReviewChangedFile } from './attempt-review.types';
 
 interface AttemptReviewFileTreeProps {
   files: AttemptReviewChangedFile[];
   activeFilePath: string | null;
+  className?: string;
   onSelectFile: (path: string) => void;
 }
 
 export function AttemptReviewFileTree({
   files,
   activeFilePath,
+  className,
   onSelectFile,
 }: AttemptReviewFileTreeProps) {
   const statsByPath = useMemo(
@@ -74,12 +77,21 @@ export function AttemptReviewFileTree({
   }
 
   return (
-    <FileTree
-      model={model}
-      header={<strong className="text-sm">Изменённые файлы</strong>}
-      className="attempt-review-file-tree overflow-hidden rounded-xl border bg-card"
-      style={{ height: '360px', width: '100%' }}
-    />
+    <div
+      className={cn(
+        'flex min-h-80 flex-col overflow-hidden rounded-xl border bg-card',
+        className
+      )}
+    >
+      <div className="shrink-0 border-b px-3 py-2.5">
+        <h2 className="text-sm font-semibold">Изменённые файлы</h2>
+      </div>
+      <FileTree
+        model={model}
+        className="attempt-review-file-tree min-h-0 flex-1"
+        style={{ width: '100%' }}
+      />
+    </div>
   );
 }
 

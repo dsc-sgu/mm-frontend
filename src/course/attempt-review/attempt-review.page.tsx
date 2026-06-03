@@ -1,16 +1,31 @@
-import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
-import { Check, RotateCcw, Save } from 'lucide-react';
+import {
+  useMemo,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import {
+  Check,
+  ChevronsUpDown,
+  MessageSquare,
+  RotateCcw,
+  Save,
+} from 'lucide-react';
 
 import { CourseScoreField, scoreDraftMaxScoreError } from '@/course/grading';
 import { Button } from '@/shadcn/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shadcn/components/ui/popover';
 import { Spinner } from '@/shadcn/components/ui/spinner';
+import { cn } from '@/shadcn/lib/utils';
 import { AttemptReviewDiff } from './attempt-review-diff.component';
 import { fileElementId } from './attempt-review.dom';
 import { AttemptReviewFileTree } from './attempt-review-file-tree.component';
-import {
-  AttemptAdjacentControls,
-  AttemptReviewHistory,
-} from './attempt-review-history.component';
 import {
   useAttemptReviewQuery,
   useSaveAttemptReviewMutation,
@@ -104,7 +119,7 @@ function AttemptReviewPageContent({
 
   return (
     <main className="mx-auto flex w-full max-w-[96rem] flex-col gap-4 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
-      <header className="sticky top-14 z-20 rounded-2xl border bg-background/95 p-4 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <header className="rounded-2xl border bg-background p-4 shadow-sm">
         <div className="grid gap-3 lg:flex lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted-foreground">
@@ -135,52 +150,36 @@ function AttemptReviewPageContent({
               </span>
             </p>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <AttemptAdjacentControls review={review} mode={mode} />
-            {mode === 'editable' ? (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-xl"
-                  disabled={!hasChanges || saveMutation.isPending}
-                  onClick={() => setDraft(savedDraft)}
-                >
-                  <RotateCcw className="size-4" />
-                  Сбросить
-                </Button>
-                <Button
-                  type="button"
-                  className="rounded-xl"
-                  disabled={!canSave}
-                  onClick={async () => {
-                    const savedReview = await saveMutation.mutateAsync({
-                      ...params,
-                      score: draft.score ? Number(draft.score) : null,
-                      overallFeedbackHtml: draft.overallFeedbackHtml,
-                      lineComments: draft.lineComments,
-                    });
-                    setDraft(createDraft(savedReview));
-                  }}
-                >
-                  {saveMutation.isPending ? (
-                    <Spinner />
-                  ) : (
-                    <Save className="size-4" />
-                  )}
-                  Сохранить
-                </Button>
-              </>
-            ) : null}
-          </div>
         </div>
       </header>
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[18rem_minmax(0,1fr)_22rem]">
-        <aside className="grid gap-4 xl:sticky xl:top-40 xl:max-h-[calc(100vh-11rem)] xl:overflow-auto">
+      <ReviewPanel
+        review={review}
+        draft={draft}
+        mode={mode}
+        scoreError={scoreError}
+        hasChanges={hasChanges}
+        canSave={canSave}
+        savePending={saveMutation.isPending}
+        onDraftChange={setDraft}
+        onDiscard={() => setDraft(savedDraft)}
+        onSave={async () => {
+          const savedReview = await saveMutation.mutateAsync({
+            ...params,
+            score: draft.score ? Number(draft.score) : null,
+            overallFeedbackHtml: draft.overallFeedbackHtml,
+            lineComments: draft.lineComments,
+          });
+          setDraft(createDraft(savedReview));
+        }}
+      />
+
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
+        <aside className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:self-start">
           <AttemptReviewFileTree
             files={review.changedFiles}
             activeFilePath={activeFilePath}
+            className="xl:h-full"
             onSelectFile={(path) => {
               setActiveFilePath(path);
               document.getElementById(fileElementId(path))?.scrollIntoView({
@@ -204,17 +203,6 @@ function AttemptReviewPageContent({
             }
           }}
         />
-
-        <aside className="grid gap-4 xl:sticky xl:top-40 xl:max-h-[calc(100vh-11rem)] xl:overflow-auto">
-          <ReviewPanel
-            review={review}
-            draft={draft}
-            mode={mode}
-            scoreError={scoreError}
-            hasChanges={hasChanges}
-            onDraftChange={setDraft}
-          />
-        </aside>
       </div>
     </main>
   );
@@ -226,20 +214,28 @@ function ReviewPanel({
   mode,
   scoreError,
   hasChanges,
+  canSave,
+  savePending,
   onDraftChange,
+  onDiscard,
+  onSave,
 }: {
   review: AttemptReviewAggregate;
   draft: ReviewDraft;
   mode: AttemptReviewMode;
   scoreError: string | null;
   hasChanges: boolean;
+  canSave: boolean;
+  savePending: boolean;
   onDraftChange: Dispatch<SetStateAction<ReviewDraft>>;
+  onDiscard: () => void;
+  onSave: () => Promise<void>;
 }) {
   return (
-    <>
-      <section className="grid gap-4 rounded-2xl border bg-card p-4">
+    <section className="grid gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
+      <div className="grid content-start gap-4 rounded-2xl border bg-card p-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-semibold">Оценка и отзыв</h2>
+          <h2 className="font-semibold">Оценка</h2>
           {hasChanges && mode === 'editable' ? (
             <span className="rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 dark:bg-orange-950/40 dark:text-orange-200">
               Есть изменения
@@ -251,32 +247,37 @@ function ReviewPanel({
           )}
         </div>
 
-        {mode === 'editable' ? (
-          <CourseScoreField
-            value={draft.score}
-            maxScore={review.current.task.maxScore}
-            changed={
-              draft.score !==
-              (review.current.grade ? String(review.current.grade.score) : '')
-            }
-            error={scoreError}
-            ariaLabel="Балл за попытку"
-            onChange={(score) =>
-              onDraftChange((current) =>
-                current ? { ...current, score } : current
-              )
-            }
-          />
-        ) : (
-          <div className="rounded-xl border bg-muted/30 p-3">
-            <p className="text-sm text-muted-foreground">Балл</p>
-            <p className="text-2xl font-semibold">
-              {review.current.grade
-                ? `${review.current.grade.score}/${review.current.grade.maxScore}`
-                : `—/${review.current.task.maxScore}`}
-            </p>
-          </div>
-        )}
+        <AttemptSelect review={review} mode={mode} />
+
+        <div className="grid gap-2">
+          <h3 className="text-sm font-semibold">Балл</h3>
+          {mode === 'editable' ? (
+            <CourseScoreField
+              value={draft.score}
+              maxScore={review.current.task.maxScore}
+              changed={
+                draft.score !==
+                (review.current.grade ? String(review.current.grade.score) : '')
+              }
+              error={scoreError}
+              ariaLabel="Балл за попытку"
+              onChange={(score) =>
+                onDraftChange((current) =>
+                  current ? { ...current, score } : current
+                )
+              }
+            />
+          ) : (
+            <div className="rounded-xl border bg-muted/30 p-3">
+              <p className="text-sm text-muted-foreground">Балл</p>
+              <p className="text-2xl font-semibold">
+                {review.current.grade
+                  ? `${review.current.grade.score}/${review.current.grade.maxScore}`
+                  : `—/${review.current.task.maxScore}`}
+              </p>
+            </div>
+          )}
+        </div>
 
         {review.current.grade ? (
           <p className="text-sm text-muted-foreground">
@@ -289,26 +290,228 @@ function ReviewPanel({
           </p>
         )}
 
-        <div className="grid gap-2">
-          <h3 className="text-sm font-semibold">Общий отзыв</h3>
-          {mode === 'editable' ? (
-            <RichTextEditor
-              value={draft.overallFeedbackHtml}
-              placeholder="Итоговый отзыв по попытке…"
-              onChange={(overallFeedbackHtml) =>
-                onDraftChange((current) =>
-                  current ? { ...current, overallFeedbackHtml } : current
-                )
+        {mode === 'editable' ? (
+          <div className="flex flex-wrap justify-start gap-2 border-t pt-4">
+            <Button
+              type="button"
+              className="rounded-xl"
+              disabled={!canSave}
+              onClick={onSave}
+            >
+              {savePending ? <Spinner /> : <Save className="size-4" />}
+              Сохранить
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
+              disabled={!hasChanges || savePending}
+              onClick={onDiscard}
+            >
+              <RotateCcw className="size-4" />
+              Сбросить
+            </Button>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-3 rounded-2xl border bg-card p-4">
+        <h2 className="font-semibold">Общий отзыв</h2>
+        {mode === 'editable' ? (
+          <RichTextEditor
+            value={draft.overallFeedbackHtml}
+            placeholder="Итоговый отзыв по попытке…"
+            className="flex min-h-0 flex-1 flex-col"
+            minHeightClassName="min-h-0 flex-1"
+            onChange={(overallFeedbackHtml) =>
+              onDraftChange((current) =>
+                current ? { ...current, overallFeedbackHtml } : current
+              )
+            }
+          />
+        ) : (
+          <RichTextContent html={review.overallFeedback.html} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function AttemptSelect({
+  review,
+  mode,
+}: {
+  review: AttemptReviewAggregate;
+  mode: AttemptReviewMode;
+}) {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const attempts = useMemo(() => getAttemptOptions(review), [review]);
+  const currentAttempt =
+    attempts.find(
+      (attempt) => attempt.attemptNumber === review.current.attemptNumber
+    ) ?? attempts[0];
+
+  return (
+    <div className="grid gap-2">
+      <p className="text-sm font-medium">Попытка</p>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="group cursor-pointer rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Выбрать попытку"
+          >
+            <AttemptOptionCard
+              attempt={currentAttempt}
+              selected
+              trailing={
+                <ChevronsUpDown className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
               }
             />
-          ) : (
-            <RichTextContent html={review.overallFeedback.html} />
-          )}
-        </div>
-      </section>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="w-[var(--radix-popover-trigger-width)] min-w-72 overflow-hidden p-0"
+        >
+          <div className="max-h-80 overflow-y-auto">
+            <div className="divide-y">
+              {attempts.map((attempt) => {
+                const selected =
+                  attempt.attemptNumber === review.current.attemptNumber;
 
-      <AttemptReviewHistory review={review} mode={mode} />
-    </>
+                return (
+                  <button
+                    key={attempt.attemptNumber}
+                    type="button"
+                    className="block w-full cursor-pointer text-left outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted/60"
+                    onClick={() => {
+                      setOpen(false);
+
+                      if (selected) {
+                        return;
+                      }
+
+                      void navigate({
+                        to:
+                          mode === 'editable'
+                            ? '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
+                            : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/',
+                        params: {
+                          courseSlug: review.courseSlug,
+                          taskId: review.current.task.id,
+                          studentUsername: review.current.student.username,
+                          attemptId: String(attempt.attemptNumber),
+                        },
+                      });
+                    }}
+                  >
+                    <AttemptOptionCard
+                      attempt={attempt}
+                      selected={selected}
+                      variant="menu-item"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+interface AttemptSelectOption {
+  attemptNumber: number;
+  submittedAt: string;
+  score: number | null;
+  maxScore: number;
+  addedLines: number;
+  deletedLines: number;
+  commentCount: number;
+}
+
+function AttemptOptionCard({
+  attempt,
+  selected = false,
+  trailing,
+  variant = 'trigger',
+}: {
+  attempt: AttemptSelectOption;
+  selected?: boolean;
+  trailing?: ReactNode;
+  variant?: 'trigger' | 'menu-item';
+}) {
+  return (
+    <div
+      className={cn(
+        variant === 'trigger'
+          ? 'rounded-lg border bg-background px-2.5 py-2 transition-colors hover:border-primary'
+          : 'px-3 py-2.5 transition-colors',
+        selected &&
+          (variant === 'trigger'
+            ? 'border-primary bg-primary/5'
+            : 'bg-primary/5')
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold">
+          Попытка #{attempt.attemptNumber}
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+          {formatDateTime(attempt.submittedAt)}
+          {trailing}
+        </span>
+      </div>
+      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+        <span>
+          {attempt.score === null
+            ? 'Не оценено'
+            : `${attempt.score}/${attempt.maxScore}`}
+        </span>
+        <span className="text-emerald-700 dark:text-emerald-300">
+          +{attempt.addedLines}
+        </span>
+        <span className="text-rose-700 dark:text-rose-300">
+          −{attempt.deletedLines}
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <MessageSquare className="size-3" /> {attempt.commentCount}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function getAttemptOptions(review: AttemptReviewAggregate) {
+  const attempts = new Map<number, AttemptSelectOption>();
+
+  const addAttempt = (attempt: AttemptSelectOption) => {
+    attempts.set(attempt.attemptNumber, attempt);
+  };
+
+  review.attempts.forEach(addAttempt);
+
+  addAttempt({
+    attemptNumber: review.current.attemptNumber,
+    submittedAt: review.current.submittedAt,
+    score: review.current.grade?.score ?? null,
+    maxScore: review.current.task.maxScore,
+    addedLines: review.changedFiles.reduce(
+      (sum, file) => sum + file.addedLines,
+      0
+    ),
+    deletedLines: review.changedFiles.reduce(
+      (sum, file) => sum + file.deletedLines,
+      0
+    ),
+    commentCount: review.lineComments.length,
+  });
+
+  return Array.from(attempts.values()).sort(
+    (first, second) => second.attemptNumber - first.attemptNumber
   );
 }
 

@@ -67,6 +67,9 @@ export async function fetchAttemptReview(
     },
     previousAttempt: previous ? toHistoryItem(series, previous) : null,
     nextAttempt: next ? toHistoryItem(series, next) : null,
+    attempts: series.attempts
+      .map((attempt) => toHistoryItem(series, attempt))
+      .reverse(),
     history: series.attempts
       .filter((attempt) => attempt.attemptNumber < current.attemptNumber)
       .map((attempt) => toHistoryItem(series, attempt))
