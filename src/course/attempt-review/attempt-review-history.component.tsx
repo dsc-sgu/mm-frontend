@@ -1,6 +1,4 @@
-import { ArrowLeft, ArrowRight, MessageSquare } from 'lucide-react';
-
-import { Button } from '@/shadcn/components/ui/button';
+import { MessageSquare } from 'lucide-react';
 import { cn } from '@/shadcn/lib/utils';
 import type {
   AttemptReviewAggregate,
@@ -20,61 +18,26 @@ export function AttemptReviewHistory({
   className,
 }: AttemptReviewHistoryProps) {
   return (
-    <section className={cn('grid gap-3', className)}>
-      <h2 className="text-base font-semibold">История попыток</h2>
-      <AttemptAdjacentControls review={review} mode={mode} />
+    <section className={cn('grid min-w-0 gap-2', className)}>
       {review.history.length === 0 ? (
-        <p className="rounded-xl border bg-muted/30 p-3 text-sm text-muted-foreground">
+        <p className="rounded-lg border bg-muted/30 p-2 text-xs text-muted-foreground">
           Предыдущих попыток пока нет.
         </p>
       ) : (
-        <div className="grid gap-2">
-          {review.history.map((item) => (
-            <AttemptHistoryCard
-              key={item.attemptNumber}
-              item={item}
-              review={review}
-              mode={mode}
-            />
-          ))}
+        <div className="min-w-0 overflow-x-auto pb-1">
+          <div className="flex w-max min-w-full gap-2">
+            {review.history.map((item) => (
+              <AttemptHistoryCard
+                key={item.attemptNumber}
+                item={item}
+                review={review}
+                mode={mode}
+              />
+            ))}
+          </div>
         </div>
       )}
     </section>
-  );
-}
-
-export function AttemptAdjacentControls({
-  review,
-  mode,
-}: {
-  review: AttemptReviewAggregate;
-  mode: AttemptReviewMode;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {review.previousAttempt ? (
-        <Button asChild variant="outline" size="sm" className="rounded-xl">
-          <a
-            href={attemptHref(
-              review,
-              review.previousAttempt.attemptNumber,
-              mode
-            )}
-          >
-            <ArrowLeft className="size-4" />
-            Попытка #{review.previousAttempt.attemptNumber}
-          </a>
-        </Button>
-      ) : null}
-      {review.nextAttempt ? (
-        <Button asChild variant="outline" size="sm" className="rounded-xl">
-          <a href={attemptHref(review, review.nextAttempt.attemptNumber, mode)}>
-            Попытка #{review.nextAttempt.attemptNumber}
-            <ArrowRight className="size-4" />
-          </a>
-        </Button>
-      ) : null}
-    </div>
   );
 }
 
@@ -90,15 +53,17 @@ function AttemptHistoryCard({
   return (
     <a
       href={attemptHref(review, item.attemptNumber, mode)}
-      className="block rounded-xl border bg-card p-3 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="block w-56 shrink-0 rounded-lg border bg-card px-2.5 py-2 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-semibold">Попытка #{item.attemptNumber}</span>
-        <span className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-semibold">
+          Попытка #{item.attemptNumber}
+        </span>
+        <span className="shrink-0 text-xs text-muted-foreground">
           {formatDateTime(item.submittedAt)}
         </span>
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
         <span>
           {item.score === null
             ? 'Не оценено'
@@ -111,7 +76,7 @@ function AttemptHistoryCard({
           −{item.deletedLines}
         </span>
         <span className="inline-flex items-center gap-1">
-          <MessageSquare className="size-3.5" /> {item.commentCount}
+          <MessageSquare className="size-3" /> {item.commentCount}
         </span>
       </div>
     </a>

@@ -98,7 +98,7 @@ export function RichTextEditor({
       )}
     >
       <EditorToolbar editor={editor} />
-      <EditorContent editor={editor} />
+      <EditorContent editor={editor} className="flex min-h-0 flex-1 flex-col" />
     </div>
   );
 }

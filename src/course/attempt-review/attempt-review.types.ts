@@ -87,6 +87,7 @@ export interface AttemptReviewAggregate {
   current: AttemptReviewAttemptDetail;
   previousAttempt: AttemptReviewHistoryItem | null;
   nextAttempt: AttemptReviewHistoryItem | null;
+  attempts: AttemptReviewHistoryItem[];
   history: AttemptReviewHistoryItem[];
   changedFiles: AttemptReviewChangedFile[];
   lineComments: AttemptReviewLineComment[];
