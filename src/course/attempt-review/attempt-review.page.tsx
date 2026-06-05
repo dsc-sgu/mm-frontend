@@ -150,7 +150,7 @@ function AttemptReviewPageContent({
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-[96rem] flex-col gap-4 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
+    <main className="flex w-full flex-col gap-4 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
       <header
         className={cn(
           'sticky top-0 z-30 overflow-hidden border bg-background/95 shadow-sm backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/80',
