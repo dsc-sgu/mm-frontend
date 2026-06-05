@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { Eye, FileCheck2, LockKeyhole } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -122,12 +123,13 @@ export function AttemptCard(props: AttemptCardProps) {
             variant="outline"
             className="h-12 rounded-xl px-5 text-base font-semibold"
           >
-            <a
-              href={
+            <Link
+              to={
                 selected
-                  ? getAttemptDiffHref(props.courseSlug, props.attempt)
-                  : getAttemptReviewHref(props.courseSlug, props.attempt)
+                  ? '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId'
+                  : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
               }
+              params={getAttemptRouteParams(props.courseSlug, props.attempt)}
             >
               {selected ? (
                 <Eye className="size-4" />
@@ -135,7 +137,7 @@ export function AttemptCard(props: AttemptCardProps) {
                 <FileCheck2 className="size-4" />
               )}
               {selected ? 'Посмотреть' : 'Оценить'}
-            </a>
+            </Link>
           </Button>
         ) : (
           <CourseAttemptsScoreField
@@ -316,16 +318,11 @@ function getGroupLabel(attempt: CourseAttempt): string {
     .join(' · ');
 }
 
-function getAttemptDiffHref(
-  courseSlug: string,
-  attempt: CourseAttempt
-): string {
-  return `/courses/${courseSlug}/tasks/${attempt.task.id}/attempts/${attempt.student.username}/${attempt.attemptNumber}`;
-}
-
-function getAttemptReviewHref(
-  courseSlug: string,
-  attempt: CourseAttempt
-): string {
-  return `${getAttemptDiffHref(courseSlug, attempt)}/review`;
+function getAttemptRouteParams(courseSlug: string, attempt: CourseAttempt) {
+  return {
+    courseSlug,
+    taskId: String(attempt.task.id),
+    studentUsername: attempt.student.username,
+    attemptId: String(attempt.attemptNumber),
+  };
 }
