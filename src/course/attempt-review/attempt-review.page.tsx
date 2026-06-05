@@ -157,7 +157,7 @@ function AttemptReviewPageContent({
           isSummaryCompact ? 'py-2 shadow-md' : 'py-4'
         )}
       >
-        <div className="grid gap-3 lg:flex lg:items-start lg:justify-between">
+        <div className="grid gap-3 lg:flex lg:items-center lg:justify-between">
           <div className="min-w-0">
             <p
               className={cn(
@@ -206,6 +206,13 @@ function AttemptReviewPageContent({
               </span>
             </p>
           </div>
+
+          <AttemptSelect
+            review={review}
+            mode={mode}
+            variant="header"
+            className="w-full lg:w-[21rem] lg:shrink-0"
+          />
         </div>
       </header>
 
@@ -303,8 +310,6 @@ function ReviewPanel({
           )}
         </div>
 
-        <AttemptSelect review={review} mode={mode} />
-
         <div className="grid gap-2">
           <h3 className="text-sm font-semibold">Балл</h3>
           {mode === 'editable' ? (
@@ -396,9 +401,13 @@ function ReviewPanel({
 function AttemptSelect({
   review,
   mode,
+  variant = 'panel',
+  className,
 }: {
   review: AttemptReviewAggregate;
   mode: AttemptReviewMode;
+  variant?: 'panel' | 'header';
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
@@ -408,19 +417,25 @@ function AttemptSelect({
       (attempt) => attempt.attemptNumber === review.current.attemptNumber
     ) ?? attempts[0];
 
+  const headerVariant = variant === 'header';
+
   return (
-    <div className="grid gap-2">
-      <p className="text-sm font-medium">Попытка</p>
+    <div className={cn(headerVariant ? 'grid gap-1' : 'grid gap-2', className)}>
+      {headerVariant ? null : <p className="text-sm font-medium">Попытка</p>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="group cursor-pointer rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className={cn(
+              'group cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              headerVariant ? 'rounded-lg' : 'rounded-xl'
+            )}
             aria-label="Выбрать попытку"
           >
             <AttemptOptionCard
               attempt={currentAttempt}
               selected
+              variant={headerVariant ? 'header-trigger' : 'trigger'}
               trailing={
                 <ChevronsUpDown className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
               }
@@ -428,7 +443,7 @@ function AttemptSelect({
           </button>
         </PopoverTrigger>
         <PopoverContent
-          align="start"
+          align={headerVariant ? 'end' : 'start'}
           className="w-[var(--radix-popover-trigger-width)] min-w-72 overflow-hidden p-0"
         >
           <div className="max-h-80 overflow-y-auto">
@@ -498,8 +513,43 @@ function AttemptOptionCard({
   attempt: AttemptSelectOption;
   selected?: boolean;
   trailing?: ReactNode;
-  variant?: 'trigger' | 'menu-item';
+  variant?: 'trigger' | 'header-trigger' | 'menu-item';
 }) {
+  if (variant === 'header-trigger') {
+    return (
+      <div
+        className={cn(
+          'rounded-lg border bg-background/80 px-3 py-2 transition-colors hover:border-primary hover:bg-background',
+          selected && 'border-primary bg-primary/5'
+        )}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-semibold">
+            Попытка #{attempt.attemptNumber}
+          </span>
+          <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+            {attempt.score === null
+              ? 'Не оценено'
+              : `${attempt.score}/${attempt.maxScore}`}
+            {trailing}
+          </span>
+        </div>
+        <div className="mt-0.5 flex items-center gap-2 overflow-hidden text-xs text-muted-foreground">
+          <span className="truncate">
+            {formatDateTime(attempt.submittedAt)}
+          </span>
+          <span className="shrink-0 text-emerald-700 dark:text-emerald-300">
+            +{attempt.addedLines}
+          </span>
+          <span className="shrink-0 text-rose-700 dark:text-rose-300">
+            −{attempt.deletedLines}
+          </span>
+          <span className="shrink-0">💬 {attempt.commentCount}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
