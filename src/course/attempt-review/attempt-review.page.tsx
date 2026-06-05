@@ -153,10 +153,8 @@ function AttemptReviewPageContent({
     <main className="flex w-full flex-col gap-4 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
       <header
         className={cn(
-          'sticky top-0 z-30 overflow-hidden border bg-background/95 shadow-sm backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/80',
-          isSummaryCompact
-            ? 'rounded-xl px-4 py-2 shadow-md'
-            : 'rounded-2xl p-4'
+          '-mx-3 sticky top-0 z-30 overflow-hidden border-b bg-background/95 px-3 shadow-sm backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8',
+          isSummaryCompact ? 'py-2 shadow-md' : 'py-4'
         )}
       >
         <div className="grid gap-3 lg:flex lg:items-start lg:justify-between">
@@ -232,8 +230,8 @@ function AttemptReviewPageContent({
         }}
       />
 
-      <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
-        <aside className="xl:sticky xl:top-20 xl:h-[calc(100vh-6rem)] xl:self-start">
+      <div className="-mx-3 grid min-w-0 items-start gap-0 sm:-mx-6 lg:-mx-8 xl:grid-cols-[20rem_minmax(0,1fr)]">
+        <aside className="xl:sticky xl:top-15 xl:h-[calc(100vh-3rem)] xl:self-start">
           <AttemptReviewFileTree
             files={review.changedFiles}
             activeFilePath={activeFilePath}
@@ -290,8 +288,8 @@ function ReviewPanel({
   onSave: () => Promise<void>;
 }) {
   return (
-    <section className="grid gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
-      <div className="grid content-start gap-4 rounded-2xl border bg-card p-4">
+    <section className="-mx-3 grid gap-0 border-y bg-card sm:-mx-6 lg:-mx-8 xl:grid-cols-[20rem_minmax(0,1fr)]">
+      <div className="grid content-start gap-4 border-b p-3 sm:p-4 xl:border-r xl:border-b-0">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-semibold">Оценка</h2>
           {hasChanges && mode === 'editable' ? (
@@ -373,7 +371,7 @@ function ReviewPanel({
         ) : null}
       </div>
 
-      <div className="flex min-w-0 flex-col gap-3 rounded-2xl border bg-card p-4">
+      <div className="flex min-w-0 flex-col gap-3 p-3 sm:p-4">
         <h2 className="font-semibold">Общий отзыв</h2>
         {mode === 'editable' ? (
           <RichTextEditor

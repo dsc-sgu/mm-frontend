@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { FileDiff } from '@pierre/diffs/react';
 import { MessageSquarePlus } from 'lucide-react';
 
-import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 import { fileElementId } from './attempt-review.dom';
 import { RichTextEditor } from './rich-text-editor.component';
@@ -56,7 +55,7 @@ export function AttemptReviewDiff({
   }
 
   return (
-    <div className="grid min-w-0 auto-rows-max content-start gap-4">
+    <div className="grid min-w-0 auto-rows-max content-start gap-0">
       {files.map((file) => {
         const fileComments = commentsByFile.get(file.path) ?? [];
 
@@ -66,41 +65,10 @@ export function AttemptReviewDiff({
             id={fileElementId(file.path)}
             tabIndex={-1}
             className={cn(
-              'attempt-review-diff-file scroll-mt-24 overflow-hidden rounded-2xl border bg-card outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
-              activeFilePath === file.path && 'border-primary shadow-sm'
+              'attempt-review-diff-file scroll-mt-24 overflow-hidden border-b bg-card outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
+              activeFilePath === file.path && 'ring-1 ring-primary'
             )}
           >
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/35 px-4 py-3">
-              <div className="min-w-0">
-                <h3 className="break-words font-semibold">{file.path}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {statusLabel(file.status)} · +{file.addedLines} / −
-                  {file.deletedLines}
-                </p>
-              </div>
-              {mode === 'editable' ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl"
-                  onClick={() => {
-                    onCommentsChange?.([
-                      ...comments,
-                      createDraftLineComment({
-                        filePath: file.path,
-                        side:
-                          file.status === 'deleted' ? 'deletions' : 'additions',
-                        lineNumber: 1,
-                      }),
-                    ]);
-                  }}
-                >
-                  <MessageSquarePlus className="size-4" />
-                  Комментарий
-                </Button>
-              ) : null}
-            </div>
             <FileDiff<LineCommentAnnotation>
               fileDiff={file.diff}
               disableWorkerPool
@@ -197,18 +165,6 @@ function groupCommentsByFile(comments: AttemptReviewLineComment[]) {
   });
 
   return grouped;
-}
-
-function statusLabel(status: AttemptReviewChangedFile['status']): string {
-  if (status === 'added') {
-    return 'Добавлен';
-  }
-
-  if (status === 'deleted') {
-    return 'Удалён';
-  }
-
-  return 'Изменён';
 }
 
 function addLineComment({
