@@ -60,6 +60,8 @@ export interface AttemptReviewLineComment {
   filePath: string;
   side: AttemptReviewCommentSide;
   lineNumber: number;
+  endSide?: AttemptReviewCommentSide;
+  endLineNumber?: number;
   html: string;
   authorName: string;
   updatedAt: string;
