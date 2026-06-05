@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { FileTree, useFileTree } from '@pierre/trees/react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
 import type { AttemptReviewChangedFile } from './attempt-review.types';
@@ -8,14 +9,18 @@ interface AttemptReviewFileTreeProps {
   files: AttemptReviewChangedFile[];
   activeFilePath: string | null;
   className?: string;
+  collapsed?: boolean;
   onSelectFile: (path: string) => void;
+  onToggleCollapsed?: () => void;
 }
 
 export function AttemptReviewFileTree({
   files,
   activeFilePath,
   className,
+  collapsed = false,
   onSelectFile,
+  onToggleCollapsed,
 }: AttemptReviewFileTreeProps) {
   const statsByPath = useMemo(
     () => new Map(files.map((file) => [file.path, file])),
@@ -80,17 +85,46 @@ export function AttemptReviewFileTree({
     <div
       className={cn(
         'flex min-h-80 flex-col overflow-hidden border-b bg-card xl:border-r xl:border-b-0',
+        collapsed && 'min-h-12',
         className
       )}
     >
-      <div className="shrink-0 border-b px-3 py-2.5">
-        <h2 className="text-sm font-semibold">Изменённые файлы</h2>
+      <div
+        className={cn(
+          'flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2.5',
+          collapsed && 'justify-center border-b-0 px-1.5 py-2'
+        )}
+      >
+        {collapsed ? null : (
+          <h2 className="min-w-0 truncate text-sm font-semibold">
+            Изменённые файлы
+          </h2>
+        )}
+        <button
+          type="button"
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={
+            collapsed
+              ? 'Показать список изменённых файлов'
+              : 'Скрыть список изменённых файлов'
+          }
+          title={collapsed ? 'Показать список файлов' : 'Скрыть список файлов'}
+          onClick={onToggleCollapsed}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="size-4" />
+          ) : (
+            <PanelLeftClose className="size-4" />
+          )}
+        </button>
       </div>
-      <FileTree
-        model={model}
-        className="attempt-review-file-tree min-h-0 flex-1 pt-2"
-        style={{ width: '100%' }}
-      />
+      {collapsed ? null : (
+        <FileTree
+          model={model}
+          className="attempt-review-file-tree min-h-0 flex-1 pt-2"
+          style={{ width: '100%' }}
+        />
+      )}
     </div>
   );
 }

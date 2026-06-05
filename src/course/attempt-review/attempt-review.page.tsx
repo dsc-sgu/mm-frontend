@@ -102,6 +102,7 @@ function AttemptReviewPageContent({
   );
   const [draft, setDraft] = useState<ReviewDraft>(() => createDraft(review));
   const [isSummaryCompact, setIsSummaryCompact] = useState(false);
+  const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const savedDraft = useMemo(() => createDraft(review), [review]);
 
   useEffect(() => {
@@ -237,12 +238,21 @@ function AttemptReviewPageContent({
         }}
       />
 
-      <div className="-mx-3 grid min-w-0 items-start gap-0 sm:-mx-6 lg:-mx-8 xl:grid-cols-[20rem_minmax(0,1fr)]">
+      <div
+        className={cn(
+          '-mx-3 grid min-w-0 items-start gap-0 transition-[grid-template-columns] duration-200 sm:-mx-6 lg:-mx-8',
+          isFileTreeCollapsed
+            ? 'xl:grid-cols-[3rem_minmax(0,1fr)]'
+            : 'xl:grid-cols-[20rem_minmax(0,1fr)]'
+        )}
+      >
         <aside className="xl:sticky xl:top-16 xl:h-[calc(100vh-4rem)] xl:self-start">
           <AttemptReviewFileTree
             files={review.changedFiles}
             activeFilePath={activeFilePath}
+            collapsed={isFileTreeCollapsed}
             className="xl:h-full"
+            onToggleCollapsed={() => setIsFileTreeCollapsed((value) => !value)}
             onSelectFile={(path) => {
               setActiveFilePath(path);
               document.getElementById(fileElementId(path))?.scrollIntoView({
