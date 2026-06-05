@@ -159,8 +159,8 @@ function AttemptReviewPageContent({
     <main className="flex w-full flex-col gap-0 px-3 pt-0 pb-0 sm:px-6 sm:pt-0 sm:pb-0 lg:px-8">
       <header
         className={cn(
-          '-mx-3 sticky top-0 z-30 overflow-hidden border-b bg-background/95 px-3 shadow-sm backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-4 lg:-mx-8 lg:px-4',
-          isSummaryCompact ? 'py-2 shadow-md' : 'py-4'
+          '-mx-3 sticky top-0 z-30 overflow-hidden border-b bg-background/95 px-3 backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-4 lg:-mx-8 lg:px-4',
+          isSummaryCompact ? 'py-2' : 'py-4'
         )}
       >
         <div className="grid gap-3 lg:flex lg:items-center lg:justify-between">
