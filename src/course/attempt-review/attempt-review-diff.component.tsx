@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { FileDiff } from '@pierre/diffs/react';
-import { MessageSquarePlus } from 'lucide-react';
+import { MessageSquarePlus, Trash2 } from 'lucide-react';
 
 import { fileElementId } from './attempt-review.dom';
 import { useHtmlThemeType } from './attempt-review-theme';
@@ -112,6 +112,11 @@ export function AttemptReviewDiff({
                         comments.map((item) =>
                           item.id === comment.id ? { ...item, html } : item
                         )
+                      );
+                    }}
+                    onDelete={() => {
+                      onCommentsChange?.(
+                        comments.filter((item) => item.id !== comment.id)
                       );
                     }}
                   />
@@ -264,10 +269,12 @@ function LineCommentCard({
   comment,
   mode,
   onChange,
+  onDelete,
 }: {
   comment: AttemptReviewLineComment;
   mode: AttemptReviewMode;
   onChange: (html: string) => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="m-3">
@@ -275,10 +282,23 @@ function LineCommentCard({
         <span className="font-medium text-foreground">
           {comment.authorName}
         </span>
-        <span>
-          {comment.side === 'additions' ? 'Новая строка' : 'Старая строка'} #
-          {comment.lineNumber}
-        </span>
+        <div className="flex items-center gap-2">
+          <span>
+            {comment.side === 'additions' ? 'Новая строка' : 'Старая строка'} #
+            {comment.lineNumber}
+          </span>
+          {mode === 'editable' ? (
+            <button
+              type="button"
+              className="cursor-pointer grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Удалить комментарий"
+              title="Удалить комментарий"
+              onClick={onDelete}
+            >
+              <Trash2 className="size-3.5" />
+            </button>
+          ) : null}
+        </div>
       </div>
       <RichTextEditor
         value={comment.html}
