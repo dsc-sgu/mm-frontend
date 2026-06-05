@@ -150,7 +150,7 @@ function AttemptReviewPageContent({
   );
 
   return (
-    <main className="flex w-full flex-col gap-4 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
+    <main className="flex w-full flex-col gap-4 px-3 pt-4 pb-0 sm:px-6 sm:pt-5 sm:pb-0 lg:px-8">
       <header
         className={cn(
           '-mx-3 sticky top-0 z-30 overflow-hidden border-b bg-background/95 px-3 shadow-sm backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8',
@@ -238,7 +238,7 @@ function AttemptReviewPageContent({
       />
 
       <div className="-mx-3 grid min-w-0 items-start gap-0 sm:-mx-6 lg:-mx-8 xl:grid-cols-[20rem_minmax(0,1fr)]">
-        <aside className="xl:sticky xl:top-15 xl:h-[calc(100vh-3rem)] xl:self-start">
+        <aside className="xl:sticky xl:top-16 xl:h-[calc(100vh-4rem)] xl:self-start">
           <AttemptReviewFileTree
             files={review.changedFiles}
             activeFilePath={activeFilePath}
