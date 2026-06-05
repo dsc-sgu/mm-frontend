@@ -88,7 +88,7 @@ export function AttemptReviewFileTree({
       </div>
       <FileTree
         model={model}
-        className="attempt-review-file-tree min-h-0 flex-1"
+        className="attempt-review-file-tree min-h-0 flex-1 pt-2"
         style={{ width: '100%' }}
       />
     </div>
