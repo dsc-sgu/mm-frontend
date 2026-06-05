@@ -174,7 +174,7 @@ function AttemptReviewPageContent({
         }}
       />
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
+      <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
         <aside className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:self-start">
           <AttemptReviewFileTree
             files={review.changedFiles}
