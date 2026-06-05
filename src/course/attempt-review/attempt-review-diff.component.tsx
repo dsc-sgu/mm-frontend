@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { FileDiff } from '@pierre/diffs/react';
-import { MessageSquarePlus, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 import { fileElementId } from './attempt-review.dom';
 import { useHtmlThemeType } from './attempt-review-theme';
@@ -81,22 +81,22 @@ export function AttemptReviewDiff({
                 disableFileHeader: true,
                 lineHoverHighlight: 'both',
                 enableGutterUtility: mode === 'editable',
-                onLineClick:
+                enableLineSelection: mode === 'editable',
+                onGutterUtilityClick:
                   mode === 'editable'
-                    ? (line) => {
+                    ? (range) => {
                         addLineComment({
                           comments,
                           filePath: file.path,
-                          side: line.annotationSide,
-                          lineNumber: line.lineNumber,
+                          range,
                           onCommentsChange,
                         });
                       }
                     : undefined,
               }}
               lineAnnotations={fileComments.map((comment) => ({
-                side: comment.side,
-                lineNumber: comment.lineNumber,
+                side: comment.endSide ?? comment.side,
+                lineNumber: comment.endLineNumber ?? comment.lineNumber,
                 metadata: { comment },
               }))}
               renderAnnotation={(annotation) => {
@@ -120,37 +120,6 @@ export function AttemptReviewDiff({
                       );
                     }}
                   />
-                );
-              }}
-              renderGutterUtility={(getHoveredLine) => {
-                if (mode !== 'editable') {
-                  return null;
-                }
-
-                return (
-                  <button
-                    type="button"
-                    className="grid size-6 place-items-center rounded-full border bg-background text-muted-foreground shadow-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label={`Добавить комментарий к ${file.path}`}
-                    title="Добавить комментарий"
-                    onClick={() => {
-                      const hoveredLine = getHoveredLine();
-
-                      if (!hoveredLine) {
-                        return;
-                      }
-
-                      addLineComment({
-                        comments,
-                        filePath: file.path,
-                        side: hoveredLine.side,
-                        lineNumber: hoveredLine.lineNumber,
-                        onCommentsChange,
-                      });
-                    }}
-                  >
-                    <MessageSquarePlus className="size-3.5" />
-                  </button>
                 );
               }}
             />
@@ -229,40 +198,80 @@ function groupCommentsByFile(comments: AttemptReviewLineComment[]) {
 function addLineComment({
   comments,
   filePath,
-  side,
-  lineNumber,
+  range,
   onCommentsChange,
 }: {
   comments: AttemptReviewLineComment[];
   filePath: string;
-  side: AttemptReviewCommentSide;
-  lineNumber: number;
+  range: {
+    start: number;
+    side?: AttemptReviewCommentSide;
+    end: number;
+    endSide?: AttemptReviewCommentSide;
+  };
   onCommentsChange: AttemptReviewDiffProps['onCommentsChange'];
 }) {
   onCommentsChange?.([
     ...comments,
-    createDraftLineComment({ filePath, side, lineNumber }),
+    createDraftLineComment({ filePath, range }),
   ]);
 }
 
 function createDraftLineComment({
   filePath,
-  side,
-  lineNumber,
+  range,
 }: {
   filePath: string;
-  side: AttemptReviewCommentSide;
-  lineNumber: number;
+  range: {
+    start: number;
+    side?: AttemptReviewCommentSide;
+    end: number;
+    endSide?: AttemptReviewCommentSide;
+  };
 }): AttemptReviewLineComment {
+  const side = range.side ?? range.endSide ?? 'additions';
+  const endSide = range.endSide ?? side;
+  const lineNumber = range.start;
+  const endLineNumber = range.end;
+
   return {
-    id: `draft-${filePath}-${side}-${lineNumber}-${Date.now()}`,
+    id: `draft-${filePath}-${side}-${lineNumber}-${endSide}-${endLineNumber}-${Date.now()}`,
     filePath,
     side,
     lineNumber,
+    endSide:
+      endSide === side && endLineNumber === lineNumber ? undefined : endSide,
+    endLineNumber: endLineNumber === lineNumber ? undefined : endLineNumber,
     html: '<p></p>',
     authorName: 'Текущий преподаватель',
     updatedAt: new Date().toISOString(),
   };
+}
+
+function formatCommentRange(comment: AttemptReviewLineComment): string {
+  const startLabel = sideLabel(comment.side);
+  const endSide = comment.endSide ?? comment.side;
+  const endLineNumber = comment.endLineNumber ?? comment.lineNumber;
+
+  if (comment.side === endSide && comment.lineNumber === endLineNumber) {
+    return `${startLabel} #${comment.lineNumber}`;
+  }
+
+  if (comment.side === endSide) {
+    const from = Math.min(comment.lineNumber, endLineNumber);
+    const to = Math.max(comment.lineNumber, endLineNumber);
+    return `${pluralSideLabel(comment.side)} #${from}–${to}`;
+  }
+
+  return `${startLabel} #${comment.lineNumber} → ${sideLabel(endSide)} #${endLineNumber}`;
+}
+
+function sideLabel(side: AttemptReviewCommentSide): string {
+  return side === 'additions' ? 'Новая строка' : 'Старая строка';
+}
+
+function pluralSideLabel(side: AttemptReviewCommentSide): string {
+  return side === 'additions' ? 'Новые строки' : 'Старые строки';
 }
 
 function LineCommentCard({
@@ -283,10 +292,7 @@ function LineCommentCard({
           {comment.authorName}
         </span>
         <div className="flex items-center gap-2">
-          <span>
-            {comment.side === 'additions' ? 'Новая строка' : 'Старая строка'} #
-            {comment.lineNumber}
-          </span>
+          <span>{formatCommentRange(comment)}</span>
           {mode === 'editable' ? (
             <button
               type="button"
