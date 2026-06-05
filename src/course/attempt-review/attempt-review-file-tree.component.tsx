@@ -79,7 +79,7 @@ export function AttemptReviewFileTree({
   return (
     <div
       className={cn(
-        'flex min-h-80 flex-col overflow-hidden rounded-xl border bg-card',
+        'flex min-h-80 flex-col overflow-hidden border-b bg-card xl:border-r xl:border-b-0',
         className
       )}
     >
