@@ -310,7 +310,7 @@ function DiffViewToggle({
             key={mode}
             type="button"
             className={cn(
-              'h-9 rounded-md px-3 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'h-9 cursor-pointer rounded-md px-3 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               selected && 'bg-background text-foreground shadow-sm'
             )}
             aria-pressed={selected}
