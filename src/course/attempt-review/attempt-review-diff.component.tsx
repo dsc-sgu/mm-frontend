@@ -270,8 +270,8 @@ function LineCommentCard({
   onChange: (html: string) => void;
 }) {
   return (
-    <div className="m-3 rounded-xl border bg-background p-3 shadow-sm">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+    <div className="m-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
         <span className="font-medium text-foreground">
           {comment.authorName}
         </span>
