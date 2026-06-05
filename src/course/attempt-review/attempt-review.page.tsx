@@ -519,8 +519,8 @@ function AttemptOptionCard({
     return (
       <div
         className={cn(
-          'rounded-lg border bg-background/80 px-3 py-2 transition-colors hover:border-primary hover:bg-background',
-          selected && 'border-primary bg-primary/5'
+          'rounded-lg bg-muted/50 px-3 py-2 transition-colors hover:bg-muted/70',
+          selected && 'bg-primary/10'
         )}
       >
         <div className="flex items-center justify-between gap-2">
