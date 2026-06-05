@@ -56,7 +56,7 @@ export function AttemptReviewDiff({
   }
 
   return (
-    <div className="grid min-w-0 gap-4">
+    <div className="grid min-w-0 auto-rows-max content-start gap-4">
       {files.map((file) => {
         const fileComments = commentsByFile.get(file.path) ?? [];
 
