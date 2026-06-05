@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useMemo,
   useState,
   type Dispatch,
@@ -100,7 +101,38 @@ function AttemptReviewPageContent({
     review.changedFiles[0]?.path ?? null
   );
   const [draft, setDraft] = useState<ReviewDraft>(() => createDraft(review));
+  const [isSummaryCompact, setIsSummaryCompact] = useState(false);
   const savedDraft = useMemo(() => createDraft(review), [review]);
+
+  useEffect(() => {
+    let animationFrame: number | null = null;
+
+    const updateCompactState = () => {
+      animationFrame = null;
+      setIsSummaryCompact(window.scrollY > 48);
+    };
+
+    const scheduleUpdate = () => {
+      if (animationFrame !== null) {
+        return;
+      }
+
+      animationFrame = window.requestAnimationFrame(updateCompactState);
+    };
+
+    updateCompactState();
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+
+    return () => {
+      if (animationFrame !== null) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+    };
+  }, []);
   const scoreError = scoreDraftMaxScoreError(
     review.current.task.maxScore,
     draft.score
@@ -119,19 +151,45 @@ function AttemptReviewPageContent({
 
   return (
     <main className="mx-auto flex w-full max-w-[96rem] flex-col gap-4 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
-      <header className="rounded-2xl border bg-background p-4 shadow-sm">
+      <header
+        className={cn(
+          'sticky top-0 z-30 overflow-hidden border bg-background/95 shadow-sm backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/80',
+          isSummaryCompact
+            ? 'rounded-xl px-4 py-2 shadow-md'
+            : 'rounded-2xl p-4'
+        )}
+      >
         <div className="grid gap-3 lg:flex lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-muted-foreground">
+            <p
+              className={cn(
+                'overflow-hidden text-sm font-medium text-muted-foreground transition-all duration-200',
+                isSummaryCompact
+                  ? 'max-h-0 -translate-y-1 opacity-0'
+                  : 'max-h-5 translate-y-0 opacity-100'
+              )}
+            >
               {mode === 'editable'
                 ? 'Проверка преподавателем'
                 : 'Просмотр попытки'}
             </p>
-            <h1 className="break-words text-2xl font-semibold tracking-tight">
+            <h1
+              className={cn(
+                'break-words font-semibold tracking-tight transition-all duration-200',
+                isSummaryCompact ? 'text-lg leading-6' : 'text-2xl leading-8'
+              )}
+            >
               Попытка #{review.current.attemptNumber}:{' '}
               {review.current.task.title}
             </h1>
-            <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <p
+              className={cn(
+                'flex flex-wrap text-muted-foreground transition-all duration-200',
+                isSummaryCompact
+                  ? 'mt-0.5 gap-x-2 gap-y-0 text-xs leading-4'
+                  : 'mt-1 gap-x-3 gap-y-1 text-sm leading-5'
+              )}
+            >
               <span>{review.current.student.fullName}</span>
               <span>Максимум: {review.current.task.maxScore}</span>
               <span>
@@ -175,7 +233,7 @@ function AttemptReviewPageContent({
       />
 
       <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
-        <aside className="xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:self-start">
+        <aside className="xl:sticky xl:top-20 xl:h-[calc(100vh-6rem)] xl:self-start">
           <AttemptReviewFileTree
             files={review.changedFiles}
             activeFilePath={activeFilePath}
