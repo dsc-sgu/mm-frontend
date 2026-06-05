@@ -3,6 +3,7 @@ import { FileDiff } from '@pierre/diffs/react';
 import { MessageSquarePlus } from 'lucide-react';
 
 import { fileElementId } from './attempt-review.dom';
+import { useHtmlThemeType } from './attempt-review-theme';
 import { RichTextEditor } from './rich-text-editor.component';
 import type {
   AttemptReviewChangedFile,
@@ -33,6 +34,7 @@ export function AttemptReviewDiff({
   viewMode = 'split',
   onCommentsChange,
 }: AttemptReviewDiffProps) {
+  const htmlThemeType = useHtmlThemeType();
   const commentsByFile = useMemo(
     () => groupCommentsByFile(comments),
     [comments]
@@ -72,6 +74,7 @@ export function AttemptReviewDiff({
               className="attempt-review-pierre-diff"
               options={{
                 diffStyle: viewMode,
+                themeType: htmlThemeType,
                 overflow: 'wrap',
                 stickyHeader: false,
                 lineHoverHighlight: 'both',

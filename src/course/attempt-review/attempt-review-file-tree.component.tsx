@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type CSSProperties } from 'react';
 import { FileTree, useFileTree } from '@pierre/trees/react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
+import { useHtmlThemeType } from './attempt-review-theme';
 import type { AttemptReviewChangedFile } from './attempt-review.types';
 
 interface AttemptReviewFileTreeProps {
@@ -22,6 +23,7 @@ export function AttemptReviewFileTree({
   onSelectFile,
   onToggleCollapsed,
 }: AttemptReviewFileTreeProps) {
+  const htmlThemeType = useHtmlThemeType();
   const statsByPath = useMemo(
     () => new Map(files.map((file) => [file.path, file])),
     [files]
@@ -122,11 +124,30 @@ export function AttemptReviewFileTree({
         <FileTree
           model={model}
           className="attempt-review-file-tree min-h-0 flex-1 pt-2"
-          style={{ width: '100%' }}
+          style={getFileTreeStyle(htmlThemeType)}
         />
       )}
     </div>
   );
+}
+
+function getFileTreeStyle(colorScheme: 'light' | 'dark'): CSSProperties {
+  return {
+    width: '100%',
+    colorScheme,
+    backgroundColor: 'var(--card)',
+    color: 'var(--card-foreground)',
+    '--trees-bg-override': 'var(--card)',
+    '--trees-fg-override': 'var(--card-foreground)',
+    '--trees-fg-muted-override': 'var(--muted-foreground)',
+    '--trees-bg-muted-override': 'var(--muted)',
+    '--trees-border-color-override': 'var(--border)',
+    '--trees-focus-ring-color-override': 'var(--ring)',
+    '--trees-search-bg-override': 'var(--background)',
+    '--trees-search-fg-override': 'var(--foreground)',
+    '--trees-selected-bg-override':
+      'color-mix(in oklch, var(--primary) 12%, transparent)',
+  } as CSSProperties;
 }
 
 function statusGlyph(status: AttemptReviewChangedFile['status']): string {
