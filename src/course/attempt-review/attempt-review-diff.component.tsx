@@ -66,8 +66,9 @@ export function AttemptReviewDiff({
             key={file.path}
             id={fileElementId(file.path)}
             tabIndex={-1}
-            className="attempt-review-diff-file scroll-mt-24 overflow-hidden border-b bg-card outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring"
+            className="attempt-review-diff-file min-w-0 scroll-mt-24 border-b bg-card outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring"
           >
+            <StickyFileHeader file={file} />
             <FileDiff<LineCommentAnnotation>
               fileDiff={file.diff}
               disableWorkerPool
@@ -77,6 +78,7 @@ export function AttemptReviewDiff({
                 themeType: htmlThemeType,
                 overflow: 'wrap',
                 stickyHeader: false,
+                disableFileHeader: true,
                 lineHoverHighlight: 'both',
                 enableGutterUtility: mode === 'editable',
                 onLineClick:
@@ -152,6 +154,58 @@ export function AttemptReviewDiff({
       })}
     </div>
   );
+}
+
+function StickyFileHeader({ file }: { file: AttemptReviewChangedFile }) {
+  return (
+    <div className="sticky top-17 z-20 flex min-w-0 items-center justify-between gap-3 border-b bg-card/95 px-4 py-3 text-sm backdrop-blur supports-[backdrop-filter]:bg-card/85">
+      <div className="flex min-w-0 items-center gap-2 font-medium text-card-foreground">
+        <span
+          className={`flex size-5 shrink-0 items-center justify-center rounded-md border text-xs leading-none ${statusIconClassName(file.status)}`}
+          aria-hidden="true"
+        >
+          <span className="-translate-y-px leading-none">
+            {statusGlyph(file.status)}
+          </span>
+        </span>
+        <span className="min-w-0 truncate">{file.path}</span>
+      </div>
+      <div className="flex shrink-0 items-center gap-2 text-xs font-semibold">
+        {file.deletedLines > 0 || file.addedLines === 0 ? (
+          <span className="text-rose-500">−{file.deletedLines}</span>
+        ) : null}
+        {file.addedLines > 0 || file.deletedLines === 0 ? (
+          <span className="text-emerald-500">+{file.addedLines}</span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function statusIconClassName(
+  status: AttemptReviewChangedFile['status']
+): string {
+  if (status === 'added') {
+    return 'border-emerald-500/50 bg-emerald-500/10 text-emerald-500';
+  }
+
+  if (status === 'deleted') {
+    return 'border-rose-500/50 bg-rose-500/10 text-rose-500';
+  }
+
+  return 'border-blue-500/50 bg-blue-500/10 text-blue-500';
+}
+
+function statusGlyph(status: AttemptReviewChangedFile['status']): string {
+  if (status === 'added') {
+    return '+';
+  }
+
+  if (status === 'deleted') {
+    return '−';
+  }
+
+  return '•';
 }
 
 function groupCommentsByFile(comments: AttemptReviewLineComment[]) {
