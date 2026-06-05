@@ -13,6 +13,8 @@ import {
   MessageSquare,
   RotateCcw,
   Save,
+  SquareSplitHorizontal,
+  SquareSplitVertical,
 } from 'lucide-react';
 
 import { CourseScoreField, scoreDraftMaxScoreError } from '@/course/grading';
@@ -45,6 +47,8 @@ interface AttemptReviewPageProps {
   studentUsername: string;
   attemptId: number;
 }
+
+type DiffViewMode = 'unified' | 'split';
 
 interface ReviewDraft {
   score: string;
@@ -103,6 +107,7 @@ function AttemptReviewPageContent({
   const [draft, setDraft] = useState<ReviewDraft>(() => createDraft(review));
   const [isSummaryCompact, setIsSummaryCompact] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
+  const [diffViewMode, setDiffViewMode] = useState<DiffViewMode>('split');
   const savedDraft = useMemo(() => createDraft(review), [review]);
 
   useEffect(() => {
@@ -208,12 +213,15 @@ function AttemptReviewPageContent({
             </p>
           </div>
 
-          <AttemptSelect
-            review={review}
-            mode={mode}
-            variant="header"
-            className="w-full lg:w-[21rem] lg:shrink-0"
-          />
+          <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row lg:items-center lg:shrink-0">
+            <DiffViewToggle value={diffViewMode} onChange={setDiffViewMode} />
+            <AttemptSelect
+              review={review}
+              mode={mode}
+              variant="header"
+              className="w-full lg:w-[21rem] lg:shrink-0"
+            />
+          </div>
         </div>
       </header>
 
@@ -268,6 +276,7 @@ function AttemptReviewPageContent({
           comments={draft.lineComments}
           mode={mode}
           activeFilePath={activeFilePath}
+          viewMode={diffViewMode}
           onCommentsChange={(lineComments) => {
             if (mode === 'editable') {
               setDraft((current) =>
@@ -278,6 +287,44 @@ function AttemptReviewPageContent({
         />
       </div>
     </main>
+  );
+}
+
+function DiffViewToggle({
+  value,
+  onChange,
+}: {
+  value: DiffViewMode;
+  onChange: (value: DiffViewMode) => void;
+}) {
+  return (
+    <div
+      className="inline-grid grid-cols-2 rounded-lg bg-muted/50 p-0.5 text-xs font-medium text-muted-foreground"
+      aria-label="Режим отображения diff"
+    >
+      {(['unified', 'split'] as const).map((mode) => {
+        const selected = value === mode;
+
+        return (
+          <button
+            key={mode}
+            type="button"
+            className={cn(
+              'h-9 rounded-md px-3 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              selected && 'bg-background text-foreground shadow-sm'
+            )}
+            aria-pressed={selected}
+            onClick={() => onChange(mode)}
+          >
+            {mode === 'unified' ? (
+              <SquareSplitVertical size={14} />
+            ) : (
+              <SquareSplitHorizontal size={14} />
+            )}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

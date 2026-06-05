@@ -17,6 +17,7 @@ interface AttemptReviewDiffProps {
   mode: AttemptReviewMode;
   loading?: boolean;
   activeFilePath?: string | null;
+  viewMode?: 'unified' | 'split';
   onCommentsChange?: (comments: AttemptReviewLineComment[]) => void;
 }
 
@@ -29,6 +30,7 @@ export function AttemptReviewDiff({
   comments,
   mode,
   loading = false,
+  viewMode = 'split',
   onCommentsChange,
 }: AttemptReviewDiffProps) {
   const commentsByFile = useMemo(
@@ -69,7 +71,7 @@ export function AttemptReviewDiff({
               disableWorkerPool
               className="attempt-review-pierre-diff"
               options={{
-                diffStyle: 'split',
+                diffStyle: viewMode,
                 overflow: 'wrap',
                 stickyHeader: false,
                 lineHoverHighlight: 'both',
