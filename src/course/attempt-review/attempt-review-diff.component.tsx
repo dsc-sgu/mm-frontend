@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { FileDiff } from '@pierre/diffs/react';
 import { MessageSquarePlus } from 'lucide-react';
 
-import { cn } from '@/shadcn/lib/utils';
 import { fileElementId } from './attempt-review.dom';
 import { RichTextEditor } from './rich-text-editor.component';
 import type {
@@ -30,7 +29,6 @@ export function AttemptReviewDiff({
   comments,
   mode,
   loading = false,
-  activeFilePath = null,
   onCommentsChange,
 }: AttemptReviewDiffProps) {
   const commentsByFile = useMemo(
@@ -64,10 +62,7 @@ export function AttemptReviewDiff({
             key={file.path}
             id={fileElementId(file.path)}
             tabIndex={-1}
-            className={cn(
-              'attempt-review-diff-file scroll-mt-24 overflow-hidden border-b bg-card outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
-              activeFilePath === file.path && 'ring-1 ring-primary'
-            )}
+            className="attempt-review-diff-file scroll-mt-24 overflow-hidden border-b bg-card outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring"
           >
             <FileDiff<LineCommentAnnotation>
               fileDiff={file.diff}
