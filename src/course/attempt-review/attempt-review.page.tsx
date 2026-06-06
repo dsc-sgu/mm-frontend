@@ -1,6 +1,9 @@
 import {
+  useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type ReactNode,
@@ -11,14 +14,23 @@ import {
   Check,
   ChevronsUpDown,
   MessageSquare,
+  PanelLeftOpen,
   RotateCcw,
   Save,
   SquareSplitHorizontal,
   SquareSplitVertical,
+  X,
 } from 'lucide-react';
 
 import { CourseScoreField, scoreDraftMaxScoreError } from '@/course/grading';
 import { Button } from '@/shadcn/components/ui/button';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/shadcn/components/ui/drawer';
 import {
   Popover,
   PopoverContent,
@@ -26,6 +38,7 @@ import {
 } from '@/shadcn/components/ui/popover';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
+import { useMediaQuery } from '@/use-media-query.hook';
 import { AttemptReviewDiff } from './attempt-review-diff.component';
 import { fileElementId } from './attempt-review.dom';
 import { AttemptReviewFileTree } from './attempt-review-file-tree.component';
@@ -107,8 +120,63 @@ function AttemptReviewPageContent({
   const [draft, setDraft] = useState<ReviewDraft>(() => createDraft(review));
   const [isSummaryCompact, setIsSummaryCompact] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
+  const [isFileTreeDrawerOpen, setIsFileTreeDrawerOpen] = useState(false);
   const [diffViewMode, setDiffViewMode] = useState<DiffViewMode>('split');
+  const pageHeaderRef = useRef<HTMLElement | null>(null);
+  const pageRootRef = useRef<HTMLElement | null>(null);
+  const isDesktopReviewLayout = useMediaQuery('(min-width: 1024px)');
   const savedDraft = useMemo(() => createDraft(review), [review]);
+
+  const updateStickyOffset = useCallback(() => {
+    const header = pageHeaderRef.current;
+    const pageRoot = pageRootRef.current;
+
+    if (!header || !pageRoot) {
+      return;
+    }
+
+    pageRoot.style.setProperty(
+      '--attempt-review-sticky-top',
+      `${Math.ceil(header.getBoundingClientRect().height)}px`
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    const header = pageHeaderRef.current;
+
+    if (!header) {
+      return;
+    }
+
+    updateStickyOffset();
+
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(updateStickyOffset);
+
+    resizeObserver?.observe(header, { box: 'border-box' });
+    header.addEventListener('transitionend', updateStickyOffset);
+    window.addEventListener('resize', updateStickyOffset);
+
+    return () => {
+      resizeObserver?.disconnect();
+      header.removeEventListener('transitionend', updateStickyOffset);
+      window.removeEventListener('resize', updateStickyOffset);
+    };
+  }, [updateStickyOffset]);
+
+  useLayoutEffect(() => {
+    updateStickyOffset();
+
+    const animationFrame = window.requestAnimationFrame(updateStickyOffset);
+    const transitionTimeout = window.setTimeout(updateStickyOffset, 240);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(transitionTimeout);
+    };
+  }, [isDesktopReviewLayout, isSummaryCompact, updateStickyOffset]);
 
   useEffect(() => {
     let animationFrame: number | null = null;
@@ -155,9 +223,32 @@ function AttemptReviewPageContent({
     0
   );
 
+  function scrollToFile(path: string) {
+    document.getElementById(fileElementId(path))?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }
+
+  function handleSelectFile(path: string) {
+    setActiveFilePath(path);
+
+    if (isDesktopReviewLayout) {
+      scrollToFile(path);
+      return;
+    }
+
+    setIsFileTreeDrawerOpen(false);
+    window.requestAnimationFrame(() => scrollToFile(path));
+  }
+
   return (
-    <main className="flex w-full flex-col gap-0 px-3 pt-0 pb-0 sm:px-6 sm:pt-0 sm:pb-0 lg:px-8">
+    <main
+      ref={pageRootRef}
+      className="flex w-full flex-col gap-0 px-3 pt-0 pb-0 sm:px-6 sm:pt-0 sm:pb-0 lg:px-8"
+    >
       <header
+        ref={pageHeaderRef}
         className={cn(
           '-mx-3 sticky top-0 z-30 overflow-hidden border-b bg-background/95 px-3 backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-4 lg:-mx-8 lg:px-4',
           isSummaryCompact ? 'py-2' : 'py-4'
@@ -199,11 +290,13 @@ function AttemptReviewPageContent({
               <span>
                 Отправлено {formatDateTime(review.current.submittedAt)}
               </span>
-              <span className="text-emerald-700 dark:text-emerald-300">
-                +{totalAdded}
-              </span>
-              <span className="text-rose-700 dark:text-rose-300">
-                −{totalDeleted}
+              <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
+                <span className="text-emerald-700 dark:text-emerald-300">
+                  +{totalAdded}
+                </span>
+                <span className="text-rose-700 dark:text-rose-300">
+                  −{totalDeleted}
+                </span>
               </span>
               <span>
                 {review.baselineAttemptNumber
@@ -213,17 +306,62 @@ function AttemptReviewPageContent({
             </p>
           </div>
 
-          <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row lg:items-center lg:shrink-0">
+          <div className="flex w-full min-w-0 gap-2 lg:w-auto lg:items-center lg:shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 px-2.5 min-[480px]:px-3 lg:hidden"
+              onClick={() => setIsFileTreeDrawerOpen(true)}
+            >
+              <PanelLeftOpen className="size-4" />
+              <span className="hidden min-[480px]:inline">Файлы</span>
+            </Button>
             <DiffViewToggle value={diffViewMode} onChange={setDiffViewMode} />
             <AttemptSelect
               review={review}
               mode={mode}
               variant="header"
-              className="w-full lg:w-[21rem] lg:shrink-0"
+              className="min-w-0 flex-1 lg:w-[21rem] lg:flex-none lg:shrink-0"
             />
           </div>
         </div>
       </header>
+
+      <Drawer
+        direction="left"
+        open={isFileTreeDrawerOpen && !isDesktopReviewLayout}
+        onOpenChange={setIsFileTreeDrawerOpen}
+      >
+        <DrawerContent className="!inset-0 !h-dvh !max-h-none !w-screen !max-w-none !rounded-none !border-0">
+          <div className="flex h-full min-h-0 flex-col bg-card">
+            <DrawerHeader className="flex-row items-start justify-between gap-4 border-b text-left">
+              <div className="min-w-0">
+                <DrawerTitle>Изменённые файлы</DrawerTitle>
+                <DrawerDescription>
+                  Выберите файл, чтобы перейти к его diff.
+                </DrawerDescription>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Закрыть список файлов"
+                onClick={() => setIsFileTreeDrawerOpen(false)}
+              >
+                <X className="size-4" />
+              </Button>
+            </DrawerHeader>
+            <div className="min-h-0 flex-1">
+              <AttemptReviewFileTree
+                files={review.changedFiles}
+                activeFilePath={activeFilePath}
+                className="h-full border-0"
+                onSelectFile={handleSelectFile}
+              />
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       <ReviewPanel
         review={review}
@@ -250,24 +388,18 @@ function AttemptReviewPageContent({
         className={cn(
           '-mx-3 grid min-w-0 items-start gap-0 transition-[grid-template-columns] duration-200 sm:-mx-6 lg:-mx-8',
           isFileTreeCollapsed
-            ? 'xl:grid-cols-[3rem_minmax(0,1fr)]'
-            : 'xl:grid-cols-[20rem_minmax(0,1fr)]'
+            ? 'lg:grid-cols-[3rem_minmax(0,1fr)]'
+            : 'lg:grid-cols-[20rem_minmax(0,1fr)]'
         )}
       >
-        <aside className="xl:sticky xl:top-16 xl:h-[calc(100vh-4rem)] xl:self-start">
+        <aside className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:self-start">
           <AttemptReviewFileTree
             files={review.changedFiles}
             activeFilePath={activeFilePath}
             collapsed={isFileTreeCollapsed}
-            className="xl:h-full"
+            className="lg:h-full"
             onToggleCollapsed={() => setIsFileTreeCollapsed((value) => !value)}
-            onSelectFile={(path) => {
-              setActiveFilePath(path);
-              document.getElementById(fileElementId(path))?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start',
-              });
-            }}
+            onSelectFile={handleSelectFile}
           />
         </aside>
 
@@ -576,22 +708,27 @@ function AttemptOptionCard({
     return (
       <div
         className={cn(
-          'rounded-lg bg-muted/50 px-3 py-2 transition-colors hover:bg-muted/70',
+          'attempt-review-attempt-trigger flex h-9 min-w-0 items-center justify-between gap-2 rounded-lg bg-muted/50 px-2.5 transition-colors hover:bg-muted/70 lg:block lg:h-auto lg:px-3 lg:py-2',
           selected && 'bg-primary/5'
         )}
       >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-semibold">
-            Попытка #{attempt.attemptNumber}
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="min-w-0 truncate text-sm font-semibold">
+            <span className="attempt-review-attempt-label-short">
+              #{attempt.attemptNumber}
+            </span>
+            <span className="attempt-review-attempt-label-full">
+              Попытка #{attempt.attemptNumber}
+            </span>
           </span>
-          <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
             {attempt.score === null
               ? 'Не оценено'
               : `${attempt.score}/${attempt.maxScore}`}
             {trailing}
           </span>
         </div>
-        <div className="mt-0.5 flex items-center gap-2 overflow-hidden text-xs text-muted-foreground">
+        <div className="mt-0.5 hidden items-center gap-2 overflow-hidden text-xs text-muted-foreground lg:flex">
           <span className="truncate">
             {formatDateTime(attempt.submittedAt)}
           </span>
@@ -601,7 +738,7 @@ function AttemptOptionCard({
           <span className="shrink-0 text-rose-700 dark:text-rose-300">
             −{attempt.deletedLines}
           </span>
-          <span className="flex gap-1 items-center">
+          <span className="flex items-center gap-1">
             <MessageSquare className="size-3" /> {attempt.commentCount}
           </span>
         </div>

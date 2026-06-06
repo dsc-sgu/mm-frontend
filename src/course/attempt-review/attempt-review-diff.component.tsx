@@ -84,7 +84,7 @@ export function AttemptReviewDiff({
             key={file.path}
             id={fileElementId(file.path)}
             tabIndex={-1}
-            className="attempt-review-diff-file min-w-0 scroll-mt-24 border-b bg-card outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring"
+            className="attempt-review-diff-file min-w-0 border-b bg-card outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring"
           >
             <StickyFileHeader
               file={file}
@@ -164,7 +164,7 @@ function StickyFileHeader({
   onToggleHidden: () => void;
 }) {
   return (
-    <div className="sticky top-17 z-20 flex min-w-0 items-center justify-between gap-3 border-b bg-card/95 px-4 py-3 text-sm backdrop-blur supports-[backdrop-filter]:bg-card/85">
+    <div className="attempt-review-sticky-file-header sticky z-20 flex min-w-0 items-center justify-between gap-3 border-b bg-card/95 px-4 py-3 text-sm backdrop-blur supports-[backdrop-filter]:bg-card/85">
       <div className="flex min-w-0 items-center gap-2 font-medium text-card-foreground">
         <button
           type="button"

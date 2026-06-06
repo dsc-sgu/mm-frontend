@@ -86,8 +86,8 @@ export function AttemptReviewFileTree({
   return (
     <div
       className={cn(
-        'flex min-h-80 flex-col overflow-hidden border-b bg-card xl:border-r xl:border-b-0',
-        collapsed && 'min-h-12',
+        'flex h-80 flex-col overflow-hidden border-b bg-card lg:h-full lg:border-r lg:border-b-0',
+        collapsed && 'h-12',
         className
       )}
     >
@@ -102,29 +102,36 @@ export function AttemptReviewFileTree({
             Изменённые файлы
           </h2>
         )}
-        <button
-          type="button"
-          className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label={
-            collapsed
-              ? 'Показать список изменённых файлов'
-              : 'Скрыть список изменённых файлов'
-          }
-          title={collapsed ? 'Показать список файлов' : 'Скрыть список файлов'}
-          onClick={onToggleCollapsed}
-        >
-          {collapsed ? (
-            <PanelLeftOpen className="size-4" />
-          ) : (
-            <PanelLeftClose className="size-4" />
-          )}
-        </button>
+        {onToggleCollapsed ? (
+          <button
+            type="button"
+            className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={
+              collapsed
+                ? 'Показать список изменённых файлов'
+                : 'Скрыть список изменённых файлов'
+            }
+            title={
+              collapsed ? 'Показать список файлов' : 'Скрыть список файлов'
+            }
+            onClick={onToggleCollapsed}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="size-4" />
+            ) : (
+              <PanelLeftClose className="size-4" />
+            )}
+          </button>
+        ) : null}
       </div>
       {collapsed ? null : (
         <FileTree
           model={model}
           className="attempt-review-file-tree min-h-0 flex-1 pt-2"
-          style={getFileTreeStyle(htmlThemeType)}
+          style={{
+            ...getFileTreeStyle(htmlThemeType),
+            height: '100%',
+          }}
         />
       )}
     </div>
