@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { FileDiff } from '@pierre/diffs/react';
-import { Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 
 import { fileElementId } from './attempt-review.dom';
 import { useHtmlThemeType } from './attempt-review-theme';
@@ -35,6 +35,9 @@ export function AttemptReviewDiff({
   onCommentsChange,
 }: AttemptReviewDiffProps) {
   const htmlThemeType = useHtmlThemeType();
+  const [hiddenFilePaths, setHiddenFilePaths] = useState<Set<string>>(
+    () => new Set()
+  );
   const commentsByFile = useMemo(
     () => groupCommentsByFile(comments),
     [comments]
@@ -56,10 +59,25 @@ export function AttemptReviewDiff({
     );
   }
 
+  function toggleFileHidden(filePath: string) {
+    setHiddenFilePaths((current) => {
+      const next = new Set(current);
+
+      if (next.has(filePath)) {
+        next.delete(filePath);
+      } else {
+        next.add(filePath);
+      }
+
+      return next;
+    });
+  }
+
   return (
     <div className="grid min-w-0 auto-rows-max content-start gap-0">
       {files.map((file) => {
         const fileComments = commentsByFile.get(file.path) ?? [];
+        const isFileHidden = hiddenFilePaths.has(file.path);
 
         return (
           <section
@@ -68,61 +86,67 @@ export function AttemptReviewDiff({
             tabIndex={-1}
             className="attempt-review-diff-file min-w-0 scroll-mt-24 border-b bg-card outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <StickyFileHeader file={file} />
-            <FileDiff<LineCommentAnnotation>
-              fileDiff={file.diff}
-              disableWorkerPool
-              className="attempt-review-pierre-diff"
-              options={{
-                diffStyle: viewMode,
-                themeType: htmlThemeType,
-                overflow: 'wrap',
-                stickyHeader: false,
-                disableFileHeader: true,
-                lineHoverHighlight: 'both',
-                enableGutterUtility: mode === 'editable',
-                enableLineSelection: mode === 'editable',
-                onGutterUtilityClick:
-                  mode === 'editable'
-                    ? (range) => {
-                        addLineComment({
-                          comments,
-                          filePath: file.path,
-                          range,
-                          onCommentsChange,
-                        });
-                      }
-                    : undefined,
-              }}
-              lineAnnotations={fileComments.map((comment) => ({
-                side: comment.endSide ?? comment.side,
-                lineNumber: comment.endLineNumber ?? comment.lineNumber,
-                metadata: { comment },
-              }))}
-              renderAnnotation={(annotation) => {
-                const comment = annotation.metadata.comment;
-
-                return (
-                  <LineCommentCard
-                    key={comment.id}
-                    comment={comment}
-                    mode={mode}
-                    onChange={(html) => {
-                      onCommentsChange?.(
-                        comments.map((item) =>
-                          item.id === comment.id ? { ...item, html } : item
-                        )
-                      );
-                    }}
-                    onDelete={() => {
-                      onCommentsChange?.(
-                        comments.filter((item) => item.id !== comment.id)
-                      );
-                    }}
-                  />
-                );
-              }}
+            <StickyFileHeader
+              file={file}
+              hidden={isFileHidden}
+              onToggleHidden={() => toggleFileHidden(file.path)}
             />
+            {isFileHidden ? null : (
+              <FileDiff<LineCommentAnnotation>
+                fileDiff={file.diff}
+                disableWorkerPool
+                className="attempt-review-pierre-diff"
+                options={{
+                  diffStyle: viewMode,
+                  themeType: htmlThemeType,
+                  overflow: 'wrap',
+                  stickyHeader: false,
+                  disableFileHeader: true,
+                  lineHoverHighlight: 'both',
+                  enableGutterUtility: mode === 'editable',
+                  enableLineSelection: mode === 'editable',
+                  onGutterUtilityClick:
+                    mode === 'editable'
+                      ? (range) => {
+                          addLineComment({
+                            comments,
+                            filePath: file.path,
+                            range,
+                            onCommentsChange,
+                          });
+                        }
+                      : undefined,
+                }}
+                lineAnnotations={fileComments.map((comment) => ({
+                  side: comment.endSide ?? comment.side,
+                  lineNumber: comment.endLineNumber ?? comment.lineNumber,
+                  metadata: { comment },
+                }))}
+                renderAnnotation={(annotation) => {
+                  const comment = annotation.metadata.comment;
+
+                  return (
+                    <LineCommentCard
+                      key={comment.id}
+                      comment={comment}
+                      mode={mode}
+                      onChange={(html) => {
+                        onCommentsChange?.(
+                          comments.map((item) =>
+                            item.id === comment.id ? { ...item, html } : item
+                          )
+                        );
+                      }}
+                      onDelete={() => {
+                        onCommentsChange?.(
+                          comments.filter((item) => item.id !== comment.id)
+                        );
+                      }}
+                    />
+                  );
+                }}
+              />
+            )}
           </section>
         );
       })}
@@ -130,10 +154,34 @@ export function AttemptReviewDiff({
   );
 }
 
-function StickyFileHeader({ file }: { file: AttemptReviewChangedFile }) {
+function StickyFileHeader({
+  file,
+  hidden,
+  onToggleHidden,
+}: {
+  file: AttemptReviewChangedFile;
+  hidden: boolean;
+  onToggleHidden: () => void;
+}) {
   return (
     <div className="sticky top-17 z-20 flex min-w-0 items-center justify-between gap-3 border-b bg-card/95 px-4 py-3 text-sm backdrop-blur supports-[backdrop-filter]:bg-card/85">
       <div className="flex min-w-0 items-center gap-2 font-medium text-card-foreground">
+        <button
+          type="button"
+          className="grid size-7 shrink-0 cursor-pointer place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={
+            hidden ? 'Показать изменение файла' : 'Скрыть изменение файла'
+          }
+          title={hidden ? 'Показать изменение файла' : 'Скрыть изменение файла'}
+          aria-expanded={!hidden}
+          onClick={onToggleHidden}
+        >
+          {hidden ? (
+            <ChevronRight className="size-4" />
+          ) : (
+            <ChevronDown className="size-4" />
+          )}
+        </button>
         <span
           className={`flex size-5 shrink-0 items-center justify-center rounded-md border text-xs leading-none ${statusIconClassName(file.status)}`}
           aria-hidden="true"
