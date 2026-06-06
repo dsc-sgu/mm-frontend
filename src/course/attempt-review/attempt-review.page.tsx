@@ -601,7 +601,9 @@ function AttemptOptionCard({
           <span className="shrink-0 text-rose-700 dark:text-rose-300">
             −{attempt.deletedLines}
           </span>
-          <span className="shrink-0">💬 {attempt.commentCount}</span>
+          <span className="flex gap-1 items-center">
+            <MessageSquare className="size-3" /> {attempt.commentCount}
+          </span>
         </div>
       </div>
     );
