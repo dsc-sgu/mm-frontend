@@ -52,6 +52,9 @@ export default defineConfig(({ mode }) => {
           : {}),
       },
     },
+    worker: {
+      format: 'es',
+    },
     build: {
       sourcemap: profiling,
       minify: profiling ? false : 'esbuild',

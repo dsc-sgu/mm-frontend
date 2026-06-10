@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
-import { FileDiff } from '@pierre/diffs/react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import type { CodeViewItem, CodeViewOptions } from '@pierre/diffs';
+import { CodeView, type CodeViewHandle } from '@pierre/diffs/react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
-import { fileElementId } from './attempt-review.dom';
 import {
   getAttemptReviewFileStatusGlyph,
   getAttemptReviewFileStatusIconClassName,
 } from './attempt-review-file-status.format';
+import { useAttemptReviewScrollHandoff } from './attempt-review-scroll-handoff.hook';
 import { useHtmlThemeType } from './attempt-review-theme';
 import { AttemptReviewLineCommentCard } from './attempt-review-line-comment-card.component';
 import type {
@@ -22,12 +23,40 @@ interface AttemptReviewDiffProps {
   mode: AttemptReviewMode;
   loading?: boolean;
   viewMode?: 'unified' | 'split';
+  className?: string;
+  enableScrollHandoff?: boolean;
   onCommentsChange?: (comments: AttemptReviewLineComment[]) => void;
+  onViewerChange?: (
+    viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null
+  ) => void;
 }
 
-interface LineCommentAnnotation {
+export interface AttemptReviewLineCommentAnnotation {
   comment: AttemptReviewLineComment;
 }
+
+const CODE_VIEW_LAYOUT = {
+  paddingTop: 0,
+  gap: 0,
+  paddingBottom: 0,
+};
+
+const CODE_VIEW_ITEM_METRICS = {
+  diffHeaderHeight: 56,
+};
+
+const CODE_VIEW_UNSAFE_CSS = `
+  [data-diffs-header='custom'] {
+    padding: 0;
+    background: var(--card);
+    color: var(--card-foreground);
+    border: 0;
+  }
+
+  [data-diffs-header][data-sticky] {
+    z-index: 2;
+  }
+`;
 
 export function AttemptReviewDiff({
   files,
@@ -35,15 +64,88 @@ export function AttemptReviewDiff({
   mode,
   loading = false,
   viewMode = 'split',
+  className,
+  enableScrollHandoff = false,
   onCommentsChange,
+  onViewerChange,
 }: AttemptReviewDiffProps) {
   const htmlThemeType = useHtmlThemeType();
-  const [hiddenFilePaths, setHiddenFilePaths] = useState<Set<string>>(
+  const codeViewContainerRef = useRef<HTMLDivElement | null>(null);
+  const [collapsedFilePaths, setCollapsedFilePaths] = useState<Set<string>>(
     () => new Set()
   );
   const commentsByFile = useMemo(
     () => groupCommentsByFile(comments),
     [comments]
+  );
+  const filesByPath = useMemo(
+    () => new Map(files.map((file) => [file.path, file])),
+    [files]
+  );
+
+  useAttemptReviewScrollHandoff({
+    enabled: enableScrollHandoff,
+    innerScrollRef: codeViewContainerRef,
+  });
+
+  const items = useMemo<CodeViewItem<AttemptReviewLineCommentAnnotation>[]>(
+    () =>
+      files.map((file) => {
+        const fileComments = commentsByFile.get(file.path) ?? [];
+        const collapsed = collapsedFilePaths.has(file.path);
+
+        return {
+          id: file.path,
+          type: 'diff',
+          fileDiff: file.diff,
+          collapsed,
+          version: buildItemVersion(file.path, collapsed, fileComments),
+          annotations: fileComments.map((comment) => ({
+            side: comment.endSide ?? comment.side,
+            lineNumber: comment.endLineNumber ?? comment.lineNumber,
+            metadata: { comment },
+          })),
+        };
+      }),
+    [collapsedFilePaths, commentsByFile, files]
+  );
+
+  const options = useMemo<CodeViewOptions<AttemptReviewLineCommentAnnotation>>(
+    () => ({
+      layout: CODE_VIEW_LAYOUT,
+      itemMetrics: CODE_VIEW_ITEM_METRICS,
+      diffStyle: viewMode,
+      themeType: htmlThemeType,
+      overflow: 'wrap',
+      stickyHeaders: true,
+      lineHoverHighlight: 'both',
+      enableGutterUtility: mode === 'editable',
+      enableLineSelection: mode === 'editable',
+      unsafeCSS: CODE_VIEW_UNSAFE_CSS,
+      onGutterUtilityClick:
+        mode === 'editable'
+          ? (range, context) => {
+              if (context.item.type !== 'diff') {
+                return;
+              }
+
+              addLineComment({
+                comments,
+                filePath: context.item.id,
+                range,
+                onCommentsChange,
+              });
+            }
+          : undefined,
+    }),
+    [comments, htmlThemeType, mode, onCommentsChange, viewMode]
+  );
+
+  const handleViewerChange = useCallback(
+    (viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null) => {
+      onViewerChange?.(viewer);
+    },
+    [onViewerChange]
   );
 
   if (loading) {
@@ -62,8 +164,8 @@ export function AttemptReviewDiff({
     );
   }
 
-  function toggleFileHidden(filePath: string) {
-    setHiddenFilePaths((current) => {
+  function toggleFileCollapsed(filePath: string) {
+    setCollapsedFilePaths((current) => {
       const next = new Set(current);
 
       if (next.has(filePath)) {
@@ -77,109 +179,85 @@ export function AttemptReviewDiff({
   }
 
   return (
-    <div className="grid min-w-0 auto-rows-max content-start gap-0">
-      {files.map((file) => {
-        const fileComments = commentsByFile.get(file.path) ?? [];
-        const isFileHidden = hiddenFilePaths.has(file.path);
+    <div className={className}>
+      <CodeView<AttemptReviewLineCommentAnnotation>
+        ref={handleViewerChange}
+        containerRef={codeViewContainerRef}
+        items={items}
+        className="attempt-review-code-view h-full min-h-0 min-w-0 overflow-y-auto overflow-x-clip overscroll-contain bg-card [overflow-anchor:none] [will-change:scroll-position] [&_diffs-container]:overflow-clip"
+        options={options}
+        renderCustomHeader={(item) => {
+          if (item.type !== 'diff') {
+            return null;
+          }
 
-        return (
-          <section
-            key={file.path}
-            id={fileElementId(file.path)}
-            tabIndex={-1}
-            className="attempt-review-diff-file min-w-0 border-b bg-card outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <StickyFileHeader
+          const file = filesByPath.get(item.id);
+
+          if (!file) {
+            return null;
+          }
+
+          return (
+            <CodeViewFileHeader
               file={file}
-              hidden={isFileHidden}
-              onToggleHidden={() => toggleFileHidden(file.path)}
+              collapsed={item.collapsed === true}
+              onToggleCollapsed={() => toggleFileCollapsed(item.id)}
             />
-            {isFileHidden ? null : (
-              <FileDiff<LineCommentAnnotation>
-                fileDiff={file.diff}
-                disableWorkerPool
-                className="attempt-review-pierre-diff"
-                options={{
-                  diffStyle: viewMode,
-                  themeType: htmlThemeType,
-                  overflow: 'wrap',
-                  stickyHeader: false,
-                  disableFileHeader: true,
-                  lineHoverHighlight: 'both',
-                  enableGutterUtility: mode === 'editable',
-                  enableLineSelection: mode === 'editable',
-                  onGutterUtilityClick:
-                    mode === 'editable'
-                      ? (range) => {
-                          addLineComment({
-                            comments,
-                            filePath: file.path,
-                            range,
-                            onCommentsChange,
-                          });
-                        }
-                      : undefined,
-                }}
-                lineAnnotations={fileComments.map((comment) => ({
-                  side: comment.endSide ?? comment.side,
-                  lineNumber: comment.endLineNumber ?? comment.lineNumber,
-                  metadata: { comment },
-                }))}
-                renderAnnotation={(annotation) => {
-                  const comment = annotation.metadata.comment;
+          );
+        }}
+        renderAnnotation={(annotation) => {
+          const comment = annotation.metadata.comment;
 
-                  return (
-                    <AttemptReviewLineCommentCard
-                      key={comment.id}
-                      comment={comment}
-                      mode={mode}
-                      onChange={(html) => {
-                        onCommentsChange?.(
-                          comments.map((item) =>
-                            item.id === comment.id ? { ...item, html } : item
-                          )
-                        );
-                      }}
-                      onDelete={() => {
-                        onCommentsChange?.(
-                          comments.filter((item) => item.id !== comment.id)
-                        );
-                      }}
-                    />
-                  );
-                }}
-              />
-            )}
-          </section>
-        );
-      })}
+          return (
+            <AttemptReviewLineCommentCard
+              key={comment.id}
+              comment={comment}
+              mode={mode}
+              onChange={(html) => {
+                onCommentsChange?.(
+                  comments.map((item) =>
+                    item.id === comment.id ? { ...item, html } : item
+                  )
+                );
+              }}
+              onDelete={() => {
+                onCommentsChange?.(
+                  comments.filter((item) => item.id !== comment.id)
+                );
+              }}
+            />
+          );
+        }}
+      />
     </div>
   );
 }
 
-function StickyFileHeader({
+function CodeViewFileHeader({
   file,
-  hidden,
-  onToggleHidden,
+  collapsed,
+  onToggleCollapsed,
 }: {
   file: AttemptReviewChangedFile;
-  hidden: boolean;
-  onToggleHidden: () => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 }) {
   return (
-    <div className="attempt-review-sticky-file-header sticky z-20 flex min-w-0 items-center justify-between gap-3 border-b bg-card/95 px-4 py-3 text-sm backdrop-blur supports-[backdrop-filter]:bg-card/85">
+    <div className="flex h-14 min-w-0 items-center justify-between gap-3 border-b bg-card/95 px-4 text-sm backdrop-blur supports-[backdrop-filter]:bg-card/85">
       <div className="flex min-w-0 items-center gap-2 font-medium text-card-foreground">
         <button
           type="button"
           className="grid size-7 shrink-0 cursor-pointer place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={
-            hidden ? 'Показать изменение файла' : 'Скрыть изменение файла'
+            collapsed ? 'Показать изменение файла' : 'Скрыть изменение файла'
           }
-          title={hidden ? 'Показать изменение файла' : 'Скрыть изменение файла'}
-          aria-expanded={!hidden}
-          onClick={onToggleHidden}
+          title={
+            collapsed ? 'Показать изменение файла' : 'Скрыть изменение файла'
+          }
+          aria-expanded={!collapsed}
+          onClick={onToggleCollapsed}
         >
-          {hidden ? (
+          {collapsed ? (
             <ChevronRight className="size-4" />
           ) : (
             <ChevronDown className="size-4" />
@@ -205,6 +283,37 @@ function StickyFileHeader({
       </div>
     </div>
   );
+}
+
+function buildItemVersion(
+  filePath: string,
+  collapsed: boolean,
+  comments: AttemptReviewLineComment[]
+): number {
+  return hashText(
+    JSON.stringify({
+      filePath,
+      collapsed,
+      comments: comments.map((comment) => ({
+        id: comment.id,
+        side: comment.side,
+        lineNumber: comment.lineNumber,
+        endSide: comment.endSide,
+        endLineNumber: comment.endLineNumber,
+        html: comment.html,
+      })),
+    })
+  );
+}
+
+function hashText(value: string): number {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) | 0;
+  }
+
+  return hash;
 }
 
 function groupCommentsByFile(comments: AttemptReviewLineComment[]) {

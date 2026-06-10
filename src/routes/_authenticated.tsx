@@ -1,5 +1,6 @@
 import { SESSION_OPTIONS } from '@/auth/auth.queries';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { AttemptReviewWorkerPool } from '@/course/attempt-review/attempt-review-worker-pool.component';
+import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authenticated')({
   async beforeLoad({ context }) {
@@ -11,4 +12,13 @@ export const Route = createFileRoute('/_authenticated')({
       });
     }
   },
+  component: AuthenticatedRouteComponent,
 });
+
+function AuthenticatedRouteComponent() {
+  return (
+    <AttemptReviewWorkerPool>
+      <Outlet />
+    </AttemptReviewWorkerPool>
+  );
+}

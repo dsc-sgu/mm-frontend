@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import type { CodeViewHandle } from '@pierre/diffs/react';
 import { PanelLeftOpen, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -17,14 +18,13 @@ import {
   AttemptReviewDiffViewToggle,
   type AttemptReviewDiffViewMode,
 } from './attempt-review-diff-view-toggle.component';
-import { AttemptReviewDiff } from './attempt-review-diff.component';
-import { fileElementId } from './attempt-review.dom';
+import {
+  AttemptReviewDiff,
+  type AttemptReviewLineCommentAnnotation,
+} from './attempt-review-diff.component';
 import { useAttemptReviewDraft } from './attempt-review-draft.hook';
 import { AttemptReviewFileTree } from './attempt-review-file-tree.component';
-import {
-  useAttemptReviewStickyOffset,
-  useAttemptReviewSummaryCompact,
-} from './attempt-review-layout.hook';
+import { useAttemptReviewStickyOffset } from './attempt-review-layout.hook';
 import { useSaveAttemptReviewMutation } from './attempt-review.queries';
 import { AttemptReviewReviewPanel } from './attempt-review-review-panel.component';
 import type {
@@ -60,8 +60,10 @@ export function AttemptReviewPageContent({
     useState<AttemptReviewDiffViewMode>('split');
   const pageHeaderRef = useRef<HTMLElement | null>(null);
   const pageRootRef = useRef<HTMLElement | null>(null);
+  const diffViewerRef =
+    useRef<CodeViewHandle<AttemptReviewLineCommentAnnotation> | null>(null);
   const isDesktopReviewLayout = useMediaQuery('(min-width: 1024px)');
-  const isSummaryCompact = useAttemptReviewSummaryCompact();
+  const isSummaryCompact = true;
   const {
     draft,
     hasChanges,
@@ -72,6 +74,12 @@ export function AttemptReviewPageContent({
     discard,
     resetToReview,
   } = useAttemptReviewDraft(review);
+  const handleDiffViewerChange = useCallback(
+    (viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null) => {
+      diffViewerRef.current = viewer;
+    },
+    []
+  );
 
   useAttemptReviewStickyOffset({
     pageHeaderRef,
@@ -92,9 +100,18 @@ export function AttemptReviewPageContent({
   );
 
   function scrollToFile(path: string) {
-    document.getElementById(fileElementId(path))?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
+    if (isDesktopReviewLayout) {
+      window.scrollTo({
+        top: getPageMaxScrollTop(),
+        behavior: 'smooth',
+      });
+    }
+
+    diffViewerRef.current?.scrollTo({
+      type: 'item',
+      id: path,
+      align: 'start',
+      behavior: 'smooth-auto',
     });
   }
 
@@ -259,13 +276,13 @@ export function AttemptReviewPageContent({
 
       <div
         className={cn(
-          '-mx-3 grid min-w-0 items-start gap-0 transition-[grid-template-columns] duration-200 sm:-mx-6 lg:-mx-8',
+          '-mx-3 grid min-w-0 items-start gap-0 transition-[grid-template-columns] duration-200 sm:-mx-6 lg:-mx-8 lg:sticky lg:top-[var(--attempt-review-sticky-top,4rem)] lg:h-[calc(100dvh_-_var(--attempt-review-sticky-top,4rem))] lg:overflow-hidden',
           isFileTreeCollapsed
             ? 'lg:grid-cols-[3rem_minmax(0,1fr)]'
             : 'lg:grid-cols-[20rem_minmax(0,1fr)]'
         )}
       >
-        <aside className="hidden lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:self-start">
+        <aside className="hidden min-h-0 lg:block lg:h-full lg:self-start">
           <AttemptReviewFileTree
             files={review.changedFiles}
             activeFilePath={activeFilePath}
@@ -281,6 +298,9 @@ export function AttemptReviewPageContent({
           comments={draft.lineComments}
           mode={mode}
           viewMode={diffViewMode}
+          enableScrollHandoff={isDesktopReviewLayout}
+          onViewerChange={handleDiffViewerChange}
+          className="h-[70vh] min-h-0 min-w-0 bg-card lg:h-full"
           onCommentsChange={(lineComments) => {
             if (mode === 'editable') {
               setLineComments(lineComments);
@@ -290,4 +310,14 @@ export function AttemptReviewPageContent({
       </div>
     </main>
   );
+}
+
+function getPageMaxScrollTop(): number {
+  const pageScroller = document.scrollingElement;
+
+  if (!pageScroller) {
+    return 0;
+  }
+
+  return Math.max(0, pageScroller.scrollHeight - pageScroller.clientHeight);
 }
