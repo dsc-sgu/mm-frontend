@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, type RefObject } from 'react';
 import type { CodeViewItem, CodeViewOptions } from '@pierre/diffs';
 import { CodeView, type CodeViewHandle } from '@pierre/diffs/react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowUp, ChevronDown, ChevronRight } from 'lucide-react';
 
 import {
   getAttemptReviewFileStatusGlyph,
@@ -25,6 +25,8 @@ interface AttemptReviewDiffProps {
   viewMode?: 'unified' | 'split';
   className?: string;
   enableScrollHandoff?: boolean;
+  scrollHandoffRootRef?: RefObject<HTMLElement | null>;
+  onScrollToReview?: () => void;
   onCommentsChange?: (comments: AttemptReviewLineComment[]) => void;
   onViewerChange?: (
     viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null
@@ -66,6 +68,8 @@ export function AttemptReviewDiff({
   viewMode = 'split',
   className,
   enableScrollHandoff = false,
+  scrollHandoffRootRef,
+  onScrollToReview,
   onCommentsChange,
   onViewerChange,
 }: AttemptReviewDiffProps) {
@@ -85,6 +89,7 @@ export function AttemptReviewDiff({
 
   useAttemptReviewScrollHandoff({
     enabled: enableScrollHandoff,
+    rootRef: scrollHandoffRootRef ?? codeViewContainerRef,
     innerScrollRef: codeViewContainerRef,
   });
 
@@ -179,7 +184,7 @@ export function AttemptReviewDiff({
   }
 
   return (
-    <div className={className}>
+    <div className={['relative', className].filter(Boolean).join(' ')}>
       <CodeView<AttemptReviewLineCommentAnnotation>
         ref={handleViewerChange}
         containerRef={codeViewContainerRef}
@@ -229,6 +234,15 @@ export function AttemptReviewDiff({
           );
         }}
       />
+      {enableScrollHandoff && onScrollToReview ? (
+        <button
+          type="button"
+          className="absolute right-4 bottom-4 z-20 inline-flex items-center gap-2 rounded-full border bg-background/95 px-3 py-2 text-sm font-medium shadow-lg backdrop-blur transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={onScrollToReview}
+        >
+          <ArrowUp className="size-4" /> <span>К отзыву</span>
+        </button>
+      ) : null}
     </div>
   );
 }
