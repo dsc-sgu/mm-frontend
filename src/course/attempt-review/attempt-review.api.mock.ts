@@ -157,7 +157,7 @@ function getReviewSeries(params: AttemptReviewRouteParams): ReviewSeries {
   const deadlineAt =
     listAttempt?.deadlineAt ??
     new Date(baseSubmittedAt + 48 * 60 * 60 * 1000).toISOString();
-  const maxAttemptNumber = Math.max(3, params.attemptId);
+  const maxAttemptNumber = Math.max(4, params.attemptId);
   const attempts = Array.from({ length: maxAttemptNumber }, (_, index) => {
     const attemptNumber = index + 1;
     const submittedAt = new Date(
@@ -411,7 +411,43 @@ function buildSnapshot(attemptNumber: number): Record<string, string> {
     },
   };
 
+  if (attemptNumber === 4) {
+    return buildStressSnapshot(snapshots[3]);
+  }
+
   return snapshots[Math.min(attemptNumber, 3)] ?? snapshots[3];
+}
+
+function buildStressSnapshot(
+  baseSnapshot: Record<string, string>
+): Record<string, string> {
+  return {
+    ...baseSnapshot,
+    ...Object.fromEntries(
+      Array.from({ length: 160 }, (_, fileIndex) => {
+        const fileNumber = fileIndex + 1;
+        const directory = String(Math.floor(fileIndex / 20) + 1).padStart(
+          2,
+          '0'
+        );
+        const fileName = String(fileNumber).padStart(3, '0');
+
+        return [
+          `stress/module-${directory}/generated-${fileName}.ts`,
+          buildStressFileContents(fileNumber),
+        ];
+      })
+    ),
+  };
+}
+
+function buildStressFileContents(fileNumber: number): string {
+  return Array.from({ length: 120 }, (_, lineIndex) => {
+    const lineNumber = lineIndex + 1;
+    const value = fileNumber * 1000 + lineNumber;
+
+    return `export const stress_${fileNumber}_${lineNumber} = ${value};`;
+  }).join('\n');
 }
 
 function buildFeedback(
@@ -433,6 +469,10 @@ function buildFeedback(
 }
 
 function buildComments(attemptNumber: number): AttemptReviewLineComment[] {
+  if (attemptNumber === 4) {
+    return [];
+  }
+
   if (attemptNumber === 1) {
     return [];
   }
