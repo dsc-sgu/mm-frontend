@@ -3,6 +3,10 @@ import { FileTree, useFileTree } from '@pierre/trees/react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
+import {
+  getAttemptReviewFileStatusLabel,
+  getAttemptReviewFileStatusShortGlyph,
+} from './attempt-review-file-status.format';
 import { useHtmlThemeType } from './attempt-review-theme';
 import type { AttemptReviewChangedFile } from './attempt-review.types';
 
@@ -51,8 +55,8 @@ export function AttemptReviewFileTree({
       }
 
       return {
-        text: `${statusGlyph(file.status)} +${file.addedLines}/−${file.deletedLines}`,
-        title: `${statusLabel(file.status)}: +${file.addedLines}, −${file.deletedLines}`,
+        text: `${getAttemptReviewFileStatusShortGlyph(file.status)} +${file.addedLines}/−${file.deletedLines}`,
+        title: `${getAttemptReviewFileStatusLabel(file.status)}: +${file.addedLines}, −${file.deletedLines}`,
       };
     },
     unsafeCSS: `
@@ -155,28 +159,4 @@ function getFileTreeStyle(colorScheme: 'light' | 'dark'): CSSProperties {
     '--trees-selected-bg-override':
       'color-mix(in oklch, var(--primary) 12%, transparent)',
   } as CSSProperties;
-}
-
-function statusGlyph(status: AttemptReviewChangedFile['status']): string {
-  if (status === 'added') {
-    return 'A';
-  }
-
-  if (status === 'deleted') {
-    return 'D';
-  }
-
-  return 'M';
-}
-
-function statusLabel(status: AttemptReviewChangedFile['status']): string {
-  if (status === 'added') {
-    return 'Добавлен';
-  }
-
-  if (status === 'deleted') {
-    return 'Удалён';
-  }
-
-  return 'Изменён';
 }

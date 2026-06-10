@@ -1,10 +1,14 @@
 import { useMemo, useState } from 'react';
 import { FileDiff } from '@pierre/diffs/react';
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 import { fileElementId } from './attempt-review.dom';
+import {
+  getAttemptReviewFileStatusGlyph,
+  getAttemptReviewFileStatusIconClassName,
+} from './attempt-review-file-status.format';
 import { useHtmlThemeType } from './attempt-review-theme';
-import { RichTextEditor } from './rich-text-editor.component';
+import { AttemptReviewLineCommentCard } from './attempt-review-line-comment-card.component';
 import type {
   AttemptReviewChangedFile,
   AttemptReviewCommentSide,
@@ -17,7 +21,6 @@ interface AttemptReviewDiffProps {
   comments: AttemptReviewLineComment[];
   mode: AttemptReviewMode;
   loading?: boolean;
-  activeFilePath?: string | null;
   viewMode?: 'unified' | 'split';
   onCommentsChange?: (comments: AttemptReviewLineComment[]) => void;
 }
@@ -126,7 +129,7 @@ export function AttemptReviewDiff({
                   const comment = annotation.metadata.comment;
 
                   return (
-                    <LineCommentCard
+                    <AttemptReviewLineCommentCard
                       key={comment.id}
                       comment={comment}
                       mode={mode}
@@ -183,11 +186,11 @@ function StickyFileHeader({
           )}
         </button>
         <span
-          className={`flex size-5 shrink-0 items-center justify-center rounded-md border text-xs leading-none ${statusIconClassName(file.status)}`}
+          className={`flex size-5 shrink-0 items-center justify-center rounded-md border text-xs leading-none ${getAttemptReviewFileStatusIconClassName(file.status)}`}
           aria-hidden="true"
         >
           <span className="-translate-y-px leading-none">
-            {statusGlyph(file.status)}
+            {getAttemptReviewFileStatusGlyph(file.status)}
           </span>
         </span>
         <span className="min-w-0 truncate">{file.path}</span>
@@ -202,32 +205,6 @@ function StickyFileHeader({
       </div>
     </div>
   );
-}
-
-function statusIconClassName(
-  status: AttemptReviewChangedFile['status']
-): string {
-  if (status === 'added') {
-    return 'border-emerald-500/50 bg-emerald-500/10 text-emerald-500';
-  }
-
-  if (status === 'deleted') {
-    return 'border-rose-500/50 bg-rose-500/10 text-rose-500';
-  }
-
-  return 'border-blue-500/50 bg-blue-500/10 text-blue-500';
-}
-
-function statusGlyph(status: AttemptReviewChangedFile['status']): string {
-  if (status === 'added') {
-    return '+';
-  }
-
-  if (status === 'deleted') {
-    return '−';
-  }
-
-  return '•';
 }
 
 function groupCommentsByFile(comments: AttemptReviewLineComment[]) {
@@ -294,73 +271,4 @@ function createDraftLineComment({
     authorName: 'Текущий преподаватель',
     updatedAt: new Date().toISOString(),
   };
-}
-
-function formatCommentRange(comment: AttemptReviewLineComment): string {
-  const startLabel = sideLabel(comment.side);
-  const endSide = comment.endSide ?? comment.side;
-  const endLineNumber = comment.endLineNumber ?? comment.lineNumber;
-
-  if (comment.side === endSide && comment.lineNumber === endLineNumber) {
-    return `${startLabel} #${comment.lineNumber}`;
-  }
-
-  if (comment.side === endSide) {
-    const from = Math.min(comment.lineNumber, endLineNumber);
-    const to = Math.max(comment.lineNumber, endLineNumber);
-    return `${pluralSideLabel(comment.side)} #${from}–${to}`;
-  }
-
-  return `${startLabel} #${comment.lineNumber} → ${sideLabel(endSide)} #${endLineNumber}`;
-}
-
-function sideLabel(side: AttemptReviewCommentSide): string {
-  return side === 'additions' ? 'Новая строка' : 'Старая строка';
-}
-
-function pluralSideLabel(side: AttemptReviewCommentSide): string {
-  return side === 'additions' ? 'Новые строки' : 'Старые строки';
-}
-
-function LineCommentCard({
-  comment,
-  mode,
-  onChange,
-  onDelete,
-}: {
-  comment: AttemptReviewLineComment;
-  mode: AttemptReviewMode;
-  onChange: (html: string) => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div className="m-3">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">
-          {comment.authorName}
-        </span>
-        <div className="flex items-center gap-2">
-          <span>{formatCommentRange(comment)}</span>
-          {mode === 'editable' ? (
-            <button
-              type="button"
-              className="cursor-pointer grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Удалить комментарий"
-              title="Удалить комментарий"
-              onClick={onDelete}
-            >
-              <Trash2 className="size-3.5" />
-            </button>
-          ) : null}
-        </div>
-      </div>
-      <RichTextEditor
-        value={comment.html}
-        editable={mode === 'editable'}
-        minHeightClassName="min-h-20"
-        placeholder="Комментарий к строке…"
-        onChange={onChange}
-      />
-    </div>
-  );
 }
