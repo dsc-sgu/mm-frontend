@@ -1,6 +1,7 @@
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { AttemptReviewPageContent } from './attempt-review-page-content.component';
 import { useAttemptReviewQuery } from './attempt-review.queries';
+import { useAttemptReviewWorkerPoolReady } from './attempt-review-worker-pool.hook';
 import type { AttemptReviewMode } from './attempt-review.types';
 
 interface AttemptReviewPageProps {
@@ -13,8 +14,9 @@ interface AttemptReviewPageProps {
 
 export function AttemptReviewPage(props: AttemptReviewPageProps) {
   const reviewQuery = useAttemptReviewQuery(props);
+  const isWorkerPoolReady = useAttemptReviewWorkerPoolReady();
 
-  if (reviewQuery.isLoading) {
+  if (reviewQuery.isLoading || !isWorkerPoolReady) {
     return (
       <main className="mx-auto grid min-h-[60vh] w-full max-w-7xl place-items-center p-6">
         <div className="inline-flex items-center gap-2 text-muted-foreground">
