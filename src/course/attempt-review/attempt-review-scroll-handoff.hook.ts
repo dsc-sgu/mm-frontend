@@ -1,28 +1,42 @@
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
 const SCROLL_EPSILON = 0.5;
+const WHEEL_GESTURE_IDLE_MS = 140;
 
 type ScrollableElement = HTMLElement | Element;
 
 interface AttemptReviewScrollHandoffOptions {
   enabled: boolean;
+  rootRef: RefObject<HTMLElement | null>;
   innerScrollRef: RefObject<HTMLElement | null>;
+}
+
+interface WheelGestureState {
+  claimedByHandoff: boolean;
+  lockedToNestedScroll: boolean;
+  deltaSign: 1 | -1;
+  lastEventTime: number;
 }
 
 export function useAttemptReviewScrollHandoff({
   enabled,
+  rootRef,
   innerScrollRef,
 }: AttemptReviewScrollHandoffOptions) {
+  const wheelGestureStateRef = useRef<WheelGestureState | null>(null);
+
   useEffect(() => {
     if (!enabled) {
       return;
     }
 
-    const innerScroller = innerScrollRef.current;
+    const root = rootRef.current;
 
-    if (!innerScroller) {
+    if (!root) {
       return;
     }
+
+    const activeRoot = root;
 
     function handleWheel(event: WheelEvent) {
       if (
@@ -42,43 +56,107 @@ export function useAttemptReviewScrollHandoff({
         return;
       }
 
+      const activeInnerScroller = innerScroller;
       const deltaY = normalizeWheelDeltaY(event);
 
       if (Math.abs(deltaY) <= SCROLL_EPSILON) {
         return;
       }
 
+      const gestureState = getWheelGestureState({
+        deltaY,
+        event,
+        previousState: wheelGestureStateRef.current,
+      });
+      const nestedScroller = gestureState.claimedByHandoff
+        ? null
+        : findScrollableEventTarget({
+            event,
+            root: activeRoot,
+            innerScroller: activeInnerScroller,
+          });
+
+      if (gestureState.lockedToNestedScroll) {
+        wheelGestureStateRef.current = gestureState;
+
+        if (nestedScroller && canScroll(nestedScroller, deltaY)) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      if (nestedScroller && canScroll(nestedScroller, deltaY)) {
+        gestureState.lockedToNestedScroll = true;
+        wheelGestureStateRef.current = gestureState;
+        return;
+      }
+
+      gestureState.claimedByHandoff = true;
+      wheelGestureStateRef.current = gestureState;
+
       event.preventDefault();
       event.stopPropagation();
 
       handoffWheelDelta({
         deltaY,
-        innerScroller,
+        innerScroller: activeInnerScroller,
         pageScroller,
+        preferInnerScrollOnUp: isEventInsideElement(event, activeInnerScroller),
       });
     }
 
-    innerScroller.addEventListener('wheel', handleWheel, {
+    activeRoot.addEventListener('wheel', handleWheel, {
       capture: true,
       passive: false,
     });
 
     return () => {
-      innerScroller.removeEventListener('wheel', handleWheel, {
+      activeRoot.removeEventListener('wheel', handleWheel, {
         capture: true,
       });
     };
-  }, [enabled, innerScrollRef]);
+  }, [enabled, innerScrollRef, rootRef]);
+}
+
+function getWheelGestureState({
+  deltaY,
+  event,
+  previousState,
+}: {
+  deltaY: number;
+  event: WheelEvent;
+  previousState: WheelGestureState | null;
+}): WheelGestureState {
+  const deltaSign = deltaY > 0 ? 1 : -1;
+  const lastEventTime = event.timeStamp;
+  const isSameGesture =
+    previousState !== null &&
+    previousState.deltaSign === deltaSign &&
+    lastEventTime - previousState.lastEventTime <= WHEEL_GESTURE_IDLE_MS;
+
+  return {
+    claimedByHandoff: isSameGesture ? previousState.claimedByHandoff : false,
+    lockedToNestedScroll: isSameGesture
+      ? previousState.lockedToNestedScroll
+      : false,
+    deltaSign,
+    lastEventTime,
+  };
 }
 
 function handoffWheelDelta({
   deltaY,
   innerScroller,
   pageScroller,
+  preferInnerScrollOnUp,
 }: {
   deltaY: number;
   innerScroller: HTMLElement;
   pageScroller: ScrollableElement;
+  preferInnerScrollOnUp: boolean;
 }) {
   if (deltaY > 0) {
     let remainingDelta = deltaY;
@@ -96,7 +174,7 @@ function handoffWheelDelta({
 
   let remainingDelta = deltaY;
 
-  if (isAtScrollEnd(pageScroller) && !isAtScrollStart(innerScroller)) {
+  if (preferInnerScrollOnUp && !isAtScrollStart(innerScroller)) {
     remainingDelta = consumeScrollDelta(innerScroller, remainingDelta);
   }
 
@@ -121,6 +199,53 @@ function consumeScrollDelta(
   const consumedDelta = element.scrollTop - currentScrollTop;
 
   return deltaY - consumedDelta;
+}
+
+function findScrollableEventTarget({
+  event,
+  root,
+  innerScroller,
+}: {
+  event: WheelEvent;
+  root: HTMLElement;
+  innerScroller: HTMLElement;
+}): HTMLElement | null {
+  for (const target of event.composedPath()) {
+    if (!(target instanceof HTMLElement)) {
+      continue;
+    }
+
+    if (target === innerScroller) {
+      return null;
+    }
+
+    if (target === root) {
+      return null;
+    }
+
+    if (isScrollable(target)) {
+      return target;
+    }
+  }
+
+  return null;
+}
+
+function isScrollable(element: HTMLElement): boolean {
+  const { overflowY } = getComputedStyle(element);
+
+  return (
+    (overflowY === 'auto' || overflowY === 'scroll') &&
+    getMaxScrollTop(element) > SCROLL_EPSILON
+  );
+}
+
+function canScroll(element: ScrollableElement, deltaY: number): boolean {
+  return deltaY > 0 ? !isAtScrollEnd(element) : !isAtScrollStart(element);
+}
+
+function isEventInsideElement(event: Event, element: HTMLElement): boolean {
+  return event.composedPath().includes(element);
 }
 
 function getPageScroller(): Element | null {

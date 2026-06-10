@@ -142,6 +142,10 @@ export function AttemptReviewPageContent({
     window.requestAnimationFrame(() => scrollToFile(path));
   }
 
+  function scrollToReview() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   return (
     <main
       ref={pageRootRef}
@@ -314,6 +318,8 @@ export function AttemptReviewPageContent({
           mode={mode}
           viewMode={diffViewMode}
           enableScrollHandoff={isDesktopReviewLayout}
+          scrollHandoffRootRef={pageRootRef}
+          onScrollToReview={scrollToReview}
           onViewerChange={handleDiffViewerChange}
           className="h-[70vh] min-h-0 min-w-0 bg-card lg:h-full"
           onCommentsChange={(lineComments) => {
