@@ -88,6 +88,7 @@ export function AttemptReviewCommentReplyItem({
         <RichTextEditor
           value={draftHtml}
           editable
+          autoFocus
           minHeightClassName="min-h-16"
           placeholder="Ответить на комментарий…"
           onChange={setDraftHtml}

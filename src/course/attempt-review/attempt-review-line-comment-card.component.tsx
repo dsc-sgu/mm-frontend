@@ -173,6 +173,7 @@ export function AttemptReviewLineCommentCard({
           <RichTextEditor
             value={draftHtml}
             editable
+            autoFocus
             minHeightClassName="min-h-20"
             placeholder="Комментарий к строке…"
             onChange={setDraftHtml}
