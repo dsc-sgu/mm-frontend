@@ -4,8 +4,8 @@ import {
   areCourseAttemptsFiltersEqual,
   EMPTY_COURSE_ATTEMPTS_FILTERS,
   normalizeCourseAttemptsFilters,
-} from '../model/filters';
-import type { CourseAttemptsFilters } from '../model/types';
+} from '@/course/attempts/model/filters';
+import type { CourseAttemptsFilters } from '@/course/attempts/model/types';
 
 export function useCourseAttemptsFilters({
   appliedFilters,

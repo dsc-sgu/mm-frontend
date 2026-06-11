@@ -3,13 +3,13 @@ import { MessageSquareText, PanelLeftOpen } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { AttemptReviewAttemptSelect } from './attempt-select';
-import { formatAttemptReviewDateTime } from '../model/date-format';
+import { formatAttemptReviewDateTime } from '@/course/attempt-review/model/date-format';
 import { AttemptReviewDiffViewToggle } from './diff-view-toggle';
 import type {
   AttemptReviewAggregate,
   AttemptReviewDiffViewMode,
   AttemptReviewMode,
-} from '../model/types';
+} from '@/course/attempt-review/model/types';
 
 type AttemptReviewHeaderProps = {
   mode: AttemptReviewMode;

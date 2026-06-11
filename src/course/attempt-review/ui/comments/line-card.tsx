@@ -4,20 +4,23 @@ import { Check, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import { cn } from '@/shadcn/lib/utils';
-import { formatAttemptReviewCommentRange } from '../../model/comment-range';
+import { formatAttemptReviewCommentRange } from '@/course/attempt-review/model/comment-range';
 import {
   getAttemptReviewCancelShortcutKeys,
   getAttemptReviewSubmitShortcutKeys,
-} from '../../model/keyboard-shortcuts';
+} from '@/course/attempt-review/model/keyboard-shortcuts';
 import { AttemptReviewCommentPendingNotice } from './pending-notice';
 import { AttemptReviewCommentReplies } from './replies';
 import { AttemptReviewCommentTimestamp } from './timestamp';
-import { RichTextContent, RichTextEditor } from '../rich-text/editor';
-import { isRichTextHtmlEmpty } from '../rich-text/empty';
+import {
+  RichTextContent,
+  RichTextEditor,
+} from '@/course/attempt-review/ui/rich-text/editor';
+import { isRichTextHtmlEmpty } from '@/course/attempt-review/ui/rich-text/empty';
 import type {
   AttemptReviewLineComment,
   AttemptReviewMode,
-} from '../../model/types';
+} from '@/course/attempt-review/model/types';
 
 type AttemptReviewLineCommentCardProps = {
   comment: AttemptReviewLineComment;

@@ -1,4 +1,4 @@
-import type { CourseSummary } from '../../course.types';
+import type { CourseSummary } from '@/course/course.types';
 
 export type RichTextMark = 'bold' | 'italic';
 

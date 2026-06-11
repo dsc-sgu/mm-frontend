@@ -10,7 +10,7 @@ import {
   DrawerTrigger,
 } from '@/shadcn/components/ui/drawer';
 import { useMediaQuery } from '@/use-media-query.hook';
-import type { Deadline } from '../model/types';
+import type { Deadline } from '@/deadlines-calendar/model/types';
 import { cn } from '@/shadcn/lib/utils';
 
 type DeadlineDetailsProps = {

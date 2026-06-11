@@ -8,7 +8,7 @@ import { fetchCourseAttemptsList, saveQuickGrades } from './mock';
 import type {
   CourseAttemptsFilters,
   SaveQuickGradesInput,
-} from '../model/types';
+} from '@/course/attempts/model/types';
 
 export const COURSE_ATTEMPTS_QUERY_KEY = 'course-attempts';
 

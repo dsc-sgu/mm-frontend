@@ -20,7 +20,7 @@ import type {
   DeleteAttemptReviewCommentReplyInput,
   SaveAttemptReviewInput,
   UpdateAttemptReviewCommentReplyInput,
-} from '../model/types';
+} from '@/course/attempt-review/model/types';
 
 export const ATTEMPT_REVIEW_QUERY_KEY = 'attempt-review';
 

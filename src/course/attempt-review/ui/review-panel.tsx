@@ -4,10 +4,13 @@ import { CourseScoreField } from '@/course/grading';
 import { Button } from '@/shadcn/components/ui/button';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
-import { formatAttemptReviewDateTime } from '../model/date-format';
-import type { AttemptReviewDraft } from '../model/draft';
+import { formatAttemptReviewDateTime } from '@/course/attempt-review/model/date-format';
+import type { AttemptReviewDraft } from '@/course/attempt-review/model/draft';
 import { RichTextContent, RichTextEditor } from './rich-text/editor';
-import type { AttemptReviewAggregate, AttemptReviewMode } from '../model/types';
+import type {
+  AttemptReviewAggregate,
+  AttemptReviewMode,
+} from '@/course/attempt-review/model/types';
 
 type AttemptReviewReviewPanelProps = {
   review: AttemptReviewAggregate;

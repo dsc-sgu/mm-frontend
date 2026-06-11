@@ -25,6 +25,17 @@ export default defineConfig([
     },
     rules: {
       'prettier/prettier': 'error',
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../**'],
+              message: 'Use @/... imports instead of parent-relative imports.',
+            },
+          ],
+        },
+      ],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
     },
   },
