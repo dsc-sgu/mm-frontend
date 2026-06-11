@@ -11,11 +11,15 @@ import type {
   AttemptReviewGrade,
   AttemptReviewHistoryItem,
   AttemptReviewLineComment,
+  AttemptReviewLineCommentReply,
   AttemptReviewRichFeedback,
   AttemptReviewRouteParams,
   AttemptReviewStudent,
   AttemptReviewTask,
+  CreateAttemptReviewCommentReplyInput,
+  DeleteAttemptReviewCommentReplyInput,
   SaveAttemptReviewInput,
+  UpdateAttemptReviewCommentReplyInput,
 } from './attempt-review.types';
 
 interface StoredAttemptReview {
@@ -40,6 +44,11 @@ const EMPTY_FEEDBACK: AttemptReviewRichFeedback = {
   html: '',
   updatedAt: null,
   updatedBy: null,
+};
+
+const MOCK_REPLY_AUTHOR = {
+  username: 'mit-teacher',
+  name: 'Текущий преподаватель',
 };
 
 export async function fetchAttemptReview(
@@ -141,6 +150,64 @@ export async function saveAttemptReview(
   }
 
   return fetchAttemptReview(input);
+}
+
+export async function createAttemptReviewCommentReply(
+  input: CreateAttemptReviewCommentReplyInput
+): Promise<AttemptReviewLineCommentReply> {
+  await new Promise((resolve) => setTimeout(resolve, 180));
+
+  const comment = findLineCommentOrThrow(input);
+  const now = new Date().toISOString();
+  const reply: AttemptReviewLineCommentReply = {
+    id: `reply-${input.commentId}-${Date.now()}`,
+    html: input.html,
+    authorName: MOCK_REPLY_AUTHOR.name,
+    authorUsername: MOCK_REPLY_AUTHOR.username,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  comment.replies = [...(comment.replies ?? []), reply];
+
+  return { ...reply };
+}
+
+export async function updateAttemptReviewCommentReply(
+  input: UpdateAttemptReviewCommentReplyInput
+): Promise<AttemptReviewLineCommentReply> {
+  await new Promise((resolve) => setTimeout(resolve, 180));
+
+  const comment = findLineCommentOrThrow(input);
+  const reply = comment.replies?.find((item) => item.id === input.replyId);
+
+  if (!reply) {
+    throw new Error(
+      `Reply ${input.replyId} is not available in mock review data`
+    );
+  }
+
+  reply.html = input.html;
+  reply.updatedAt = new Date().toISOString();
+
+  return { ...reply };
+}
+
+export async function deleteAttemptReviewCommentReply(
+  input: DeleteAttemptReviewCommentReplyInput
+): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 180));
+
+  const comment = findLineCommentOrThrow(input);
+  const replies = comment.replies ?? [];
+
+  if (!replies.some((reply) => reply.id === input.replyId)) {
+    throw new Error(
+      `Reply ${input.replyId} is not available in mock review data`
+    );
+  }
+
+  comment.replies = replies.filter((reply) => reply.id !== input.replyId);
 }
 
 function getReviewSeries(params: AttemptReviewRouteParams): ReviewSeries {
@@ -245,6 +312,24 @@ function findPreviousAttempt(
       .reverse()
       .find((item) => item.attemptNumber < attemptNumber) ?? null
   );
+}
+
+function findLineCommentOrThrow(
+  params: AttemptReviewRouteParams & { commentId: string }
+): AttemptReviewLineComment {
+  const series = getReviewSeries(params);
+  const current = findAttemptOrThrow(series, params.attemptId);
+  const comment = current.lineComments.find(
+    (item) => item.id === params.commentId
+  );
+
+  if (!comment) {
+    throw new Error(
+      `Comment ${params.commentId} is not available in mock review data`
+    );
+  }
+
+  return comment;
 }
 
 function buildChangedFiles(

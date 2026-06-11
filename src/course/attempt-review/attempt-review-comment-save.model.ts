@@ -13,25 +13,6 @@ export function prepareLineCommentsForSave(
     .map((comment) => prepareLineCommentForSave(comment, now));
 }
 
-export function prepareLineCommentsForImmediatePersist(
-  comments: AttemptReviewLineComment[],
-  savedComments: AttemptReviewLineComment[]
-): AttemptReviewLineComment[] {
-  const commentsById = new Map(
-    comments.map((comment) => [comment.id, comment])
-  );
-
-  return savedComments.map((savedComment) => {
-    const comment = commentsById.get(savedComment.id);
-
-    if (comment && (comment.status ?? 'saved') === 'saved') {
-      return prepareLineCommentForSave(comment, comment.updatedAt);
-    }
-
-    return prepareLineCommentForSave(savedComment, savedComment.updatedAt);
-  });
-}
-
 function prepareLineCommentForSave(
   comment: AttemptReviewLineComment,
   fallbackDate: string

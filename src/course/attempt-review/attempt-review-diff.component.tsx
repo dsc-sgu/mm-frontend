@@ -11,13 +11,13 @@ import {
 import type { AttemptReviewLineCommentAnnotation } from './attempt-review-comment-annotation.model';
 import {
   addLineComment,
+  addLineCommentReply,
   cancelLineComment,
   deleteLineComment,
   deleteLineCommentReply,
   editLineComment,
   revertPendingLineComment,
   submitLineComment,
-  submitLineCommentReply,
   updateLineCommentReply,
 } from './attempt-review-line-comment.model';
 import {
@@ -31,6 +31,7 @@ import type {
   AttemptReviewChangedFile,
   AttemptReviewCommentAuthor,
   AttemptReviewLineComment,
+  AttemptReviewLineCommentReply,
   AttemptReviewMode,
 } from './attempt-review.types';
 
@@ -48,9 +49,16 @@ interface AttemptReviewDiffProps {
   scrollHandoffRootRef?: RefObject<HTMLElement | null>;
   onScrollToReview?: () => void;
   onCommentsChange?: (comments: AttemptReviewLineComment[]) => void;
-  onCommentsPersist?: (
-    comments: AttemptReviewLineComment[]
-  ) => void | Promise<void>;
+  onReplySubmit?: (
+    commentId: string,
+    html: string
+  ) => Promise<AttemptReviewLineCommentReply>;
+  onReplyUpdate?: (
+    commentId: string,
+    replyId: string,
+    html: string
+  ) => Promise<AttemptReviewLineCommentReply>;
+  onReplyDelete?: (commentId: string, replyId: string) => Promise<void>;
   onViewerChange?: (
     viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null
   ) => void;
@@ -93,7 +101,9 @@ export function AttemptReviewDiff({
   scrollHandoffRootRef,
   onScrollToReview,
   onCommentsChange,
-  onCommentsPersist,
+  onReplySubmit,
+  onReplyUpdate,
+  onReplyDelete,
   onViewerChange,
 }: AttemptReviewDiffProps) {
   const htmlThemeType = useHtmlThemeType();
@@ -223,36 +233,32 @@ export function AttemptReviewDiff({
   }
 
   async function submitReply(commentId: string, html: string) {
-    if (!currentReviewer) {
+    if (!currentReviewer || !onReplySubmit) {
       return;
     }
 
-    const nextComments = applyComments(
-      submitLineCommentReply({
-        comments,
-        commentId,
-        html,
-        currentReviewer,
-      })
-    );
+    const reply = await onReplySubmit(commentId, html);
 
-    await onCommentsPersist?.(nextComments);
+    applyComments(addLineCommentReply({ comments, commentId, reply }));
   }
 
   async function updateReply(commentId: string, replyId: string, html: string) {
-    const nextComments = applyComments(
-      updateLineCommentReply({ comments, commentId, replyId, html })
-    );
+    if (!onReplyUpdate) {
+      return;
+    }
 
-    await onCommentsPersist?.(nextComments);
+    const reply = await onReplyUpdate(commentId, replyId, html);
+
+    applyComments(updateLineCommentReply({ comments, commentId, reply }));
   }
 
   async function deleteReply(commentId: string, replyId: string) {
-    const nextComments = applyComments(
-      deleteLineCommentReply({ comments, commentId, replyId })
-    );
+    if (!onReplyDelete) {
+      return;
+    }
 
-    await onCommentsPersist?.(nextComments);
+    await onReplyDelete(commentId, replyId);
+    applyComments(deleteLineCommentReply({ comments, commentId, replyId }));
   }
 
   function toggleFileCollapsed(filePath: string) {

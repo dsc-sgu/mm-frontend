@@ -125,3 +125,19 @@ export interface SaveAttemptReviewInput extends AttemptReviewRouteParams {
   overallFeedbackHtml: string;
   lineComments: AttemptReviewLineComment[];
 }
+
+export interface CreateAttemptReviewCommentReplyInput extends AttemptReviewRouteParams {
+  commentId: string;
+  html: string;
+}
+
+export interface UpdateAttemptReviewCommentReplyInput extends AttemptReviewRouteParams {
+  commentId: string;
+  replyId: string;
+  html: string;
+}
+
+export interface DeleteAttemptReviewCommentReplyInput extends AttemptReviewRouteParams {
+  commentId: string;
+  replyId: string;
+}
