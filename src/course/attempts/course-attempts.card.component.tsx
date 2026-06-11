@@ -9,10 +9,7 @@ import {
   scoreDraftChanged,
   scoreDraftValidationError,
 } from '@/course/grading';
-import type {
-  CourseAttempt,
-  CourseAttemptGrade,
-} from './course-attempts.types';
+import type { CourseAttempt, CourseAttemptGrade } from './model/types';
 
 type AttemptCardProps =
   | {

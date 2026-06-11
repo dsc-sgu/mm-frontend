@@ -3,7 +3,7 @@ import { parseDiffFromFile, type FileDiffMetadata } from '@pierre/diffs';
 import {
   findMockCourseAttempt,
   upsertMockCourseAttemptGrade,
-} from '@/course/attempts/course-attempts.api.mock';
+} from '@/course/attempts/api/mock';
 import type {
   AttemptReviewAggregate,
   AttemptReviewChangedFile,

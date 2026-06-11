@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 
-import type { CourseAttempt } from './course-attempts.types';
+import type { CourseAttempt } from './model/types';
 
 const VIRTUAL_ATTEMPT_ESTIMATED_HEIGHT = 220;
 const VIRTUAL_ATTEMPT_OVERSCAN = 6;

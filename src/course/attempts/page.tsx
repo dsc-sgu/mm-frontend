@@ -7,16 +7,16 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/shadcn/components/ui/drawer';
-import { useCourseAttemptsData } from './course-attempts.data.hook';
-import { useCourseAttemptsFilters } from './course-attempts.filters.hook';
+import { useCourseAttemptsData } from './hooks/use-data';
+import { useCourseAttemptsFilters } from './hooks/use-filters';
 import {
   useCourseAttemptsGrading,
   useCourseAttemptsQuickGradingState,
-} from './course-attempts.grading.hook';
-import { useCourseAttemptsQuery } from './course-attempts.queries';
-import { useCourseAttemptsReviewLockSelectionSync } from './course-attempts.review-lock-selection.hook';
-import { isAttemptSelectable } from './course-attempts.selection';
-import { useCourseAttemptsSelection } from './course-attempts.selection.hook';
+} from './hooks/use-grading';
+import { useCourseAttemptsQuery } from './api/queries';
+import { useCourseAttemptsReviewLockSelectionSync } from './hooks/use-review-lock-selection';
+import { isAttemptSelectable } from './model/selection';
+import { useCourseAttemptsSelection } from './hooks/use-selection';
 import { AttemptCard } from './course-attempts.card.component';
 import {
   BottomActionBar,
@@ -29,7 +29,7 @@ import {
   AttemptsFiltersContent,
 } from './course-attempts.sidebar.component';
 import { VirtualizedAttemptsList } from './virtualized-attempts-list.component';
-import type { CourseAttemptsFilters } from './course-attempts.types';
+import type { CourseAttemptsFilters } from './model/types';
 
 type CourseAttemptsPageProps = {
   courseSlug: string;

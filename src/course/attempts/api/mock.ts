@@ -1,7 +1,7 @@
 import {
   applyReviewLockUpdatesToAttempts,
   type CourseAttemptReviewLockUpdate,
-} from './course-attempts.lock-updates';
+} from '../model/lock-updates';
 import type {
   CourseAttempt,
   CourseAttemptStudent,
@@ -9,7 +9,7 @@ import type {
   CourseAttemptsFilters,
   CourseAttemptsListResult,
   SaveQuickGradesInput,
-} from './course-attempts.types';
+} from '../model/types';
 
 const MOCK_TASKS: CourseAttemptTask[] = [
   { id: '1', title: 'Вводное практическое задание', maxScore: 10 },

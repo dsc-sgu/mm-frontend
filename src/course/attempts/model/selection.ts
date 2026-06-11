@@ -1,4 +1,4 @@
-import type { CourseAttempt } from './course-attempts.types';
+import type { CourseAttempt } from './types';
 
 export function isAttemptSelectable(attempt: CourseAttempt): boolean {
   return !attempt.reviewLock;
