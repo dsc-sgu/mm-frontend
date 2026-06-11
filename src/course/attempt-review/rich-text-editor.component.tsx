@@ -19,6 +19,7 @@ interface RichTextEditorProps {
   placeholder?: string;
   minHeightClassName?: string;
   className?: string;
+  autoFocus?: boolean;
   onChange?: (value: string) => void;
   onBlur?: (value: string) => void;
   onFocus?: () => void;
@@ -32,6 +33,7 @@ export function RichTextEditor({
   placeholder = 'Напишите комментарий…',
   minHeightClassName = 'min-h-32',
   className,
+  autoFocus = false,
   onChange,
   onBlur,
   onFocus,
@@ -41,6 +43,7 @@ export function RichTextEditor({
   const onChangeRef = useRef(onChange);
   const onBlurRef = useRef(onBlur);
   const onFocusRef = useRef(onFocus);
+  const hasAutoFocusedRef = useRef(false);
   const onSubmitShortcutRef = useRef(onSubmitShortcut);
   const onCancelShortcutRef = useRef(onCancelShortcut);
 
@@ -119,6 +122,20 @@ export function RichTextEditor({
 
     editor.setEditable(editable);
   }, [editable, editor]);
+
+  useEffect(() => {
+    if (!editor || !editable || !autoFocus || hasAutoFocusedRef.current) {
+      return;
+    }
+
+    hasAutoFocusedRef.current = true;
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      editor.chain().focus('end').run();
+    });
+
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [autoFocus, editable, editor]);
 
   useEffect(() => {
     if (!editor || editor.getHTML() === (value || '')) {
