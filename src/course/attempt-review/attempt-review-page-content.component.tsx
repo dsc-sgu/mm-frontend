@@ -5,13 +5,6 @@ import { PanelLeftOpen, X } from 'lucide-react';
 
 import { SESSION_OPTIONS } from '@/auth/auth.queries';
 import { Button } from '@/shadcn/components/ui/button';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from '@/shadcn/components/ui/drawer';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/use-media-query.hook';
 import { AttemptReviewAttemptSelect } from './attempt-review-attempt-select.component';
@@ -68,6 +61,7 @@ export function AttemptReviewPageContent({
   );
   const pageHeaderRef = useRef<HTMLElement | null>(null);
   const pageRootRef = useRef<HTMLElement | null>(null);
+  const diffSectionRef = useRef<HTMLDivElement | null>(null);
   const diffViewerRef =
     useRef<CodeViewHandle<AttemptReviewLineCommentAnnotation> | null>(null);
   const scrollRequestIdRef = useRef(0);
@@ -170,8 +164,21 @@ export function AttemptReviewPageContent({
       return;
     }
 
+    const scrollRequestId = scrollRequestIdRef.current + 1;
+    scrollRequestIdRef.current = scrollRequestId;
+
     setIsFileTreeDrawerOpen(false);
-    window.requestAnimationFrame(() => scrollToFile(path));
+    waitForAnimationFrames(2, () => {
+      if (scrollRequestIdRef.current !== scrollRequestId) {
+        return;
+      }
+
+      diffSectionRef.current?.scrollIntoView({
+        block: 'start',
+        behavior: 'smooth',
+      });
+      scrollCodeViewToFile(path, scrollRequestId);
+    });
   }
 
   async function persistLineComments(lineComments: AttemptReviewLineComment[]) {
@@ -290,42 +297,47 @@ export function AttemptReviewPageContent({
         </div>
       </header>
 
-      <Drawer
-        direction="left"
-        open={isFileTreeDrawerOpen && !isDesktopReviewLayout}
-        onOpenChange={setIsFileTreeDrawerOpen}
-      >
-        <DrawerContent className="!inset-0 !h-dvh !max-h-none !w-screen !max-w-none !rounded-none !border-0">
-          <div className="flex h-full min-h-0 flex-col bg-card">
-            <DrawerHeader className="flex-row items-start justify-between gap-4 border-b text-left">
-              <div className="min-w-0">
-                <DrawerTitle>Изменённые файлы</DrawerTitle>
-                <DrawerDescription>
-                  Выберите файл, чтобы перейти к его diff.
-                </DrawerDescription>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Закрыть список файлов"
-                onClick={() => setIsFileTreeDrawerOpen(false)}
+      {isFileTreeDrawerOpen && !isDesktopReviewLayout ? (
+        <div
+          className="fixed inset-0 z-50 flex h-dvh min-h-0 flex-col bg-card"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="attempt-review-mobile-file-tree-title"
+        >
+          <div className="flex shrink-0 items-start justify-between gap-4 border-b p-4 text-left">
+            <div className="min-w-0">
+              <h2
+                id="attempt-review-mobile-file-tree-title"
+                className="font-semibold text-foreground"
               >
-                <X className="size-4" />
-              </Button>
-            </DrawerHeader>
-            <div className="min-h-0 flex-1">
-              <AttemptReviewFileTree
-                files={review.changedFiles}
-                comments={draft.lineComments}
-                activeFilePath={activeFilePath}
-                className="h-full border-0"
-                onSelectFile={handleSelectFile}
-              />
+                Изменённые файлы
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Выберите файл, чтобы перейти к его diff.
+              </p>
             </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Закрыть список файлов"
+              onClick={() => setIsFileTreeDrawerOpen(false)}
+            >
+              <X className="size-4" />
+            </Button>
           </div>
-        </DrawerContent>
-      </Drawer>
+          <div className="min-h-0 flex-1 overflow-hidden overscroll-contain">
+            <AttemptReviewFileTree
+              key={`mobile-file-tree-${attemptId}`}
+              files={review.changedFiles}
+              comments={draft.lineComments}
+              activeFilePath={activeFilePath}
+              className="h-full min-h-0 border-0"
+              onSelectFile={handleSelectFile}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <AttemptReviewReviewPanel
         review={review}
@@ -351,6 +363,7 @@ export function AttemptReviewPageContent({
       />
 
       <div
+        ref={diffSectionRef}
         className={cn(
           '-mx-3 grid min-w-0 items-start gap-0 transition-[grid-template-columns] duration-200 sm:-mx-6 lg:-mx-8 lg:sticky lg:top-[var(--attempt-review-sticky-top,4rem)] lg:h-[calc(100dvh_-_var(--attempt-review-sticky-top,4rem))] lg:overflow-hidden',
           isFileTreeCollapsed

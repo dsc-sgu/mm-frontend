@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  type CSSProperties,
+  type MutableRefObject,
+} from 'react';
 import { FileTree, useFileTree } from '@pierre/trees/react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
@@ -43,6 +49,7 @@ export function AttemptReviewFileTree({
   );
   const statsByPathRef = useRef(statsByPath);
   const commentCountByPathRef = useRef(commentCountByPath);
+  const isSyncingSelectionRef = useRef(false);
   const paths = useMemo(() => files.map((file) => file.path), [files]);
   const { model } = useFileTree({
     paths,
@@ -52,7 +59,11 @@ export function AttemptReviewFileTree({
     search: true,
     itemHeight: 30,
     onSelectionChange: (selectedPaths) => {
-      const selected = selectedPaths[0];
+      if (isSyncingSelectionRef.current) {
+        return;
+      }
+
+      const selected = selectedPaths.at(-1);
 
       if (selected) {
         onSelectFile(selected);
@@ -79,6 +90,11 @@ export function AttemptReviewFileTree({
     unsafeCSS: `
       :host { --trees-selected-bg-override: color-mix(in oklch, var(--primary, #111) 12%, transparent); }
       button[data-type='item'] { border-radius: 10px; }
+      [data-file-tree-virtualized-scroll] {
+        touch-action: pan-y;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
       [data-item-section='decoration'] {
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
@@ -117,8 +133,7 @@ export function AttemptReviewFileTree({
       return;
     }
 
-    const item = model.getItem(activeFilePath);
-    item?.select();
+    selectOnlyFileTreePath(model, activeFilePath, isSyncingSelectionRef);
     model.scrollToPath(activeFilePath, { focus: false, offset: 'center' });
   }, [activeFilePath, model, paths]);
 
@@ -185,6 +200,26 @@ export function AttemptReviewFileTree({
   );
 }
 
+function selectOnlyFileTreePath(
+  model: ReturnType<typeof useFileTree>['model'],
+  path: string,
+  isSyncingSelectionRef: MutableRefObject<boolean>
+) {
+  isSyncingSelectionRef.current = true;
+
+  model.getSelectedPaths().forEach((selectedPath) => {
+    if (selectedPath !== path) {
+      model.getItem(selectedPath)?.deselect();
+    }
+  });
+
+  model.getItem(path)?.select();
+
+  window.requestAnimationFrame(() => {
+    isSyncingSelectionRef.current = false;
+  });
+}
+
 function groupCommentCountsByFile(comments: AttemptReviewLineComment[]) {
   const counts = new Map<string, number>();
 
@@ -205,6 +240,7 @@ function groupCommentCountsByFile(comments: AttemptReviewLineComment[]) {
 function getFileTreeStyle(colorScheme: 'light' | 'dark'): CSSProperties {
   return {
     width: '100%',
+    touchAction: 'pan-y',
     colorScheme,
     backgroundColor: 'var(--card)',
     color: 'var(--card-foreground)',
