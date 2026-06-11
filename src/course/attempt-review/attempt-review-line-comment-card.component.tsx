@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
+import { formatAttemptReviewRelativeDateTime } from './attempt-review-date.format';
 import { RichTextContent, RichTextEditor } from './rich-text-editor.component';
 import type {
   AttemptReviewCommentSide,
@@ -79,9 +80,20 @@ export function AttemptReviewLineCommentCard({
     <div className="m-3 rounded-xl border bg-card p-3 font-sans shadow-sm">
       <div className="mb-2 flex flex-wrap items-start justify-between gap-2 text-xs text-muted-foreground">
         <div className="min-w-0">
-          <span className="block truncate font-medium text-foreground">
-            {comment.authorName}
-          </span>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            <span className="truncate font-medium text-foreground">
+              {comment.authorName}
+            </span>
+            {comment.status !== 'draft' ? (
+              <>
+                <span aria-hidden="true">·</span>
+                <CommentTimestamp
+                  createdAt={comment.createdAt}
+                  updatedAt={comment.updatedAt}
+                />
+              </>
+            ) : null}
+          </div>
           <span>{formatCommentRange(comment)}</span>
         </div>
 
@@ -322,10 +334,15 @@ function ReplyItem({
   if (isEditing) {
     return (
       <div className="grid gap-2 border-l-2 border-muted pl-3 text-sm">
-        <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+        <div className="mb-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
           <span className="font-medium text-foreground">
             {reply.authorName}
           </span>
+          <span aria-hidden="true">·</span>
+          <CommentTimestamp
+            createdAt={reply.createdAt}
+            updatedAt={reply.updatedAt}
+          />
         </div>
         <RichTextEditor
           value={draftHtml}
@@ -369,7 +386,16 @@ function ReplyItem({
   return (
     <div className="border-l-2 border-muted pl-3 text-sm">
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">{reply.authorName}</span>
+        <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
+          <span className="font-medium text-foreground">
+            {reply.authorName}
+          </span>
+          <span aria-hidden="true">·</span>
+          <CommentTimestamp
+            createdAt={reply.createdAt}
+            updatedAt={reply.updatedAt}
+          />
+        </div>
         {canManage ? (
           <div className="flex shrink-0 items-center gap-1">
             <Button
@@ -402,6 +428,26 @@ function ReplyItem({
       </div>
       <RichTextContent html={reply.html} />
     </div>
+  );
+}
+
+function CommentTimestamp({
+  createdAt,
+  updatedAt,
+}: {
+  createdAt: string;
+  updatedAt: string;
+}) {
+  const edited = createdAt !== updatedAt;
+  const date = formatAttemptReviewRelativeDateTime(
+    edited ? updatedAt : createdAt
+  );
+
+  return (
+    <span title={date.title}>
+      {date.label}
+      {edited ? ' · изменено' : ''}
+    </span>
   );
 }
 

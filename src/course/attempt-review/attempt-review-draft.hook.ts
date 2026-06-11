@@ -93,6 +93,7 @@ function areLineCommentsEqual(
       comment.html === other.html &&
       comment.authorName === other.authorName &&
       comment.authorUsername === other.authorUsername &&
+      comment.createdAt === other.createdAt &&
       comment.updatedAt === other.updatedAt &&
       areRepliesEqual(comment.replies ?? [], other.replies ?? [])
     );
@@ -116,6 +117,7 @@ function areRepliesEqual(
       reply.html === other.html &&
       reply.authorName === other.authorName &&
       reply.authorUsername === other.authorUsername &&
+      reply.createdAt === other.createdAt &&
       reply.updatedAt === other.updatedAt
     );
   });
