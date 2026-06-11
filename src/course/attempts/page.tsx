@@ -17,18 +17,15 @@ import { useCourseAttemptsQuery } from './api/queries';
 import { useCourseAttemptsReviewLockSelectionSync } from './hooks/use-review-lock-selection';
 import { isAttemptSelectable } from './model/selection';
 import { useCourseAttemptsSelection } from './hooks/use-selection';
-import { AttemptCard } from './course-attempts.card.component';
+import { AttemptCard } from './ui/card';
 import {
   BottomActionBar,
   IdleBottomActions,
   QuickGradingBottomActions,
   SelectionBottomActions,
-} from './course-attempts.bottom-bar.component';
-import {
-  AttemptsFilterSidebar,
-  AttemptsFiltersContent,
-} from './course-attempts.sidebar.component';
-import { VirtualizedAttemptsList } from './virtualized-attempts-list.component';
+} from './ui/bottom-bar';
+import { AttemptsFilterSidebar, AttemptsFiltersContent } from './ui/sidebar';
+import { VirtualizedAttemptsList } from './ui/virtualized-list';
 import type { CourseAttemptsFilters } from './model/types';
 
 type CourseAttemptsPageProps = {
