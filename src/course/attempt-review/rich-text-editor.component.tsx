@@ -72,7 +72,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'attempt-review-editor-content prose prose-sm max-w-none rounded-b-xl px-3 py-3 focus:outline-none dark:prose-invert',
+          'attempt-review-editor-content prose prose-sm max-w-none rounded-b-xl px-3 py-3 font-sans focus:outline-none dark:prose-invert',
           minHeightClassName
         ),
       },
@@ -102,7 +102,7 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        'attempt-review-editor rounded-xl border bg-card',
+        'attempt-review-editor rounded-xl border bg-card font-sans',
         className
       )}
     >
