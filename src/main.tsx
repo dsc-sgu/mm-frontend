@@ -8,6 +8,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 const queryClient = new QueryClient();
 
 declare global {
+  // Global augmentation intentionally uses interface declaration merging.
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {
     __TANSTACK_QUERY_CLIENT__: import('@tanstack/query-core').QueryClient;
   }

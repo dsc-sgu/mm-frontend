@@ -25,6 +25,13 @@ export default defineConfig([
     },
     rules: {
       'prettier/prettier': 'error',
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+    },
+  },
+  {
+    files: ['**/*.d.ts'],
+    rules: {
+      '@typescript-eslint/consistent-type-definitions': 'off',
     },
   },
 ]);
