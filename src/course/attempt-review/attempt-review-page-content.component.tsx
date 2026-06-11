@@ -1,7 +1,9 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { CodeViewHandle } from '@pierre/diffs/react';
+import { useQuery } from '@tanstack/react-query';
 import { PanelLeftOpen, X } from 'lucide-react';
 
+import { SESSION_OPTIONS } from '@/auth/auth.queries';
 import { Button } from '@/shadcn/components/ui/button';
 import {
   Drawer,
@@ -29,6 +31,7 @@ import { useSaveAttemptReviewMutation } from './attempt-review.queries';
 import { AttemptReviewReviewPanel } from './attempt-review-review-panel.component';
 import type {
   AttemptReviewAggregate,
+  AttemptReviewLineComment,
   AttemptReviewMode,
 } from './attempt-review.types';
 
@@ -51,6 +54,7 @@ export function AttemptReviewPageContent({
 }: AttemptReviewPageContentProps) {
   const params = { courseSlug, taskId, studentUsername, attemptId };
   const saveMutation = useSaveAttemptReviewMutation();
+  const { data: sessionData } = useQuery(SESSION_OPTIONS);
   const [activeFilePath, setActiveFilePath] = useState<string | null>(
     review.changedFiles[0]?.path ?? null
   );
@@ -65,6 +69,18 @@ export function AttemptReviewPageContent({
   const scrollRequestIdRef = useRef(0);
   const isDesktopReviewLayout = useMediaQuery('(min-width: 1024px)');
   const isSummaryCompact = true;
+  const currentReviewer = useMemo(() => {
+    if (sessionData?.status !== 'AUTHORIZED') {
+      return undefined;
+    }
+
+    const { username, firstName, lastName, patronymic } = sessionData.session;
+
+    return {
+      username,
+      name: [lastName, firstName, patronymic].filter(Boolean).join(' '),
+    };
+  }, [sessionData]);
   const {
     draft,
     hasChanges,
@@ -287,7 +303,7 @@ export function AttemptReviewPageContent({
             ...params,
             score: draft.score ? Number(draft.score) : null,
             overallFeedbackHtml: draft.overallFeedbackHtml,
-            lineComments: draft.lineComments,
+            lineComments: prepareLineCommentsForSave(draft.lineComments),
           });
           resetToReview(savedReview);
         }}
@@ -316,6 +332,7 @@ export function AttemptReviewPageContent({
           files={review.changedFiles}
           comments={draft.lineComments}
           mode={mode}
+          currentReviewer={currentReviewer}
           viewMode={diffViewMode}
           enableScrollHandoff={isDesktopReviewLayout}
           scrollHandoffRootRef={pageRootRef}
@@ -331,6 +348,26 @@ export function AttemptReviewPageContent({
       </div>
     </main>
   );
+}
+
+function prepareLineCommentsForSave(
+  comments: AttemptReviewLineComment[]
+): AttemptReviewLineComment[] {
+  return comments
+    .filter((comment) => comment.status !== 'draft')
+    .map((comment) => ({
+      id: comment.id,
+      filePath: comment.filePath,
+      side: comment.side,
+      lineNumber: comment.lineNumber,
+      endSide: comment.endSide,
+      endLineNumber: comment.endLineNumber,
+      html: comment.html,
+      authorName: comment.authorName,
+      authorUsername: comment.authorUsername,
+      updatedAt: comment.updatedAt,
+      status: 'saved',
+    }));
 }
 
 const PAGE_BOTTOM_EPSILON = 2;
