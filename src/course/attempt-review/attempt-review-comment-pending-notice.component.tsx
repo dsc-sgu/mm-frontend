@@ -1,8 +1,8 @@
 import type { AttemptReviewLineComment } from './attempt-review.types';
 
-interface AttemptReviewCommentPendingNoticeProps {
+type AttemptReviewCommentPendingNoticeProps = {
   status: AttemptReviewLineComment['status'];
-}
+};
 
 export function AttemptReviewCommentPendingNotice({
   status,

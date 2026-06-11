@@ -6,11 +6,11 @@ import type {
   AttemptReviewLineComment,
 } from './attempt-review.types';
 
-export interface AttemptReviewDraft {
+export type AttemptReviewDraft = {
   score: string;
   overallFeedbackHtml: string;
   lineComments: AttemptReviewLineComment[];
-}
+};
 
 export function useAttemptReviewDraft(review: AttemptReviewAggregate) {
   const [draft, setDraft] = useState<AttemptReviewDraft>(() =>

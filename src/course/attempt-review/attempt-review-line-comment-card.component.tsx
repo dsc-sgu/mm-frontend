@@ -19,7 +19,7 @@ import type {
   AttemptReviewMode,
 } from './attempt-review.types';
 
-interface AttemptReviewLineCommentCardProps {
+type AttemptReviewLineCommentCardProps = {
   comment: AttemptReviewLineComment;
   mode: AttemptReviewMode;
   canDelete: boolean;
@@ -34,7 +34,7 @@ interface AttemptReviewLineCommentCardProps {
   onReplySubmit: (html: string) => void | Promise<void>;
   onReplyUpdate: (replyId: string, html: string) => void | Promise<void>;
   onReplyDelete: (replyId: string) => void | Promise<void>;
-}
+};
 
 export function AttemptReviewLineCommentCard({
   comment,

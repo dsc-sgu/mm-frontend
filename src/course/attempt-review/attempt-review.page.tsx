@@ -35,17 +35,17 @@ import type {
   AttemptReviewMode,
 } from './attempt-review.types';
 
-interface AttemptReviewPageProps {
+type AttemptReviewPageProps = {
   mode: AttemptReviewMode;
   courseSlug: string;
   taskId: string;
   studentUsername: string;
   attemptId: number;
-}
+};
 
-interface AttemptReviewPageLoadedProps extends AttemptReviewPageProps {
+type AttemptReviewPageLoadedProps = {
   review: AttemptReviewAggregate;
-}
+} & AttemptReviewPageProps;
 
 export function AttemptReviewPage(props: AttemptReviewPageProps) {
   const reviewQuery = useAttemptReviewQuery(props);

@@ -4,10 +4,10 @@ import { cn } from '@/shadcn/lib/utils';
 
 export type AttemptReviewDiffViewMode = 'unified' | 'split';
 
-interface AttemptReviewDiffViewToggleProps {
+type AttemptReviewDiffViewToggleProps = {
   value: AttemptReviewDiffViewMode;
   onChange: (value: AttemptReviewDiffViewMode) => void;
-}
+};
 
 export function AttemptReviewDiffViewToggle({
   value,

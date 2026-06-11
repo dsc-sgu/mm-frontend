@@ -13,10 +13,10 @@ import { useMediaQuery } from '@/use-media-query.hook';
 import type { Deadline } from './deadlines-calendar.types';
 import { cn } from '@/shadcn/lib/utils';
 
-interface DeadlineDetailsProps {
+type DeadlineDetailsProps = {
   deadline: Deadline;
   children: ReactNode;
-}
+};
 
 function DeadlineContent({ deadline }: { deadline: Deadline }) {
   const now = new Date();

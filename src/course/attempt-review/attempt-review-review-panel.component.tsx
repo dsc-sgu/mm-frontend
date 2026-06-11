@@ -12,7 +12,7 @@ import type {
   AttemptReviewMode,
 } from './attempt-review.types';
 
-interface AttemptReviewReviewPanelProps {
+type AttemptReviewReviewPanelProps = {
   review: AttemptReviewAggregate;
   draft: AttemptReviewDraft;
   mode: AttemptReviewMode;
@@ -25,7 +25,7 @@ interface AttemptReviewReviewPanelProps {
   onFeedbackChange: (html: string) => void;
   onDiscard: () => void;
   onSave: () => Promise<void>;
-}
+};
 
 export function AttemptReviewReviewPanel({
   review,

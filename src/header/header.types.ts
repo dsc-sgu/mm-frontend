@@ -43,6 +43,8 @@ export type HeaderState = {
 };
 
 declare module '@tanstack/router-core' {
+  // Module augmentation intentionally uses interface declaration merging.
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface StaticDataRouteOption {
     header?: HeaderStaticData;
   }

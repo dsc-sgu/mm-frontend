@@ -1,4 +1,4 @@
-export interface CourseGradeDraftAttempt {
+export type CourseGradeDraftAttempt = {
   id: string;
   task: {
     maxScore: number;
@@ -7,12 +7,12 @@ export interface CourseGradeDraftAttempt {
     score: number;
   } | null;
   reviewLock?: unknown;
-}
+};
 
-export interface QuickGradeUpdate {
+export type QuickGradeUpdate = {
   attemptId: string;
   score: number;
-}
+};
 
 export function scoreValue(attempt: CourseGradeDraftAttempt): string {
   return attempt.grade ? String(attempt.grade.score) : '';

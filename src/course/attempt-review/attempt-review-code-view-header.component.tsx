@@ -6,11 +6,11 @@ import {
 } from './attempt-review-file-status.format';
 import type { AttemptReviewChangedFile } from './attempt-review.types';
 
-interface AttemptReviewCodeViewHeaderProps {
+type AttemptReviewCodeViewHeaderProps = {
   file: AttemptReviewChangedFile;
   collapsed: boolean;
   onToggleCollapsed: () => void;
-}
+};
 
 export function AttemptReviewCodeViewHeader({
   file,

@@ -22,7 +22,7 @@ import type {
   UpdateAttemptReviewCommentReplyInput,
 } from './attempt-review.types';
 
-interface StoredAttemptReview {
+type StoredAttemptReview = {
   attemptNumber: number;
   submittedAt: string;
   deadlineAt: string;
@@ -30,13 +30,13 @@ interface StoredAttemptReview {
   grade: AttemptReviewGrade | null;
   overallFeedback: AttemptReviewRichFeedback;
   lineComments: AttemptReviewLineComment[];
-}
+};
 
-interface ReviewSeries {
+type ReviewSeries = {
   task: AttemptReviewTask;
   student: AttemptReviewStudent;
   attempts: StoredAttemptReview[];
-}
+};
 
 const reviewSeriesByKey = new Map<string, ReviewSeries>();
 

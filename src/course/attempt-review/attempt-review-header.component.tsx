@@ -13,7 +13,7 @@ import type {
   AttemptReviewMode,
 } from './attempt-review.types';
 
-interface AttemptReviewHeaderProps {
+type AttemptReviewHeaderProps = {
   mode: AttemptReviewMode;
   review: AttemptReviewAggregate;
   diffViewMode: AttemptReviewDiffViewMode;
@@ -23,7 +23,7 @@ interface AttemptReviewHeaderProps {
   onDiffViewModeChange: (value: AttemptReviewDiffViewMode) => void;
   onOpenFileTree: () => void;
   onOpenReviewPanel: () => void;
-}
+};
 
 export const AttemptReviewHeader = forwardRef<
   HTMLElement,

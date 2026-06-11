@@ -19,9 +19,9 @@ export function getWeekQueryKey(weekStart: Date): string[] {
   return ['deadlines', weekStart.toISOString()];
 }
 
-interface UseDeadlinesQueryOptions {
+type UseDeadlinesQueryOptions = {
   weekStart: Date;
-}
+};
 
 export function useDeadlinesQuery({ weekStart }: UseDeadlinesQueryOptions) {
   const { start, end } = getWeekBounds(weekStart);
