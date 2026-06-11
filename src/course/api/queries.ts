@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
-import { fetchCourses } from './course.api.mock';
+import { fetchCourses } from '@/course/api/mock';
 
 export const COURSES_QUERY_KEY = ['courses'];
 

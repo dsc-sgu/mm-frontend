@@ -1,4 +1,4 @@
-import { SESSION_OPTIONS } from '@/auth/auth.queries';
+import { SESSION_OPTIONS } from '@/auth/api/queries';
 import { AttemptReviewWorkerPool } from '@/course/attempt-review/providers/worker-pool';
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 

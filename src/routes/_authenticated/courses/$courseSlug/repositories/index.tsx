@@ -1,4 +1,4 @@
-import { requireCourseRole } from '@/course/course.guards';
+import { requireCourseRole } from '@/course/routing/guards';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

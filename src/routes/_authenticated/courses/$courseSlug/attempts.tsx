@@ -4,8 +4,8 @@ import {
   searchFromCourseAttemptsFilters,
   validateCourseAttemptsSearch,
 } from '@/course/attempts/model/filters';
-import { requireCourseRole } from '@/course/course.guards';
-import { createCourseSectionBreadcrumb } from '@/course/course-route.header';
+import { requireCourseRole } from '@/course/routing/guards';
+import { createCourseSectionBreadcrumb } from '@/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useMemo } from 'react';
 import type { CourseAttemptsFilters } from '@/course/attempts/model/types';

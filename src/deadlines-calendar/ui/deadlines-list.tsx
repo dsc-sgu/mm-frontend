@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { cn } from '@/shadcn/lib/utils';
 import { DeadlineDetails } from './deadline-details';
 import type { Deadline } from '@/deadlines-calendar/model/types';
-import type { CourseColor } from '@/course/course.types';
+import type { CourseColor } from '@/course/model/types';
 
 type DeadlinesListProps = {
   deadlines: Deadline[];

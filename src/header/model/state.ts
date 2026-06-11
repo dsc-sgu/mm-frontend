@@ -5,7 +5,7 @@ import type {
   HeaderNavItem,
   HeaderRouteMatch,
   HeaderState,
-} from './header.types';
+} from '@/header/model/navigation';
 
 export function getHeaderState(
   matches: readonly HeaderRouteMatch[]

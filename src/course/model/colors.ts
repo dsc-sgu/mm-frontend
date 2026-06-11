@@ -1,4 +1,4 @@
-import type { CourseColor } from './course.types';
+import type { CourseColor } from '@/course/model/types';
 
 export type CourseColorTheme = {
   base: string;

@@ -1,9 +1,9 @@
-import { MOCK_COURSES } from '@/course/course.api.mock';
+import { MOCK_COURSES } from '@/course/api/mock';
 import type {
   CourseContentBlockItem,
   CoursePage,
 } from '@/course/page/model/types';
-import type { CourseSummary } from '@/course/course.types';
+import type { CourseSummary } from '@/course/model/types';
 
 const COURSE_DESCRIPTIONS: Record<string, string> = {
   'algorithms-and-data-structures':

@@ -1,10 +1,10 @@
-import type { CourseRouteContext } from './course-route.types';
+import type { CourseRouteContext } from '@/course/routing/context';
 import type {
   HeaderBreadcrumbItem,
   HeaderDataContext,
   HeaderDataGetter,
   HeaderNavItem,
-} from '@/header/header.types';
+} from '@/header/model/navigation';
 
 export const getCourseRootBreadcrumb: HeaderDataGetter<
   HeaderBreadcrumbItem[]

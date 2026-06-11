@@ -12,8 +12,8 @@ import {
   CardTitle,
 } from '@/shadcn/components/ui/card';
 import { cn } from '@/shadcn/lib/utils';
-import { useLoginMutation } from '@/auth/auth.queries';
-import { loginSchema, type LoginFormData } from '@/auth/auth.schemas';
+import { useLoginMutation } from '@/auth/api/queries';
+import { loginSchema, type LoginFormData } from '@/auth/model/schema';
 
 export const Route = createFileRoute('/_auth/login')({
   component: RouteComponent,

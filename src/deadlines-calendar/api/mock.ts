@@ -1,4 +1,4 @@
-import type { CourseColor } from '@/course/course.types';
+import type { CourseColor } from '@/course/model/types';
 import type {
   Deadline,
   DeadlinesByDay,

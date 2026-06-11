@@ -1,16 +1,16 @@
-import { SessionScheme } from './auth.schemas';
+import { SessionScheme } from '@/auth/model/schema';
 import type {
   FetchSessionResponse,
   LoginRequest,
   RegisterRequest,
-} from './auth.types';
-import * as mockAuthApi from './auth.api.mock';
+} from '@/auth/model/types';
+import * as mockAuthApi from '@/auth/api/mock';
 import axios from 'axios';
 import * as v from 'valibot';
 
 // TODO: Use VITE_BASE_API_URL env
 
-export type { FetchSessionResponse } from './auth.types';
+export type { FetchSessionResponse } from '@/auth/model/types';
 
 const IS_MOCK_AUTH_ENABLED = import.meta.env.VITE_MOCK_AUTH === 'true';
 

@@ -1,5 +1,5 @@
-import { Header } from '@/header/header.component';
-import { RouterPending } from '@/router-pending.component';
+import { Header } from '@/header/ui/header';
+import { RouterPending } from '@/router-pending';
 import { Toaster } from '@/shadcn/components/ui/sonner';
 import type { QueryClient } from '@tanstack/react-query';
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router';

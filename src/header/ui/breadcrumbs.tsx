@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 
 import { cn } from '@/shadcn/lib/utils';
-import type { HeaderBreadcrumbItem } from './header.types';
+import type { HeaderBreadcrumbItem } from '@/header/model/navigation';
 
 type HeaderBreadcrumbsProps = {
   items: HeaderBreadcrumbItem[];

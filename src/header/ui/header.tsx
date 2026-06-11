@@ -24,11 +24,11 @@ import {
 } from '@/shadcn/components/ui/dropdown-menu';
 import { Link, useMatches } from '@tanstack/react-router';
 import { useQuery, type UseMutateAsyncFunction } from '@tanstack/react-query';
-import { SESSION_OPTIONS, useLogoutMutation } from '@/auth/auth.queries';
-import type { FetchSessionResponse } from '@/auth/auth.api';
-import { HeaderBreadcrumbs } from './header-breadcrumbs.component';
-import { HeaderSectionNav } from './header-section-nav.component';
-import { getHeaderState } from './header.state';
+import { SESSION_OPTIONS, useLogoutMutation } from '@/auth/api/queries';
+import type { FetchSessionResponse } from '@/auth/api/client';
+import { HeaderBreadcrumbs } from '@/header/ui/breadcrumbs';
+import { HeaderSectionNav } from '@/header/ui/section-nav';
+import { getHeaderState } from '@/header/model/state';
 
 export function Header() {
   const matches = useMatches();

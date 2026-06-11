@@ -1,4 +1,4 @@
-import type { CourseColor } from '@/course/course.types';
+import type { CourseColor } from '@/course/model/types';
 
 export type Deadline = {
   id: string;

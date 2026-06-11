@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { cn } from '@/shadcn/lib/utils';
-import type { RichTextNode } from './page/model/types';
+import type { RichTextNode } from '@/course/page/model/types';
 
 type CourseRichTextProps = {
   nodes: RichTextNode[];
