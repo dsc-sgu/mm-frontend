@@ -18,7 +18,6 @@ interface AttemptReviewReviewPanelProps {
   mode: AttemptReviewMode;
   scoreError: string | null;
   hasChanges: boolean;
-  hasCommentChanges: boolean;
   canSave: boolean;
   savePending: boolean;
   className?: string;
@@ -34,7 +33,6 @@ export function AttemptReviewReviewPanel({
   mode,
   scoreError,
   hasChanges,
-  hasCommentChanges,
   canSave,
   savePending,
   className,
@@ -103,11 +101,6 @@ export function AttemptReviewReviewPanel({
 
         {mode === 'editable' ? (
           <div className="grid gap-3 border-t pt-4">
-            {hasCommentChanges ? (
-              <p className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
-                Есть несохранённые изменения в комментариях.
-              </p>
-            ) : null}
             <div className="flex flex-wrap justify-start gap-2">
               <Button
                 type="button"
