@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { CodeViewHandle } from '@pierre/diffs/react';
 import { useQuery } from '@tanstack/react-query';
-import { PanelLeftOpen, X } from 'lucide-react';
+import { MessageSquareText, PanelLeftOpen, X } from 'lucide-react';
 
 import { SESSION_OPTIONS } from '@/auth/auth.queries';
 import { Button } from '@/shadcn/components/ui/button';
@@ -56,6 +56,7 @@ export function AttemptReviewPageContent({
   );
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [isFileTreeDrawerOpen, setIsFileTreeDrawerOpen] = useState(false);
+  const [isReviewPanelOpen, setIsReviewPanelOpen] = useState(false);
   const [diffViewMode, setDiffViewMode] = useState<AttemptReviewDiffViewMode>(
     getStoredDiffViewMode
   );
@@ -204,6 +205,16 @@ export function AttemptReviewPageContent({
     resetToReview(savedReview);
   }
 
+  async function saveReview() {
+    const savedReview = await saveMutation.mutateAsync({
+      ...params,
+      score: draft.score ? Number(draft.score) : null,
+      overallFeedbackHtml: draft.overallFeedbackHtml,
+      lineComments: prepareLineCommentsForSave(draft.lineComments),
+    });
+    resetToReview(savedReview);
+  }
+
   function scrollToReview() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -273,26 +284,51 @@ export function AttemptReviewPageContent({
             </p>
           </div>
 
-          <div className="flex w-full min-w-0 gap-2 lg:w-auto lg:items-center lg:shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 px-2.5 min-[480px]:px-3 lg:hidden"
-              onClick={() => setIsFileTreeDrawerOpen(true)}
-            >
-              <PanelLeftOpen className="size-4" />
-              <span className="hidden min-[480px]:inline">Файлы</span>
-            </Button>
-            <AttemptReviewDiffViewToggle
-              value={diffViewMode}
-              onChange={handleDiffViewModeChange}
-            />
-            <AttemptReviewAttemptSelect
-              review={review}
-              mode={mode}
-              variant="header"
-              className="min-w-0 flex-1 lg:w-[21rem] lg:flex-none lg:shrink-0"
-            />
+          <div className="grid w-full min-w-0 gap-2 lg:flex lg:w-auto lg:items-center lg:shrink-0">
+            <div className="grid grid-cols-2 gap-2 lg:hidden">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 justify-start px-2.5 min-[480px]:px-3"
+                onClick={() => {
+                  setIsReviewPanelOpen(false);
+                  setIsFileTreeDrawerOpen(true);
+                }}
+              >
+                <PanelLeftOpen className="size-4" />
+                Файлы
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="relative h-9 justify-start px-2.5 min-[480px]:px-3"
+                onClick={() => {
+                  setIsFileTreeDrawerOpen(false);
+                  setIsReviewPanelOpen(true);
+                }}
+              >
+                <MessageSquareText className="size-4" />
+                Отзыв
+                {hasChanges ? (
+                  <span
+                    className="absolute top-2 right-2 size-2 rounded-full bg-amber-500"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </Button>
+            </div>
+            <div className="flex min-w-0 gap-2 lg:w-auto lg:items-center lg:shrink-0">
+              <AttemptReviewDiffViewToggle
+                value={diffViewMode}
+                onChange={handleDiffViewModeChange}
+              />
+              <AttemptReviewAttemptSelect
+                review={review}
+                mode={mode}
+                variant="header"
+                className="min-w-0 flex-1 lg:w-[21rem] lg:flex-none lg:shrink-0"
+              />
+            </div>
           </div>
         </div>
       </header>
@@ -339,28 +375,71 @@ export function AttemptReviewPageContent({
         </div>
       ) : null}
 
-      <AttemptReviewReviewPanel
-        review={review}
-        draft={draft}
-        mode={mode}
-        scoreError={scoreError}
-        hasChanges={hasChanges}
-        hasCommentChanges={hasLineCommentChanges}
-        canSave={canSave}
-        savePending={saveMutation.isPending}
-        onScoreChange={setScore}
-        onFeedbackChange={setOverallFeedbackHtml}
-        onDiscard={discard}
-        onSave={async () => {
-          const savedReview = await saveMutation.mutateAsync({
-            ...params,
-            score: draft.score ? Number(draft.score) : null,
-            overallFeedbackHtml: draft.overallFeedbackHtml,
-            lineComments: prepareLineCommentsForSave(draft.lineComments),
-          });
-          resetToReview(savedReview);
-        }}
-      />
+      {isReviewPanelOpen && !isDesktopReviewLayout ? (
+        <div
+          className="fixed inset-0 z-50 flex h-dvh min-h-0 flex-col bg-card"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="attempt-review-mobile-review-title"
+        >
+          <div className="flex shrink-0 items-start justify-between gap-4 border-b p-4 text-left">
+            <div className="min-w-0">
+              <h2
+                id="attempt-review-mobile-review-title"
+                className="font-semibold text-foreground"
+              >
+                Отзыв по попытке
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Оценка, общий отзыв и сохранение изменений.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Закрыть отзыв"
+              onClick={() => setIsReviewPanelOpen(false)}
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <AttemptReviewReviewPanel
+              review={review}
+              draft={draft}
+              mode={mode}
+              scoreError={scoreError}
+              hasChanges={hasChanges}
+              hasCommentChanges={hasLineCommentChanges}
+              canSave={canSave}
+              savePending={saveMutation.isPending}
+              className="mx-0 border-0 sm:mx-0 lg:mx-0"
+              onScoreChange={setScore}
+              onFeedbackChange={setOverallFeedbackHtml}
+              onDiscard={discard}
+              onSave={saveReview}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {isDesktopReviewLayout ? (
+        <AttemptReviewReviewPanel
+          review={review}
+          draft={draft}
+          mode={mode}
+          scoreError={scoreError}
+          hasChanges={hasChanges}
+          hasCommentChanges={hasLineCommentChanges}
+          canSave={canSave}
+          savePending={saveMutation.isPending}
+          onScoreChange={setScore}
+          onFeedbackChange={setOverallFeedbackHtml}
+          onDiscard={discard}
+          onSave={saveReview}
+        />
+      ) : null}
 
       <div
         ref={diffSectionRef}
