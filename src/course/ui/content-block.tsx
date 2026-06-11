@@ -1,14 +1,14 @@
 import { Link } from '@tanstack/react-router';
 import { CalendarDays, Trophy } from 'lucide-react';
 
-import { CodeBlock } from '@/code-block/code-block.component';
+import { CodeBlock } from '@/code-block/ui/block';
 import { cn } from '@/shadcn/lib/utils';
 import type {
   CourseContentBlockItem,
   CourseListBlock,
   RankedContent,
-} from './page/model/types';
-import { CourseRichText } from './course-rich-text.component';
+} from '@/course/page/model/types';
+import { CourseRichText } from '@/course/ui/rich-text';
 
 function sortRankedContent<T extends RankedContent>(items: readonly T[]) {
   return [...items].sort((a, b) => {

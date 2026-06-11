@@ -1,4 +1,4 @@
-import type { Session } from './auth.schemas';
+import type { Session } from '@/auth/model/schema';
 
 export type FetchSessionResponse =
   | { status: 'AUTHORIZED'; session: Session }

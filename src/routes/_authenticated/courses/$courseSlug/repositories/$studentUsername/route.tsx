@@ -1,9 +1,9 @@
-import { ensureValidUsernameOrRedirect } from '@/course/course.validation';
+import { ensureValidUsernameOrRedirect } from '@/course/routing/params';
 import {
   requireCourseParticipant,
   requireKnownCourseStudent,
-} from '@/course/course.guards';
-import { getStudentRepositoryBreadcrumb } from '@/course/course-route.header';
+} from '@/course/routing/guards';
+import { getStudentRepositoryBreadcrumb } from '@/course/routing/header';
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

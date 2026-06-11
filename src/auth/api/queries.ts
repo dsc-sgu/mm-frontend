@@ -3,7 +3,7 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
-import { fetchSession, login, logout, register } from './auth.api';
+import { fetchSession, login, logout, register } from '@/auth/api/client';
 import { useRouter } from '@tanstack/react-router';
 
 export const SESSION_QUERY_KEY = 'session';

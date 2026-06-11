@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 
 import { cn } from '@/shadcn/lib/utils';
-import { CodeBlockCopyBtn } from './code-block-copy-btn.component';
-import { highlightCode } from './code-block.shiki';
-import type { CodeBlockProps } from './code-block.types';
+import { CodeBlockCopyBtn } from '@/code-block/ui/copy-button';
+import { highlightCode } from '@/code-block/model/highlight';
+
+export type CodeBlockProps = {
+  code: string;
+  language?: string;
+  fileName?: string;
+};
 
 const codeBlockClassName = cn(
   'code-block my-4 overflow-hidden rounded-2xl',

@@ -2,8 +2,12 @@ import { Link } from '@tanstack/react-router';
 import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { cn } from '@/shadcn/lib/utils';
-import { COURSE_COLORS } from './course.colors';
-import type { CourseColor, LucideIconName, Teacher } from './course.types';
+import { COURSE_COLORS } from '@/course/model/colors';
+import type {
+  CourseColor,
+  LucideIconName,
+  Teacher,
+} from '@/course/model/types';
 
 export type CourseCardProps = {
   title: string;

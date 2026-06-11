@@ -1,10 +1,10 @@
-import { COURSES_QUERY_OPTIONS } from '@/course/course.queries';
-import { ensureValidCourseSlugOrRedirect } from '@/course/course.validation';
-import { requireCourseParticipant } from '@/course/course.guards';
+import { COURSES_QUERY_OPTIONS } from '@/course/api/queries';
+import { ensureValidCourseSlugOrRedirect } from '@/course/routing/params';
+import { requireCourseParticipant } from '@/course/routing/guards';
 import {
   getCourseNavItems,
   getCourseRootBreadcrumb,
-} from '@/course/course-route.header';
+} from '@/course/routing/header';
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({

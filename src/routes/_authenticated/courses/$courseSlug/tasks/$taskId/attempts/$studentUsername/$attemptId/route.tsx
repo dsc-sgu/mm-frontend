@@ -1,11 +1,11 @@
 import {
   ensurePositiveIntegerOrRedirect,
   ensureValidUsernameOrRedirect,
-} from '@/course/course.validation';
+} from '@/course/routing/params';
 import {
   requireCourseParticipant,
   requireKnownCourseStudent,
-} from '@/course/course.guards';
+} from '@/course/routing/guards';
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

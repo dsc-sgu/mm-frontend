@@ -12,11 +12,11 @@ import {
   CardTitle,
 } from '@/shadcn/components/ui/card';
 import { cn } from '@/shadcn/lib/utils';
-import { useRegisterMutation } from '@/auth/auth.queries';
+import { useRegisterMutation } from '@/auth/api/queries';
 import {
   registrationSchema,
   type RegistrationFormData,
-} from '@/auth/auth.schemas';
+} from '@/auth/model/schema';
 
 export const Route = createFileRoute('/_auth/register')({
   component: RouteComponent,

@@ -1,5 +1,5 @@
-import type { Session } from './auth.schemas';
-import type { FetchSessionResponse } from './auth.types';
+import type { Session } from '@/auth/model/schema';
+import type { FetchSessionResponse } from '@/auth/model/types';
 
 const MOCK_AUTH_STORAGE_KEY = 'mm.mock-auth.authorized';
 

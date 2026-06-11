@@ -2,10 +2,10 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import type { CodeViewHandle } from '@pierre/diffs/react';
 import { useQuery } from '@tanstack/react-query';
 
-import { SESSION_OPTIONS } from '@/auth/auth.queries';
+import { SESSION_OPTIONS } from '@/auth/api/queries';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
-import { useMediaQuery } from '@/use-media-query.hook';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import type { AttemptReviewLineCommentAnnotation } from './model/comment-annotation';
 import { prepareLineCommentsForSave } from './model/comment-save';
 import { AttemptReviewDiff } from './ui/diff';

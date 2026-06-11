@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
 import { cn } from '@/shadcn/lib/utils';
-import type { HeaderNavItem } from './header.types';
+import type { HeaderNavItem } from '@/header/model/navigation';
 
 type HeaderSectionNavProps = {
   items: HeaderNavItem[];

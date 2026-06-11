@@ -1,4 +1,4 @@
-import type { CourseSummary } from './course.types';
+import type { CourseSummary } from '@/course/model/types';
 
 export const MOCK_COURSES: CourseSummary[] = [
   {
