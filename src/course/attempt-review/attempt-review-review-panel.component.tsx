@@ -3,6 +3,7 @@ import { Check, RotateCcw, Save } from 'lucide-react';
 import { CourseScoreField } from '@/course/grading';
 import { Button } from '@/shadcn/components/ui/button';
 import { Spinner } from '@/shadcn/components/ui/spinner';
+import { cn } from '@/shadcn/lib/utils';
 import { formatAttemptReviewDateTime } from './attempt-review-date.format';
 import type { AttemptReviewDraft } from './attempt-review-draft.hook';
 import { RichTextContent, RichTextEditor } from './rich-text-editor.component';
@@ -20,6 +21,7 @@ interface AttemptReviewReviewPanelProps {
   hasCommentChanges: boolean;
   canSave: boolean;
   savePending: boolean;
+  className?: string;
   onScoreChange: (score: string) => void;
   onFeedbackChange: (html: string) => void;
   onDiscard: () => void;
@@ -35,13 +37,19 @@ export function AttemptReviewReviewPanel({
   hasCommentChanges,
   canSave,
   savePending,
+  className,
   onScoreChange,
   onFeedbackChange,
   onDiscard,
   onSave,
 }: AttemptReviewReviewPanelProps) {
   return (
-    <section className="-mx-3 grid gap-0 border-y bg-card sm:-mx-6 lg:-mx-8 xl:grid-cols-[20rem_minmax(0,1fr)]">
+    <section
+      className={cn(
+        '-mx-3 grid gap-0 border-y bg-card sm:-mx-6 lg:-mx-8 xl:grid-cols-[20rem_minmax(0,1fr)]',
+        className
+      )}
+    >
       <div className="grid content-start gap-4 border-b p-3 sm:p-4 xl:border-r xl:border-b-0">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-semibold">Оценка</h2>
