@@ -45,12 +45,12 @@ export function AttemptReviewFileTree({
     () => new Map(files.map((file) => [file.path, file])),
     [files]
   );
-  const commentCountByPath = useMemo(
-    () => groupCommentCountsByFile(comments),
+  const commentStatsByPath = useMemo(
+    () => groupCommentStatsByFile(comments),
     [comments]
   );
   const statsByPathRef = useRef(statsByPath);
-  const commentCountByPathRef = useRef(commentCountByPath);
+  const commentStatsByPathRef = useRef(commentStatsByPath);
   const isSyncingSelectionRef = useRef(false);
   const paths = useMemo(() => files.map((file) => file.path), [files]);
   const { model } = useFileTree({
@@ -78,11 +78,22 @@ export function AttemptReviewFileTree({
         return null;
       }
 
-      const commentCount = commentCountByPathRef.current.get(item.path) ?? 0;
-      const title =
-        commentCount > 0
-          ? `${getAttemptReviewFileStatusLabel(file.status)}: +${file.addedLines}, −${file.deletedLines}. Комментариев: ${commentCount}`
-          : `${getAttemptReviewFileStatusLabel(file.status)}: +${file.addedLines}, −${file.deletedLines}`;
+      const commentStats = commentStatsByPathRef.current.get(item.path);
+      const commentCount = commentStats?.visibleCount ?? 0;
+      const unsavedCommentCount = commentStats?.unsavedCount ?? 0;
+      const titleParts = [
+        `${getAttemptReviewFileStatusLabel(file.status)}: +${file.addedLines}, −${file.deletedLines}`,
+      ];
+
+      if (commentCount > 0) {
+        titleParts.push(`Комментариев: ${commentCount}`);
+      }
+
+      if (unsavedCommentCount > 0) {
+        titleParts.push(`Несохранённых комментариев: ${unsavedCommentCount}`);
+      }
+
+      const title = titleParts.join('. ');
 
       return {
         text: `${getAttemptReviewFileStatusShortGlyph(file.status)} +${file.addedLines}/−${file.deletedLines}`,
@@ -101,12 +112,14 @@ export function AttemptReviewFileTree({
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
       }
-      [data-item-section='decoration'] > span[title*='Комментариев'] {
+      [data-item-section='decoration'] > span[title*='Комментариев'],
+      [data-item-section='decoration'] > span[title*='Несохранённых'] {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
       }
-      [data-item-section='decoration'] > span[title*='Комментариев']::before {
+      [data-item-section='decoration'] > span[title*='Комментариев']::before,
+      [data-item-section='decoration'] > span[title*='Несохранённых']::before {
         content: '';
         width: 0.875rem;
         height: 0.875rem;
@@ -114,17 +127,23 @@ export function AttemptReviewFileTree({
         background: var(--primary);
         mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
       }
+      [data-item-section='decoration'] > span[title*='Несохранённых']::before {
+        background: #f59e0b;
+      }
+      :host-context(.dark) [data-item-section='decoration'] > span[title*='Несохранённых']::before {
+        background: #fbbf24;
+      }
     `,
   });
 
   useEffect(() => {
     statsByPathRef.current = statsByPath;
-    commentCountByPathRef.current = commentCountByPath;
+    commentStatsByPathRef.current = commentStatsByPath;
 
     if (model.getFileTreeContainer()) {
       model.render({});
     }
-  }, [commentCountByPath, model, statsByPath]);
+  }, [commentStatsByPath, model, statsByPath]);
 
   useEffect(() => {
     model.resetPaths(paths);
@@ -224,21 +243,33 @@ function selectOnlyFileTreePath(
   });
 }
 
-function groupCommentCountsByFile(comments: AttemptReviewLineComment[]) {
-  const counts = new Map<string, number>();
+interface FileCommentStats {
+  visibleCount: number;
+  unsavedCount: number;
+}
+
+function groupCommentStatsByFile(comments: AttemptReviewLineComment[]) {
+  const stats = new Map<string, FileCommentStats>();
 
   comments.forEach((comment) => {
-    if (comment.status === 'draft' || comment.status === 'pending-delete') {
-      return;
+    const current = stats.get(comment.filePath) ?? {
+      visibleCount: 0,
+      unsavedCount: 0,
+    };
+    const status = comment.status ?? 'saved';
+
+    if (status !== 'draft' && status !== 'pending-delete') {
+      current.visibleCount += 1 + (comment.replies?.length ?? 0);
     }
 
-    counts.set(
-      comment.filePath,
-      (counts.get(comment.filePath) ?? 0) + 1 + (comment.replies?.length ?? 0)
-    );
+    if (status !== 'saved') {
+      current.unsavedCount += 1;
+    }
+
+    stats.set(comment.filePath, current);
   });
 
-  return counts;
+  return stats;
 }
 
 function getFileTreeStyle(colorScheme: 'light' | 'dark'): CSSProperties {
