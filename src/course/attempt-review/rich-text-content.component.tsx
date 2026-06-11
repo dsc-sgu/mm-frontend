@@ -19,7 +19,7 @@ export function RichTextContent({
   return (
     <div
       className={cn(
-        'attempt-review-editor-readonly prose prose-sm max-w-none dark:prose-invert',
+        'attempt-review-editor-readonly prose prose-sm max-w-none font-sans dark:prose-invert',
         className
       )}
       dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(html) }}

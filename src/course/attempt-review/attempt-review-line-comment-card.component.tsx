@@ -46,7 +46,7 @@ export function AttemptReviewLineCommentCard({
   useEffect(() => () => commitDraft(draftHtmlRef.current), [commitDraft]);
 
   return (
-    <div className="m-3">
+    <div className="m-3 font-sans">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
         <span className="font-medium text-foreground">
           {comment.authorName}
