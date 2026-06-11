@@ -119,12 +119,14 @@ export async function saveAttemptReview(
     html: comment.html,
     authorName: comment.authorName || gradedBy,
     authorUsername: comment.authorUsername || 'mit-teacher',
+    createdAt: comment.createdAt || comment.updatedAt || now,
     updatedAt: comment.updatedAt || now,
     replies: comment.replies?.map((reply) => ({
       id: reply.id,
       html: reply.html,
       authorName: reply.authorName || gradedBy,
       authorUsername: reply.authorUsername || 'mit-teacher',
+      createdAt: reply.createdAt || reply.updatedAt || now,
       updatedAt: reply.updatedAt || now,
     })),
   }));
@@ -509,6 +511,7 @@ function buildComments(attemptNumber: number): AttemptReviewLineComment[] {
         html: '<p>Проверка пустого массива нужна, но после неё стоит добавить тест на этот случай.</p>',
         authorName: 'Елизавета Громова',
         authorUsername: 'egromova',
+        createdAt: '2026-05-22T10:20:00.000Z',
         updatedAt: '2026-05-22T10:20:00.000Z',
         replies: [
           {
@@ -516,6 +519,7 @@ function buildComments(attemptNumber: number): AttemptReviewLineComment[] {
             html: '<p>Согласен, добавлю тест отдельным коммитом.</p>',
             authorName: 'Иван Петров',
             authorUsername: 'student1',
+            createdAt: '2026-05-22T11:05:00.000Z',
             updatedAt: '2026-05-22T11:05:00.000Z',
           },
         ],
@@ -532,6 +536,7 @@ function buildComments(attemptNumber: number): AttemptReviewLineComment[] {
       html: '<p>Классно, что отрицательные значения обработаны. Зафиксируйте это в тестах.</p>',
       authorName: 'Елизавета Громова',
       authorUsername: 'egromova',
+      createdAt: '2026-05-24T11:15:00.000Z',
       updatedAt: '2026-05-24T11:15:00.000Z',
     },
     {
@@ -542,6 +547,7 @@ function buildComments(attemptNumber: number): AttemptReviewLineComment[] {
       html: '<p>Компонент маленький и понятный. Можно добавить ссылку на <a href="/docs/components">гайд по компонентам</a>.</p>',
       authorName: 'Елизавета Громова',
       authorUsername: 'egromova',
+      createdAt: '2026-05-24T11:18:00.000Z',
       updatedAt: '2026-05-24T11:18:00.000Z',
     },
   ];

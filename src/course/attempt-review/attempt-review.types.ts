@@ -67,6 +67,7 @@ export interface AttemptReviewLineCommentReply {
   html: string;
   authorName: string;
   authorUsername: string;
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -80,6 +81,7 @@ export interface AttemptReviewLineComment {
   html: string;
   authorName: string;
   authorUsername: string;
+  createdAt: string;
   updatedAt: string;
   status?: AttemptReviewLineCommentStatus;
   isEditing?: boolean;

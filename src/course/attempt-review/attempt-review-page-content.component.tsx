@@ -387,6 +387,7 @@ function prepareLineCommentsForSave(
       html: comment.html,
       authorName: comment.authorName,
       authorUsername: comment.authorUsername,
+      createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
       status: 'saved',
       replies: comment.replies?.map((reply) => ({
@@ -394,6 +395,7 @@ function prepareLineCommentsForSave(
         html: reply.html,
         authorName: reply.authorName,
         authorUsername: reply.authorUsername,
+        createdAt: reply.createdAt,
         updatedAt: reply.updatedAt,
       })),
     }));

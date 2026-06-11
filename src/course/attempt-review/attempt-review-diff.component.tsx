@@ -206,12 +206,15 @@ export function AttemptReviewDiff({
   }
 
   function submitComment(commentId: string, html: string) {
+    const now = new Date().toISOString();
+
     updateComment(commentId, (comment) => ({
       ...comment,
       html,
       status: 'saved',
       isEditing: false,
-      updatedAt: new Date().toISOString(),
+      createdAt: comment.status === 'draft' ? now : comment.createdAt,
+      updatedAt: now,
     }));
     clearSelectedLines();
   }
@@ -250,10 +253,10 @@ export function AttemptReviewDiff({
           html,
           authorName: currentReviewer.name,
           authorUsername: currentReviewer.username,
+          createdAt: now,
           updatedAt: now,
         },
       ],
-      updatedAt: now,
     }));
 
     await onCommentsPersist?.(nextComments);
@@ -266,18 +269,15 @@ export function AttemptReviewDiff({
       replies: (comment.replies ?? []).map((reply) =>
         reply.id === replyId ? { ...reply, html, updatedAt: now } : reply
       ),
-      updatedAt: now,
     }));
 
     await onCommentsPersist?.(nextComments);
   }
 
   async function deleteReply(commentId: string, replyId: string) {
-    const now = new Date().toISOString();
     const nextComments = updateComment(commentId, (comment) => ({
       ...comment,
       replies: (comment.replies ?? []).filter((reply) => reply.id !== replyId),
-      updatedAt: now,
     }));
 
     await onCommentsPersist?.(nextComments);
@@ -438,6 +438,8 @@ function buildItemVersion(
         endLineNumber: comment.endLineNumber,
         html: comment.html,
         authorUsername: comment.authorUsername,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
         status: comment.status,
         isEditing: comment.isEditing,
         replies: comment.replies,
@@ -511,6 +513,7 @@ function createDraftLineComment({
   const endSide = range.endSide ?? side;
   const lineNumber = range.start;
   const endLineNumber = range.end;
+  const now = new Date().toISOString();
 
   return {
     id: `draft-${filePath}-${side}-${lineNumber}-${endSide}-${endLineNumber}-${Date.now()}`,
@@ -523,7 +526,8 @@ function createDraftLineComment({
     html: '<p></p>',
     authorName: currentReviewer.name,
     authorUsername: currentReviewer.username,
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
     status: 'draft',
   };
 }
