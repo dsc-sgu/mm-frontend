@@ -1,10 +1,10 @@
 import type { CodeViewItem } from '@pierre/diffs';
 
-import type { AttemptReviewLineCommentAnnotation } from './attempt-review-comment-annotation.model';
+import type { AttemptReviewLineCommentAnnotation } from './comment-annotation';
 import type {
   AttemptReviewChangedFile,
   AttemptReviewLineComment,
-} from './attempt-review.types';
+} from './types';
 
 export function createAttemptReviewCodeViewItems({
   files,

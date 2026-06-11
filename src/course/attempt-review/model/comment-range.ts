@@ -1,7 +1,7 @@
 import type {
   AttemptReviewCommentSide,
   AttemptReviewLineComment,
-} from './attempt-review.types';
+} from './types';
 
 export function formatAttemptReviewCommentRange(
   comment: AttemptReviewLineComment

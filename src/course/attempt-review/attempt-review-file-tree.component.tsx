@@ -12,12 +12,12 @@ import { cn } from '@/shadcn/lib/utils';
 import {
   getAttemptReviewFileStatusLabel,
   getAttemptReviewFileStatusShortGlyph,
-} from './attempt-review-file-status.format';
-import { useHtmlThemeType } from './attempt-review-theme';
+} from './model/file-status';
+import { useHtmlThemeType } from './hooks/use-html-theme';
 import type {
   AttemptReviewChangedFile,
   AttemptReviewLineComment,
-} from './attempt-review.types';
+} from './model/types';
 
 type AttemptReviewFileTreeProps = {
   files: AttemptReviewChangedFile[];

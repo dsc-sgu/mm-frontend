@@ -1,4 +1,4 @@
-import { formatAttemptReviewRelativeDateTime } from './attempt-review-date.format';
+import { formatAttemptReviewRelativeDateTime } from './model/date-format';
 
 type AttemptReviewCommentTimestampProps = {
   createdAt: string;

@@ -9,7 +9,7 @@ import { cn } from '@/shadcn/lib/utils';
 import {
   isAttemptReviewCancelShortcutEvent,
   isAttemptReviewSubmitShortcutEvent,
-} from './attempt-review-keyboard-shortcut.model';
+} from './model/keyboard-shortcuts';
 import { RichTextContent } from './rich-text-content.component';
 import { RichTextEditorToolbar } from './rich-text-editor-toolbar.component';
 

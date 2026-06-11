@@ -6,19 +6,18 @@ import { SESSION_OPTIONS } from '@/auth/auth.queries';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/use-media-query.hook';
-import type { AttemptReviewLineCommentAnnotation } from './attempt-review-comment-annotation.model';
-import { prepareLineCommentsForSave } from './attempt-review-comment-save.model';
+import type { AttemptReviewLineCommentAnnotation } from './model/comment-annotation';
+import { prepareLineCommentsForSave } from './model/comment-save';
 import { AttemptReviewDiff } from './attempt-review-diff.component';
-import type { AttemptReviewDiffViewMode } from './attempt-review-diff-view-toggle.component';
 import {
   getStoredDiffViewMode,
   saveDiffViewMode,
-} from './attempt-review-diff-view-mode.storage';
-import { useAttemptReviewDraft } from './attempt-review-draft.hook';
-import { useAttemptReviewFileScroll } from './attempt-review-file-scroll.hook';
+} from './model/diff-view-mode-storage';
+import { useAttemptReviewDraft } from './model/draft';
+import { useAttemptReviewFileScroll } from './hooks/use-file-scroll';
 import { AttemptReviewFileTree } from './attempt-review-file-tree.component';
 import { AttemptReviewHeader } from './attempt-review-header.component';
-import { useAttemptReviewStickyOffset } from './attempt-review-layout.hook';
+import { useAttemptReviewStickyOffset } from './hooks/use-sticky-offset';
 import { AttemptReviewMobileDrawer } from './attempt-review-mobile-drawer.component';
 import { AttemptReviewReviewPanel } from './attempt-review-review-panel.component';
 import {
@@ -27,13 +26,14 @@ import {
   useDeleteAttemptReviewCommentReplyMutation,
   useSaveAttemptReviewMutation,
   useUpdateAttemptReviewCommentReplyMutation,
-} from './attempt-review.queries';
+} from './api/queries';
 import { useAttemptReviewWorkerPoolReady } from './attempt-review-worker-pool.hook';
 import type {
   AttemptReviewAggregate,
+  AttemptReviewDiffViewMode,
   AttemptReviewLineCommentReply,
   AttemptReviewMode,
-} from './attempt-review.types';
+} from './model/types';
 
 type AttemptReviewPageProps = {
   mode: AttemptReviewMode;

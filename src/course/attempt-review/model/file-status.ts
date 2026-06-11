@@ -1,4 +1,4 @@
-import type { AttemptReviewFileStatus } from './attempt-review.types';
+import type { AttemptReviewFileStatus } from './types';
 
 export function getAttemptReviewFileStatusIconClassName(
   status: AttemptReviewFileStatus

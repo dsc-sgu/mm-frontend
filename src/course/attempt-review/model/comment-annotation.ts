@@ -1,4 +1,4 @@
-import type { AttemptReviewLineComment } from './attempt-review.types';
+import type { AttemptReviewLineComment } from './types';
 
 export type AttemptReviewLineCommentAnnotation = {
   comment: AttemptReviewLineComment;
