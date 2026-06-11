@@ -24,8 +24,8 @@ import {
 } from '@/shadcn/components/ui/dropdown-menu';
 import { Link, useMatches } from '@tanstack/react-router';
 import { useQuery, type UseMutateAsyncFunction } from '@tanstack/react-query';
-import { SESSION_OPTIONS, useLogoutMutation } from '../auth/auth.queries';
-import type { FetchSessionResponse } from '../auth/auth.api';
+import { SESSION_OPTIONS, useLogoutMutation } from '@/auth/auth.queries';
+import type { FetchSessionResponse } from '@/auth/auth.api';
 import { HeaderBreadcrumbs } from './header-breadcrumbs.component';
 import { HeaderSectionNav } from './header-section-nav.component';
 import { getHeaderState } from './header.state';

@@ -1,7 +1,7 @@
 import { useCallback, useRef, type RefObject } from 'react';
 import type { CodeViewHandle } from '@pierre/diffs/react';
 
-import type { AttemptReviewLineCommentAnnotation } from '../model/comment-annotation';
+import type { AttemptReviewLineCommentAnnotation } from '@/course/attempt-review/model/comment-annotation';
 
 type AttemptReviewFileScrollOptions = {
   diffSectionRef: RefObject<HTMLDivElement | null>;

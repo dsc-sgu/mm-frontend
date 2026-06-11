@@ -7,8 +7,8 @@ import { AttemptReviewCodeViewHeader } from './code-view-header';
 import {
   createAttemptReviewCodeViewItems,
   groupAttemptReviewCommentsByFile,
-} from '../model/code-view-item';
-import type { AttemptReviewLineCommentAnnotation } from '../model/comment-annotation';
+} from '@/course/attempt-review/model/code-view-item';
+import type { AttemptReviewLineCommentAnnotation } from '@/course/attempt-review/model/comment-annotation';
 import {
   addLineComment,
   addLineCommentReply,
@@ -19,13 +19,13 @@ import {
   revertPendingLineComment,
   submitLineComment,
   updateLineCommentReply,
-} from '../model/line-comment';
+} from '@/course/attempt-review/model/line-comment';
 import {
   canManageLineComment,
   canReplyToLineComment,
-} from '../model/comment-permissions';
-import { useAttemptReviewScrollHandoff } from '../hooks/use-scroll-handoff';
-import { useHtmlThemeType } from '../hooks/use-html-theme';
+} from '@/course/attempt-review/model/comment-permissions';
+import { useAttemptReviewScrollHandoff } from '@/course/attempt-review/hooks/use-scroll-handoff';
+import { useHtmlThemeType } from '@/course/attempt-review/hooks/use-html-theme';
 import { AttemptReviewLineCommentCard } from './comments/line-card';
 import type {
   AttemptReviewChangedFile,
@@ -33,7 +33,7 @@ import type {
   AttemptReviewLineComment,
   AttemptReviewLineCommentReply,
   AttemptReviewMode,
-} from '../model/types';
+} from '@/course/attempt-review/model/types';
 
 type AttemptReviewDiffProps = {
   files: AttemptReviewChangedFile[];

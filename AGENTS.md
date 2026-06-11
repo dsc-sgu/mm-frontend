@@ -83,6 +83,30 @@ feature/
 
 Small features may keep a flatter structure until the number of files makes navigation harder.
 
+### Imports
+
+Use the `@/` alias for imports that leave the current directory.
+
+Prefer:
+
+```ts
+import { CourseScoreField } from '@/course/grading';
+import type { Deadline } from '@/deadlines-calendar/model/types';
+```
+
+Avoid parent-relative imports:
+
+```ts
+import { CourseScoreField } from '../../grading';
+import type { Deadline } from '../model/types';
+```
+
+Same-directory imports are allowed:
+
+```ts
+import { DayCell } from './day-cell';
+```
+
 ### Types
 
 Use `type` by default.

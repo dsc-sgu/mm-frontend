@@ -20,7 +20,7 @@ import type {
   DeleteAttemptReviewCommentReplyInput,
   SaveAttemptReviewInput,
   UpdateAttemptReviewCommentReplyInput,
-} from '../model/types';
+} from '@/course/attempt-review/model/types';
 
 type StoredAttemptReview = {
   attemptNumber: number;

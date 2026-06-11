@@ -3,8 +3,8 @@ import type { Set as ImmutableSetType } from 'immutable';
 import { toast } from 'sonner';
 
 import { useCourseAttemptReviewLockUpdates } from './use-lock-updates';
-import type { CourseAttemptReviewLockUpdate } from '../model/lock-updates';
-import type { CourseAttempt } from '../model/types';
+import type { CourseAttemptReviewLockUpdate } from '@/course/attempts/model/lock-updates';
+import type { CourseAttempt } from '@/course/attempts/model/types';
 
 export function useCourseAttemptsReviewLockSelectionSync({
   courseSlug,

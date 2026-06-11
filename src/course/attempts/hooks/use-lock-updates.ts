@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { createMockReviewLockUpdates } from '../api/mock';
-import { COURSE_ATTEMPTS_QUERY_KEY } from '../api/queries';
+import { createMockReviewLockUpdates } from '@/course/attempts/api/mock';
+import { COURSE_ATTEMPTS_QUERY_KEY } from '@/course/attempts/api/queries';
 import {
   applyReviewLockUpdatesToAttempts,
   type CourseAttemptReviewLockUpdate,
-} from '../model/lock-updates';
-import type { CourseAttemptsListResult } from '../model/types';
+} from '@/course/attempts/model/lock-updates';
+import type { CourseAttemptsListResult } from '@/course/attempts/model/types';
 
 const MOCK_REVIEW_LOCK_UPDATE_INTERVAL = 4_500;
 

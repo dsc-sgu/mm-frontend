@@ -5,7 +5,7 @@ import type {
   CourseAttemptsListResult,
   CourseAttemptStudent,
   CourseAttemptTask,
-} from '../model/types';
+} from '@/course/attempts/model/types';
 
 const EMPTY_ATTEMPTS: CourseAttempt[] = [];
 const EMPTY_TASKS: CourseAttemptTask[] = [];

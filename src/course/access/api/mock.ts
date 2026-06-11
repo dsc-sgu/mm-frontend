@@ -1,4 +1,4 @@
-import type { CourseAccessResult } from '../model/types';
+import type { CourseAccessResult } from '@/course/access/model/types';
 
 type MockCourseAccess = {
   teachers: string[];

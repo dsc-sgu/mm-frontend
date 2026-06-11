@@ -14,12 +14,12 @@ import { cn } from '@/shadcn/lib/utils';
 import {
   areCourseAttemptsFiltersEqual,
   EMPTY_COURSE_ATTEMPTS_FILTERS,
-} from '../model/filters';
+} from '@/course/attempts/model/filters';
 import type {
   CourseAttempt,
   CourseAttemptGradedFilter,
   CourseAttemptsFilters,
-} from '../model/types';
+} from '@/course/attempts/model/types';
 
 const GRADED_FILTER_OPTIONS: Array<{
   value: CourseAttemptGradedFilter;

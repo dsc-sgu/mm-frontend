@@ -6,11 +6,14 @@ import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import {
   getAttemptReviewCancelShortcutKeys,
   getAttemptReviewSubmitShortcutKeys,
-} from '../../model/keyboard-shortcuts';
-import { RichTextContent, RichTextEditor } from '../rich-text/editor';
-import { isRichTextHtmlEmpty } from '../rich-text/empty';
+} from '@/course/attempt-review/model/keyboard-shortcuts';
+import {
+  RichTextContent,
+  RichTextEditor,
+} from '@/course/attempt-review/ui/rich-text/editor';
+import { isRichTextHtmlEmpty } from '@/course/attempt-review/ui/rich-text/empty';
 import { AttemptReviewCommentTimestamp } from './timestamp';
-import type { AttemptReviewLineCommentReply } from '../../model/types';
+import type { AttemptReviewLineCommentReply } from '@/course/attempt-review/model/types';
 
 type AttemptReviewCommentReplyItemProps = {
   reply: AttemptReviewLineCommentReply;
