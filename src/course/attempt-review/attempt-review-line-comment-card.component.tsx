@@ -2,8 +2,13 @@ import { useEffect, useState } from 'react';
 import { Check, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
+import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import { cn } from '@/shadcn/lib/utils';
 import { formatAttemptReviewCommentRange } from './attempt-review-comment-range.format';
+import {
+  getAttemptReviewCancelShortcutKeys,
+  getAttemptReviewSubmitShortcutKeys,
+} from './attempt-review-keyboard-shortcut.model';
 import { AttemptReviewCommentPendingNotice } from './attempt-review-comment-pending-notice.component';
 import { AttemptReviewCommentReplies } from './attempt-review-comment-replies.component';
 import { AttemptReviewCommentTimestamp } from './attempt-review-comment-timestamp.component';
@@ -63,6 +68,8 @@ export function AttemptReviewLineCommentCard({
   const isSubmitDisabled = isRichTextHtmlEmpty(draftHtml);
   const isReplySubmitDisabled =
     isReplySubmitting || isRichTextHtmlEmpty(replyHtml);
+  const submitShortcutKeys = getAttemptReviewSubmitShortcutKeys();
+  const cancelShortcutKeys = getAttemptReviewCancelShortcutKeys();
 
   useEffect(() => {
     if (!isEditableComment) {
@@ -169,6 +176,12 @@ export function AttemptReviewLineCommentCard({
             minHeightClassName="min-h-20"
             placeholder="Комментарий к строке…"
             onChange={setDraftHtml}
+            onSubmitShortcut={() => {
+              if (!isSubmitDisabled) {
+                onSubmit(draftHtml);
+              }
+            }}
+            onCancelShortcut={onCancel}
           />
           <div className="flex flex-wrap justify-start gap-2">
             <Button
@@ -180,6 +193,11 @@ export function AttemptReviewLineCommentCard({
             >
               <Check className="size-4" />
               Отправить
+              <KbdGroup className="ml-1 hidden sm:inline-flex">
+                {submitShortcutKeys.map((key) => (
+                  <Kbd key={key}>{key}</Kbd>
+                ))}
+              </KbdGroup>
             </Button>
             <Button
               type="button"
@@ -194,6 +212,11 @@ export function AttemptReviewLineCommentCard({
                 <RotateCcw className="size-4" />
               )}
               Отмена
+              <KbdGroup className="ml-1 hidden sm:inline-flex">
+                {cancelShortcutKeys.map((key) => (
+                  <Kbd key={key}>{key}</Kbd>
+                ))}
+              </KbdGroup>
             </Button>
           </div>
         </div>

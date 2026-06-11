@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react';
 import { Check, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
+import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
+import {
+  getAttemptReviewCancelShortcutKeys,
+  getAttemptReviewSubmitShortcutKeys,
+} from './attempt-review-keyboard-shortcut.model';
 import { RichTextContent, RichTextEditor } from './rich-text-editor.component';
 import { isRichTextHtmlEmpty } from './rich-text-empty.model';
 import { AttemptReviewCommentTimestamp } from './attempt-review-comment-timestamp.component';
@@ -24,6 +29,8 @@ export function AttemptReviewCommentReplyItem({
   const [draftHtml, setDraftHtml] = useState(reply.html);
   const [isPending, setIsPending] = useState(false);
   const isSubmitDisabled = isPending || isRichTextHtmlEmpty(draftHtml);
+  const submitShortcutKeys = getAttemptReviewSubmitShortcutKeys();
+  const cancelShortcutKeys = getAttemptReviewCancelShortcutKeys();
 
   useEffect(() => {
     if (!isEditing) {
@@ -44,6 +51,15 @@ export function AttemptReviewCommentReplyItem({
     } finally {
       setIsPending(false);
     }
+  }
+
+  function cancelEdit() {
+    if (isPending) {
+      return;
+    }
+
+    setDraftHtml(reply.html);
+    setIsEditing(false);
   }
 
   async function deleteReply() {
@@ -75,6 +91,10 @@ export function AttemptReviewCommentReplyItem({
           minHeightClassName="min-h-16"
           placeholder="Ответить на комментарий…"
           onChange={setDraftHtml}
+          onSubmitShortcut={() => {
+            void submitEdit();
+          }}
+          onCancelShortcut={cancelEdit}
         />
         <div className="flex flex-wrap justify-start gap-2">
           <Button
@@ -88,6 +108,11 @@ export function AttemptReviewCommentReplyItem({
           >
             <Check className="size-4" />
             Сохранить
+            <KbdGroup className="ml-1 hidden sm:inline-flex">
+              {submitShortcutKeys.map((key) => (
+                <Kbd key={key}>{key}</Kbd>
+              ))}
+            </KbdGroup>
           </Button>
           <Button
             type="button"
@@ -95,13 +120,15 @@ export function AttemptReviewCommentReplyItem({
             size="sm"
             className="rounded-xl"
             disabled={isPending}
-            onClick={() => {
-              setDraftHtml(reply.html);
-              setIsEditing(false);
-            }}
+            onClick={cancelEdit}
           >
             <RotateCcw className="size-4" />
             Отмена
+            <KbdGroup className="ml-1 hidden sm:inline-flex">
+              {cancelShortcutKeys.map((key) => (
+                <Kbd key={key}>{key}</Kbd>
+              ))}
+            </KbdGroup>
           </Button>
         </div>
       </div>
