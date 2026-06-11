@@ -50,7 +50,6 @@ export async function fetchAttemptReview(
   const series = getReviewSeries(params);
   const current = findAttemptOrThrow(series, params.attemptId);
   const previous = findPreviousAttempt(series, params.attemptId);
-  const next = findNextAttempt(series, params.attemptId);
   const changedFiles = buildChangedFiles(previous?.files ?? {}, current.files);
 
   return {
@@ -65,8 +64,6 @@ export async function fetchAttemptReview(
       deadlineAt: current.deadlineAt,
       grade: current.grade,
     },
-    previousAttempt: previous ? toHistoryItem(series, previous) : null,
-    nextAttempt: next ? toHistoryItem(series, next) : null,
     attempts: series.attempts
       .map((attempt) => toHistoryItem(series, attempt))
       .reverse(),
@@ -247,15 +244,6 @@ function findPreviousAttempt(
     [...series.attempts]
       .reverse()
       .find((item) => item.attemptNumber < attemptNumber) ?? null
-  );
-}
-
-function findNextAttempt(
-  series: ReviewSeries,
-  attemptNumber: number
-): StoredAttemptReview | null {
-  return (
-    series.attempts.find((item) => item.attemptNumber > attemptNumber) ?? null
   );
 }
 

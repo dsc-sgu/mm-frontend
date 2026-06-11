@@ -113,8 +113,6 @@ export interface AttemptReviewAggregate {
   courseSlug: string;
   baselineAttemptNumber: number | null;
   current: AttemptReviewAttemptDetail;
-  previousAttempt: AttemptReviewHistoryItem | null;
-  nextAttempt: AttemptReviewHistoryItem | null;
   attempts: AttemptReviewHistoryItem[];
   history: AttemptReviewHistoryItem[];
   changedFiles: AttemptReviewChangedFile[];
