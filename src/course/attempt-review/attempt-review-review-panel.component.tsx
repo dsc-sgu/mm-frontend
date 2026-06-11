@@ -46,11 +46,11 @@ export function AttemptReviewReviewPanel({
   return (
     <section
       className={cn(
-        '-mx-3 grid gap-0 border-y bg-card sm:-mx-6 lg:-mx-8 xl:grid-cols-[20rem_minmax(0,1fr)]',
+        '-mx-3 grid gap-0 border-y bg-card sm:-mx-6 lg:-mx-8 lg:grid-cols-[20rem_minmax(0,1fr)]',
         className
       )}
     >
-      <div className="grid content-start gap-4 border-b p-3 sm:p-4 xl:border-r xl:border-b-0">
+      <div className="grid content-start gap-4 border-b p-3 sm:p-4 lg:border-r lg:border-b-0">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-semibold">Оценка</h2>
           {hasChanges && mode === 'editable' ? (
