@@ -25,6 +25,7 @@ interface AttemptReviewFileTreeProps {
   activeFilePath: string | null;
   className?: string;
   collapsed?: boolean;
+  showHeader?: boolean;
   onSelectFile: (path: string) => void;
   onToggleCollapsed?: () => void;
 }
@@ -35,6 +36,7 @@ export function AttemptReviewFileTree({
   activeFilePath,
   className,
   collapsed = false,
+  showHeader = true,
   onSelectFile,
   onToggleCollapsed,
 }: AttemptReviewFileTreeProps) {
@@ -153,39 +155,41 @@ export function AttemptReviewFileTree({
         className
       )}
     >
-      <div
-        className={cn(
-          'flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2.5',
-          collapsed && 'justify-center border-b-0 px-1.5 py-2'
-        )}
-      >
-        {collapsed ? null : (
-          <h2 className="min-w-0 truncate text-sm font-semibold">
-            Изменённые файлы
-          </h2>
-        )}
-        {onToggleCollapsed ? (
-          <button
-            type="button"
-            className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={
-              collapsed
-                ? 'Показать список изменённых файлов'
-                : 'Скрыть список изменённых файлов'
-            }
-            title={
-              collapsed ? 'Показать список файлов' : 'Скрыть список файлов'
-            }
-            onClick={onToggleCollapsed}
-          >
-            {collapsed ? (
-              <PanelLeftOpen className="size-4" />
-            ) : (
-              <PanelLeftClose className="size-4" />
-            )}
-          </button>
-        ) : null}
-      </div>
+      {showHeader ? (
+        <div
+          className={cn(
+            'flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2.5',
+            collapsed && 'justify-center border-b-0 px-1.5 py-2'
+          )}
+        >
+          {collapsed ? null : (
+            <h2 className="min-w-0 truncate text-sm font-semibold">
+              Изменённые файлы
+            </h2>
+          )}
+          {onToggleCollapsed ? (
+            <button
+              type="button"
+              className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={
+                collapsed
+                  ? 'Показать список изменённых файлов'
+                  : 'Скрыть список изменённых файлов'
+              }
+              title={
+                collapsed ? 'Показать список файлов' : 'Скрыть список файлов'
+              }
+              onClick={onToggleCollapsed}
+            >
+              {collapsed ? (
+                <PanelLeftOpen className="size-4" />
+              ) : (
+                <PanelLeftClose className="size-4" />
+              )}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       {collapsed ? null : (
         <FileTree
           model={model}

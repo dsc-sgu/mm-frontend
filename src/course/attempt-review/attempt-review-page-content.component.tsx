@@ -212,6 +212,7 @@ export function AttemptReviewPageContent({
               comments={draft.lineComments}
               activeFilePath={activeFilePath}
               className="h-full min-h-0 border-0"
+              showHeader={false}
               onSelectFile={handleSelectFile}
             />
           </div>
