@@ -3,8 +3,8 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import {
   getAttemptReviewFileStatusGlyph,
   getAttemptReviewFileStatusIconClassName,
-} from './attempt-review-file-status.format';
-import type { AttemptReviewChangedFile } from './attempt-review.types';
+} from './model/file-status';
+import type { AttemptReviewChangedFile } from './model/types';
 
 type AttemptReviewCodeViewHeaderProps = {
   file: AttemptReviewChangedFile;

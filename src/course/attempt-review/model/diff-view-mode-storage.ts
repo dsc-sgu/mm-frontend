@@ -1,4 +1,4 @@
-import type { AttemptReviewDiffViewMode } from './attempt-review-diff-view-toggle.component';
+import type { AttemptReviewDiffViewMode } from './types';
 
 const ATTEMPT_REVIEW_DIFF_VIEW_MODE_STORAGE_KEY =
   'attempt-review.diff-view-mode';

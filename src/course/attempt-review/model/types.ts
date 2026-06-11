@@ -1,6 +1,7 @@
 import type { FileDiffMetadata } from '@pierre/diffs';
 
 export type AttemptReviewMode = 'editable' | 'readonly';
+export type AttemptReviewDiffViewMode = 'unified' | 'split';
 export type AttemptReviewFileStatus = 'added' | 'deleted' | 'changed';
 export type AttemptReviewCommentSide = 'deletions' | 'additions';
 

@@ -2,7 +2,7 @@ import type {
   AttemptReviewCommentAuthor,
   AttemptReviewCommentSide,
   AttemptReviewLineComment,
-} from './attempt-review.types';
+} from './types';
 
 export type AttemptReviewLineRange = {
   start: number;

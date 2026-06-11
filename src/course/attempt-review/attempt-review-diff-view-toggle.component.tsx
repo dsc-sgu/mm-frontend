@@ -1,8 +1,7 @@
 import { SquareSplitHorizontal, SquareSplitVertical } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
-
-export type AttemptReviewDiffViewMode = 'unified' | 'split';
+import type { AttemptReviewDiffViewMode } from './model/types';
 
 type AttemptReviewDiffViewToggleProps = {
   value: AttemptReviewDiffViewMode;

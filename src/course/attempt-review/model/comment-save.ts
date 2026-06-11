@@ -1,4 +1,4 @@
-import type { AttemptReviewLineComment } from './attempt-review.types';
+import type { AttemptReviewLineComment } from './types';
 
 export function prepareLineCommentsForSave(
   comments: AttemptReviewLineComment[]

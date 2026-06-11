@@ -13,14 +13,14 @@ import {
   fetchAttemptReview,
   saveAttemptReview,
   updateAttemptReviewCommentReply,
-} from './attempt-review.api.mock';
+} from './mock';
 import type {
   AttemptReviewRouteParams,
   CreateAttemptReviewCommentReplyInput,
   DeleteAttemptReviewCommentReplyInput,
   SaveAttemptReviewInput,
   UpdateAttemptReviewCommentReplyInput,
-} from './attempt-review.types';
+} from '../model/types';
 
 export const ATTEMPT_REVIEW_QUERY_KEY = 'attempt-review';
 

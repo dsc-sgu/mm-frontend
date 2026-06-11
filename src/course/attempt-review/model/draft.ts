@@ -1,10 +1,7 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 
 import { scoreDraftMaxScoreError } from '@/course/grading';
-import type {
-  AttemptReviewAggregate,
-  AttemptReviewLineComment,
-} from './attempt-review.types';
+import type { AttemptReviewAggregate, AttemptReviewLineComment } from './types';
 
 export type AttemptReviewDraft = {
   score: string;

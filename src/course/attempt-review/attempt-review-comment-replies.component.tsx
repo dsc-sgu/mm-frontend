@@ -5,10 +5,10 @@ import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import {
   getAttemptReviewCancelShortcutKeys,
   getAttemptReviewSubmitShortcutKeys,
-} from './attempt-review-keyboard-shortcut.model';
+} from './model/keyboard-shortcuts';
 import { RichTextEditor } from './rich-text-editor.component';
 import { AttemptReviewCommentReplyItem } from './attempt-review-comment-reply-item.component';
-import type { AttemptReviewLineCommentReply } from './attempt-review.types';
+import type { AttemptReviewLineCommentReply } from './model/types';
 
 type AttemptReviewCommentRepliesProps = {
   replies: AttemptReviewLineCommentReply[];
