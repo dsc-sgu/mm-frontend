@@ -23,6 +23,7 @@ interface AttemptReviewDiffProps {
   comments: AttemptReviewLineComment[];
   mode: AttemptReviewMode;
   currentReviewer?: AttemptReviewCommentAuthor;
+  canReplyToComments?: boolean;
   loading?: boolean;
   viewMode?: 'unified' | 'split';
   className?: string;
@@ -30,6 +31,9 @@ interface AttemptReviewDiffProps {
   scrollHandoffRootRef?: RefObject<HTMLElement | null>;
   onScrollToReview?: () => void;
   onCommentsChange?: (comments: AttemptReviewLineComment[]) => void;
+  onCommentsPersist?: (
+    comments: AttemptReviewLineComment[]
+  ) => void | Promise<void>;
   onViewerChange?: (
     viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null
   ) => void;
@@ -67,6 +71,7 @@ export function AttemptReviewDiff({
   comments,
   mode,
   currentReviewer,
+  canReplyToComments = false,
   loading = false,
   viewMode = 'split',
   className,
@@ -74,6 +79,7 @@ export function AttemptReviewDiff({
   scrollHandoffRootRef,
   onScrollToReview,
   onCommentsChange,
+  onCommentsPersist,
   onViewerChange,
 }: AttemptReviewDiffProps) {
   const htmlThemeType = useHtmlThemeType();
@@ -185,17 +191,18 @@ export function AttemptReviewDiff({
     update: (
       comment: AttemptReviewLineComment
     ) => AttemptReviewLineComment | null
-  ) {
-    onCommentsChange?.(
-      comments.flatMap((comment) => {
-        if (comment.id !== commentId) {
-          return [comment];
-        }
+  ): AttemptReviewLineComment[] {
+    const nextComments = comments.flatMap((comment) => {
+      if (comment.id !== commentId) {
+        return [comment];
+      }
 
-        const nextComment = update(comment);
-        return nextComment ? [nextComment] : [];
-      })
-    );
+      const nextComment = update(comment);
+      return nextComment ? [nextComment] : [];
+    });
+
+    onCommentsChange?.(nextComments);
+    return nextComments;
   }
 
   function submitComment(commentId: string, html: string) {
@@ -226,6 +233,54 @@ export function AttemptReviewDiff({
 
   function deleteComment(commentId: string) {
     updateComment(commentId, () => null);
+  }
+
+  async function submitReply(commentId: string, html: string) {
+    if (!currentReviewer) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const nextComments = updateComment(commentId, (comment) => ({
+      ...comment,
+      replies: [
+        ...(comment.replies ?? []),
+        {
+          id: `reply-${comment.id}-${Date.now()}`,
+          html,
+          authorName: currentReviewer.name,
+          authorUsername: currentReviewer.username,
+          updatedAt: now,
+        },
+      ],
+      updatedAt: now,
+    }));
+
+    await onCommentsPersist?.(nextComments);
+  }
+
+  async function updateReply(commentId: string, replyId: string, html: string) {
+    const now = new Date().toISOString();
+    const nextComments = updateComment(commentId, (comment) => ({
+      ...comment,
+      replies: (comment.replies ?? []).map((reply) =>
+        reply.id === replyId ? { ...reply, html, updatedAt: now } : reply
+      ),
+      updatedAt: now,
+    }));
+
+    await onCommentsPersist?.(nextComments);
+  }
+
+  async function deleteReply(commentId: string, replyId: string) {
+    const now = new Date().toISOString();
+    const nextComments = updateComment(commentId, (comment) => ({
+      ...comment,
+      replies: (comment.replies ?? []).filter((reply) => reply.id !== replyId),
+      updatedAt: now,
+    }));
+
+    await onCommentsPersist?.(nextComments);
   }
 
   function toggleFileCollapsed(filePath: string) {
@@ -282,10 +337,21 @@ export function AttemptReviewDiff({
                 mode === 'editable' &&
                 currentReviewer?.username === comment.authorUsername
               }
+              canReply={
+                canReplyToComments &&
+                currentReviewer !== undefined &&
+                comment.status !== 'draft'
+              }
+              currentUsername={currentReviewer?.username}
               onSubmit={(html) => submitComment(comment.id, html)}
               onCancel={() => cancelComment(comment.id)}
               onEdit={() => editComment(comment.id)}
               onDelete={() => deleteComment(comment.id)}
+              onReplySubmit={(html) => submitReply(comment.id, html)}
+              onReplyUpdate={(replyId, html) =>
+                updateReply(comment.id, replyId, html)
+              }
+              onReplyDelete={(replyId) => deleteReply(comment.id, replyId)}
             />
           );
         }}
@@ -374,6 +440,7 @@ function buildItemVersion(
         authorUsername: comment.authorUsername,
         status: comment.status,
         isEditing: comment.isEditing,
+        replies: comment.replies,
       })),
     })
   );

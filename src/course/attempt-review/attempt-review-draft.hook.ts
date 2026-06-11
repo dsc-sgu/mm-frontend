@@ -93,7 +93,30 @@ function areLineCommentsEqual(
       comment.html === other.html &&
       comment.authorName === other.authorName &&
       comment.authorUsername === other.authorUsername &&
-      comment.updatedAt === other.updatedAt
+      comment.updatedAt === other.updatedAt &&
+      areRepliesEqual(comment.replies ?? [], other.replies ?? [])
+    );
+  });
+}
+
+function areRepliesEqual(
+  first: NonNullable<AttemptReviewLineComment['replies']>,
+  second: NonNullable<AttemptReviewLineComment['replies']>
+): boolean {
+  if (first.length !== second.length) {
+    return false;
+  }
+
+  return first.every((reply, index) => {
+    const other = second[index];
+
+    return (
+      other !== undefined &&
+      reply.id === other.id &&
+      reply.html === other.html &&
+      reply.authorName === other.authorName &&
+      reply.authorUsername === other.authorUsername &&
+      reply.updatedAt === other.updatedAt
     );
   });
 }

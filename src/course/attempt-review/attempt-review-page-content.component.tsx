@@ -105,6 +105,10 @@ export function AttemptReviewPageContent({
     isSummaryCompact,
   });
 
+  const canReplyToComments =
+    sessionData?.status === 'AUTHORIZED' &&
+    (sessionData.session.role === 'teacher' ||
+      sessionData.session.username === studentUsername);
   const canSave =
     mode === 'editable' && hasChanges && !scoreError && !saveMutation.isPending;
   const totalAdded = review.changedFiles.reduce(
@@ -156,6 +160,20 @@ export function AttemptReviewPageContent({
 
     setIsFileTreeDrawerOpen(false);
     window.requestAnimationFrame(() => scrollToFile(path));
+  }
+
+  async function persistLineComments(lineComments: AttemptReviewLineComment[]) {
+    if (mode === 'editable') {
+      return;
+    }
+
+    const savedReview = await saveMutation.mutateAsync({
+      ...params,
+      score: draft.score ? Number(draft.score) : null,
+      overallFeedbackHtml: draft.overallFeedbackHtml,
+      lineComments: prepareLineCommentsForSave(lineComments),
+    });
+    resetToReview(savedReview);
   }
 
   function scrollToReview() {
@@ -278,6 +296,7 @@ export function AttemptReviewPageContent({
             <div className="min-h-0 flex-1">
               <AttemptReviewFileTree
                 files={review.changedFiles}
+                comments={draft.lineComments}
                 activeFilePath={activeFilePath}
                 className="h-full border-0"
                 onSelectFile={handleSelectFile}
@@ -320,6 +339,7 @@ export function AttemptReviewPageContent({
         <aside className="hidden min-h-0 lg:block lg:h-full lg:self-start">
           <AttemptReviewFileTree
             files={review.changedFiles}
+            comments={draft.lineComments}
             activeFilePath={activeFilePath}
             collapsed={isFileTreeCollapsed}
             className="lg:h-full"
@@ -333,6 +353,7 @@ export function AttemptReviewPageContent({
           comments={draft.lineComments}
           mode={mode}
           currentReviewer={currentReviewer}
+          canReplyToComments={canReplyToComments}
           viewMode={diffViewMode}
           enableScrollHandoff={isDesktopReviewLayout}
           scrollHandoffRootRef={pageRootRef}
@@ -340,10 +361,11 @@ export function AttemptReviewPageContent({
           onViewerChange={handleDiffViewerChange}
           className="h-[70vh] min-h-0 min-w-0 bg-card lg:h-full"
           onCommentsChange={(lineComments) => {
-            if (mode === 'editable') {
+            if (mode === 'editable' || canReplyToComments) {
               setLineComments(lineComments);
             }
           }}
+          onCommentsPersist={persistLineComments}
         />
       </div>
     </main>
@@ -367,6 +389,13 @@ function prepareLineCommentsForSave(
       authorUsername: comment.authorUsername,
       updatedAt: comment.updatedAt,
       status: 'saved',
+      replies: comment.replies?.map((reply) => ({
+        id: reply.id,
+        html: reply.html,
+        authorName: reply.authorName,
+        authorUsername: reply.authorUsername,
+        updatedAt: reply.updatedAt,
+      })),
     }));
 }
 
