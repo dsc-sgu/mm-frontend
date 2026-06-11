@@ -1,5 +1,5 @@
 import { cn } from '@/shadcn/lib/utils';
-import { sanitizeRichTextHtml } from './rich-text-sanitize.dom';
+import { sanitizeRichTextHtml } from './sanitize';
 
 export function RichTextContent({
   html,

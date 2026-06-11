@@ -3,12 +3,12 @@ import type { CodeViewOptions } from '@pierre/diffs';
 import { CodeView, type CodeViewHandle } from '@pierre/diffs/react';
 import { ArrowUp } from 'lucide-react';
 
-import { AttemptReviewCodeViewHeader } from './attempt-review-code-view-header.component';
+import { AttemptReviewCodeViewHeader } from './code-view-header';
 import {
   createAttemptReviewCodeViewItems,
   groupAttemptReviewCommentsByFile,
-} from './model/code-view-item';
-import type { AttemptReviewLineCommentAnnotation } from './model/comment-annotation';
+} from '../model/code-view-item';
+import type { AttemptReviewLineCommentAnnotation } from '../model/comment-annotation';
 import {
   addLineComment,
   addLineCommentReply,
@@ -19,21 +19,21 @@ import {
   revertPendingLineComment,
   submitLineComment,
   updateLineCommentReply,
-} from './model/line-comment';
+} from '../model/line-comment';
 import {
   canManageLineComment,
   canReplyToLineComment,
-} from './model/comment-permissions';
-import { useAttemptReviewScrollHandoff } from './hooks/use-scroll-handoff';
-import { useHtmlThemeType } from './hooks/use-html-theme';
-import { AttemptReviewLineCommentCard } from './attempt-review-line-comment-card.component';
+} from '../model/comment-permissions';
+import { useAttemptReviewScrollHandoff } from '../hooks/use-scroll-handoff';
+import { useHtmlThemeType } from '../hooks/use-html-theme';
+import { AttemptReviewLineCommentCard } from './comments/line-card';
 import type {
   AttemptReviewChangedFile,
   AttemptReviewCommentAuthor,
   AttemptReviewLineComment,
   AttemptReviewLineCommentReply,
   AttemptReviewMode,
-} from './model/types';
+} from '../model/types';
 
 type AttemptReviewDiffProps = {
   files: AttemptReviewChangedFile[];

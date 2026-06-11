@@ -9,9 +9,9 @@ import { cn } from '@/shadcn/lib/utils';
 import {
   isAttemptReviewCancelShortcutEvent,
   isAttemptReviewSubmitShortcutEvent,
-} from './model/keyboard-shortcuts';
-import { RichTextContent } from './rich-text-content.component';
-import { RichTextEditorToolbar } from './rich-text-editor-toolbar.component';
+} from '../../model/keyboard-shortcuts';
+import { RichTextContent } from './content';
+import { RichTextEditorToolbar } from './toolbar';
 
 type RichTextEditorProps = {
   value: string;
@@ -162,4 +162,4 @@ export function RichTextEditor({
   );
 }
 
-export { RichTextContent } from './rich-text-content.component';
+export { RichTextContent } from './content';

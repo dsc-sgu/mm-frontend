@@ -8,18 +8,18 @@ import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/use-media-query.hook';
 import type { AttemptReviewLineCommentAnnotation } from './model/comment-annotation';
 import { prepareLineCommentsForSave } from './model/comment-save';
-import { AttemptReviewDiff } from './attempt-review-diff.component';
+import { AttemptReviewDiff } from './ui/diff';
 import {
   getStoredDiffViewMode,
   saveDiffViewMode,
 } from './model/diff-view-mode-storage';
 import { useAttemptReviewDraft } from './model/draft';
 import { useAttemptReviewFileScroll } from './hooks/use-file-scroll';
-import { AttemptReviewFileTree } from './attempt-review-file-tree.component';
-import { AttemptReviewHeader } from './attempt-review-header.component';
+import { AttemptReviewFileTree } from './ui/file-tree';
+import { AttemptReviewHeader } from './ui/header';
 import { useAttemptReviewStickyOffset } from './hooks/use-sticky-offset';
-import { AttemptReviewMobileDrawer } from './attempt-review-mobile-drawer.component';
-import { AttemptReviewReviewPanel } from './attempt-review-review-panel.component';
+import { AttemptReviewMobileDrawer } from './ui/mobile-drawer';
+import { AttemptReviewReviewPanel } from './ui/review-panel';
 import {
   useAttemptReviewQuery,
   useCreateAttemptReviewCommentReplyMutation,
@@ -27,7 +27,7 @@ import {
   useSaveAttemptReviewMutation,
   useUpdateAttemptReviewCommentReplyMutation,
 } from './api/queries';
-import { useAttemptReviewWorkerPoolReady } from './attempt-review-worker-pool.hook';
+import { useAttemptReviewWorkerPoolReady } from './hooks/use-worker-pool';
 import type {
   AttemptReviewAggregate,
   AttemptReviewDiffViewMode,
