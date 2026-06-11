@@ -88,6 +88,7 @@ export function AttemptReviewPageContent({
   const {
     draft,
     hasChanges,
+    hasLineCommentChanges,
     scoreError,
     setScore,
     setOverallFeedbackHtml,
@@ -175,6 +176,15 @@ export function AttemptReviewPageContent({
 
   async function persistLineComments(lineComments: AttemptReviewLineComment[]) {
     if (mode === 'editable') {
+      await saveMutation.mutateAsync({
+        ...params,
+        score: review.current.grade?.score ?? null,
+        overallFeedbackHtml: review.overallFeedback.html,
+        lineComments: prepareLineCommentsForImmediatePersist(
+          lineComments,
+          review.lineComments
+        ),
+      });
       return;
     }
 
@@ -323,6 +333,7 @@ export function AttemptReviewPageContent({
         mode={mode}
         scoreError={scoreError}
         hasChanges={hasChanges}
+        hasCommentChanges={hasLineCommentChanges}
         canSave={canSave}
         savePending={saveMutation.isPending}
         onScoreChange={setScore}
@@ -362,6 +373,7 @@ export function AttemptReviewPageContent({
         <AttemptReviewDiff
           files={review.changedFiles}
           comments={draft.lineComments}
+          savedComments={review.lineComments}
           mode={mode}
           currentReviewer={currentReviewer}
           canReplyToComments={canReplyToComments}
@@ -386,30 +398,71 @@ export function AttemptReviewPageContent({
 function prepareLineCommentsForSave(
   comments: AttemptReviewLineComment[]
 ): AttemptReviewLineComment[] {
+  const now = new Date().toISOString();
+
   return comments
-    .filter((comment) => comment.status !== 'draft')
-    .map((comment) => ({
-      id: comment.id,
-      filePath: comment.filePath,
-      side: comment.side,
-      lineNumber: comment.lineNumber,
-      endSide: comment.endSide,
-      endLineNumber: comment.endLineNumber,
-      html: comment.html,
-      authorName: comment.authorName,
-      authorUsername: comment.authorUsername,
-      createdAt: comment.createdAt,
-      updatedAt: comment.updatedAt,
-      status: 'saved',
-      replies: comment.replies?.map((reply) => ({
-        id: reply.id,
-        html: reply.html,
-        authorName: reply.authorName,
-        authorUsername: reply.authorUsername,
-        createdAt: reply.createdAt,
-        updatedAt: reply.updatedAt,
-      })),
-    }));
+    .filter(
+      (comment) =>
+        comment.status !== 'draft' && comment.status !== 'pending-delete'
+    )
+    .map((comment) => prepareLineCommentForSave(comment, now));
+}
+
+function prepareLineCommentsForImmediatePersist(
+  comments: AttemptReviewLineComment[],
+  savedComments: AttemptReviewLineComment[]
+): AttemptReviewLineComment[] {
+  const commentsById = new Map(
+    comments.map((comment) => [comment.id, comment])
+  );
+
+  return savedComments.map((savedComment) => {
+    const comment = commentsById.get(savedComment.id);
+
+    if (comment && (comment.status ?? 'saved') === 'saved') {
+      return prepareLineCommentForSave(comment, comment.updatedAt);
+    }
+
+    return prepareLineCommentForSave(savedComment, savedComment.updatedAt);
+  });
+}
+
+function prepareLineCommentForSave(
+  comment: AttemptReviewLineComment,
+  fallbackDate: string
+): AttemptReviewLineComment {
+  const status = comment.status ?? 'saved';
+  const createdAt =
+    status === 'pending-create'
+      ? fallbackDate
+      : comment.createdAt || fallbackDate;
+  const updatedAt =
+    status === 'pending-create' || status === 'pending-update'
+      ? fallbackDate
+      : comment.updatedAt || fallbackDate;
+
+  return {
+    id: comment.id,
+    filePath: comment.filePath,
+    side: comment.side,
+    lineNumber: comment.lineNumber,
+    endSide: comment.endSide,
+    endLineNumber: comment.endLineNumber,
+    html: comment.html,
+    authorName: comment.authorName,
+    authorUsername: comment.authorUsername,
+    createdAt,
+    updatedAt,
+    status: 'saved',
+    replies: comment.replies?.map((reply) => ({
+      id: reply.id,
+      html: reply.html,
+      authorName: reply.authorName,
+      authorUsername: reply.authorUsername,
+      createdAt: reply.createdAt,
+      updatedAt: reply.updatedAt,
+    })),
+  };
 }
 
 function getStoredDiffViewMode(): AttemptReviewDiffViewMode {

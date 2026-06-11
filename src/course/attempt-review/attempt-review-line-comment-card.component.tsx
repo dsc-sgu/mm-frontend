@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
+import { cn } from '@/shadcn/lib/utils';
 import { formatAttemptReviewRelativeDateTime } from './attempt-review-date.format';
 import { RichTextContent, RichTextEditor } from './rich-text-editor.component';
 import type {
@@ -29,6 +30,7 @@ interface AttemptReviewLineCommentCardProps {
   onCancel: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onRevertPending: () => void;
   onReplySubmit: (html: string) => void | Promise<void>;
   onReplyUpdate: (replyId: string, html: string) => void | Promise<void>;
   onReplyDelete: (replyId: string) => void | Promise<void>;
@@ -45,13 +47,20 @@ export function AttemptReviewLineCommentCard({
   onCancel,
   onEdit,
   onDelete,
+  onRevertPending,
   onReplySubmit,
   onReplyUpdate,
   onReplyDelete,
 }: AttemptReviewLineCommentCardProps) {
+  const commentStatus = comment.status ?? 'saved';
+  const isPendingCreate = commentStatus === 'pending-create';
+  const isPendingUpdate = commentStatus === 'pending-update';
+  const isPendingDelete = commentStatus === 'pending-delete';
+  const isPendingComment =
+    isPendingCreate || isPendingUpdate || isPendingDelete;
   const isEditableComment =
     mode === 'editable' &&
-    (comment.status === 'draft' || comment.isEditing === true);
+    (commentStatus === 'draft' || comment.isEditing === true);
   const [draftHtml, setDraftHtml] = useState(comment.html);
   const [isReplying, setIsReplying] = useState(false);
   const [replyHtml, setReplyHtml] = useState('<p></p>');
@@ -77,14 +86,19 @@ export function AttemptReviewLineCommentCard({
   }
 
   return (
-    <div className="m-3 rounded-xl border bg-card p-3 font-sans shadow-sm">
+    <div
+      className={cn(
+        'm-3 rounded-xl border bg-card p-3 font-sans shadow-sm',
+        isPendingDelete && 'bg-muted/40 opacity-70'
+      )}
+    >
       <div className="mb-2 flex flex-wrap items-start justify-between gap-2 text-xs text-muted-foreground">
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
             <span className="truncate font-medium text-foreground">
               {comment.authorName}
             </span>
-            {comment.status !== 'draft' ? (
+            {commentStatus === 'saved' ? (
               <>
                 <span aria-hidden="true">·</span>
                 <CommentTimestamp
@@ -93,13 +107,31 @@ export function AttemptReviewLineCommentCard({
                 />
               </>
             ) : null}
+            {isPendingComment ? (
+              <>
+                <span aria-hidden="true">·</span>
+                <PendingCommentNotice status={commentStatus} />
+              </>
+            ) : null}
           </div>
           <span>{formatCommentRange(comment)}</span>
         </div>
 
         {!isEditableComment ? (
           <div className="flex shrink-0 items-center gap-1">
-            {canEdit ? (
+            {isPendingComment ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 rounded-lg px-2 text-xs"
+                onClick={onRevertPending}
+              >
+                <RotateCcw className="size-3.5" />
+                {isPendingDelete ? 'Отменить удаление' : 'Отменить'}
+              </Button>
+            ) : null}
+            {!isPendingComment && canEdit ? (
               <Button
                 type="button"
                 variant="ghost"
@@ -111,7 +143,7 @@ export function AttemptReviewLineCommentCard({
                 <Pencil className="size-3.5" />
               </Button>
             ) : null}
-            {canDelete ? (
+            {!isPendingComment && canDelete ? (
               <Button
                 type="button"
                 variant="ghost"
@@ -168,11 +200,11 @@ export function AttemptReviewLineCommentCard({
         <RichTextContent html={comment.html} />
       )}
 
-      {comment.status !== 'draft' ? (
+      {commentStatus !== 'draft' ? (
         <CommentReplies
           replies={comment.replies ?? []}
-          canReply={canReply && !isEditableComment}
-          currentUsername={currentUsername}
+          canReply={canReply && !isEditableComment && !isPendingComment}
+          currentUsername={isPendingComment ? undefined : currentUsername}
           isReplying={isReplying}
           replyHtml={replyHtml}
           isReplySubmitDisabled={isReplySubmitDisabled}
@@ -428,6 +460,25 @@ function ReplyItem({
       </div>
       <RichTextContent html={reply.html} />
     </div>
+  );
+}
+
+function PendingCommentNotice({
+  status,
+}: {
+  status: AttemptReviewLineComment['status'];
+}) {
+  const label =
+    status === 'pending-delete'
+      ? 'Будет удалён после сохранения отзыва'
+      : status === 'pending-update'
+        ? 'Сохраните отзыв, чтобы применить изменения'
+        : 'Сохраните отзыв, чтобы комментарий стал виден';
+
+  return (
+    <span className="rounded-md bg-amber-100 px-1.5 py-0.5 font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
+      {label}
+    </span>
   );
 }
 

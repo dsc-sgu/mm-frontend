@@ -21,6 +21,7 @@ import type {
 interface AttemptReviewDiffProps {
   files: AttemptReviewChangedFile[];
   comments: AttemptReviewLineComment[];
+  savedComments?: AttemptReviewLineComment[];
   mode: AttemptReviewMode;
   currentReviewer?: AttemptReviewCommentAuthor;
   canReplyToComments?: boolean;
@@ -69,6 +70,7 @@ const CODE_VIEW_UNSAFE_CSS = `
 export function AttemptReviewDiff({
   files,
   comments,
+  savedComments = [],
   mode,
   currentReviewer,
   canReplyToComments = false,
@@ -96,6 +98,10 @@ export function AttemptReviewDiff({
   const filesByPath = useMemo(
     () => new Map(files.map((file) => [file.path, file])),
     [files]
+  );
+  const savedCommentsById = useMemo(
+    () => new Map(savedComments.map((comment) => [comment.id, comment])),
+    [savedComments]
   );
 
   useAttemptReviewScrollHandoff({
@@ -206,15 +212,11 @@ export function AttemptReviewDiff({
   }
 
   function submitComment(commentId: string, html: string) {
-    const now = new Date().toISOString();
-
     updateComment(commentId, (comment) => ({
       ...comment,
       html,
-      status: 'saved',
+      status: comment.status === 'draft' ? 'pending-create' : 'pending-update',
       isEditing: false,
-      createdAt: comment.status === 'draft' ? now : comment.createdAt,
-      updatedAt: now,
     }));
     clearSelectedLines();
   }
@@ -235,7 +237,23 @@ export function AttemptReviewDiff({
   }
 
   function deleteComment(commentId: string) {
-    updateComment(commentId, () => null);
+    updateComment(commentId, (comment) => {
+      if (comment.status === 'draft' || comment.status === 'pending-create') {
+        return null;
+      }
+
+      return { ...comment, status: 'pending-delete', isEditing: false };
+    });
+  }
+
+  function revertPendingComment(commentId: string) {
+    updateComment(commentId, (comment) => {
+      if (comment.status === 'pending-create') {
+        return null;
+      }
+
+      return savedCommentsById.get(comment.id) ?? null;
+    });
   }
 
   async function submitReply(commentId: string, html: string) {
@@ -332,21 +350,27 @@ export function AttemptReviewDiff({
               key={`${comment.id}:${comment.status ?? 'saved'}:${comment.isEditing === true ? 'editing' : 'readonly'}:${comment.html}`}
               comment={comment}
               mode={mode}
-              canDelete={mode === 'editable'}
+              canDelete={mode === 'editable' && canManageLineComment(comment)}
               canEdit={
                 mode === 'editable' &&
+                canManageLineComment(comment) &&
                 currentReviewer?.username === comment.authorUsername
               }
               canReply={
                 canReplyToComments &&
                 currentReviewer !== undefined &&
-                comment.status !== 'draft'
+                canReplyToLineComment(comment)
               }
-              currentUsername={currentReviewer?.username}
+              currentUsername={
+                canReplyToLineComment(comment)
+                  ? currentReviewer?.username
+                  : undefined
+              }
               onSubmit={(html) => submitComment(comment.id, html)}
               onCancel={() => cancelComment(comment.id)}
               onEdit={() => editComment(comment.id)}
               onDelete={() => deleteComment(comment.id)}
+              onRevertPending={() => revertPendingComment(comment.id)}
               onReplySubmit={(html) => submitReply(comment.id, html)}
               onReplyUpdate={(replyId, html) =>
                 updateReply(comment.id, replyId, html)
@@ -367,6 +391,14 @@ export function AttemptReviewDiff({
       ) : null}
     </div>
   );
+}
+
+function canManageLineComment(comment: AttemptReviewLineComment): boolean {
+  return (comment.status ?? 'saved') === 'saved';
+}
+
+function canReplyToLineComment(comment: AttemptReviewLineComment): boolean {
+  return (comment.status ?? 'saved') === 'saved';
 }
 
 function CodeViewFileHeader({
@@ -513,7 +545,6 @@ function createDraftLineComment({
   const endSide = range.endSide ?? side;
   const lineNumber = range.start;
   const endLineNumber = range.end;
-  const now = new Date().toISOString();
 
   return {
     id: `draft-${filePath}-${side}-${lineNumber}-${endSide}-${endLineNumber}-${Date.now()}`,
@@ -526,8 +557,8 @@ function createDraftLineComment({
     html: '<p></p>',
     authorName: currentReviewer.name,
     authorUsername: currentReviewer.username,
-    createdAt: now,
-    updatedAt: now,
+    createdAt: '',
+    updatedAt: '',
     status: 'draft',
   };
 }

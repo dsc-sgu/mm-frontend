@@ -189,7 +189,7 @@ function groupCommentCountsByFile(comments: AttemptReviewLineComment[]) {
   const counts = new Map<string, number>();
 
   comments.forEach((comment) => {
-    if (comment.status === 'draft') {
+    if (comment.status === 'draft' || comment.status === 'pending-delete') {
       return;
     }
 

@@ -21,6 +21,10 @@ export function useAttemptReviewDraft(review: AttemptReviewAggregate) {
     review.current.task.maxScore,
     draft.score
   );
+  const hasLineCommentChanges = !areLineCommentsEqual(
+    draft.lineComments,
+    savedDraft.lineComments
+  );
   const hasChanges = !areAttemptReviewDraftsEqual(draft, savedDraft);
 
   return {
@@ -29,6 +33,7 @@ export function useAttemptReviewDraft(review: AttemptReviewAggregate) {
     savedDraft,
     scoreError,
     hasChanges,
+    hasLineCommentChanges,
     setScore: createDraftSetter(setDraft, 'score'),
     setOverallFeedbackHtml: createDraftSetter(setDraft, 'overallFeedbackHtml'),
     setLineComments: createDraftSetter(setDraft, 'lineComments'),
@@ -95,6 +100,7 @@ function areLineCommentsEqual(
       comment.authorUsername === other.authorUsername &&
       comment.createdAt === other.createdAt &&
       comment.updatedAt === other.updatedAt &&
+      (comment.status ?? 'saved') === (other.status ?? 'saved') &&
       areRepliesEqual(comment.replies ?? [], other.replies ?? [])
     );
   });

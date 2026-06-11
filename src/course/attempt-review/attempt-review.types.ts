@@ -55,7 +55,12 @@ export interface AttemptReviewChangedFile {
   diff: FileDiffMetadata;
 }
 
-export type AttemptReviewLineCommentStatus = 'draft' | 'saved';
+export type AttemptReviewLineCommentStatus =
+  | 'draft'
+  | 'pending-create'
+  | 'pending-update'
+  | 'pending-delete'
+  | 'saved';
 
 export interface AttemptReviewCommentAuthor {
   username: string;
