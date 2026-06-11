@@ -1,5 +1,5 @@
 import type { CourseColor } from '@/course/course.types';
-import type { Deadline, DeadlinesByDay } from './deadlines-calendar.types';
+import type { Deadline, DeadlinesByDay } from '../model/types';
 
 const MOCK_COURSES: { name: string; color: CourseColor }[] = [
   { name: 'Языки программирования', color: 'red' },

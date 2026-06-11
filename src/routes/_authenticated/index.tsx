@@ -1,6 +1,6 @@
 import { CourseCard, CourseCardSkeleton } from '@/course/course-card.component';
 import { useCoursesQuery } from '@/course/course.queries';
-import { DeadlinesCalendar } from '@/deadlines-calendar/deadlines-calendar.component';
+import { DeadlinesCalendar } from '@/deadlines-calendar/calendar';
 import { createFileRoute } from '@tanstack/react-router';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';

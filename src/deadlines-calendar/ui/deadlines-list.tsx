@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { cn } from '@/shadcn/lib/utils';
-import { DeadlineDetails } from './deadline-details.component';
-import type { Deadline } from './deadlines-calendar.types';
+import { DeadlineDetails } from './deadline-details';
+import type { Deadline } from '../model/types';
 import type { CourseColor } from '@/course/course.types';
 
 type DeadlinesListProps = {

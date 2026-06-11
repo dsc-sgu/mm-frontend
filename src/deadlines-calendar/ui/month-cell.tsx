@@ -1,5 +1,5 @@
 import { cn } from '@/shadcn/lib/utils';
-import type { Season } from './deadlines-calendar.types';
+import type { Season } from '../model/types';
 
 type MonthCellProps = {
   date: Date;

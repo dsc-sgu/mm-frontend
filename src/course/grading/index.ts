@@ -1,2 +1,2 @@
-export * from './course-grading';
-export * from './course-score-field.component';
+export * from './model/grading';
+export * from './ui/score-field';

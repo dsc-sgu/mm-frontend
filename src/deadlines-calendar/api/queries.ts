@@ -1,5 +1,5 @@
 import { useIsFetching, useQuery } from '@tanstack/react-query';
-import { fetchDeadlines } from './deadlines.api.mock';
+import { fetchDeadlines } from './mock';
 
 export function getWeekBounds(date: Date): { start: Date; end: Date } {
   const start = new Date(date);

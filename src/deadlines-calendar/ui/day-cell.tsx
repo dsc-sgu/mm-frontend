@@ -1,6 +1,6 @@
 import { cn } from '@/shadcn/lib/utils';
-import { DeadlinesList } from './deadlines-list.component';
-import type { Deadline } from './deadlines-calendar.types';
+import { DeadlinesList } from './deadlines-list';
+import type { Deadline } from '../model/types';
 
 type DayCellProps = {
   date: Date;

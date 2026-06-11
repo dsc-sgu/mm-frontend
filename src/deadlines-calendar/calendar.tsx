@@ -1,14 +1,11 @@
 import { cn } from '@/shadcn/lib/utils';
 import { useRef } from 'react';
 import { useDebounce } from 'use-debounce';
-import { DayCell } from './day-cell.component';
-import { MonthCell } from './month-cell.component';
-import {
-  useDeadlinesIsFetching,
-  useDeadlinesQuery,
-} from './use-deadlines-query.hook';
+import { DayCell } from './ui/day-cell';
+import { MonthCell } from './ui/month-cell';
+import { useDeadlinesIsFetching, useDeadlinesQuery } from './api/queries';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useCalendarHeaderText } from './calendar-header-text.hook';
+import { useCalendarHeaderText } from './hooks/use-header-text';
 
 type DeadlinesCalendarProps = {
   className?: string;
