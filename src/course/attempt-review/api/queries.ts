@@ -6,7 +6,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 
-import { COURSE_ATTEMPTS_QUERY_KEY } from '@/course/attempts/course-attempts.queries';
+import { COURSE_ATTEMPTS_QUERY_KEY } from '@/course/attempts/api/queries';
 import {
   createAttemptReviewCommentReply,
   deleteAttemptReviewCommentReply,

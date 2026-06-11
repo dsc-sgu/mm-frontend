@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { Set as ImmutableSetType } from 'immutable';
 import { toast } from 'sonner';
 
-import { useCourseAttemptReviewLockUpdates } from './course-attempts.lock-updates.hook';
-import type { CourseAttemptReviewLockUpdate } from './course-attempts.lock-updates';
-import type { CourseAttempt } from './course-attempts.types';
+import { useCourseAttemptReviewLockUpdates } from './use-lock-updates';
+import type { CourseAttemptReviewLockUpdate } from '../model/lock-updates';
+import type { CourseAttempt } from '../model/types';
 
 export function useCourseAttemptsReviewLockSelectionSync({
   courseSlug,

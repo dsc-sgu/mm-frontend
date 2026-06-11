@@ -1,7 +1,4 @@
-import type {
-  CourseAttempt,
-  CourseAttemptReviewLock,
-} from './course-attempts.types';
+import type { CourseAttempt, CourseAttemptReviewLock } from './types';
 
 export type CourseAttemptReviewLockUpdate = {
   attemptId: string;

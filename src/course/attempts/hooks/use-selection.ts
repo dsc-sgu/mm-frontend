@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Set as ImmutableSet } from 'immutable';
 
-import { isAttemptSelectable } from './course-attempts.selection';
-import type { CourseAttempt } from './course-attempts.types';
+import { isAttemptSelectable } from '../model/selection';
+import type { CourseAttempt } from '../model/types';
 
 export function useCourseAttemptsSelection(attempts: CourseAttempt[]) {
   const [selectedAttemptIds, setSelectedAttemptIds] = useState(() =>

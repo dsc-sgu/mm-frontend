@@ -4,14 +4,11 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import {
-  fetchCourseAttemptsList,
-  saveQuickGrades,
-} from './course-attempts.api.mock';
+import { fetchCourseAttemptsList, saveQuickGrades } from './mock';
 import type {
   CourseAttemptsFilters,
   SaveQuickGradesInput,
-} from './course-attempts.types';
+} from '../model/types';
 
 export const COURSE_ATTEMPTS_QUERY_KEY = 'course-attempts';
 

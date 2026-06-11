@@ -2,7 +2,7 @@ import type {
   CourseAttemptGradedFilter,
   CourseAttemptsFilters,
   CourseAttemptsRouteSearch,
-} from './course-attempts.types';
+} from './types';
 
 const TOKEN_RE = /^[a-zA-Z0-9_-]+$/;
 

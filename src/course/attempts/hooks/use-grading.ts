@@ -7,9 +7,9 @@ import {
   scoreValue,
   type QuickGradeUpdate,
 } from '@/course/grading';
-import { isAttemptSelectable } from './course-attempts.selection';
-import { useSaveQuickGradesMutation } from './course-attempts.queries';
-import type { CourseAttempt } from './course-attempts.types';
+import { isAttemptSelectable } from '../model/selection';
+import { useSaveQuickGradesMutation } from '../api/queries';
+import type { CourseAttempt } from '../model/types';
 
 export function useCourseAttemptsQuickGradingState() {
   const [quickGrading, setQuickGrading] = useState(false);
