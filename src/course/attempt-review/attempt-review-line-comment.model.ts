@@ -51,7 +51,10 @@ export function submitLineComment(
   return updateLineComment(comments, commentId, (comment) => ({
     ...comment,
     html,
-    status: comment.status === 'draft' ? 'pending-create' : 'pending-update',
+    status:
+      comment.status === 'draft' || comment.status === 'pending-create'
+        ? 'pending-create'
+        : 'pending-update',
     isEditing: false,
   }));
 }
