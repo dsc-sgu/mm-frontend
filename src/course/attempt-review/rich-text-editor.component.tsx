@@ -6,6 +6,10 @@ import Placeholder from '@tiptap/extension-placeholder';
 import StarterKit from '@tiptap/starter-kit';
 
 import { cn } from '@/shadcn/lib/utils';
+import {
+  isAttemptReviewCancelShortcutEvent,
+  isAttemptReviewSubmitShortcutEvent,
+} from './attempt-review-keyboard-shortcut.model';
 import { RichTextContent } from './rich-text-content.component';
 import { RichTextEditorToolbar } from './rich-text-editor-toolbar.component';
 
@@ -18,6 +22,8 @@ interface RichTextEditorProps {
   onChange?: (value: string) => void;
   onBlur?: (value: string) => void;
   onFocus?: () => void;
+  onSubmitShortcut?: () => void;
+  onCancelShortcut?: () => void;
 }
 
 export function RichTextEditor({
@@ -29,16 +35,22 @@ export function RichTextEditor({
   onChange,
   onBlur,
   onFocus,
+  onSubmitShortcut,
+  onCancelShortcut,
 }: RichTextEditorProps) {
   const onChangeRef = useRef(onChange);
   const onBlurRef = useRef(onBlur);
   const onFocusRef = useRef(onFocus);
+  const onSubmitShortcutRef = useRef(onSubmitShortcut);
+  const onCancelShortcutRef = useRef(onCancelShortcut);
 
   useEffect(() => {
     onChangeRef.current = onChange;
     onBlurRef.current = onBlur;
     onFocusRef.current = onFocus;
-  }, [onBlur, onChange, onFocus]);
+    onSubmitShortcutRef.current = onSubmitShortcut;
+    onCancelShortcutRef.current = onCancelShortcut;
+  }, [onBlur, onCancelShortcut, onChange, onFocus, onSubmitShortcut]);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -75,6 +87,27 @@ export function RichTextEditor({
           'attempt-review-editor-content prose prose-sm max-w-none rounded-b-xl px-3 py-3 font-sans focus:outline-none dark:prose-invert',
           minHeightClassName
         ),
+      },
+      handleKeyDown(_view, event) {
+        if (
+          onSubmitShortcutRef.current &&
+          isAttemptReviewSubmitShortcutEvent(event)
+        ) {
+          event.preventDefault();
+          onSubmitShortcutRef.current();
+          return true;
+        }
+
+        if (
+          onCancelShortcutRef.current &&
+          isAttemptReviewCancelShortcutEvent(event)
+        ) {
+          event.preventDefault();
+          onCancelShortcutRef.current();
+          return true;
+        }
+
+        return false;
       },
     },
   });

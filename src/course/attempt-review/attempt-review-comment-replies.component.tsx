@@ -1,6 +1,11 @@
 import { Check, MessageSquare, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
+import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
+import {
+  getAttemptReviewCancelShortcutKeys,
+  getAttemptReviewSubmitShortcutKeys,
+} from './attempt-review-keyboard-shortcut.model';
 import { RichTextEditor } from './rich-text-editor.component';
 import { AttemptReviewCommentReplyItem } from './attempt-review-comment-reply-item.component';
 import type { AttemptReviewLineCommentReply } from './attempt-review.types';
@@ -34,6 +39,9 @@ export function AttemptReviewCommentReplies({
   onReplyUpdate,
   onReplyDelete,
 }: AttemptReviewCommentRepliesProps) {
+  const submitShortcutKeys = getAttemptReviewSubmitShortcutKeys();
+  const cancelShortcutKeys = getAttemptReviewCancelShortcutKeys();
+
   if (replies.length === 0 && !canReply && !isReplying) {
     return null;
   }
@@ -62,6 +70,12 @@ export function AttemptReviewCommentReplies({
             minHeightClassName="min-h-16"
             placeholder="Ответить на комментарий…"
             onChange={onReplyHtmlChange}
+            onSubmitShortcut={() => {
+              if (!isReplySubmitDisabled) {
+                onSubmitReply();
+              }
+            }}
+            onCancelShortcut={onCancelReply}
           />
           <div className="flex flex-wrap justify-start gap-2">
             <Button
@@ -73,6 +87,11 @@ export function AttemptReviewCommentReplies({
             >
               <Check className="size-4" />
               Отправить
+              <KbdGroup className="ml-1 hidden sm:inline-flex">
+                {submitShortcutKeys.map((key) => (
+                  <Kbd key={key}>{key}</Kbd>
+                ))}
+              </KbdGroup>
             </Button>
             <Button
               type="button"
@@ -83,6 +102,11 @@ export function AttemptReviewCommentReplies({
             >
               <X className="size-4" />
               Отмена
+              <KbdGroup className="ml-1 hidden sm:inline-flex">
+                {cancelShortcutKeys.map((key) => (
+                  <Kbd key={key}>{key}</Kbd>
+                ))}
+              </KbdGroup>
             </Button>
           </div>
         </div>
