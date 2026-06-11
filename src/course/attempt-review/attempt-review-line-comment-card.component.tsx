@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef } from 'react';
 import { Trash2 } from 'lucide-react';
 
 import { RichTextEditor } from './rich-text-editor.component';
@@ -20,6 +21,30 @@ export function AttemptReviewLineCommentCard({
   onChange,
   onDelete,
 }: AttemptReviewLineCommentCardProps) {
+  const draftHtmlRef = useRef(comment.html);
+  const isFocusedRef = useRef(false);
+  const commentHtmlRef = useRef(comment.html);
+  const onChangeRef = useRef(onChange);
+
+  useEffect(() => {
+    commentHtmlRef.current = comment.html;
+    onChangeRef.current = onChange;
+
+    if (!isFocusedRef.current) {
+      draftHtmlRef.current = comment.html;
+    }
+  }, [comment.html, onChange]);
+
+  const commitDraft = useCallback((html: string) => {
+    draftHtmlRef.current = html;
+
+    if (html !== commentHtmlRef.current) {
+      onChangeRef.current(html);
+    }
+  }, []);
+
+  useEffect(() => () => commitDraft(draftHtmlRef.current), [commitDraft]);
+
   return (
     <div className="m-3">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
@@ -46,7 +71,16 @@ export function AttemptReviewLineCommentCard({
         editable={mode === 'editable'}
         minHeightClassName="min-h-20"
         placeholder="Комментарий к строке…"
-        onChange={onChange}
+        onChange={(html) => {
+          draftHtmlRef.current = html;
+        }}
+        onFocus={() => {
+          isFocusedRef.current = true;
+        }}
+        onBlur={(html) => {
+          isFocusedRef.current = false;
+          commitDraft(html);
+        }}
       />
     </div>
   );
