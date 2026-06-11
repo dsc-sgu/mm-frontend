@@ -47,7 +47,7 @@ export function AttemptReviewPageContent({
   attemptId,
   review,
 }: AttemptReviewPageContentProps) {
-  const params = { courseSlug, taskId, studentUsername, attemptId };
+  const mutationParams = { courseSlug, taskId, studentUsername, attemptId };
   const saveMutation = useSaveAttemptReviewMutation();
   const { data: sessionData } = useQuery(SESSION_OPTIONS);
   const [activeFilePath, setActiveFilePath] = useState<string | null>(
@@ -140,7 +140,7 @@ export function AttemptReviewPageContent({
   async function persistLineComments(lineComments: AttemptReviewLineComment[]) {
     if (mode === 'editable') {
       await saveMutation.mutateAsync({
-        ...params,
+        ...mutationParams,
         score: review.current.grade?.score ?? null,
         overallFeedbackHtml: review.overallFeedback.html,
         lineComments: prepareLineCommentsForImmediatePersist(
@@ -152,7 +152,7 @@ export function AttemptReviewPageContent({
     }
 
     const savedReview = await saveMutation.mutateAsync({
-      ...params,
+      ...mutationParams,
       score: draft.score ? Number(draft.score) : null,
       overallFeedbackHtml: draft.overallFeedbackHtml,
       lineComments: prepareLineCommentsForSave(lineComments),
@@ -162,7 +162,7 @@ export function AttemptReviewPageContent({
 
   async function saveReview() {
     const savedReview = await saveMutation.mutateAsync({
-      ...params,
+      ...mutationParams,
       score: draft.score ? Number(draft.score) : null,
       overallFeedbackHtml: draft.overallFeedbackHtml,
       lineComments: prepareLineCommentsForSave(draft.lineComments),
