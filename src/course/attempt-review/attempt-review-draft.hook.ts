@@ -72,12 +72,15 @@ function areLineCommentsEqual(
   first: AttemptReviewLineComment[],
   second: AttemptReviewLineComment[]
 ): boolean {
-  if (first.length !== second.length) {
+  const firstPersisted = first.filter(isPersistedLineComment);
+  const secondPersisted = second.filter(isPersistedLineComment);
+
+  if (firstPersisted.length !== secondPersisted.length) {
     return false;
   }
 
-  return first.every((comment, index) => {
-    const other = second[index];
+  return firstPersisted.every((comment, index) => {
+    const other = secondPersisted[index];
 
     return (
       other !== undefined &&
@@ -89,7 +92,12 @@ function areLineCommentsEqual(
       comment.endLineNumber === other.endLineNumber &&
       comment.html === other.html &&
       comment.authorName === other.authorName &&
+      comment.authorUsername === other.authorUsername &&
       comment.updatedAt === other.updatedAt
     );
   });
+}
+
+function isPersistedLineComment(comment: AttemptReviewLineComment): boolean {
+  return comment.status !== 'draft';
 }

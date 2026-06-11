@@ -105,8 +105,15 @@ export async function saveAttemptReview(
     updatedBy: input.overallFeedbackHtml ? gradedBy : null,
   };
   current.lineComments = input.lineComments.map((comment) => ({
-    ...comment,
+    id: comment.id,
+    filePath: comment.filePath,
+    side: comment.side,
+    lineNumber: comment.lineNumber,
+    endSide: comment.endSide,
+    endLineNumber: comment.endLineNumber,
+    html: comment.html,
     authorName: comment.authorName || gradedBy,
+    authorUsername: comment.authorUsername || 'mit-teacher',
     updatedAt: comment.updatedAt || now,
   }));
 
@@ -486,6 +493,7 @@ function buildComments(attemptNumber: number): AttemptReviewLineComment[] {
         lineNumber: 4,
         html: '<p>Проверка пустого массива нужна, но после неё стоит добавить тест на этот случай.</p>',
         authorName: 'Елизавета Громова',
+        authorUsername: 'egromova',
         updatedAt: '2026-05-22T10:20:00.000Z',
       },
     ];
@@ -499,6 +507,7 @@ function buildComments(attemptNumber: number): AttemptReviewLineComment[] {
       lineNumber: 4,
       html: '<p>Классно, что отрицательные значения обработаны. Зафиксируйте это в тестах.</p>',
       authorName: 'Елизавета Громова',
+      authorUsername: 'egromova',
       updatedAt: '2026-05-24T11:15:00.000Z',
     },
     {
@@ -508,6 +517,7 @@ function buildComments(attemptNumber: number): AttemptReviewLineComment[] {
       lineNumber: 3,
       html: '<p>Компонент маленький и понятный. Можно добавить ссылку на <a href="/docs/components">гайд по компонентам</a>.</p>',
       authorName: 'Елизавета Громова',
+      authorUsername: 'egromova',
       updatedAt: '2026-05-24T11:18:00.000Z',
     },
   ];

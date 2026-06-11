@@ -12,6 +12,7 @@ import { useHtmlThemeType } from './attempt-review-theme';
 import { AttemptReviewLineCommentCard } from './attempt-review-line-comment-card.component';
 import type {
   AttemptReviewChangedFile,
+  AttemptReviewCommentAuthor,
   AttemptReviewCommentSide,
   AttemptReviewLineComment,
   AttemptReviewMode,
@@ -21,6 +22,7 @@ interface AttemptReviewDiffProps {
   files: AttemptReviewChangedFile[];
   comments: AttemptReviewLineComment[];
   mode: AttemptReviewMode;
+  currentReviewer?: AttemptReviewCommentAuthor;
   loading?: boolean;
   viewMode?: 'unified' | 'split';
   className?: string;
@@ -64,6 +66,7 @@ export function AttemptReviewDiff({
   files,
   comments,
   mode,
+  currentReviewer,
   loading = false,
   viewMode = 'split',
   className,
@@ -75,6 +78,8 @@ export function AttemptReviewDiff({
 }: AttemptReviewDiffProps) {
   const htmlThemeType = useHtmlThemeType();
   const codeViewContainerRef = useRef<HTMLDivElement | null>(null);
+  const codeViewHandleRef =
+    useRef<CodeViewHandle<AttemptReviewLineCommentAnnotation> | null>(null);
   const [collapsedFilePaths, setCollapsedFilePaths] = useState<Set<string>>(
     () => new Set()
   );
@@ -124,11 +129,11 @@ export function AttemptReviewDiff({
       overflow: 'wrap',
       stickyHeaders: true,
       lineHoverHighlight: 'both',
-      enableGutterUtility: mode === 'editable',
+      enableGutterUtility: mode === 'editable' && currentReviewer !== undefined,
       enableLineSelection: mode === 'editable',
       unsafeCSS: CODE_VIEW_UNSAFE_CSS,
       onGutterUtilityClick:
-        mode === 'editable'
+        mode === 'editable' && currentReviewer
           ? (range, context) => {
               if (context.item.type !== 'diff') {
                 return;
@@ -138,16 +143,18 @@ export function AttemptReviewDiff({
                 comments,
                 filePath: context.item.id,
                 range,
+                currentReviewer,
                 onCommentsChange,
               });
             }
           : undefined,
     }),
-    [comments, htmlThemeType, mode, onCommentsChange, viewMode]
+    [comments, currentReviewer, htmlThemeType, mode, onCommentsChange, viewMode]
   );
 
   const handleViewerChange = useCallback(
     (viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null) => {
+      codeViewHandleRef.current = viewer;
       onViewerChange?.(viewer);
     },
     [onViewerChange]
@@ -167,6 +174,58 @@ export function AttemptReviewDiff({
         В этой попытке нет изменений относительно базовой версии.
       </section>
     );
+  }
+
+  function clearSelectedLines() {
+    codeViewHandleRef.current?.clearSelectedLines();
+  }
+
+  function updateComment(
+    commentId: string,
+    update: (
+      comment: AttemptReviewLineComment
+    ) => AttemptReviewLineComment | null
+  ) {
+    onCommentsChange?.(
+      comments.flatMap((comment) => {
+        if (comment.id !== commentId) {
+          return [comment];
+        }
+
+        const nextComment = update(comment);
+        return nextComment ? [nextComment] : [];
+      })
+    );
+  }
+
+  function submitComment(commentId: string, html: string) {
+    updateComment(commentId, (comment) => ({
+      ...comment,
+      html,
+      status: 'saved',
+      isEditing: false,
+      updatedAt: new Date().toISOString(),
+    }));
+    clearSelectedLines();
+  }
+
+  function cancelComment(commentId: string) {
+    updateComment(commentId, (comment) => {
+      if (comment.status === 'draft') {
+        return null;
+      }
+
+      return { ...comment, isEditing: false };
+    });
+    clearSelectedLines();
+  }
+
+  function editComment(commentId: string) {
+    updateComment(commentId, (comment) => ({ ...comment, isEditing: true }));
+  }
+
+  function deleteComment(commentId: string) {
+    updateComment(commentId, () => null);
   }
 
   function toggleFileCollapsed(filePath: string) {
@@ -215,21 +274,18 @@ export function AttemptReviewDiff({
 
           return (
             <AttemptReviewLineCommentCard
-              key={comment.id}
+              key={`${comment.id}:${comment.status ?? 'saved'}:${comment.isEditing === true ? 'editing' : 'readonly'}:${comment.html}`}
               comment={comment}
               mode={mode}
-              onChange={(html) => {
-                onCommentsChange?.(
-                  comments.map((item) =>
-                    item.id === comment.id ? { ...item, html } : item
-                  )
-                );
-              }}
-              onDelete={() => {
-                onCommentsChange?.(
-                  comments.filter((item) => item.id !== comment.id)
-                );
-              }}
+              canDelete={mode === 'editable'}
+              canEdit={
+                mode === 'editable' &&
+                currentReviewer?.username === comment.authorUsername
+              }
+              onSubmit={(html) => submitComment(comment.id, html)}
+              onCancel={() => cancelComment(comment.id)}
+              onEdit={() => editComment(comment.id)}
+              onDelete={() => deleteComment(comment.id)}
             />
           );
         }}
@@ -315,6 +371,9 @@ function buildItemVersion(
         endSide: comment.endSide,
         endLineNumber: comment.endLineNumber,
         html: comment.html,
+        authorUsername: comment.authorUsername,
+        status: comment.status,
+        isEditing: comment.isEditing,
       })),
     })
   );
@@ -347,10 +406,12 @@ function addLineComment({
   comments,
   filePath,
   range,
+  currentReviewer,
   onCommentsChange,
 }: {
   comments: AttemptReviewLineComment[];
   filePath: string;
+  currentReviewer: AttemptReviewCommentAuthor;
   range: {
     start: number;
     side?: AttemptReviewCommentSide;
@@ -361,13 +422,14 @@ function addLineComment({
 }) {
   onCommentsChange?.([
     ...comments,
-    createDraftLineComment({ filePath, range }),
+    createDraftLineComment({ filePath, range, currentReviewer }),
   ]);
 }
 
 function createDraftLineComment({
   filePath,
   range,
+  currentReviewer,
 }: {
   filePath: string;
   range: {
@@ -376,6 +438,7 @@ function createDraftLineComment({
     end: number;
     endSide?: AttemptReviewCommentSide;
   };
+  currentReviewer: AttemptReviewCommentAuthor;
 }): AttemptReviewLineComment {
   const side = range.side ?? range.endSide ?? 'additions';
   const endSide = range.endSide ?? side;
@@ -391,7 +454,9 @@ function createDraftLineComment({
       endSide === side && endLineNumber === lineNumber ? undefined : endSide,
     endLineNumber: endLineNumber === lineNumber ? undefined : endLineNumber,
     html: '<p></p>',
-    authorName: 'Текущий преподаватель',
+    authorName: currentReviewer.name,
+    authorUsername: currentReviewer.username,
     updatedAt: new Date().toISOString(),
+    status: 'draft',
   };
 }

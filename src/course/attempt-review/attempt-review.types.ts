@@ -55,6 +55,13 @@ export interface AttemptReviewChangedFile {
   diff: FileDiffMetadata;
 }
 
+export type AttemptReviewLineCommentStatus = 'draft' | 'saved';
+
+export interface AttemptReviewCommentAuthor {
+  username: string;
+  name: string;
+}
+
 export interface AttemptReviewLineComment {
   id: string;
   filePath: string;
@@ -64,7 +71,10 @@ export interface AttemptReviewLineComment {
   endLineNumber?: number;
   html: string;
   authorName: string;
+  authorUsername: string;
   updatedAt: string;
+  status?: AttemptReviewLineCommentStatus;
+  isEditing?: boolean;
 }
 
 export interface AttemptReviewRichFeedback {
