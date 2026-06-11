@@ -1,8 +1,5 @@
-import {
-  CoursePage,
-  CoursePageLoading,
-} from '@/course/page/course-page.component';
-import { useCoursePageQuery } from '@/course/page/course-page.queries';
+import { CoursePage, CoursePageLoading } from '@/course/page/ui/page';
+import { useCoursePageQuery } from '@/course/page/api/queries';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authenticated/courses/$courseSlug/')({

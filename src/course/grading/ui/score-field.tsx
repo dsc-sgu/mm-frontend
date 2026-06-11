@@ -7,7 +7,7 @@ import { cn } from '@/shadcn/lib/utils';
 import {
   normalizeScoreDraftInput,
   scoreDraftTextSizeClass,
-} from './course-grading';
+} from '../model/grading';
 
 type CourseScoreFieldProps = {
   value: string;
