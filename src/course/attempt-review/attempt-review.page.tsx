@@ -127,7 +127,6 @@ function AttemptReviewPageLoaded({
   const {
     draft,
     hasChanges,
-    hasLineCommentChanges,
     scoreError,
     setScore,
     setOverallFeedbackHtml,
@@ -277,7 +276,6 @@ function AttemptReviewPageLoaded({
               mode={mode}
               scoreError={scoreError}
               hasChanges={hasChanges}
-              hasCommentChanges={hasLineCommentChanges}
               canSave={canSave}
               savePending={saveMutation.isPending}
               className="mx-0 border-0 sm:mx-0 lg:mx-0"
@@ -297,7 +295,6 @@ function AttemptReviewPageLoaded({
           mode={mode}
           scoreError={scoreError}
           hasChanges={hasChanges}
-          hasCommentChanges={hasLineCommentChanges}
           canSave={canSave}
           savePending={saveMutation.isPending}
           onScoreChange={setScore}
