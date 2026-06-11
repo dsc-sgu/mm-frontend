@@ -2,14 +2,14 @@ import { forwardRef } from 'react';
 import { MessageSquareText, PanelLeftOpen } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
-import { AttemptReviewAttemptSelect } from './attempt-review-attempt-select.component';
-import { formatAttemptReviewDateTime } from './model/date-format';
-import { AttemptReviewDiffViewToggle } from './attempt-review-diff-view-toggle.component';
+import { AttemptReviewAttemptSelect } from './attempt-select';
+import { formatAttemptReviewDateTime } from '../model/date-format';
+import { AttemptReviewDiffViewToggle } from './diff-view-toggle';
 import type {
   AttemptReviewAggregate,
   AttemptReviewDiffViewMode,
   AttemptReviewMode,
-} from './model/types';
+} from '../model/types';
 
 type AttemptReviewHeaderProps = {
   mode: AttemptReviewMode;

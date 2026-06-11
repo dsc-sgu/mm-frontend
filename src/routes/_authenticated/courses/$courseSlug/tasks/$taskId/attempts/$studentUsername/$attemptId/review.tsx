@@ -1,4 +1,4 @@
-import { AttemptReviewPage } from '@/course/attempt-review/attempt-review.page';
+import { AttemptReviewPage } from '@/course/attempt-review/page';
 import { requireCourseRole } from '@/course/course.guards';
 import { getAttemptReviewBreadcrumb } from '@/course/course-route.header';
 import { createFileRoute } from '@tanstack/react-router';

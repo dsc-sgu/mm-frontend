@@ -4,20 +4,20 @@ import { Check, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import { cn } from '@/shadcn/lib/utils';
-import { formatAttemptReviewCommentRange } from './model/comment-range';
+import { formatAttemptReviewCommentRange } from '../../model/comment-range';
 import {
   getAttemptReviewCancelShortcutKeys,
   getAttemptReviewSubmitShortcutKeys,
-} from './model/keyboard-shortcuts';
-import { AttemptReviewCommentPendingNotice } from './attempt-review-comment-pending-notice.component';
-import { AttemptReviewCommentReplies } from './attempt-review-comment-replies.component';
-import { AttemptReviewCommentTimestamp } from './attempt-review-comment-timestamp.component';
-import { RichTextContent, RichTextEditor } from './rich-text-editor.component';
-import { isRichTextHtmlEmpty } from './rich-text-empty.model';
+} from '../../model/keyboard-shortcuts';
+import { AttemptReviewCommentPendingNotice } from './pending-notice';
+import { AttemptReviewCommentReplies } from './replies';
+import { AttemptReviewCommentTimestamp } from './timestamp';
+import { RichTextContent, RichTextEditor } from '../rich-text/editor';
+import { isRichTextHtmlEmpty } from '../rich-text/empty';
 import type {
   AttemptReviewLineComment,
   AttemptReviewMode,
-} from './model/types';
+} from '../../model/types';
 
 type AttemptReviewLineCommentCardProps = {
   comment: AttemptReviewLineComment;

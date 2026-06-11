@@ -8,8 +8,8 @@ import {
   PopoverTrigger,
 } from '@/shadcn/components/ui/popover';
 import { cn } from '@/shadcn/lib/utils';
-import { formatAttemptReviewDateTime } from './model/date-format';
-import type { AttemptReviewAggregate, AttemptReviewMode } from './model/types';
+import { formatAttemptReviewDateTime } from '../model/date-format';
+import type { AttemptReviewAggregate, AttemptReviewMode } from '../model/types';
 
 type AttemptReviewAttemptSelectProps = {
   review: AttemptReviewAggregate;

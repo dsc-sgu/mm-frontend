@@ -6,11 +6,11 @@ import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import {
   getAttemptReviewCancelShortcutKeys,
   getAttemptReviewSubmitShortcutKeys,
-} from './model/keyboard-shortcuts';
-import { RichTextContent, RichTextEditor } from './rich-text-editor.component';
-import { isRichTextHtmlEmpty } from './rich-text-empty.model';
-import { AttemptReviewCommentTimestamp } from './attempt-review-comment-timestamp.component';
-import type { AttemptReviewLineCommentReply } from './model/types';
+} from '../../model/keyboard-shortcuts';
+import { RichTextContent, RichTextEditor } from '../rich-text/editor';
+import { isRichTextHtmlEmpty } from '../rich-text/empty';
+import { AttemptReviewCommentTimestamp } from './timestamp';
+import type { AttemptReviewLineCommentReply } from '../../model/types';
 
 type AttemptReviewCommentReplyItemProps = {
   reply: AttemptReviewLineCommentReply;

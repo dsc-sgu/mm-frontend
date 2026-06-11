@@ -1,4 +1,4 @@
-import type { AttemptReviewLineComment } from './model/types';
+import type { AttemptReviewLineComment } from '../../model/types';
 
 type AttemptReviewCommentPendingNoticeProps = {
   status: AttemptReviewLineComment['status'];
