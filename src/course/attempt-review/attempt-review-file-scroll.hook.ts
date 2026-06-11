@@ -3,12 +3,12 @@ import type { CodeViewHandle } from '@pierre/diffs/react';
 
 import type { AttemptReviewLineCommentAnnotation } from './attempt-review-comment-annotation.model';
 
-interface AttemptReviewFileScrollOptions {
+type AttemptReviewFileScrollOptions = {
   diffSectionRef: RefObject<HTMLDivElement | null>;
   diffViewerRef: RefObject<CodeViewHandle<AttemptReviewLineCommentAnnotation> | null>;
   isDesktopReviewLayout: boolean;
   onCloseMobileFileTree: () => void;
-}
+};
 
 export function useAttemptReviewFileScroll({
   diffSectionRef,

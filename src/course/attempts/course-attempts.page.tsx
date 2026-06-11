@@ -31,11 +31,11 @@ import {
 import { VirtualizedAttemptsList } from './virtualized-attempts-list.component';
 import type { CourseAttemptsFilters } from './course-attempts.types';
 
-interface CourseAttemptsPageProps {
+type CourseAttemptsPageProps = {
   courseSlug: string;
   appliedFilters: CourseAttemptsFilters;
   onApplyFilters: (filters: CourseAttemptsFilters) => void;
-}
+};
 
 export function CourseAttemptsPage({
   courseSlug,

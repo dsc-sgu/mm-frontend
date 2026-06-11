@@ -12,12 +12,12 @@ import { isRichTextHtmlEmpty } from './rich-text-empty.model';
 import { AttemptReviewCommentTimestamp } from './attempt-review-comment-timestamp.component';
 import type { AttemptReviewLineCommentReply } from './attempt-review.types';
 
-interface AttemptReviewCommentReplyItemProps {
+type AttemptReviewCommentReplyItemProps = {
   reply: AttemptReviewLineCommentReply;
   canManage: boolean;
   onUpdate: (replyId: string, html: string) => void | Promise<void>;
   onDelete: (replyId: string) => void | Promise<void>;
-}
+};
 
 export function AttemptReviewCommentReplyItem({
   reply,

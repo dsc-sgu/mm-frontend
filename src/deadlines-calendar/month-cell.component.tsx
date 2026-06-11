@@ -1,9 +1,9 @@
 import { cn } from '@/shadcn/lib/utils';
 import type { Season } from './deadlines-calendar.types';
 
-interface MonthCellProps {
+type MonthCellProps = {
   date: Date;
-}
+};
 
 function getSeasonFromMonth(month: number): Season {
   if (month === 11 || month === 0 || month === 1) return 'winter';

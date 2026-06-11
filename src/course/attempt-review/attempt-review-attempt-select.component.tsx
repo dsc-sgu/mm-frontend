@@ -14,12 +14,12 @@ import type {
   AttemptReviewMode,
 } from './attempt-review.types';
 
-interface AttemptReviewAttemptSelectProps {
+type AttemptReviewAttemptSelectProps = {
   review: AttemptReviewAggregate;
   mode: AttemptReviewMode;
   variant?: 'panel' | 'header';
   className?: string;
-}
+};
 
 export function AttemptReviewAttemptSelect({
   review,
@@ -111,7 +111,7 @@ export function AttemptReviewAttemptSelect({
   );
 }
 
-interface AttemptSelectOption {
+type AttemptSelectOption = {
   attemptNumber: number;
   submittedAt: string;
   score: number | null;
@@ -119,7 +119,7 @@ interface AttemptSelectOption {
   addedLines: number;
   deletedLines: number;
   commentCount: number;
-}
+};
 
 function AttemptOptionCard({
   attempt,

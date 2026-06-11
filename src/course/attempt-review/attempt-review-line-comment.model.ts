@@ -4,12 +4,12 @@ import type {
   AttemptReviewLineComment,
 } from './attempt-review.types';
 
-export interface AttemptReviewLineRange {
+export type AttemptReviewLineRange = {
   start: number;
   side?: AttemptReviewCommentSide;
   end: number;
   endSide?: AttemptReviewCommentSide;
-}
+};
 
 export function addLineComment({
   comments,

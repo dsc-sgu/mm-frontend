@@ -4,34 +4,34 @@ export type AttemptReviewMode = 'editable' | 'readonly';
 export type AttemptReviewFileStatus = 'added' | 'deleted' | 'changed';
 export type AttemptReviewCommentSide = 'deletions' | 'additions';
 
-export interface AttemptReviewRouteParams {
+export type AttemptReviewRouteParams = {
   courseSlug: string;
   taskId: string;
   studentUsername: string;
   attemptId: number;
-}
+};
 
-export interface AttemptReviewTask {
+export type AttemptReviewTask = {
   id: string;
   title: string;
   maxScore: number;
-}
+};
 
-export interface AttemptReviewStudent {
+export type AttemptReviewStudent = {
   username: string;
   fullName: string;
   group: string;
   subgroup?: string;
-}
+};
 
-export interface AttemptReviewGrade {
+export type AttemptReviewGrade = {
   score: number;
   maxScore: number;
   gradedAt: string;
   gradedBy: string;
-}
+};
 
-export interface AttemptReviewAttemptDetail {
+export type AttemptReviewAttemptDetail = {
   id: string;
   attemptNumber: number;
   task: AttemptReviewTask;
@@ -39,21 +39,21 @@ export interface AttemptReviewAttemptDetail {
   submittedAt: string;
   deadlineAt: string;
   grade: AttemptReviewGrade | null;
-}
+};
 
-export interface AttemptReviewFileContents {
+export type AttemptReviewFileContents = {
   oldText: string;
   newText: string;
-}
+};
 
-export interface AttemptReviewChangedFile {
+export type AttemptReviewChangedFile = {
   path: string;
   status: AttemptReviewFileStatus;
   addedLines: number;
   deletedLines: number;
   contents: AttemptReviewFileContents;
   diff: FileDiffMetadata;
-}
+};
 
 export type AttemptReviewLineCommentStatus =
   | 'draft'
@@ -62,21 +62,21 @@ export type AttemptReviewLineCommentStatus =
   | 'pending-delete'
   | 'saved';
 
-export interface AttemptReviewCommentAuthor {
+export type AttemptReviewCommentAuthor = {
   username: string;
   name: string;
-}
+};
 
-export interface AttemptReviewLineCommentReply {
+export type AttemptReviewLineCommentReply = {
   id: string;
   html: string;
   authorName: string;
   authorUsername: string;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface AttemptReviewLineComment {
+export type AttemptReviewLineComment = {
   id: string;
   filePath: string;
   side: AttemptReviewCommentSide;
@@ -91,15 +91,15 @@ export interface AttemptReviewLineComment {
   status?: AttemptReviewLineCommentStatus;
   isEditing?: boolean;
   replies?: AttemptReviewLineCommentReply[];
-}
+};
 
-export interface AttemptReviewRichFeedback {
+export type AttemptReviewRichFeedback = {
   html: string;
   updatedAt: string | null;
   updatedBy: string | null;
-}
+};
 
-export interface AttemptReviewHistoryItem {
+export type AttemptReviewHistoryItem = {
   attemptNumber: number;
   submittedAt: string;
   score: number | null;
@@ -107,9 +107,9 @@ export interface AttemptReviewHistoryItem {
   addedLines: number;
   deletedLines: number;
   commentCount: number;
-}
+};
 
-export interface AttemptReviewAggregate {
+export type AttemptReviewAggregate = {
   courseSlug: string;
   baselineAttemptNumber: number | null;
   current: AttemptReviewAttemptDetail;
@@ -118,26 +118,26 @@ export interface AttemptReviewAggregate {
   changedFiles: AttemptReviewChangedFile[];
   lineComments: AttemptReviewLineComment[];
   overallFeedback: AttemptReviewRichFeedback;
-}
+};
 
-export interface SaveAttemptReviewInput extends AttemptReviewRouteParams {
+export type SaveAttemptReviewInput = {
   score: number | null;
   overallFeedbackHtml: string;
   lineComments: AttemptReviewLineComment[];
-}
+} & AttemptReviewRouteParams;
 
-export interface CreateAttemptReviewCommentReplyInput extends AttemptReviewRouteParams {
+export type CreateAttemptReviewCommentReplyInput = {
   commentId: string;
   html: string;
-}
+} & AttemptReviewRouteParams;
 
-export interface UpdateAttemptReviewCommentReplyInput extends AttemptReviewRouteParams {
+export type UpdateAttemptReviewCommentReplyInput = {
   commentId: string;
   replyId: string;
   html: string;
-}
+} & AttemptReviewRouteParams;
 
-export interface DeleteAttemptReviewCommentReplyInput extends AttemptReviewRouteParams {
+export type DeleteAttemptReviewCommentReplyInput = {
   commentId: string;
   replyId: string;
-}
+} & AttemptReviewRouteParams;

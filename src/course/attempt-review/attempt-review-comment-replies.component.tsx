@@ -10,7 +10,7 @@ import { RichTextEditor } from './rich-text-editor.component';
 import { AttemptReviewCommentReplyItem } from './attempt-review-comment-reply-item.component';
 import type { AttemptReviewLineCommentReply } from './attempt-review.types';
 
-interface AttemptReviewCommentRepliesProps {
+type AttemptReviewCommentRepliesProps = {
   replies: AttemptReviewLineCommentReply[];
   canReply: boolean;
   currentUsername?: string;
@@ -23,7 +23,7 @@ interface AttemptReviewCommentRepliesProps {
   onSubmitReply: () => void;
   onReplyUpdate: (replyId: string, html: string) => void | Promise<void>;
   onReplyDelete: (replyId: string) => void | Promise<void>;
-}
+};
 
 export function AttemptReviewCommentReplies({
   replies,

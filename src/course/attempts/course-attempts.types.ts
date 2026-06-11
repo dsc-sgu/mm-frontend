@@ -1,48 +1,48 @@
 export type CourseAttemptGradedFilter = 'any' | 'no' | 'yes';
 
-export interface CourseAttemptsFilters {
+export type CourseAttemptsFilters = {
   tasks: string[];
   students: string[];
   graded: CourseAttemptGradedFilter;
-}
+};
 
-export interface CourseAttemptsRouteSearch {
+export type CourseAttemptsRouteSearch = {
   tasks?: string;
   students?: string;
   graded?: CourseAttemptGradedFilter;
-}
+};
 
-export interface CourseAttemptTask {
+export type CourseAttemptTask = {
   id: string;
   title: string;
   maxScore: number;
-}
+};
 
-export interface CourseAttemptStudent {
+export type CourseAttemptStudent = {
   username: string;
   fullName: string;
   group: string;
   subgroup?: string;
-}
+};
 
-export interface CourseAttemptDiffStats {
+export type CourseAttemptDiffStats = {
   addedLines: number;
   deletedLines: number;
-}
+};
 
-export interface CourseAttemptGrade {
+export type CourseAttemptGrade = {
   score: number;
   maxScore: number;
   gradedAt: string;
   gradedBy: string;
-}
+};
 
-export interface CourseAttemptReviewLock {
+export type CourseAttemptReviewLock = {
   teacherName: string;
   lockedAt: string;
-}
+};
 
-export interface CourseAttempt {
+export type CourseAttempt = {
   id: string;
   attemptNumber: number;
   task: CourseAttemptTask;
@@ -52,18 +52,18 @@ export interface CourseAttempt {
   diff: CourseAttemptDiffStats;
   grade: CourseAttemptGrade | null;
   reviewLock: CourseAttemptReviewLock | null;
-}
+};
 
-export interface CourseAttemptsListResult {
+export type CourseAttemptsListResult = {
   attempts: CourseAttempt[];
   tasks: CourseAttemptTask[];
   students: CourseAttemptStudent[];
-}
+};
 
-export interface SaveQuickGradesInput {
+export type SaveQuickGradesInput = {
   courseSlug: string;
   updates: Array<{
     attemptId: string;
     score: number;
   }>;
-}
+};

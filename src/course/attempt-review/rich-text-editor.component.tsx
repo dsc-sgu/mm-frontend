@@ -13,7 +13,7 @@ import {
 import { RichTextContent } from './rich-text-content.component';
 import { RichTextEditorToolbar } from './rich-text-editor-toolbar.component';
 
-interface RichTextEditorProps {
+type RichTextEditorProps = {
   value: string;
   editable?: boolean;
   placeholder?: string;
@@ -25,7 +25,7 @@ interface RichTextEditorProps {
   onFocus?: () => void;
   onSubmitShortcut?: () => void;
   onCancelShortcut?: () => void;
-}
+};
 
 export function RichTextEditor({
   value,

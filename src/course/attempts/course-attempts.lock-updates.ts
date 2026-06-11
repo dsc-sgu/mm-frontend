@@ -3,10 +3,10 @@ import type {
   CourseAttemptReviewLock,
 } from './course-attempts.types';
 
-export interface CourseAttemptReviewLockUpdate {
+export type CourseAttemptReviewLockUpdate = {
   attemptId: string;
   reviewLock: CourseAttemptReviewLock | null;
-}
+};
 
 export function applyReviewLockUpdatesToAttempts(
   attempts: CourseAttempt[],

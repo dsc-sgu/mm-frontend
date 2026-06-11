@@ -319,12 +319,12 @@ function AttemptsFiltersHeader({
 
 type AttemptsFiltersVariant = 'sidebar' | 'drawer';
 
-interface FilterSectionContext {
+type FilterSectionContext = {
   idPrefix: string;
   loading: boolean;
   filterActionsDisabled: boolean;
   variant: AttemptsFiltersVariant;
-}
+};
 
 function TasksFilterSection({
   context,
@@ -576,7 +576,7 @@ function AttemptsFiltersActions({
   );
 }
 
-interface AttemptsFiltersPanel {
+type AttemptsFiltersPanel = {
   appliedFilters: CourseAttemptsFilters;
   draftFilters: CourseAttemptsFilters;
   attemptsCount: number;
@@ -587,13 +587,13 @@ interface AttemptsFiltersPanel {
   onDraftFiltersChange: (filters: CourseAttemptsFilters) => void;
   onApplyFilters: () => void;
   onResetFilters: () => void;
-}
+};
 
-interface AttemptsFiltersContentProps {
+type AttemptsFiltersContentProps = {
   idPrefix: string;
   panel: AttemptsFiltersPanel;
   onAfterApply?: () => void;
   onAfterReset?: () => void;
   showHeader?: boolean;
   variant?: AttemptsFiltersVariant;
-}
+};

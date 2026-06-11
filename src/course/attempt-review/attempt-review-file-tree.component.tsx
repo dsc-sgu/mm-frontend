@@ -19,7 +19,7 @@ import type {
   AttemptReviewLineComment,
 } from './attempt-review.types';
 
-interface AttemptReviewFileTreeProps {
+type AttemptReviewFileTreeProps = {
   files: AttemptReviewChangedFile[];
   comments: AttemptReviewLineComment[];
   activeFilePath: string | null;
@@ -28,7 +28,7 @@ interface AttemptReviewFileTreeProps {
   showHeader?: boolean;
   onSelectFile: (path: string) => void;
   onToggleCollapsed?: () => void;
-}
+};
 
 export function AttemptReviewFileTree({
   files,
@@ -243,10 +243,10 @@ function selectOnlyFileTreePath(
   });
 }
 
-interface FileCommentStats {
+type FileCommentStats = {
   visibleCount: number;
   unsavedCount: number;
-}
+};
 
 function groupCommentStatsByFile(comments: AttemptReviewLineComment[]) {
   const stats = new Map<string, FileCommentStats>();

@@ -57,9 +57,9 @@ const highlighterOptions: WorkerInitializationRenderOptions = {
   preferredHighlighter: 'shiki-wasm',
 };
 
-interface AttemptReviewWorkerPoolProps {
+type AttemptReviewWorkerPoolProps = {
   children: ReactNode;
-}
+};
 
 export function AttemptReviewWorkerPool({
   children,

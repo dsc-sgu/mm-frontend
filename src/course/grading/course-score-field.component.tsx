@@ -9,7 +9,7 @@ import {
   scoreDraftTextSizeClass,
 } from './course-grading';
 
-interface CourseScoreFieldProps {
+type CourseScoreFieldProps = {
   value: string;
   maxScore: number;
   changed?: boolean;
@@ -21,7 +21,7 @@ interface CourseScoreFieldProps {
   inputClassName?: string;
   onChange: (value: string) => void;
   onReset?: () => void;
-}
+};
 
 export function CourseScoreField({
   value,

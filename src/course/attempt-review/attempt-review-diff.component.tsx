@@ -35,7 +35,7 @@ import type {
   AttemptReviewMode,
 } from './attempt-review.types';
 
-interface AttemptReviewDiffProps {
+type AttemptReviewDiffProps = {
   files: AttemptReviewChangedFile[];
   comments: AttemptReviewLineComment[];
   savedComments?: AttemptReviewLineComment[];
@@ -62,7 +62,7 @@ interface AttemptReviewDiffProps {
   onViewerChange?: (
     viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null
   ) => void;
-}
+};
 
 const CODE_VIEW_LAYOUT = {
   paddingTop: 0,

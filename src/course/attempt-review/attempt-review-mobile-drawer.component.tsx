@@ -3,13 +3,13 @@ import { X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 
-interface AttemptReviewMobileDrawerProps {
+type AttemptReviewMobileDrawerProps = {
   titleId: string;
   title: string;
   description: string;
   children: ReactNode;
   onClose: () => void;
-}
+};
 
 export function AttemptReviewMobileDrawer({
   titleId,

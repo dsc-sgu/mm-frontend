@@ -1,5 +1,5 @@
 import type { AttemptReviewLineComment } from './attempt-review.types';
 
-export interface AttemptReviewLineCommentAnnotation {
+export type AttemptReviewLineCommentAnnotation = {
   comment: AttemptReviewLineComment;
-}
+};

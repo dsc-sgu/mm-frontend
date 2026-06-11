@@ -5,18 +5,18 @@ const WHEEL_GESTURE_IDLE_MS = 140;
 
 type ScrollableElement = HTMLElement | Element;
 
-interface AttemptReviewScrollHandoffOptions {
+type AttemptReviewScrollHandoffOptions = {
   enabled: boolean;
   rootRef: RefObject<HTMLElement | null>;
   innerScrollRef: RefObject<HTMLElement | null>;
-}
+};
 
-interface WheelGestureState {
+type WheelGestureState = {
   claimedByHandoff: boolean;
   lockedToNestedScroll: boolean;
   deltaSign: 1 | -1;
   lastEventTime: number;
-}
+};
 
 export function useAttemptReviewScrollHandoff({
   enabled,

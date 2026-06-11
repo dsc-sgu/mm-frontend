@@ -1,9 +1,9 @@
 import { formatAttemptReviewRelativeDateTime } from './attempt-review-date.format';
 
-interface AttemptReviewCommentTimestampProps {
+type AttemptReviewCommentTimestampProps = {
   createdAt: string;
   updatedAt: string;
-}
+};
 
 export function AttemptReviewCommentTimestamp({
   createdAt,
