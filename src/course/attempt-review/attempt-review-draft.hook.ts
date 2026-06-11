@@ -49,7 +49,16 @@ export function createAttemptReviewDraft(
   return {
     score: review.current.grade ? String(review.current.grade.score) : '',
     overallFeedbackHtml: review.overallFeedback.html,
-    lineComments: review.lineComments.map((comment) => ({ ...comment })),
+    lineComments: review.lineComments.map(cloneLineComment),
+  };
+}
+
+function cloneLineComment(
+  comment: AttemptReviewLineComment
+): AttemptReviewLineComment {
+  return {
+    ...comment,
+    replies: comment.replies?.map((reply) => ({ ...reply })),
   };
 }
 

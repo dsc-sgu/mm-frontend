@@ -217,14 +217,6 @@
     container-type: inline-size;
   }
 
-  .attempt-review-sticky-file-header {
-    top: var(--attempt-review-sticky-top, 4rem);
-  }
-
-  .attempt-review-diff-file {
-    scroll-margin-top: calc(var(--attempt-review-sticky-top, 4rem) + 4rem);
-  }
-
   .attempt-review-attempt-label-full {
     display: none;
   }

@@ -1,21 +1,16 @@
-import { useState } from 'react';
-import {
-  Check,
-  MessageSquare,
-  Pencil,
-  RotateCcw,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
-import { formatAttemptReviewRelativeDateTime } from './attempt-review-date.format';
+import { formatAttemptReviewCommentRange } from './attempt-review-comment-range.format';
+import { AttemptReviewCommentPendingNotice } from './attempt-review-comment-pending-notice.component';
+import { AttemptReviewCommentReplies } from './attempt-review-comment-replies.component';
+import { AttemptReviewCommentTimestamp } from './attempt-review-comment-timestamp.component';
 import { RichTextContent, RichTextEditor } from './rich-text-editor.component';
+import { isRichTextHtmlEmpty } from './rich-text-empty.model';
 import type {
-  AttemptReviewCommentSide,
   AttemptReviewLineComment,
-  AttemptReviewLineCommentReply,
   AttemptReviewMode,
 } from './attempt-review.types';
 
@@ -69,6 +64,12 @@ export function AttemptReviewLineCommentCard({
   const isReplySubmitDisabled =
     isReplySubmitting || isRichTextHtmlEmpty(replyHtml);
 
+  useEffect(() => {
+    if (!isEditableComment) {
+      setDraftHtml(comment.html);
+    }
+  }, [comment.html, isEditableComment]);
+
   async function submitReply() {
     if (isReplySubmitDisabled) {
       return;
@@ -101,7 +102,7 @@ export function AttemptReviewLineCommentCard({
             {commentStatus === 'saved' ? (
               <>
                 <span aria-hidden="true">·</span>
-                <CommentTimestamp
+                <AttemptReviewCommentTimestamp
                   createdAt={comment.createdAt}
                   updatedAt={comment.updatedAt}
                 />
@@ -110,11 +111,11 @@ export function AttemptReviewLineCommentCard({
             {isPendingComment ? (
               <>
                 <span aria-hidden="true">·</span>
-                <PendingCommentNotice status={commentStatus} />
+                <AttemptReviewCommentPendingNotice status={commentStatus} />
               </>
             ) : null}
           </div>
-          <span>{formatCommentRange(comment)}</span>
+          <span>{formatAttemptReviewCommentRange(comment)}</span>
         </div>
 
         {!isEditableComment ? (
@@ -201,7 +202,7 @@ export function AttemptReviewLineCommentCard({
       )}
 
       {commentStatus !== 'draft' ? (
-        <CommentReplies
+        <AttemptReviewCommentReplies
           replies={comment.replies ?? []}
           canReply={canReply && !isEditableComment && !isPendingComment}
           currentUsername={isPendingComment ? undefined : currentUsername}
@@ -223,318 +224,4 @@ export function AttemptReviewLineCommentCard({
       ) : null}
     </div>
   );
-}
-
-function CommentReplies({
-  replies,
-  canReply,
-  currentUsername,
-  isReplying,
-  replyHtml,
-  isReplySubmitDisabled,
-  onReplyHtmlChange,
-  onStartReply,
-  onCancelReply,
-  onSubmitReply,
-  onReplyUpdate,
-  onReplyDelete,
-}: {
-  replies: AttemptReviewLineCommentReply[];
-  canReply: boolean;
-  currentUsername?: string;
-  isReplying: boolean;
-  replyHtml: string;
-  isReplySubmitDisabled: boolean;
-  onReplyHtmlChange: (html: string) => void;
-  onStartReply: () => void;
-  onCancelReply: () => void;
-  onSubmitReply: () => void;
-  onReplyUpdate: (replyId: string, html: string) => void | Promise<void>;
-  onReplyDelete: (replyId: string) => void | Promise<void>;
-}) {
-  if (replies.length === 0 && !canReply && !isReplying) {
-    return null;
-  }
-
-  return (
-    <div className="mt-3 grid gap-3 border-t pt-3">
-      {replies.length > 0 ? (
-        <div className="grid gap-2">
-          {replies.map((reply) => (
-            <ReplyItem
-              key={reply.id}
-              reply={reply}
-              canManage={currentUsername === reply.authorUsername}
-              onUpdate={onReplyUpdate}
-              onDelete={onReplyDelete}
-            />
-          ))}
-        </div>
-      ) : null}
-
-      {isReplying ? (
-        <div className="grid gap-2 border-l-2 border-primary/30 pl-3">
-          <RichTextEditor
-            value={replyHtml}
-            editable
-            minHeightClassName="min-h-16"
-            placeholder="Ответить на комментарий…"
-            onChange={onReplyHtmlChange}
-          />
-          <div className="flex flex-wrap justify-start gap-2">
-            <Button
-              type="button"
-              size="sm"
-              className="rounded-xl"
-              disabled={isReplySubmitDisabled}
-              onClick={onSubmitReply}
-            >
-              <Check className="size-4" />
-              Отправить
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="rounded-xl"
-              onClick={onCancelReply}
-            >
-              <X className="size-4" />
-              Отмена
-            </Button>
-          </div>
-        </div>
-      ) : canReply ? (
-        <div className="flex justify-start">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="rounded-xl text-muted-foreground"
-            onClick={onStartReply}
-          >
-            <MessageSquare className="size-4" />
-            Ответить
-          </Button>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function ReplyItem({
-  reply,
-  canManage,
-  onUpdate,
-  onDelete,
-}: {
-  reply: AttemptReviewLineCommentReply;
-  canManage: boolean;
-  onUpdate: (replyId: string, html: string) => void | Promise<void>;
-  onDelete: (replyId: string) => void | Promise<void>;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [draftHtml, setDraftHtml] = useState(reply.html);
-  const [isPending, setIsPending] = useState(false);
-  const isSubmitDisabled = isPending || isRichTextHtmlEmpty(draftHtml);
-
-  async function submitEdit() {
-    if (isSubmitDisabled) {
-      return;
-    }
-
-    setIsPending(true);
-
-    try {
-      await onUpdate(reply.id, draftHtml);
-      setIsEditing(false);
-    } finally {
-      setIsPending(false);
-    }
-  }
-
-  async function deleteReply() {
-    setIsPending(true);
-
-    try {
-      await onDelete(reply.id);
-    } finally {
-      setIsPending(false);
-    }
-  }
-
-  if (isEditing) {
-    return (
-      <div className="grid gap-2 border-l-2 border-muted pl-3 text-sm">
-        <div className="mb-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">
-            {reply.authorName}
-          </span>
-          <span aria-hidden="true">·</span>
-          <CommentTimestamp
-            createdAt={reply.createdAt}
-            updatedAt={reply.updatedAt}
-          />
-        </div>
-        <RichTextEditor
-          value={draftHtml}
-          editable
-          minHeightClassName="min-h-16"
-          placeholder="Ответить на комментарий…"
-          onChange={setDraftHtml}
-        />
-        <div className="flex flex-wrap justify-start gap-2">
-          <Button
-            type="button"
-            size="sm"
-            className="rounded-xl"
-            disabled={isSubmitDisabled}
-            onClick={() => {
-              void submitEdit();
-            }}
-          >
-            <Check className="size-4" />
-            Сохранить
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="rounded-xl"
-            disabled={isPending}
-            onClick={() => {
-              setDraftHtml(reply.html);
-              setIsEditing(false);
-            }}
-          >
-            <RotateCcw className="size-4" />
-            Отмена
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="border-l-2 border-muted pl-3 text-sm">
-      <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
-          <span className="font-medium text-foreground">
-            {reply.authorName}
-          </span>
-          <span aria-hidden="true">·</span>
-          <CommentTimestamp
-            createdAt={reply.createdAt}
-            updatedAt={reply.updatedAt}
-          />
-        </div>
-        {canManage ? (
-          <div className="flex shrink-0 items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              disabled={isPending}
-              aria-label="Редактировать ответ"
-              title="Редактировать ответ"
-              onClick={() => setIsEditing(true)}
-            >
-              <Pencil className="size-3.5" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              disabled={isPending}
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-              aria-label="Удалить ответ"
-              title="Удалить ответ"
-              onClick={() => {
-                void deleteReply();
-              }}
-            >
-              <Trash2 className="size-3.5" />
-            </Button>
-          </div>
-        ) : null}
-      </div>
-      <RichTextContent html={reply.html} />
-    </div>
-  );
-}
-
-function PendingCommentNotice({
-  status,
-}: {
-  status: AttemptReviewLineComment['status'];
-}) {
-  const label =
-    status === 'pending-delete'
-      ? 'Будет удалён после сохранения отзыва'
-      : status === 'pending-update'
-        ? 'Сохраните отзыв, чтобы применить изменения'
-        : 'Сохраните отзыв, чтобы комментарий стал виден';
-
-  return (
-    <span className="rounded-md bg-amber-100 px-1.5 py-0.5 font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
-      {label}
-    </span>
-  );
-}
-
-function CommentTimestamp({
-  createdAt,
-  updatedAt,
-}: {
-  createdAt: string;
-  updatedAt: string;
-}) {
-  const edited = createdAt !== updatedAt;
-  const date = formatAttemptReviewRelativeDateTime(
-    edited ? updatedAt : createdAt
-  );
-
-  return (
-    <span title={date.title}>
-      {date.label}
-      {edited ? ' · изменено' : ''}
-    </span>
-  );
-}
-
-function isRichTextHtmlEmpty(html: string): boolean {
-  const withoutTags = html
-    .replace(/<br\s*\/?>(?=<\/p>)/gi, '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, '')
-    .trim();
-
-  return withoutTags.length === 0 && !/<img\s/i.test(html);
-}
-
-function formatCommentRange(comment: AttemptReviewLineComment): string {
-  const startLabel = sideLabel(comment.side).toLowerCase();
-  const endSide = comment.endSide ?? comment.side;
-  const endLineNumber = comment.endLineNumber ?? comment.lineNumber;
-
-  if (comment.side === endSide && comment.lineNumber === endLineNumber) {
-    return `К ${startLabel} #${comment.lineNumber}`;
-  }
-
-  if (comment.side === endSide) {
-    const from = Math.min(comment.lineNumber, endLineNumber);
-    const to = Math.max(comment.lineNumber, endLineNumber);
-    return `К ${pluralSideLabel(comment.side).toLowerCase()} #${from}–${to}`;
-  }
-
-  return `К ${startLabel} #${comment.lineNumber} → ${sideLabel(endSide).toLowerCase()} #${endLineNumber}`;
-}
-
-function sideLabel(side: AttemptReviewCommentSide): string {
-  return side === 'additions' ? 'новой строке' : 'старой строке';
-}
-
-function pluralSideLabel(side: AttemptReviewCommentSide): string {
-  return side === 'additions' ? 'новым строкам' : 'старым строкам';
 }
