@@ -13,7 +13,7 @@ import {
 } from '@/shadcn/components/ui/card';
 import { cn } from '@/shadcn/lib/utils';
 import { useLoginMutation } from '@/auth/auth.queries';
-import { loginSchema, type LoginFormData } from '@/auth/auth.schemes';
+import { loginSchema, type LoginFormData } from '@/auth/auth.schemas';
 
 export const Route = createFileRoute('/_auth/login')({
   component: RouteComponent,

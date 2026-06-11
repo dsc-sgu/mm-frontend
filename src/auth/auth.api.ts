@@ -1,4 +1,4 @@
-import { SessionScheme } from './auth.schemes';
+import { SessionScheme } from './auth.schemas';
 import type {
   FetchSessionResponse,
   LoginRequest,

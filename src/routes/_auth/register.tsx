@@ -16,7 +16,7 @@ import { useRegisterMutation } from '@/auth/auth.queries';
 import {
   registrationSchema,
   type RegistrationFormData,
-} from '@/auth/auth.schemes';
+} from '@/auth/auth.schemas';
 
 export const Route = createFileRoute('/_auth/register')({
   component: RouteComponent,
