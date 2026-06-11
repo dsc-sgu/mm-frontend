@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
@@ -16,6 +16,8 @@ interface RichTextEditorProps {
   minHeightClassName?: string;
   className?: string;
   onChange?: (value: string) => void;
+  onBlur?: (value: string) => void;
+  onFocus?: () => void;
 }
 
 export function RichTextEditor({
@@ -25,7 +27,18 @@ export function RichTextEditor({
   minHeightClassName = 'min-h-32',
   className,
   onChange,
+  onBlur,
+  onFocus,
 }: RichTextEditorProps) {
+  const onChangeRef = useRef(onChange);
+  const onBlurRef = useRef(onBlur);
+  const onFocusRef = useRef(onFocus);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+    onBlurRef.current = onBlur;
+    onFocusRef.current = onFocus;
+  }, [onBlur, onChange, onFocus]);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -48,7 +61,13 @@ export function RichTextEditor({
     editable,
     immediatelyRender: false,
     onUpdate({ editor: currentEditor }) {
-      onChange?.(currentEditor.getHTML());
+      onChangeRef.current?.(currentEditor.getHTML());
+    },
+    onBlur({ editor: currentEditor }) {
+      onBlurRef.current?.(currentEditor.getHTML());
+    },
+    onFocus() {
+      onFocusRef.current?.();
     },
     editorProps: {
       attributes: {
