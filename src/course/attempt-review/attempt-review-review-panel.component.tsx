@@ -17,6 +17,7 @@ interface AttemptReviewReviewPanelProps {
   mode: AttemptReviewMode;
   scoreError: string | null;
   hasChanges: boolean;
+  hasCommentChanges: boolean;
   canSave: boolean;
   savePending: boolean;
   onScoreChange: (score: string) => void;
@@ -31,6 +32,7 @@ export function AttemptReviewReviewPanel({
   mode,
   scoreError,
   hasChanges,
+  hasCommentChanges,
   canSave,
   savePending,
   onScoreChange,
@@ -92,26 +94,33 @@ export function AttemptReviewReviewPanel({
         )}
 
         {mode === 'editable' ? (
-          <div className="flex flex-wrap justify-start gap-2 border-t pt-4">
-            <Button
-              type="button"
-              className="rounded-xl"
-              disabled={!canSave}
-              onClick={onSave}
-            >
-              {savePending ? <Spinner /> : <Save className="size-4" />}
-              Сохранить
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-xl"
-              disabled={!hasChanges || savePending}
-              onClick={onDiscard}
-            >
-              <RotateCcw className="size-4" />
-              Сбросить
-            </Button>
+          <div className="grid gap-3 border-t pt-4">
+            {hasCommentChanges ? (
+              <p className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
+                Есть несохранённые изменения в комментариях.
+              </p>
+            ) : null}
+            <div className="flex flex-wrap justify-start gap-2">
+              <Button
+                type="button"
+                className="rounded-xl"
+                disabled={!canSave}
+                onClick={onSave}
+              >
+                {savePending ? <Spinner /> : <Save className="size-4" />}
+                Сохранить
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-xl"
+                disabled={!hasChanges || savePending}
+                onClick={onDiscard}
+              >
+                <RotateCcw className="size-4" />
+                Сбросить
+              </Button>
+            </div>
           </div>
         ) : null}
       </div>
