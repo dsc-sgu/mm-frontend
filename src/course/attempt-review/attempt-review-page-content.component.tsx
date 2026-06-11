@@ -1,25 +1,27 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { CodeViewHandle } from '@pierre/diffs/react';
 import { useQuery } from '@tanstack/react-query';
-import { MessageSquareText, PanelLeftOpen, X } from 'lucide-react';
 
 import { SESSION_OPTIONS } from '@/auth/auth.queries';
-import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/use-media-query.hook';
-import { AttemptReviewAttemptSelect } from './attempt-review-attempt-select.component';
-import { formatAttemptReviewDateTime } from './attempt-review-date.format';
+import type { AttemptReviewLineCommentAnnotation } from './attempt-review-comment-annotation.model';
 import {
-  AttemptReviewDiffViewToggle,
-  type AttemptReviewDiffViewMode,
-} from './attempt-review-diff-view-toggle.component';
+  prepareLineCommentsForImmediatePersist,
+  prepareLineCommentsForSave,
+} from './attempt-review-comment-save.model';
+import { AttemptReviewDiff } from './attempt-review-diff.component';
+import type { AttemptReviewDiffViewMode } from './attempt-review-diff-view-toggle.component';
 import {
-  AttemptReviewDiff,
-  type AttemptReviewLineCommentAnnotation,
-} from './attempt-review-diff.component';
+  getStoredDiffViewMode,
+  saveDiffViewMode,
+} from './attempt-review-diff-view-mode.storage';
 import { useAttemptReviewDraft } from './attempt-review-draft.hook';
+import { useAttemptReviewFileScroll } from './attempt-review-file-scroll.hook';
 import { AttemptReviewFileTree } from './attempt-review-file-tree.component';
+import { AttemptReviewHeader } from './attempt-review-header.component';
 import { useAttemptReviewStickyOffset } from './attempt-review-layout.hook';
+import { AttemptReviewMobileDrawer } from './attempt-review-mobile-drawer.component';
 import { useSaveAttemptReviewMutation } from './attempt-review.queries';
 import { AttemptReviewReviewPanel } from './attempt-review-review-panel.component';
 import type {
@@ -36,9 +38,6 @@ interface AttemptReviewPageContentProps {
   attemptId: number;
   review: AttemptReviewAggregate;
 }
-
-const ATTEMPT_REVIEW_DIFF_VIEW_MODE_STORAGE_KEY =
-  'attempt-review.diff-view-mode';
 
 export function AttemptReviewPageContent({
   mode,
@@ -65,9 +64,7 @@ export function AttemptReviewPageContent({
   const diffSectionRef = useRef<HTMLDivElement | null>(null);
   const diffViewerRef =
     useRef<CodeViewHandle<AttemptReviewLineCommentAnnotation> | null>(null);
-  const scrollRequestIdRef = useRef(0);
   const isDesktopReviewLayout = useMediaQuery('(min-width: 1024px)');
-  const isSummaryCompact = true;
   const currentReviewer = useMemo(() => {
     if (sessionData?.status !== 'AUTHORIZED') {
       return undefined;
@@ -109,8 +106,21 @@ export function AttemptReviewPageContent({
     pageHeaderRef,
     pageRootRef,
     isDesktopReviewLayout,
-    isSummaryCompact,
   });
+
+  const { scrollToFile } = useAttemptReviewFileScroll({
+    diffSectionRef,
+    diffViewerRef,
+    isDesktopReviewLayout,
+    onCloseMobileFileTree: () => setIsFileTreeDrawerOpen(false),
+  });
+  const handleSelectFile = useCallback(
+    (path: string) => {
+      setActiveFilePath(path);
+      scrollToFile(path);
+    },
+    [scrollToFile]
+  );
 
   const canReplyToComments =
     sessionData?.status === 'AUTHORIZED' &&
@@ -126,61 +136,6 @@ export function AttemptReviewPageContent({
     (sum, file) => sum + file.deletedLines,
     0
   );
-
-  function scrollCodeViewToFile(path: string, scrollRequestId: number) {
-    stagedScrollCodeViewToItem(
-      diffViewerRef.current,
-      path,
-      () => scrollRequestIdRef.current === scrollRequestId
-    );
-  }
-
-  function scrollToFile(path: string) {
-    const scrollRequestId = scrollRequestIdRef.current + 1;
-    scrollRequestIdRef.current = scrollRequestId;
-
-    if (!isDesktopReviewLayout || isPageAtBottom()) {
-      scrollCodeViewToFile(path, scrollRequestId);
-      return;
-    }
-
-    window.scrollTo({
-      top: getPageMaxScrollTop(),
-      behavior: 'smooth',
-    });
-
-    waitForPageBottom(
-      () => {
-        scrollCodeViewToFile(path, scrollRequestId);
-      },
-      () => scrollRequestIdRef.current === scrollRequestId
-    );
-  }
-
-  function handleSelectFile(path: string) {
-    setActiveFilePath(path);
-
-    if (isDesktopReviewLayout) {
-      scrollToFile(path);
-      return;
-    }
-
-    const scrollRequestId = scrollRequestIdRef.current + 1;
-    scrollRequestIdRef.current = scrollRequestId;
-
-    setIsFileTreeDrawerOpen(false);
-    waitForAnimationFrames(2, () => {
-      if (scrollRequestIdRef.current !== scrollRequestId) {
-        return;
-      }
-
-      diffSectionRef.current?.scrollIntoView({
-        block: 'start',
-        behavior: 'smooth',
-      });
-      scrollCodeViewToFile(path, scrollRequestId);
-    });
-  }
 
   async function persistLineComments(lineComments: AttemptReviewLineComment[]) {
     if (mode === 'editable') {
@@ -224,144 +179,32 @@ export function AttemptReviewPageContent({
       ref={pageRootRef}
       className="flex w-full flex-col gap-0 px-3 pt-0 pb-0 sm:px-6 sm:pt-0 sm:pb-0 lg:px-8"
     >
-      <header
+      <AttemptReviewHeader
         ref={pageHeaderRef}
-        className={cn(
-          '-mx-3 sticky top-0 z-30 overflow-hidden border-b bg-background/95 px-3 backdrop-blur transition-all duration-200 supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-4 lg:-mx-8 lg:px-4',
-          isSummaryCompact ? 'py-2' : 'py-4'
-        )}
-      >
-        <div className="grid gap-3 lg:flex lg:items-center lg:justify-between">
-          <div className="min-w-0">
-            <p
-              className={cn(
-                'overflow-hidden text-sm font-medium text-muted-foreground transition-all duration-200',
-                isSummaryCompact
-                  ? 'max-h-0 -translate-y-1 opacity-0'
-                  : 'max-h-5 translate-y-0 opacity-100'
-              )}
-            >
-              {mode === 'editable'
-                ? 'Проверка преподавателем'
-                : 'Просмотр попытки'}
-            </p>
-            <h1
-              className={cn(
-                'break-words font-semibold tracking-tight transition-all duration-200',
-                isSummaryCompact ? 'text-lg leading-6' : 'text-2xl leading-8'
-              )}
-            >
-              Попытка #{review.current.attemptNumber}:{' '}
-              {review.current.task.title}
-            </h1>
-            <p
-              className={cn(
-                'flex flex-wrap text-muted-foreground transition-all duration-200',
-                isSummaryCompact
-                  ? 'mt-0.5 gap-x-2 gap-y-0 text-xs leading-4'
-                  : 'mt-1 gap-x-3 gap-y-1 text-sm leading-5'
-              )}
-            >
-              <span>{review.current.student.fullName}</span>
-              <span>Максимум: {review.current.task.maxScore}</span>
-              <span>
-                Отправлено{' '}
-                {formatAttemptReviewDateTime(review.current.submittedAt)}
-              </span>
-              <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
-                <span className="text-emerald-700 dark:text-emerald-300">
-                  +{totalAdded}
-                </span>
-                <span className="text-rose-700 dark:text-rose-300">
-                  −{totalDeleted}
-                </span>
-              </span>
-              <span>
-                {review.baselineAttemptNumber
-                  ? `Сравнение с попыткой #${review.baselineAttemptNumber}`
-                  : 'Сравнение с пустой базой'}
-              </span>
-            </p>
-          </div>
-
-          <div className="grid w-full min-w-0 gap-2 lg:flex lg:w-auto lg:items-center lg:shrink-0">
-            <div className="grid grid-cols-2 gap-2 lg:hidden">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-9 justify-start px-2.5 min-[480px]:px-3"
-                onClick={() => {
-                  setIsReviewPanelOpen(false);
-                  setIsFileTreeDrawerOpen(true);
-                }}
-              >
-                <PanelLeftOpen className="size-4" />
-                Файлы
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="relative h-9 justify-start px-2.5 min-[480px]:px-3"
-                onClick={() => {
-                  setIsFileTreeDrawerOpen(false);
-                  setIsReviewPanelOpen(true);
-                }}
-              >
-                <MessageSquareText className="size-4" />
-                Отзыв
-                {hasChanges ? (
-                  <span
-                    className="absolute top-2 right-2 size-2 rounded-full bg-amber-500"
-                    aria-hidden="true"
-                  />
-                ) : null}
-              </Button>
-            </div>
-            <div className="flex min-w-0 gap-2 lg:w-auto lg:items-center lg:shrink-0">
-              <AttemptReviewDiffViewToggle
-                value={diffViewMode}
-                onChange={handleDiffViewModeChange}
-              />
-              <AttemptReviewAttemptSelect
-                review={review}
-                mode={mode}
-                variant="header"
-                className="min-w-0 flex-1 lg:w-[21rem] lg:flex-none lg:shrink-0"
-              />
-            </div>
-          </div>
-        </div>
-      </header>
+        mode={mode}
+        review={review}
+        diffViewMode={diffViewMode}
+        hasChanges={hasChanges}
+        totalAdded={totalAdded}
+        totalDeleted={totalDeleted}
+        onDiffViewModeChange={handleDiffViewModeChange}
+        onOpenFileTree={() => {
+          setIsReviewPanelOpen(false);
+          setIsFileTreeDrawerOpen(true);
+        }}
+        onOpenReviewPanel={() => {
+          setIsFileTreeDrawerOpen(false);
+          setIsReviewPanelOpen(true);
+        }}
+      />
 
       {isFileTreeDrawerOpen && !isDesktopReviewLayout ? (
-        <div
-          className="fixed inset-0 z-50 flex h-dvh min-h-0 flex-col bg-card"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="attempt-review-mobile-file-tree-title"
+        <AttemptReviewMobileDrawer
+          titleId="attempt-review-mobile-file-tree-title"
+          title="Изменённые файлы"
+          description="Выберите файл, чтобы перейти к его diff."
+          onClose={() => setIsFileTreeDrawerOpen(false)}
         >
-          <div className="flex shrink-0 items-start justify-between gap-4 border-b p-4 text-left">
-            <div className="min-w-0">
-              <h2
-                id="attempt-review-mobile-file-tree-title"
-                className="font-semibold text-foreground"
-              >
-                Изменённые файлы
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Выберите файл, чтобы перейти к его diff.
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Закрыть список файлов"
-              onClick={() => setIsFileTreeDrawerOpen(false)}
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
           <div className="min-h-0 flex-1 overflow-hidden overscroll-contain">
             <AttemptReviewFileTree
               key={`mobile-file-tree-${attemptId}`}
@@ -372,38 +215,16 @@ export function AttemptReviewPageContent({
               onSelectFile={handleSelectFile}
             />
           </div>
-        </div>
+        </AttemptReviewMobileDrawer>
       ) : null}
 
       {isReviewPanelOpen && !isDesktopReviewLayout ? (
-        <div
-          className="fixed inset-0 z-50 flex h-dvh min-h-0 flex-col bg-card"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="attempt-review-mobile-review-title"
+        <AttemptReviewMobileDrawer
+          titleId="attempt-review-mobile-review-title"
+          title="Отзыв по попытке"
+          description="Оценка, общий отзыв и сохранение изменений."
+          onClose={() => setIsReviewPanelOpen(false)}
         >
-          <div className="flex shrink-0 items-start justify-between gap-4 border-b p-4 text-left">
-            <div className="min-w-0">
-              <h2
-                id="attempt-review-mobile-review-title"
-                className="font-semibold text-foreground"
-              >
-                Отзыв по попытке
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Оценка, общий отзыв и сохранение изменений.
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Закрыть отзыв"
-              onClick={() => setIsReviewPanelOpen(false)}
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <AttemptReviewReviewPanel
               review={review}
@@ -421,7 +242,7 @@ export function AttemptReviewPageContent({
               onSave={saveReview}
             />
           </div>
-        </div>
+        </AttemptReviewMobileDrawer>
       ) : null}
 
       {isDesktopReviewLayout ? (
@@ -485,231 +306,4 @@ export function AttemptReviewPageContent({
       </div>
     </main>
   );
-}
-
-function prepareLineCommentsForSave(
-  comments: AttemptReviewLineComment[]
-): AttemptReviewLineComment[] {
-  const now = new Date().toISOString();
-
-  return comments
-    .filter(
-      (comment) =>
-        comment.status !== 'draft' && comment.status !== 'pending-delete'
-    )
-    .map((comment) => prepareLineCommentForSave(comment, now));
-}
-
-function prepareLineCommentsForImmediatePersist(
-  comments: AttemptReviewLineComment[],
-  savedComments: AttemptReviewLineComment[]
-): AttemptReviewLineComment[] {
-  const commentsById = new Map(
-    comments.map((comment) => [comment.id, comment])
-  );
-
-  return savedComments.map((savedComment) => {
-    const comment = commentsById.get(savedComment.id);
-
-    if (comment && (comment.status ?? 'saved') === 'saved') {
-      return prepareLineCommentForSave(comment, comment.updatedAt);
-    }
-
-    return prepareLineCommentForSave(savedComment, savedComment.updatedAt);
-  });
-}
-
-function prepareLineCommentForSave(
-  comment: AttemptReviewLineComment,
-  fallbackDate: string
-): AttemptReviewLineComment {
-  const status = comment.status ?? 'saved';
-  const createdAt =
-    status === 'pending-create'
-      ? fallbackDate
-      : comment.createdAt || fallbackDate;
-  const updatedAt =
-    status === 'pending-create' || status === 'pending-update'
-      ? fallbackDate
-      : comment.updatedAt || fallbackDate;
-
-  return {
-    id: comment.id,
-    filePath: comment.filePath,
-    side: comment.side,
-    lineNumber: comment.lineNumber,
-    endSide: comment.endSide,
-    endLineNumber: comment.endLineNumber,
-    html: comment.html,
-    authorName: comment.authorName,
-    authorUsername: comment.authorUsername,
-    createdAt,
-    updatedAt,
-    status: 'saved',
-    replies: comment.replies?.map((reply) => ({
-      id: reply.id,
-      html: reply.html,
-      authorName: reply.authorName,
-      authorUsername: reply.authorUsername,
-      createdAt: reply.createdAt,
-      updatedAt: reply.updatedAt,
-    })),
-  };
-}
-
-function getStoredDiffViewMode(): AttemptReviewDiffViewMode {
-  if (typeof window === 'undefined') {
-    return 'unified';
-  }
-
-  try {
-    const value = window.localStorage.getItem(
-      ATTEMPT_REVIEW_DIFF_VIEW_MODE_STORAGE_KEY
-    );
-
-    return isAttemptReviewDiffViewMode(value) ? value : 'unified';
-  } catch {
-    return 'unified';
-  }
-}
-
-function saveDiffViewMode(value: AttemptReviewDiffViewMode) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(
-      ATTEMPT_REVIEW_DIFF_VIEW_MODE_STORAGE_KEY,
-      value
-    );
-  } catch {
-    // localStorage can be unavailable in private mode or restricted contexts.
-  }
-}
-
-function isAttemptReviewDiffViewMode(
-  value: string | null
-): value is AttemptReviewDiffViewMode {
-  return value === 'unified' || value === 'split';
-}
-
-const PAGE_BOTTOM_EPSILON = 2;
-const PAGE_BOTTOM_WAIT_MAX_FRAMES = 90;
-const CODE_VIEW_SMOOTH_SCROLL_VIEWPORTS = 3;
-const CODE_VIEW_STAGED_SCROLL_THRESHOLD_VIEWPORTS = 6;
-const CODE_VIEW_STAGED_SCROLL_FRAME_DELAY = 2;
-
-function stagedScrollCodeViewToItem(
-  viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null,
-  itemId: string,
-  shouldContinue: () => boolean
-) {
-  if (!viewer || !shouldContinue()) {
-    return;
-  }
-
-  const instance = viewer.getInstance();
-
-  if (!instance) {
-    smoothScrollCodeViewToItem(viewer, itemId);
-    return;
-  }
-
-  const targetTop = instance.getTopForItem(itemId);
-  const currentTop = instance.getScrollTop();
-  const viewportHeight = instance.getHeight();
-
-  if (
-    targetTop == null ||
-    !Number.isFinite(targetTop) ||
-    !Number.isFinite(currentTop) ||
-    !Number.isFinite(viewportHeight) ||
-    viewportHeight <= 0
-  ) {
-    smoothScrollCodeViewToItem(viewer, itemId);
-    return;
-  }
-
-  const distance = targetTop - currentTop;
-  const smoothDistance = viewportHeight * CODE_VIEW_SMOOTH_SCROLL_VIEWPORTS;
-  const stagedScrollThreshold =
-    viewportHeight * CODE_VIEW_STAGED_SCROLL_THRESHOLD_VIEWPORTS;
-
-  if (Math.abs(distance) <= stagedScrollThreshold) {
-    smoothScrollCodeViewToItem(viewer, itemId);
-    return;
-  }
-
-  viewer.scrollTo({
-    type: 'position',
-    position: Math.max(0, targetTop - Math.sign(distance) * smoothDistance),
-    behavior: 'instant',
-  });
-
-  waitForAnimationFrames(CODE_VIEW_STAGED_SCROLL_FRAME_DELAY, () => {
-    if (shouldContinue()) {
-      smoothScrollCodeViewToItem(viewer, itemId);
-    }
-  });
-}
-
-function smoothScrollCodeViewToItem(
-  viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation>,
-  itemId: string
-) {
-  viewer.scrollTo({
-    type: 'item',
-    id: itemId,
-    align: 'start',
-    behavior: 'smooth',
-  });
-}
-
-function waitForAnimationFrames(frameCount: number, callback: () => void) {
-  if (frameCount <= 0) {
-    callback();
-    return;
-  }
-
-  window.requestAnimationFrame(() => {
-    waitForAnimationFrames(frameCount - 1, callback);
-  });
-}
-
-function waitForPageBottom(
-  callback: () => void,
-  shouldContinue: () => boolean
-) {
-  let frameCount = 0;
-
-  function tick() {
-    if (!shouldContinue()) {
-      return;
-    }
-
-    if (isPageAtBottom() || frameCount >= PAGE_BOTTOM_WAIT_MAX_FRAMES) {
-      callback();
-      return;
-    }
-
-    frameCount += 1;
-    window.requestAnimationFrame(tick);
-  }
-
-  window.requestAnimationFrame(tick);
-}
-
-function isPageAtBottom(): boolean {
-  return getPageMaxScrollTop() - window.scrollY <= PAGE_BOTTOM_EPSILON;
-}
-
-function getPageMaxScrollTop(): number {
-  const pageScroller = document.scrollingElement;
-
-  if (!pageScroller) {
-    return 0;
-  }
-
-  return Math.max(0, pageScroller.scrollHeight - pageScroller.clientHeight);
 }

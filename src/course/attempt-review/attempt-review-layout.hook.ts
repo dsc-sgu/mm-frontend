@@ -1,57 +1,13 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useState,
-  type RefObject,
-} from 'react';
-
-export function useAttemptReviewSummaryCompact(): boolean {
-  const [isSummaryCompact, setIsSummaryCompact] = useState(false);
-
-  useEffect(() => {
-    let animationFrame: number | null = null;
-
-    const updateCompactState = () => {
-      animationFrame = null;
-      setIsSummaryCompact(window.scrollY > 48);
-    };
-
-    const scheduleUpdate = () => {
-      if (animationFrame !== null) {
-        return;
-      }
-
-      animationFrame = window.requestAnimationFrame(updateCompactState);
-    };
-
-    updateCompactState();
-    window.addEventListener('scroll', scheduleUpdate, { passive: true });
-    window.addEventListener('resize', scheduleUpdate);
-
-    return () => {
-      if (animationFrame !== null) {
-        window.cancelAnimationFrame(animationFrame);
-      }
-
-      window.removeEventListener('scroll', scheduleUpdate);
-      window.removeEventListener('resize', scheduleUpdate);
-    };
-  }, []);
-
-  return isSummaryCompact;
-}
+import { useCallback, useLayoutEffect, type RefObject } from 'react';
 
 export function useAttemptReviewStickyOffset({
   pageHeaderRef,
   pageRootRef,
   isDesktopReviewLayout,
-  isSummaryCompact,
 }: {
   pageHeaderRef: RefObject<HTMLElement | null>;
   pageRootRef: RefObject<HTMLElement | null>;
   isDesktopReviewLayout: boolean;
-  isSummaryCompact: boolean;
 }) {
   const updateStickyOffset = useCallback(() => {
     const header = pageHeaderRef.current;
@@ -102,5 +58,5 @@ export function useAttemptReviewStickyOffset({
       window.cancelAnimationFrame(animationFrame);
       window.clearTimeout(transitionTimeout);
     };
-  }, [isDesktopReviewLayout, isSummaryCompact, updateStickyOffset]);
+  }, [isDesktopReviewLayout, updateStickyOffset]);
 }

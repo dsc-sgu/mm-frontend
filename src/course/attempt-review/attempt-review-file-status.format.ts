@@ -1,7 +1,7 @@
-import type { AttemptReviewChangedFile } from './attempt-review.types';
+import type { AttemptReviewFileStatus } from './attempt-review.types';
 
 export function getAttemptReviewFileStatusIconClassName(
-  status: AttemptReviewChangedFile['status']
+  status: AttemptReviewFileStatus
 ): string {
   if (status === 'added') {
     return 'border-emerald-500/50 bg-emerald-500/10 text-emerald-500';
@@ -15,7 +15,7 @@ export function getAttemptReviewFileStatusIconClassName(
 }
 
 export function getAttemptReviewFileStatusGlyph(
-  status: AttemptReviewChangedFile['status']
+  status: AttemptReviewFileStatus
 ): string {
   if (status === 'added') {
     return '+';
@@ -29,7 +29,7 @@ export function getAttemptReviewFileStatusGlyph(
 }
 
 export function getAttemptReviewFileStatusShortGlyph(
-  status: AttemptReviewChangedFile['status']
+  status: AttemptReviewFileStatus
 ): string {
   if (status === 'added') {
     return 'A';
@@ -43,7 +43,7 @@ export function getAttemptReviewFileStatusShortGlyph(
 }
 
 export function getAttemptReviewFileStatusLabel(
-  status: AttemptReviewChangedFile['status']
+  status: AttemptReviewFileStatus
 ): string {
   if (status === 'added') {
     return 'Добавлен';
