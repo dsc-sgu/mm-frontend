@@ -3,29 +3,30 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type QueryClient,
 } from '@tanstack/react-query';
 
 import { COURSE_ATTEMPTS_QUERY_KEY } from '@/course/attempts/course-attempts.queries';
 import {
+  createAttemptReviewCommentReply,
+  deleteAttemptReviewCommentReply,
   fetchAttemptReview,
   saveAttemptReview,
+  updateAttemptReviewCommentReply,
 } from './attempt-review.api.mock';
 import type {
   AttemptReviewRouteParams,
+  CreateAttemptReviewCommentReplyInput,
+  DeleteAttemptReviewCommentReplyInput,
   SaveAttemptReviewInput,
+  UpdateAttemptReviewCommentReplyInput,
 } from './attempt-review.types';
 
 export const ATTEMPT_REVIEW_QUERY_KEY = 'attempt-review';
 
 export function attemptReviewQueryOptions(params: AttemptReviewRouteParams) {
   return queryOptions({
-    queryKey: [
-      ATTEMPT_REVIEW_QUERY_KEY,
-      params.courseSlug,
-      params.taskId,
-      params.studentUsername,
-      params.attemptId,
-    ],
+    queryKey: getAttemptReviewQueryKey(params),
     queryFn: () => fetchAttemptReview(params),
     staleTime: 30 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -43,19 +44,66 @@ export function useSaveAttemptReviewMutation() {
     mutationFn: (input: SaveAttemptReviewInput) => saveAttemptReview(input),
     onSuccess: async (_data, variables) => {
       await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [
-            ATTEMPT_REVIEW_QUERY_KEY,
-            variables.courseSlug,
-            variables.taskId,
-            variables.studentUsername,
-            variables.attemptId,
-          ],
-        }),
+        invalidateAttemptReviewQuery(queryClient, variables),
         queryClient.invalidateQueries({
           queryKey: [COURSE_ATTEMPTS_QUERY_KEY, variables.courseSlug],
         }),
       ]);
     },
+  });
+}
+
+export function useCreateAttemptReviewCommentReplyMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateAttemptReviewCommentReplyInput) =>
+      createAttemptReviewCommentReply(input),
+    onSuccess: async (_data, variables) => {
+      await invalidateAttemptReviewQuery(queryClient, variables);
+    },
+  });
+}
+
+export function useUpdateAttemptReviewCommentReplyMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdateAttemptReviewCommentReplyInput) =>
+      updateAttemptReviewCommentReply(input),
+    onSuccess: async (_data, variables) => {
+      await invalidateAttemptReviewQuery(queryClient, variables);
+    },
+  });
+}
+
+export function useDeleteAttemptReviewCommentReplyMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: DeleteAttemptReviewCommentReplyInput) =>
+      deleteAttemptReviewCommentReply(input),
+    onSuccess: async (_data, variables) => {
+      await invalidateAttemptReviewQuery(queryClient, variables);
+    },
+  });
+}
+
+function getAttemptReviewQueryKey(params: AttemptReviewRouteParams) {
+  return [
+    ATTEMPT_REVIEW_QUERY_KEY,
+    params.courseSlug,
+    params.taskId,
+    params.studentUsername,
+    params.attemptId,
+  ];
+}
+
+function invalidateAttemptReviewQuery(
+  queryClient: QueryClient,
+  params: AttemptReviewRouteParams
+) {
+  return queryClient.invalidateQueries({
+    queryKey: getAttemptReviewQueryKey(params),
   });
 }

@@ -106,52 +106,34 @@ export function revertPendingLineComment(
   });
 }
 
-export function submitLineCommentReply({
+export function addLineCommentReply({
   comments,
   commentId,
-  html,
-  currentReviewer,
+  reply,
 }: {
   comments: AttemptReviewLineComment[];
   commentId: string;
-  html: string;
-  currentReviewer: AttemptReviewCommentAuthor;
+  reply: NonNullable<AttemptReviewLineComment['replies']>[number];
 }): AttemptReviewLineComment[] {
-  const now = new Date().toISOString();
-
   return updateLineComment(comments, commentId, (comment) => ({
     ...comment,
-    replies: [
-      ...(comment.replies ?? []),
-      {
-        id: `reply-${comment.id}-${Date.now()}`,
-        html,
-        authorName: currentReviewer.name,
-        authorUsername: currentReviewer.username,
-        createdAt: now,
-        updatedAt: now,
-      },
-    ],
+    replies: [...(comment.replies ?? []), reply],
   }));
 }
 
 export function updateLineCommentReply({
   comments,
   commentId,
-  replyId,
-  html,
+  reply,
 }: {
   comments: AttemptReviewLineComment[];
   commentId: string;
-  replyId: string;
-  html: string;
+  reply: NonNullable<AttemptReviewLineComment['replies']>[number];
 }): AttemptReviewLineComment[] {
-  const now = new Date().toISOString();
-
   return updateLineComment(comments, commentId, (comment) => ({
     ...comment,
-    replies: (comment.replies ?? []).map((reply) =>
-      reply.id === replyId ? { ...reply, html, updatedAt: now } : reply
+    replies: (comment.replies ?? []).map((currentReply) =>
+      currentReply.id === reply.id ? reply : currentReply
     ),
   }));
 }

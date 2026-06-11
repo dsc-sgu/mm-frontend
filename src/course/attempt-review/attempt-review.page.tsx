@@ -7,10 +7,7 @@ import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/use-media-query.hook';
 import type { AttemptReviewLineCommentAnnotation } from './attempt-review-comment-annotation.model';
-import {
-  prepareLineCommentsForImmediatePersist,
-  prepareLineCommentsForSave,
-} from './attempt-review-comment-save.model';
+import { prepareLineCommentsForSave } from './attempt-review-comment-save.model';
 import { AttemptReviewDiff } from './attempt-review-diff.component';
 import type { AttemptReviewDiffViewMode } from './attempt-review-diff-view-toggle.component';
 import {
@@ -26,12 +23,15 @@ import { AttemptReviewMobileDrawer } from './attempt-review-mobile-drawer.compon
 import { AttemptReviewReviewPanel } from './attempt-review-review-panel.component';
 import {
   useAttemptReviewQuery,
+  useCreateAttemptReviewCommentReplyMutation,
+  useDeleteAttemptReviewCommentReplyMutation,
   useSaveAttemptReviewMutation,
+  useUpdateAttemptReviewCommentReplyMutation,
 } from './attempt-review.queries';
 import { useAttemptReviewWorkerPoolReady } from './attempt-review-worker-pool.hook';
 import type {
   AttemptReviewAggregate,
-  AttemptReviewLineComment,
+  AttemptReviewLineCommentReply,
   AttemptReviewMode,
 } from './attempt-review.types';
 
@@ -93,6 +93,9 @@ function AttemptReviewPageLoaded({
 }: AttemptReviewPageLoadedProps) {
   const params = { courseSlug, taskId, studentUsername, attemptId };
   const saveMutation = useSaveAttemptReviewMutation();
+  const createReplyMutation = useCreateAttemptReviewCommentReplyMutation();
+  const updateReplyMutation = useUpdateAttemptReviewCommentReplyMutation();
+  const deleteReplyMutation = useDeleteAttemptReviewCommentReplyMutation();
   const { data: sessionData } = useQuery(SESSION_OPTIONS);
   const [activeFilePath, setActiveFilePath] = useState<string | null>(
     review.changedFiles[0]?.path ?? null
@@ -181,27 +184,28 @@ function AttemptReviewPageLoaded({
     0
   );
 
-  async function persistLineComments(lineComments: AttemptReviewLineComment[]) {
-    if (mode === 'editable') {
-      await saveMutation.mutateAsync({
-        ...params,
-        score: review.current.grade?.score ?? null,
-        overallFeedbackHtml: review.overallFeedback.html,
-        lineComments: prepareLineCommentsForImmediatePersist(
-          lineComments,
-          review.lineComments
-        ),
-      });
-      return;
-    }
+  async function submitCommentReply(
+    commentId: string,
+    html: string
+  ): Promise<AttemptReviewLineCommentReply> {
+    return createReplyMutation.mutateAsync({ ...params, commentId, html });
+  }
 
-    const savedReview = await saveMutation.mutateAsync({
+  async function updateCommentReply(
+    commentId: string,
+    replyId: string,
+    html: string
+  ): Promise<AttemptReviewLineCommentReply> {
+    return updateReplyMutation.mutateAsync({
       ...params,
-      score: draft.score ? Number(draft.score) : null,
-      overallFeedbackHtml: draft.overallFeedbackHtml,
-      lineComments: prepareLineCommentsForSave(lineComments),
+      commentId,
+      replyId,
+      html,
     });
-    resetToReview(savedReview);
+  }
+
+  async function deleteCommentReply(commentId: string, replyId: string) {
+    await deleteReplyMutation.mutateAsync({ ...params, commentId, replyId });
   }
 
   async function saveReview() {
@@ -342,7 +346,9 @@ function AttemptReviewPageLoaded({
               setLineComments(lineComments);
             }
           }}
-          onCommentsPersist={persistLineComments}
+          onReplySubmit={submitCommentReply}
+          onReplyUpdate={updateCommentReply}
+          onReplyDelete={deleteCommentReply}
         />
       </div>
     </main>
