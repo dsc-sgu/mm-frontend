@@ -90,15 +90,20 @@ export async function saveAttemptReview(
   const now = new Date().toISOString();
   const gradedBy = 'Текущий преподаватель';
 
-  current.grade =
-    input.score === null
-      ? null
-      : {
-          score: input.score,
-          maxScore: series.task.maxScore,
-          gradedAt: now,
-          gradedBy,
-        };
+  if (input.score === null) {
+    current.grade = null;
+  } else if (
+    !current.grade ||
+    current.grade.score !== input.score ||
+    current.grade.maxScore !== series.task.maxScore
+  ) {
+    current.grade = {
+      score: input.score,
+      maxScore: series.task.maxScore,
+      gradedAt: now,
+      gradedBy,
+    };
+  }
   current.overallFeedback = {
     html: input.overallFeedbackHtml,
     updatedAt: input.overallFeedbackHtml ? now : null,
@@ -115,6 +120,13 @@ export async function saveAttemptReview(
     authorName: comment.authorName || gradedBy,
     authorUsername: comment.authorUsername || 'mit-teacher',
     updatedAt: comment.updatedAt || now,
+    replies: comment.replies?.map((reply) => ({
+      id: reply.id,
+      html: reply.html,
+      authorName: reply.authorName || gradedBy,
+      authorUsername: reply.authorUsername || 'mit-teacher',
+      updatedAt: reply.updatedAt || now,
+    })),
   }));
 
   if (current.grade) {
@@ -343,7 +355,10 @@ function hashText(value: string): string {
 function cloneLineComment(
   comment: AttemptReviewLineComment
 ): AttemptReviewLineComment {
-  return { ...comment };
+  return {
+    ...comment,
+    replies: comment.replies?.map((reply) => ({ ...reply })),
+  };
 }
 
 function buildSnapshot(attemptNumber: number): Record<string, string> {
@@ -495,6 +510,15 @@ function buildComments(attemptNumber: number): AttemptReviewLineComment[] {
         authorName: 'Елизавета Громова',
         authorUsername: 'egromova',
         updatedAt: '2026-05-22T10:20:00.000Z',
+        replies: [
+          {
+            id: 'reply-a2-main-4-1',
+            html: '<p>Согласен, добавлю тест отдельным коммитом.</p>',
+            authorName: 'Иван Петров',
+            authorUsername: 'student1',
+            updatedAt: '2026-05-22T11:05:00.000Z',
+          },
+        ],
       },
     ];
   }

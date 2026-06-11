@@ -62,6 +62,14 @@ export interface AttemptReviewCommentAuthor {
   name: string;
 }
 
+export interface AttemptReviewLineCommentReply {
+  id: string;
+  html: string;
+  authorName: string;
+  authorUsername: string;
+  updatedAt: string;
+}
+
 export interface AttemptReviewLineComment {
   id: string;
   filePath: string;
@@ -75,6 +83,7 @@ export interface AttemptReviewLineComment {
   updatedAt: string;
   status?: AttemptReviewLineCommentStatus;
   isEditing?: boolean;
+  replies?: AttemptReviewLineCommentReply[];
 }
 
 export interface AttemptReviewRichFeedback {

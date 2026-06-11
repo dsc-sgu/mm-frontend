@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { FileTree, useFileTree } from '@pierre/trees/react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
@@ -8,10 +8,14 @@ import {
   getAttemptReviewFileStatusShortGlyph,
 } from './attempt-review-file-status.format';
 import { useHtmlThemeType } from './attempt-review-theme';
-import type { AttemptReviewChangedFile } from './attempt-review.types';
+import type {
+  AttemptReviewChangedFile,
+  AttemptReviewLineComment,
+} from './attempt-review.types';
 
 interface AttemptReviewFileTreeProps {
   files: AttemptReviewChangedFile[];
+  comments: AttemptReviewLineComment[];
   activeFilePath: string | null;
   className?: string;
   collapsed?: boolean;
@@ -21,6 +25,7 @@ interface AttemptReviewFileTreeProps {
 
 export function AttemptReviewFileTree({
   files,
+  comments,
   activeFilePath,
   className,
   collapsed = false,
@@ -32,6 +37,12 @@ export function AttemptReviewFileTree({
     () => new Map(files.map((file) => [file.path, file])),
     [files]
   );
+  const commentCountByPath = useMemo(
+    () => groupCommentCountsByFile(comments),
+    [comments]
+  );
+  const statsByPathRef = useRef(statsByPath);
+  const commentCountByPathRef = useRef(commentCountByPath);
   const paths = useMemo(() => files.map((file) => file.path), [files]);
   const { model } = useFileTree({
     paths,
@@ -48,22 +59,54 @@ export function AttemptReviewFileTree({
       }
     },
     renderRowDecoration: ({ item }) => {
-      const file = statsByPath.get(item.path);
+      const file = statsByPathRef.current.get(item.path);
 
       if (!file) {
         return null;
       }
 
+      const commentCount = commentCountByPathRef.current.get(item.path) ?? 0;
+      const title =
+        commentCount > 0
+          ? `${getAttemptReviewFileStatusLabel(file.status)}: +${file.addedLines}, −${file.deletedLines}. Комментариев: ${commentCount}`
+          : `${getAttemptReviewFileStatusLabel(file.status)}: +${file.addedLines}, −${file.deletedLines}`;
+
       return {
         text: `${getAttemptReviewFileStatusShortGlyph(file.status)} +${file.addedLines}/−${file.deletedLines}`,
-        title: `${getAttemptReviewFileStatusLabel(file.status)}: +${file.addedLines}, −${file.deletedLines}`,
+        title,
       };
     },
     unsafeCSS: `
       :host { --trees-selected-bg-override: color-mix(in oklch, var(--primary, #111) 12%, transparent); }
       button[data-type='item'] { border-radius: 10px; }
+      [data-item-section='decoration'] {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      [data-item-section='decoration'] > span[title*='Комментариев'] {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+      [data-item-section='decoration'] > span[title*='Комментариев']::before {
+        content: '';
+        width: 0.875rem;
+        height: 0.875rem;
+        flex: none;
+        background: var(--primary);
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+      }
     `,
   });
+
+  useEffect(() => {
+    statsByPathRef.current = statsByPath;
+    commentCountByPathRef.current = commentCountByPath;
+
+    if (model.getFileTreeContainer()) {
+      model.render({});
+    }
+  }, [commentCountByPath, model, statsByPath]);
 
   useEffect(() => {
     model.resetPaths(paths);
@@ -140,6 +183,23 @@ export function AttemptReviewFileTree({
       )}
     </div>
   );
+}
+
+function groupCommentCountsByFile(comments: AttemptReviewLineComment[]) {
+  const counts = new Map<string, number>();
+
+  comments.forEach((comment) => {
+    if (comment.status === 'draft') {
+      return;
+    }
+
+    counts.set(
+      comment.filePath,
+      (counts.get(comment.filePath) ?? 0) + 1 + (comment.replies?.length ?? 0)
+    );
+  });
+
+  return counts;
 }
 
 function getFileTreeStyle(colorScheme: 'light' | 'dark'): CSSProperties {
