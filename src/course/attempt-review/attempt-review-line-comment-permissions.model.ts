@@ -3,7 +3,13 @@ import type { AttemptReviewLineComment } from './attempt-review.types';
 export function canManageLineComment(
   comment: AttemptReviewLineComment
 ): boolean {
-  return (comment.status ?? 'saved') === 'saved';
+  const status = comment.status ?? 'saved';
+
+  return (
+    status === 'saved' ||
+    status === 'pending-create' ||
+    status === 'pending-update'
+  );
 }
 
 export function canReplyToLineComment(

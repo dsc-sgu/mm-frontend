@@ -127,7 +127,7 @@ export function AttemptReviewLineCommentCard({
 
         {!isEditableComment ? (
           <div className="flex shrink-0 items-center gap-1">
-            {isPendingComment ? (
+            {isPendingDelete ? (
               <Button
                 type="button"
                 variant="outline"
@@ -136,10 +136,10 @@ export function AttemptReviewLineCommentCard({
                 onClick={onRevertPending}
               >
                 <RotateCcw className="size-3.5" />
-                {isPendingDelete ? 'Отменить удаление' : 'Отменить'}
+                Отменить удаление
               </Button>
             ) : null}
-            {!isPendingComment && canEdit ? (
+            {!isPendingDelete && canEdit ? (
               <Button
                 type="button"
                 variant="ghost"
@@ -151,7 +151,19 @@ export function AttemptReviewLineCommentCard({
                 <Pencil className="size-3.5" />
               </Button>
             ) : null}
-            {!isPendingComment && canDelete ? (
+            {isPendingUpdate ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                aria-label="Отменить изменения комментария"
+                title="Отменить изменения"
+                onClick={onRevertPending}
+              >
+                <RotateCcw className="size-3.5" />
+              </Button>
+            ) : null}
+            {!isPendingDelete && canDelete ? (
               <Button
                 type="button"
                 variant="ghost"
