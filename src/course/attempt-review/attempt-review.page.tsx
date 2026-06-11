@@ -214,10 +214,6 @@ function AttemptReviewPageLoaded({
     resetToReview(savedReview);
   }
 
-  function scrollToReview() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
   return (
     <main
       ref={pageRootRef}
@@ -351,4 +347,8 @@ function AttemptReviewPageLoaded({
       </div>
     </main>
   );
+}
+
+function scrollToReview() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
