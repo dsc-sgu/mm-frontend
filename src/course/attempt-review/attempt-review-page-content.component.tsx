@@ -44,6 +44,9 @@ interface AttemptReviewPageContentProps {
   review: AttemptReviewAggregate;
 }
 
+const ATTEMPT_REVIEW_DIFF_VIEW_MODE_STORAGE_KEY =
+  'attempt-review.diff-view-mode';
+
 export function AttemptReviewPageContent({
   mode,
   courseSlug,
@@ -60,8 +63,9 @@ export function AttemptReviewPageContent({
   );
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [isFileTreeDrawerOpen, setIsFileTreeDrawerOpen] = useState(false);
-  const [diffViewMode, setDiffViewMode] =
-    useState<AttemptReviewDiffViewMode>('split');
+  const [diffViewMode, setDiffViewMode] = useState<AttemptReviewDiffViewMode>(
+    getStoredDiffViewMode
+  );
   const pageHeaderRef = useRef<HTMLElement | null>(null);
   const pageRootRef = useRef<HTMLElement | null>(null);
   const diffViewerRef =
@@ -94,6 +98,13 @@ export function AttemptReviewPageContent({
   const handleDiffViewerChange = useCallback(
     (viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null) => {
       diffViewerRef.current = viewer;
+    },
+    []
+  );
+  const handleDiffViewModeChange = useCallback(
+    (value: AttemptReviewDiffViewMode) => {
+      setDiffViewMode(value);
+      saveDiffViewMode(value);
     },
     []
   );
@@ -257,7 +268,7 @@ export function AttemptReviewPageContent({
             </Button>
             <AttemptReviewDiffViewToggle
               value={diffViewMode}
-              onChange={setDiffViewMode}
+              onChange={handleDiffViewModeChange}
             />
             <AttemptReviewAttemptSelect
               review={review}
@@ -399,6 +410,43 @@ function prepareLineCommentsForSave(
         updatedAt: reply.updatedAt,
       })),
     }));
+}
+
+function getStoredDiffViewMode(): AttemptReviewDiffViewMode {
+  if (typeof window === 'undefined') {
+    return 'unified';
+  }
+
+  try {
+    const value = window.localStorage.getItem(
+      ATTEMPT_REVIEW_DIFF_VIEW_MODE_STORAGE_KEY
+    );
+
+    return isAttemptReviewDiffViewMode(value) ? value : 'unified';
+  } catch {
+    return 'unified';
+  }
+}
+
+function saveDiffViewMode(value: AttemptReviewDiffViewMode) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(
+      ATTEMPT_REVIEW_DIFF_VIEW_MODE_STORAGE_KEY,
+      value
+    );
+  } catch {
+    // localStorage can be unavailable in private mode or restricted contexts.
+  }
+}
+
+function isAttemptReviewDiffViewMode(
+  value: string | null
+): value is AttemptReviewDiffViewMode {
+  return value === 'unified' || value === 'split';
 }
 
 const PAGE_BOTTOM_EPSILON = 2;

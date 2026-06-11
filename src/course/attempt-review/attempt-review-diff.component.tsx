@@ -73,7 +73,7 @@ export function AttemptReviewDiff({
   currentReviewer,
   canReplyToComments = false,
   loading = false,
-  viewMode = 'split',
+  viewMode = 'unified',
   className,
   enableScrollHandoff = false,
   scrollHandoffRootRef,
