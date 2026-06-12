@@ -1,5 +1,5 @@
-import { AttemptReviewPage } from '@/course/attempt-review/page';
-import { getAttemptDiffBreadcrumb } from '@/course/routing/header';
+import { AttemptReviewPage } from '@/features/course/features/attempt-review/page';
+import { getAttemptDiffBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

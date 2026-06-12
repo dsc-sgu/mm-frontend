@@ -1,5 +1,5 @@
-import { requireCourseRole } from '@/course/routing/guards';
-import { createCourseSectionBreadcrumb } from '@/course/routing/header';
+import { requireCourseRole } from '@/features/course/routing/guards';
+import { createCourseSectionBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

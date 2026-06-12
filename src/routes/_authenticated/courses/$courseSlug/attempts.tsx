@@ -1,14 +1,14 @@
-import { CourseAttemptsPage } from '@/course/attempts/page';
+import { CourseAttemptsPage } from '@/features/course/features/attempts/page';
 import {
   filtersFromCourseAttemptsSearch,
   searchFromCourseAttemptsFilters,
   validateCourseAttemptsSearch,
-} from '@/course/attempts/model/filters';
-import { requireCourseRole } from '@/course/routing/guards';
-import { createCourseSectionBreadcrumb } from '@/course/routing/header';
+} from '@/features/course/features/attempts/model/filters';
+import { requireCourseRole } from '@/features/course/routing/guards';
+import { createCourseSectionBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useMemo } from 'react';
-import type { CourseAttemptsFilters } from '@/course/attempts/model/types';
+import type { CourseAttemptsFilters } from '@/features/course/features/attempts/model/types';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/attempts'
