@@ -1,3 +1,4 @@
+import { CoursePageEditPage } from '@/features/course/features/page-edit/page';
 import { requireCourseRole } from '@/features/course/routing/guards';
 import { createCourseSectionBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
@@ -24,5 +25,7 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  return <main className="p-6 text-2xl font-semibold">Course edit page</main>;
+  const { courseSlug } = Route.useParams();
+
+  return <CoursePageEditPage courseSlug={courseSlug} />;
 }
