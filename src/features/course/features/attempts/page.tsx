@@ -15,6 +15,10 @@ import {
 } from './hooks/use-grading';
 import { useCourseAttemptsQuery } from './api/queries';
 import { useCourseAttemptsReviewLockSelectionSync } from './hooks/use-review-lock-selection';
+import {
+  getCourseAttemptsFilterActionsDisabledReason,
+  getCourseAttemptsPageMode,
+} from './model/page-mode';
 import { isAttemptSelectable } from './model/selection';
 import { useCourseAttemptsSelection } from './hooks/use-selection';
 import { AttemptCard } from './ui/card';
@@ -70,12 +74,14 @@ export function CourseAttemptsPage({
 
   const selectedAttemptsCount = selection.selectedAttempts.length;
   const hasSelectableAttempts = attempts.some(isAttemptSelectable);
-
-  const filterActionsDisabledReason = grading.quickGrading
-    ? 'Фильтры недоступны во время быстрой оценки. Выйдите из режима быстрой оценки.'
-    : selectedAttemptsCount > 0
-      ? 'Фильтры недоступны, пока выбраны попытки. Очистите выбор.'
-      : undefined;
+  const pageMode = getCourseAttemptsPageMode({
+    loading: attemptsQuery.isPending,
+    attemptsCount: attempts.length,
+    quickGrading: grading.quickGrading,
+    selectedAttemptsCount,
+  });
+  const filterActionsDisabledReason =
+    getCourseAttemptsFilterActionsDisabledReason(pageMode);
 
   const filtersPanel = {
     appliedFilters: filters.normalizedAppliedFilters,
@@ -96,7 +102,7 @@ export function CourseAttemptsPage({
         <AttemptsFilterSidebar panel={filtersPanel} />
 
         <section className="min-w-0 overflow-hidden pb-44 sm:pb-36">
-          {attemptsQuery.isPending ? (
+          {pageMode === 'loading' ? (
             <div className="space-y-3" aria-busy="true">
               {[0, 1, 2].map((item) => (
                 <div
@@ -105,14 +111,14 @@ export function CourseAttemptsPage({
                 />
               ))}
             </div>
-          ) : attempts.length === 0 ? (
+          ) : pageMode === 'empty' ? (
             <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
               <h2 className="text-xl font-semibold">Попытки не найдены</h2>
               <p className="mt-2 text-muted-foreground">
                 Измените фильтры и нажмите «Применить».
               </p>
             </div>
-          ) : grading.quickGrading ? (
+          ) : pageMode === 'quick-grading' ? (
             <VirtualizedAttemptsList
               attempts={attempts}
               renderAttempt={(attempt) => (
@@ -184,7 +190,7 @@ export function CourseAttemptsPage({
           </div>
 
           <BottomActionBar>
-            {grading.quickGrading ? (
+            {pageMode === 'quick-grading' ? (
               <QuickGradingBottomActions
                 hasDraftChanges={grading.hasDraftChanges}
                 hasDraftValidationErrors={grading.hasDraftValidationErrors}
@@ -192,7 +198,7 @@ export function CourseAttemptsPage({
                 onExitQuickGrading={grading.exitQuickGrading}
                 onSaveQuickGrades={grading.saveQuickGrades}
               />
-            ) : selectedAttemptsCount > 0 ? (
+            ) : pageMode === 'selection' ? (
               <SelectionBottomActions
                 selectedCount={selectedAttemptsCount}
                 savePending={grading.savePending}
