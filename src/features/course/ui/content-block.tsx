@@ -1,26 +1,17 @@
+import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
-import { CalendarDays, Trophy } from 'lucide-react';
+import { CalendarDays, Paperclip, Trophy } from 'lucide-react';
 
 import { CodeBlock } from '@/features/code-block/ui/block';
 import { cn } from '@/shadcn/lib/utils';
+import { sortRankedContent } from '@/features/course/features/page/model/rank';
 import type {
   CourseContentBlockItem,
+  CourseFileResource,
   CourseListBlock,
-  RankedContent,
+  CoursePageResources,
 } from '@/features/course/features/page/model/types';
 import { CourseRichText } from '@/features/course/ui/rich-text';
-
-function sortRankedContent<T extends RankedContent>(items: readonly T[]) {
-  return [...items].sort((a, b) => {
-    const rankOrder = a.rank.localeCompare(b.rank);
-
-    if (rankOrder !== 0) {
-      return rankOrder;
-    }
-
-    return a.id.localeCompare(b.id);
-  });
-}
 
 function formatDueDate(value: string) {
   return new Intl.DateTimeFormat('ru-RU', {
@@ -52,12 +43,66 @@ function ListBlock({ block }: { block: CourseListBlock }) {
   );
 }
 
+function MissingResource({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className={cn(
+        'my-4 flex items-center gap-3 rounded-xl border border-dashed',
+        'border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground'
+      )}
+    >
+      <Paperclip className="size-4" aria-hidden="true" />
+      <span>{children}</span>
+    </div>
+  );
+}
+
+function FileLink({ file }: { file: CourseFileResource }) {
+  return (
+    <a
+      href={file.href}
+      className={cn(
+        'flex flex-col gap-1 rounded-xl border',
+        'border-black/10 bg-primary/3 dark:border-white/10',
+        'px-4 py-3 transition-colors',
+        'hover:bg-muted/70 hover:bg-primary/6',
+        'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+        'sm:flex-row sm:items-center sm:justify-between'
+      )}
+    >
+      <span className="font-medium text-foreground">{file.name}</span>
+      {(file.size || file.mimeType) && (
+        <span className="text-sm text-muted-foreground">
+          {[file.size, file.mimeType].filter(Boolean).join(' • ')}
+        </span>
+      )}
+    </a>
+  );
+}
+
+function MissingFile({ fileId }: { fileId: string }) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col gap-1 rounded-xl border border-dashed border-border',
+        'bg-muted/40 px-4 py-3 text-sm text-muted-foreground',
+        'sm:flex-row sm:items-center sm:justify-between'
+      )}
+    >
+      <span>Файл курса недоступен</span>
+      <span className="font-mono text-xs">{fileId}</span>
+    </div>
+  );
+}
+
 function CourseContentBlock({
   block,
   courseSlug,
+  resources,
 }: {
   block: CourseContentBlockItem;
   courseSlug: string;
+  resources: CoursePageResources;
 }) {
   switch (block.type) {
     case 'paragraph':
@@ -108,6 +153,7 @@ function CourseContentBlock({
           <CourseContentBlocks
             blocks={block.children}
             courseSlug={courseSlug}
+            resources={resources}
             className="border-l border-border/80 pl-4"
           />
         </details>
@@ -120,7 +166,17 @@ function CourseContentBlock({
           fileName={block.fileName}
         />
       );
-    case 'image':
+    case 'image': {
+      const image = resources.images.find((item) => item.id === block.imageId);
+
+      if (!image) {
+        return (
+          <MissingResource>
+            Картинка курса недоступна: {block.imageId}
+          </MissingResource>
+        );
+      }
+
       return (
         <figure
           className={cn(
@@ -128,52 +184,53 @@ function CourseContentBlock({
           )}
         >
           <img
-            src={block.src}
-            alt={block.alt}
+            src={image.src}
+            alt={image.alt}
             className="max-h-[28rem] w-full object-cover"
           />
-          {block.caption && (
+          {image.caption && (
             <figcaption
               className={cn(
                 'px-4 py-3 text-sm leading-6 text-muted-foreground'
               )}
             >
-              <CourseRichText nodes={block.caption} />
+              <CourseRichText nodes={image.caption} />
             </figcaption>
           )}
         </figure>
       );
+    }
     case 'files':
       return (
         <section className="my-4 grid gap-2">
-          {block.files.map((file) => (
-            <a
-              key={file.id}
-              href={file.href}
-              className={cn(
-                'flex flex-col gap-1 rounded-xl border',
-                'border-black/10 bg-primary/3 dark:border-white/10',
-                'px-4 py-3 transition-colors',
-                'hover:bg-muted/70 hover:bg-primary/6',
-                'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
-                'sm:flex-row sm:items-center sm:justify-between'
-              )}
-            >
-              <span className="font-medium text-foreground">{file.name}</span>
-              {(file.size || file.mimeType) && (
-                <span className="text-sm text-muted-foreground">
-                  {[file.size, file.mimeType].filter(Boolean).join(' • ')}
-                </span>
-              )}
-            </a>
-          ))}
+          {block.fileIds.map((fileId) => {
+            const file = resources.files.find((item) => item.id === fileId);
+
+            if (!file) {
+              return <MissingFile key={fileId} fileId={fileId} />;
+            }
+
+            return <FileLink key={file.id} file={file} />;
+          })}
         </section>
       );
-    case 'assignment':
+    case 'assignment': {
+      const assignment = resources.assignments.find(
+        (item) => item.taskId === block.taskId
+      );
+
+      if (!assignment) {
+        return (
+          <MissingResource>
+            Задание курса недоступно: {block.taskId}
+          </MissingResource>
+        );
+      }
+
       return (
         <Link
           to="/courses/$courseSlug/tasks/$taskId"
-          params={{ courseSlug, taskId: block.taskId }}
+          params={{ courseSlug, taskId: assignment.taskId }}
           className={cn(
             'group my-4 block rounded-xl border border-black/10 bg-primary/3',
             'p-4 transition-colors hover:bg-primary/6',
@@ -204,11 +261,11 @@ function CourseContentBlock({
                   'md:text-xl'
                 )}
               >
-                {block.title}
+                {assignment.title}
               </h3>
-              {block.description && (
+              {assignment.description && (
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  <CourseRichText nodes={block.description} />
+                  <CourseRichText nodes={assignment.description} />
                 </p>
               )}
             </div>
@@ -218,29 +275,32 @@ function CourseContentBlock({
                 'text-muted-foreground md:items-end'
               )}
             >
-              {block.dueDate && (
+              {assignment.dueDate && (
                 <span className="inline-flex items-center gap-2">
                   <CalendarDays className="size-4" aria-hidden="true" />
-                  {formatDueDate(block.dueDate)}
+                  {formatDueDate(assignment.dueDate)}
                 </span>
               )}
-              {block.maxScore !== undefined && (
-                <span>Макс. балл: {block.maxScore}</span>
+              {assignment.maxScore !== undefined && (
+                <span>Макс. балл: {assignment.maxScore}</span>
               )}
             </div>
           </div>
         </Link>
       );
+    }
   }
 }
 
 export function CourseContentBlocks({
   blocks,
   courseSlug,
+  resources,
   className,
 }: {
   blocks: CourseContentBlockItem[];
   courseSlug: string;
+  resources: CoursePageResources;
   className?: string;
 }) {
   return (
@@ -250,6 +310,7 @@ export function CourseContentBlocks({
           key={block.id}
           block={block}
           courseSlug={courseSlug}
+          resources={resources}
         />
       ))}
     </div>
