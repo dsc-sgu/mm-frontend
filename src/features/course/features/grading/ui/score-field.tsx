@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { cva } from 'class-variance-authority';
 import { RotateCcw } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -20,20 +21,61 @@ type CourseScoreFieldProps = {
   onReset?: () => void;
 };
 
-function scoreDraftTextSizeClass(value: string): string {
+const scoreFieldInputVariants = cva(
+  [
+    'h-12 w-24 rounded-xl px-2',
+    'text-center font-semibold',
+    'transition-colors',
+  ],
+  {
+    variants: {
+      state: {
+        default: '',
+        changed: [
+          'border-orange-400 bg-orange-50 text-orange-950',
+          'focus-visible:border-orange-500 focus-visible:ring-orange-400/35',
+          'dark:border-orange-500/70 dark:bg-orange-950/35',
+          'dark:text-orange-100',
+          'dark:focus-visible:border-orange-400',
+          'dark:focus-visible:ring-orange-400/30',
+        ],
+        error: [
+          'border-destructive bg-destructive/10 text-destructive',
+          'focus-visible:border-destructive',
+          'focus-visible:ring-destructive/30',
+          'dark:bg-destructive/20',
+        ],
+      },
+      size: {
+        default: 'text-xl md:text-xl',
+        compact: 'text-lg md:text-lg',
+        dense: 'text-base md:text-base',
+        overflow: 'text-sm md:text-sm',
+      },
+    },
+    defaultVariants: {
+      state: 'default',
+      size: 'default',
+    },
+  }
+);
+
+function getScoreDraftTextSize(
+  value: string
+): 'default' | 'compact' | 'dense' | 'overflow' {
   if (value.length <= 4) {
-    return 'text-xl md:text-xl';
+    return 'default';
   }
 
   if (value.length <= 6) {
-    return 'text-lg md:text-lg';
+    return 'compact';
   }
 
   if (value.length <= 8) {
-    return 'text-base md:text-base';
+    return 'dense';
   }
 
-  return 'text-sm md:text-sm';
+  return 'overflow';
 }
 
 export function CourseScoreField({
@@ -75,12 +117,10 @@ export function CourseScoreField({
           }}
           placeholder="—"
           className={cn(
-            'h-12 w-24 rounded-xl px-2 text-center font-semibold transition-colors',
-            scoreDraftTextSizeClass(value),
-            changed &&
-              'border-orange-400 bg-orange-50 text-orange-950 focus-visible:border-orange-500 focus-visible:ring-orange-400/35 dark:border-orange-500/70 dark:bg-orange-950/35 dark:text-orange-100 dark:focus-visible:border-orange-400 dark:focus-visible:ring-orange-400/30',
-            error &&
-              'border-destructive bg-destructive/10 text-destructive focus-visible:border-destructive focus-visible:ring-destructive/30 dark:bg-destructive/20',
+            scoreFieldInputVariants({
+              state: error ? 'error' : changed ? 'changed' : 'default',
+              size: getScoreDraftTextSize(value),
+            }),
             inputClassName
           )}
         />

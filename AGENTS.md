@@ -276,7 +276,7 @@ Use raw palette classes only when the color is part of the domain meaning, such 
 
 Do not keep very long Tailwind class strings on one line. Use `cn()` with logical grouping for one-off long class lists.
 
-Use `cva` for reusable components with variants, sizes, tones, or visual states.
+Use `cva` for reusable components with variants, sizes, tones, or visual states. `cva` accepts arrays of class strings; use arrays to group long base or variant classes by purpose instead of keeping one very long string.
 
 Do not extract Tailwind class lists into constants just to shorten JSX. Extract only when reused or when the name represents a real UI concept. If a class list grows because the UI chunk is complex, prefer extracting a component.
 
