@@ -17,6 +17,18 @@ bun run build
 
 Avoid using `npm`, `npx`, `yarn`, or `pnpm` commands unless there is a specific documented reason.
 
+### shadcn components
+
+Add shadcn components through the shadcn CLI instead of writing or copying component files manually.
+
+Prefer:
+
+```bash
+bunx shadcn@latest add button
+```
+
+Avoid manually creating files under `src/shadcn/components/ui/` unless the component is intentionally custom and not provided by shadcn.
+
 ### File and directory naming
 
 - Prefer feature-based structure.
