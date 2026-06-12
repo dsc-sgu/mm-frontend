@@ -2,6 +2,7 @@ import { MOCK_COURSES } from '@/features/course/api/mock';
 import type {
   CourseContentBlockItem,
   CoursePage,
+  CoursePageResources,
 } from '@/features/course/features/page/model/types';
 import type { CourseSummary } from '@/features/course/model/types';
 
@@ -21,6 +22,56 @@ const COURSE_DESCRIPTIONS: Record<string, string> = {
   'modern-information-technologies':
     'Обзор современных технологий разработки: командная работа, веб-платформы, облачная инфраструктура и безопасная доставка изменений.',
 };
+
+function buildCourseResources(course: CourseSummary): CoursePageResources {
+  return {
+    images: [
+      {
+        id: `${course.courseId}:image:workspace`,
+        src: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80',
+        alt: 'Рабочее место студента с ноутбуком и заметками',
+        caption: [
+          {
+            id: `${course.courseId}:image:workspace:caption`,
+            type: 'text',
+            text: 'Материалы курса рассчитаны на работу в браузере, редакторе кода и системе контроля версий.',
+          },
+        ],
+      },
+    ],
+    files: [
+      {
+        id: `${course.courseId}:files:syllabus`,
+        name: 'Силлабус курса.pdf',
+        href: `/courses/${course.courseId}/files`,
+        size: '420 KB',
+        mimeType: 'application/pdf',
+      },
+      {
+        id: `${course.courseId}:files:rubric`,
+        name: 'Критерии оценивания.md',
+        href: `/courses/${course.courseId}/files`,
+        size: '18 KB',
+        mimeType: 'text/markdown',
+      },
+    ],
+    assignments: [
+      {
+        taskId: '1',
+        title: 'Вводное практическое задание',
+        description: [
+          {
+            id: `${course.courseId}:assignment:1:description`,
+            type: 'text',
+            text: 'Покажите, что окружение готово, и отправьте первый небольшой результат.',
+          },
+        ],
+        dueDate: '2026-06-01T20:59:00Z',
+        maxScore: 10,
+      },
+    ],
+  };
+}
 
 function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
   return [
@@ -244,35 +295,15 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       id: `${course.courseId}:image`,
       rank: 'j0',
       type: 'image',
-      src: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80',
-      alt: 'Рабочее место студента с ноутбуком и заметками',
-      caption: [
-        {
-          id: `${course.courseId}:image:caption`,
-          type: 'text',
-          text: 'Материалы курса рассчитаны на работу в браузере, редакторе кода и системе контроля версий.',
-        },
-      ],
+      imageId: `${course.courseId}:image:workspace`,
     },
     {
       id: `${course.courseId}:files`,
       rank: 'k0',
       type: 'files',
-      files: [
-        {
-          id: `${course.courseId}:files:syllabus`,
-          name: 'Силлабус курса.pdf',
-          href: `/courses/${course.courseId}/files`,
-          size: '420 KB',
-          mimeType: 'application/pdf',
-        },
-        {
-          id: `${course.courseId}:files:rubric`,
-          name: 'Критерии оценивания.md',
-          href: `/courses/${course.courseId}/files`,
-          size: '18 KB',
-          mimeType: 'text/markdown',
-        },
+      fileIds: [
+        `${course.courseId}:files:syllabus`,
+        `${course.courseId}:files:rubric`,
       ],
     },
     {
@@ -280,16 +311,6 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       rank: 'l0',
       type: 'assignment',
       taskId: '1',
-      title: 'Вводное практическое задание',
-      description: [
-        {
-          id: `${course.courseId}:assignment:description`,
-          type: 'text',
-          text: 'Покажите, что окружение готово, и отправьте первый небольшой результат.',
-        },
-      ],
-      dueDate: '2026-06-01T20:59:00Z',
-      maxScore: 10,
     },
     {
       id: `${course.courseId}:external`,
@@ -335,6 +356,7 @@ export async function fetchCoursePage(
     description:
       COURSE_DESCRIPTIONS[course.courseId] ??
       'Материалы курса, задания и полезные ссылки собраны в одном месте.',
+    resources: buildCourseResources(course),
     content: buildCourseContent(course),
   };
 }

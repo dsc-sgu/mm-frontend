@@ -67,12 +67,27 @@ export type CourseCodeBlock = RankedContent & {
 
 export type CourseImageBlock = RankedContent & {
   type: 'image';
+  imageId: string;
+};
+
+export type CourseFilesBlock = RankedContent & {
+  type: 'files';
+  fileIds: string[];
+};
+
+export type CourseAssignmentBlock = RankedContent & {
+  type: 'assignment';
+  taskId: string;
+};
+
+export type CourseImageResource = {
+  id: string;
   src: string;
   alt: string;
   caption?: RichTextNode[];
 };
 
-export type CourseFileItem = {
+export type CourseFileResource = {
   id: string;
   name: string;
   href: string;
@@ -80,18 +95,18 @@ export type CourseFileItem = {
   mimeType?: string;
 };
 
-export type CourseFilesBlock = RankedContent & {
-  type: 'files';
-  files: CourseFileItem[];
-};
-
-export type CourseAssignmentBlock = RankedContent & {
-  type: 'assignment';
+export type CourseAssignmentResource = {
   taskId: string;
   title: string;
   description?: RichTextNode[];
   dueDate?: string;
   maxScore?: number;
+};
+
+export type CoursePageResources = {
+  images: CourseImageResource[];
+  files: CourseFileResource[];
+  assignments: CourseAssignmentResource[];
 };
 
 // TODO: Надо что-то сделать с неймингом DTOшек и компонентов,
@@ -109,5 +124,6 @@ export type CourseContentBlockItem =
 
 export type CoursePage = CourseSummary & {
   description: string;
+  resources: CoursePageResources;
   content: CourseContentBlockItem[];
 };

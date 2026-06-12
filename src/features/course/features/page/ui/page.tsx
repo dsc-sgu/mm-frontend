@@ -91,6 +91,7 @@ export function CoursePage({ course }: { course: CoursePageModel }) {
         <CourseContentBlocks
           blocks={course.content}
           courseSlug={course.courseId}
+          resources={course.resources}
         />
       </article>
     </main>
