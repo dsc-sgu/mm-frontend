@@ -98,7 +98,7 @@ function CourseContentBlock({
         <details className="my-5" open={block.defaultOpen}>
           <summary
             className={cn(
-              'cursor-pointer select-none rounded-lg px-1',
+              'cursor-pointer rounded-lg px-1 select-none',
               'text-base font-semibold marker:text-muted-foreground',
               'outline-none focus-visible:ring-2 focus-visible:ring-ring'
             )}
@@ -137,7 +137,7 @@ function CourseContentBlock({
       );
     case 'files':
       return (
-        <section className="grid gap-2 my-4">
+        <section className="my-4 grid gap-2">
           {block.files.map((file) => (
             <a
               key={file.id}
@@ -146,8 +146,8 @@ function CourseContentBlock({
                 'flex flex-col gap-1 rounded-xl border',
                 'border-black/10 bg-primary/3 dark:border-white/10',
                 'px-4 py-3 transition-colors',
-                'hover:bg-primary/6 hover:bg-muted/70',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'hover:bg-muted/70 hover:bg-primary/6',
+                'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                 'sm:flex-row sm:items-center sm:justify-between'
               )}
             >
@@ -169,8 +169,8 @@ function CourseContentBlock({
           className={cn(
             'group my-4 block rounded-xl border border-black/10 bg-primary/3',
             'p-4 transition-colors hover:bg-primary/6',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            'dark:border-white/10 md:rounded-2xl md:p-5'
+            'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+            'md:rounded-2xl md:p-5 dark:border-white/10'
           )}
         >
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -178,7 +178,7 @@ function CourseContentBlock({
               <div
                 className={cn(
                   'mb-2 flex items-center gap-2',
-                  'text-xs font-semibold uppercase tracking-wide text-primary',
+                  'text-xs font-semibold tracking-wide text-primary uppercase',
                   'md:text-sm'
                 )}
               >

@@ -85,7 +85,7 @@ function DashboardSection({
 
       <div
         className={clsx(
-          'p-4 md:p-5 xl:flex-1 xl:min-h-0',
+          'p-4 md:p-5 xl:min-h-0 xl:flex-1',
           scrollable && 'pt-24 md:pt-[100px] xl:overflow-auto',
           contentClassName
         )}

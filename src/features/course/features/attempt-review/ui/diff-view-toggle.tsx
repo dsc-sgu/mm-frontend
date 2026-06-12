@@ -25,7 +25,7 @@ export function AttemptReviewDiffViewToggle({
             key={mode}
             type="button"
             className={cn(
-              'h-9 cursor-pointer rounded-md px-3 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'h-9 cursor-pointer rounded-md px-3 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
               selected && 'bg-background text-foreground shadow-sm'
             )}
             aria-pressed={selected}

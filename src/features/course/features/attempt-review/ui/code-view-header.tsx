@@ -55,7 +55,7 @@ export function AttemptReviewCodeViewHeader({
       <div className="flex min-w-0 items-center gap-2 font-medium text-card-foreground">
         <button
           type="button"
-          className="grid size-7 shrink-0 cursor-pointer place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="grid size-7 shrink-0 cursor-pointer place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           aria-label={
             collapsed ? 'Показать изменение файла' : 'Скрыть изменение файла'
           }

@@ -66,7 +66,7 @@ function Logo() {
     <Link
       to="/"
       aria-label="На главную"
-      className="flex shrink-0 items-center rounded-md px-2 py-1 text-lg font-semibold tracking-tight text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex shrink-0 items-center rounded-md px-2 py-1 text-lg font-semibold tracking-tight text-foreground underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       <GitPullRequest className="mr-2 h-5 w-5" />
       MergeMinds
@@ -147,7 +147,7 @@ function AuthorizedPart({
 
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="flex flex-col">
-            <span className="text-sm font-medium leading-none">
+            <span className="text-sm leading-none font-medium">
               {sessionFullName(sessionData)}
             </span>
             <span className="text-xs text-muted-foreground">

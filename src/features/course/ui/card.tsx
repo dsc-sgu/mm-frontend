@@ -64,16 +64,16 @@ export function CourseCard({
           params={{ courseSlug: courseId }}
           className={cn(
             'block pr-16',
-            'text-xl font-semibold leading-snug tracking-tight text-foreground hover:underline',
+            'text-xl leading-snug font-semibold tracking-tight text-foreground hover:underline',
             'wrap-break-word',
-            'rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            'rounded-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
           )}
         >
           {title}
         </Link>
 
         <div className="mt-5 text-sm text-foreground/90">
-          <div className="font-semibold text-md text-foreground/90">
+          <div className="text-md font-semibold text-foreground/90">
             Преподаватели:
           </div>
 
@@ -85,7 +85,7 @@ export function CourseCard({
                   href={`/@${teacher.username}`}
                   className={cn(
                     'w-fit rounded-sm underline-offset-4 hover:underline',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                    'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
                   )}
                 >
                   {teacherFullName(teacher)}
@@ -105,7 +105,7 @@ export function CourseCardSkeleton({ className }: { className?: string }) {
       className={cn(
         'relative min-h-48 overflow-hidden rounded-2xl border border-border/60',
         'bg-linear-to-br from-muted/80 via-muted/45 to-background',
-        'shadow-xs animate-pulse',
+        'animate-pulse shadow-xs',
         className
       )}
       aria-hidden="true"

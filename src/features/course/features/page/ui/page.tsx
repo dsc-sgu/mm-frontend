@@ -28,7 +28,7 @@ export function CoursePage({ course }: { course: CoursePageModel }) {
         <DynamicIcon
           name={course.iconName}
           className={cn(
-            'pointer-events-none absolute -right-8 -top-8 hidden size-72 rotate-12 stroke-[1.35] xl:block',
+            'pointer-events-none absolute -top-8 -right-8 hidden size-72 rotate-12 stroke-[1.35] xl:block',
             theme.icon,
             theme.darkIcon
           )}
@@ -48,7 +48,7 @@ export function CoursePage({ course }: { course: CoursePageModel }) {
               <a
                 key={teacher.username}
                 href={`/@${teacher.username}`}
-                className="max-w-full truncate rounded-lg bg-background/70 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="max-w-full truncate rounded-lg bg-background/70 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
               >
                 {teacherFullName(teacher)}
               </a>

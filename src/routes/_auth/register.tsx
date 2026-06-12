@@ -53,13 +53,13 @@ function RouteComponent() {
   return (
     <div
       className={cn(
-        'min-h-[calc(100vh-4rem)] flex items-center justify-center',
+        'flex min-h-[calc(100vh-4rem)] items-center justify-center',
         'bg-linear-to-br from-background via-muted/30 to-muted p-4'
       )}
     >
       <Card className="w-full max-w-2xl shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="text-center text-2xl font-bold">
             Регистрация
           </CardTitle>
           <CardDescription className="text-center">
@@ -68,7 +68,7 @@ function RouteComponent() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="lastName">
                   Фамилия <span className="text-destructive">*</span>
@@ -148,7 +148,7 @@ function RouteComponent() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="password">
                   Пароль <span className="text-destructive">*</span>
@@ -195,7 +195,7 @@ function RouteComponent() {
               <span className="text-muted-foreground">Уже есть аккаунт?</span>{' '}
               <Link
                 to="/login"
-                className="text-primary hover:underline font-medium"
+                className="font-medium text-primary hover:underline"
               >
                 Войти
               </Link>

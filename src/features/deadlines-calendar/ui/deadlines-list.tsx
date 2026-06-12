@@ -33,12 +33,12 @@ export function DeadlinesList({ deadlines }: DeadlinesListProps) {
   }
 
   return (
-    <div className="flex flex-col gap-1 overflow-auto flex-1">
+    <div className="flex flex-1 flex-col gap-1 overflow-auto">
       {visibleDeadlines.map((deadline) => (
         <DeadlineDetails key={deadline.id} deadline={deadline}>
           <button
             className={cn(
-              'w-full text-left px-2 py-1 rounded text-xs font-medium transition-colors truncate',
+              'w-full truncate rounded px-2 py-1 text-left text-xs font-medium transition-colors',
               COURSE_COLOR_CLASSES[deadline.courseColor]
             )}
           >
@@ -51,7 +51,7 @@ export function DeadlinesList({ deadlines }: DeadlinesListProps) {
         <button
           onClick={() => setIsExpanded(true)}
           className={cn(
-            'w-full text-left px-2 py-1 rounded text-xs font-medium',
+            'w-full rounded px-2 py-1 text-left text-xs font-medium',
             'bg-card hover:bg-muted',
             'text-card-foreground transition-colors'
           )}
@@ -64,7 +64,7 @@ export function DeadlinesList({ deadlines }: DeadlinesListProps) {
         <button
           onClick={() => setIsExpanded(false)}
           className={cn(
-            'w-full text-left px-2 py-1 rounded text-xs font-medium',
+            'w-full rounded px-2 py-1 text-left text-xs font-medium',
             'bg-card hover:bg-muted',
             'text-card-foreground transition-colors'
           )}

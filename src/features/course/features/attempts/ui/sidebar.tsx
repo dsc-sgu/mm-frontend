@@ -273,7 +273,7 @@ function FilterOption({
   return (
     <label
       htmlFor={id}
-      className="flex min-w-0 select-none cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+      className="flex min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors select-none hover:bg-accent"
     >
       <Checkbox
         id={id}
@@ -299,7 +299,7 @@ function AttemptsFiltersHeader({
   return (
     <div className="flex items-center justify-between gap-3">
       <div>
-        <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="flex items-center gap-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
           <Filter className="size-4" /> Фильтры
         </p>
       </div>
@@ -358,7 +358,7 @@ function TasksFilterSection({
         </Button>
       </div>
       <div className="relative mt-2">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
@@ -428,7 +428,7 @@ function StudentsFilterSection({
         </Button>
       </div>
       <div className="relative mt-2">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
@@ -483,7 +483,7 @@ function GradedFilterSection({
             type="button"
             onClick={() => onGradedChange(option.value)}
             className={cn(
-              'cursor-pointer rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'cursor-pointer rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
               graded === option.value
                 ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
                 : 'border-border bg-background'

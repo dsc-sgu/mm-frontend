@@ -74,7 +74,7 @@ export function AttemptReviewAttemptSelect({
                   <button
                     key={attempt.attemptNumber}
                     type="button"
-                    className="block w-full cursor-pointer text-left outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted/60"
+                    className="block w-full cursor-pointer text-left transition-colors outline-none hover:bg-muted/60 focus-visible:bg-muted/60"
                     onClick={() => {
                       setOpen(false);
 

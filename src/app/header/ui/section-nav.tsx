@@ -27,7 +27,7 @@ export function HeaderSectionNav({ items }: HeaderSectionNavProps) {
             className={cn(
               'relative flex h-10 shrink-0 items-center gap-2 rounded-t-md px-3 text-sm font-medium',
               'text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
             )}
             activeProps={{
               className:

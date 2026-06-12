@@ -31,7 +31,7 @@ export function MonthCell({ date }: MonthCellProps) {
   return (
     <div
       className={cn(
-        'flex items-center justify-center border border-border rounded-lg min-h-34',
+        'flex min-h-34 items-center justify-center rounded-lg border border-border',
         seasonColor
       )}
     >

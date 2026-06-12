@@ -36,12 +36,12 @@ function DeadlineContent({ deadline }: { deadline: Deadline }) {
   return (
     <div className="space-y-3">
       <div>
-        <h3 className="font-semibold text-base mb-1">{deadline.subjectName}</h3>
+        <h3 className="mb-1 text-base font-semibold">{deadline.subjectName}</h3>
         <p className="text-sm text-muted-foreground">{deadline.taskText}</p>
       </div>
 
-      <div className="pt-2 border-t">
-        <p className="text-xs text-muted-foreground mb-1">Срок сдачи:</p>
+      <div className="border-t pt-2">
+        <p className="mb-1 text-xs text-muted-foreground">Срок сдачи:</p>
         <p
           className={cn(
             'text-sm font-medium',
