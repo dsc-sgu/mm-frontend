@@ -9,6 +9,7 @@ import {
   groupAttemptReviewCommentsByFile,
 } from '@/features/course/features/attempt-review/model/code-view-item';
 import type { AttemptReviewLineCommentAnnotation } from '@/features/course/features/attempt-review/model/comment-annotation';
+import { getLineCommentStatus } from '@/features/course/features/attempt-review/model/comment-lifecycle';
 import {
   addLineComment,
   addLineCommentReply,
@@ -307,7 +308,7 @@ export function AttemptReviewDiff({
 
           return (
             <AttemptReviewLineCommentCard
-              key={`${comment.id}:${comment.status ?? 'saved'}:${comment.isEditing === true ? 'editing' : 'readonly'}:${comment.html}`}
+              key={`${comment.id}:${getLineCommentStatus(comment)}:${comment.isEditing === true ? 'editing' : 'readonly'}:${comment.html}`}
               comment={comment}
               mode={mode}
               canDelete={mode === 'editable' && canManageLineComment(comment)}

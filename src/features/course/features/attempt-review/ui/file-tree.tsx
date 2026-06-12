@@ -9,6 +9,7 @@ import { FileTree, useFileTree } from '@pierre/trees/react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
+import { getLineCommentStatus } from '@/features/course/features/attempt-review/model/comment-lifecycle';
 import {
   getAttemptReviewFileStatusLabel,
   getAttemptReviewFileStatusShortGlyph,
@@ -256,7 +257,7 @@ function groupCommentStatsByFile(comments: AttemptReviewLineComment[]) {
       visibleCount: 0,
       unsavedCount: 0,
     };
-    const status = comment.status ?? 'saved';
+    const status = getLineCommentStatus(comment);
 
     if (status !== 'draft' && status !== 'pending-delete') {
       current.visibleCount += 1 + (comment.replies?.length ?? 0);

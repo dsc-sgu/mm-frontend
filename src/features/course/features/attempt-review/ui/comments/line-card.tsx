@@ -4,6 +4,11 @@ import { Check, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import { cn } from '@/shadcn/lib/utils';
+import {
+  getLineCommentStatus,
+  isEditableLineComment,
+  isPendingLineComment,
+} from '@/features/course/features/attempt-review/model/comment-lifecycle';
 import { formatAttemptReviewCommentRange } from '@/features/course/features/attempt-review/model/comment-range';
 import {
   getAttemptReviewCancelShortcutKeys,
@@ -62,15 +67,11 @@ export function AttemptReviewLineCommentCard({
   onReplyUpdate,
   onReplyDelete,
 }: AttemptReviewLineCommentCardProps) {
-  const commentStatus = comment.status ?? 'saved';
-  const isPendingCreate = commentStatus === 'pending-create';
+  const commentStatus = getLineCommentStatus(comment);
   const isPendingUpdate = commentStatus === 'pending-update';
   const isPendingDelete = commentStatus === 'pending-delete';
-  const isPendingComment =
-    isPendingCreate || isPendingUpdate || isPendingDelete;
-  const isEditableComment =
-    mode === 'editable' &&
-    (commentStatus === 'draft' || comment.isEditing === true);
+  const isPendingComment = isPendingLineComment(comment);
+  const isEditableComment = isEditableLineComment({ comment, mode });
   const [draftState, setDraftState] = useState(() => ({
     sourceHtml: comment.html,
     html: comment.html,
