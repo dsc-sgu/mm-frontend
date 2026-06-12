@@ -1,5 +1,6 @@
 import { cn } from '@/shadcn/lib/utils';
 import { sanitizeRichTextHtml } from './sanitize';
+import styles from './editor.module.css';
 
 export function RichTextContent({
   html,
@@ -19,7 +20,8 @@ export function RichTextContent({
   return (
     <div
       className={cn(
-        'attempt-review-editor-readonly prose prose-sm max-w-none font-sans dark:prose-invert',
+        'prose prose-sm max-w-none font-sans dark:prose-invert',
+        styles.readonly,
         className
       )}
       dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(html) }}

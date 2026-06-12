@@ -12,6 +12,7 @@ import {
 } from '@/features/course/features/attempt-review/model/keyboard-shortcuts';
 import { RichTextContent } from './content';
 import { RichTextEditorToolbar } from './toolbar';
+import styles from './editor.module.css';
 
 type RichTextEditorProps = {
   value: string;
@@ -87,7 +88,9 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'attempt-review-editor-content prose prose-sm max-w-none rounded-b-xl px-3 py-3 font-sans focus:outline-none dark:prose-invert',
+          'prose prose-sm max-w-none rounded-b-xl px-3 py-3',
+          'font-sans focus:outline-none dark:prose-invert',
+          styles.content,
           minHeightClassName
         ),
       },
@@ -150,12 +153,7 @@ export function RichTextEditor({
   }
 
   return (
-    <div
-      className={cn(
-        'attempt-review-editor rounded-xl border bg-card font-sans',
-        className
-      )}
-    >
+    <div className={cn('rounded-xl border bg-card font-sans', className)}>
       <RichTextEditorToolbar editor={editor} />
       <EditorContent editor={editor} className="flex min-h-0 flex-1 flex-col" />
     </div>
