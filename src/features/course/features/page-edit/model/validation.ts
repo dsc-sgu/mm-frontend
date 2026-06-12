@@ -1,3 +1,5 @@
+import * as v from 'valibot';
+
 import type {
   CourseColor,
   LucideIconName,
@@ -26,41 +28,56 @@ export const COURSE_EDIT_COLOR_OPTIONS = [
   'green',
 ] as const satisfies readonly CourseColor[];
 
+export const coursePageEditSchema = v.object({
+  title: v.pipe(
+    v.string(),
+    v.trim(),
+    v.minLength(1, 'Введите название курса.')
+  ),
+  courseId: v.pipe(
+    v.string(),
+    v.trim(),
+    v.minLength(1, 'Введите slug курса.'),
+    v.regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      'Slug может содержать только строчные латинские буквы, цифры и дефисы.'
+    )
+  ),
+  description: v.pipe(
+    v.string(),
+    v.trim(),
+    v.minLength(1, 'Введите описание курса.')
+  ),
+});
+
 export type CoursePageEditValidationErrors = {
   title?: string;
   courseId?: string;
   description?: string;
 };
 
-export type CoursePageEditValidationInput = {
-  title: string;
-  courseId: string;
-  description: string;
-};
-
-const courseSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export type CoursePageEditValidationInput = v.InferInput<
+  typeof coursePageEditSchema
+>;
 
 export function validateCoursePageEdit(
   input: CoursePageEditValidationInput
 ): CoursePageEditValidationErrors {
-  const errors: CoursePageEditValidationErrors = {};
+  const result = v.safeParse(coursePageEditSchema, input);
 
-  if (input.title.trim().length === 0) {
-    errors.title = 'Введите название курса.';
+  if (result.success) {
+    return {};
   }
 
-  if (input.courseId.trim().length === 0) {
-    errors.courseId = 'Введите slug курса.';
-  } else if (!courseSlugPattern.test(input.courseId)) {
-    errors.courseId =
-      'Slug может содержать только строчные латинские буквы, цифры и дефисы.';
-  }
+  const nestedErrors = v.flatten<typeof coursePageEditSchema>(
+    result.issues
+  ).nested;
 
-  if (input.description.trim().length === 0) {
-    errors.description = 'Введите описание курса.';
-  }
-
-  return errors;
+  return {
+    title: nestedErrors?.title?.[0],
+    courseId: nestedErrors?.courseId?.[0],
+    description: nestedErrors?.description?.[0],
+  };
 }
 
 export function hasCoursePageEditErrors(
