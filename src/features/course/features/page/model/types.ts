@@ -127,3 +127,14 @@ export type CoursePage = CourseSummary & {
   resources: CoursePageResources;
   content: CourseContentBlockItem[];
 };
+
+export type SaveCoursePageInput = {
+  courseSlug: string;
+  courseId: string;
+  title: string;
+  description: string;
+  color: CourseSummary['color'];
+  iconName: CourseSummary['iconName'];
+  content: CourseContentBlockItem[];
+  resources?: CoursePageResources;
+};

@@ -119,6 +119,24 @@ export const MOCK_COURSES: CourseSummary[] = [
   },
 ];
 
+export function updateMockCourseSummary({
+  courseSlug,
+  summary,
+}: {
+  courseSlug: string;
+  summary: CourseSummary;
+}) {
+  const courseIndex = MOCK_COURSES.findIndex(
+    (course) => course.courseId === courseSlug
+  );
+
+  if (courseIndex === -1) {
+    return;
+  }
+
+  MOCK_COURSES[courseIndex] = summary;
+}
+
 export async function fetchCourses(): Promise<CourseSummary[]> {
   await new Promise((resolve) => setTimeout(resolve, 150));
 

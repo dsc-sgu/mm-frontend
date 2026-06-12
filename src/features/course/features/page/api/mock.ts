@@ -1,8 +1,13 @@
-import { MOCK_COURSES } from '@/features/course/api/mock';
+import {
+  MOCK_COURSES,
+  updateMockCourseSummary,
+} from '@/features/course/api/mock';
+import { renameMockCourseAccessSlug } from '@/features/course/features/access/api/mock';
 import type {
   CourseContentBlockItem,
   CoursePage,
   CoursePageResources,
+  SaveCoursePageInput,
 } from '@/features/course/features/page/model/types';
 import type { CourseSummary } from '@/features/course/model/types';
 
@@ -22,6 +27,44 @@ const COURSE_DESCRIPTIONS: Record<string, string> = {
   'modern-information-technologies':
     'Обзор современных технологий разработки: командная работа, веб-платформы, облачная инфраструктура и безопасная доставка изменений.',
 };
+
+const COURSE_PAGE_STORE: Record<string, CoursePage> = {};
+
+function cloneCoursePage(course: CoursePage): CoursePage {
+  return structuredClone(course);
+}
+
+function findCourseSummary(courseSlug: string) {
+  return MOCK_COURSES.find((item) => item.courseId === courseSlug) ?? null;
+}
+
+function createCoursePage(course: CourseSummary): CoursePage {
+  return {
+    ...course,
+    description:
+      COURSE_DESCRIPTIONS[course.courseId] ??
+      'Материалы курса, задания и полезные ссылки собраны в одном месте.',
+    resources: buildCourseResources(course),
+    content: buildCourseContent(course),
+  };
+}
+
+function ensureCoursePage(courseSlug: string): CoursePage | null {
+  if (COURSE_PAGE_STORE[courseSlug]) {
+    return COURSE_PAGE_STORE[courseSlug];
+  }
+
+  const course = findCourseSummary(courseSlug);
+
+  if (!course) {
+    return null;
+  }
+
+  const page = createCoursePage(course);
+  COURSE_PAGE_STORE[courseSlug] = page;
+
+  return page;
+}
 
 function buildCourseResources(course: CourseSummary): CoursePageResources {
   return {
@@ -345,18 +388,49 @@ export async function fetchCoursePage(
 ): Promise<CoursePage | null> {
   await new Promise((resolve) => setTimeout(resolve, 150));
 
-  const course = MOCK_COURSES.find((item) => item.courseId === courseSlug);
+  const page = ensureCoursePage(courseSlug);
 
-  if (!course) {
-    return null;
+  return page ? cloneCoursePage(page) : null;
+}
+
+export async function saveCoursePage(
+  input: SaveCoursePageInput
+): Promise<CoursePage> {
+  await new Promise((resolve) => setTimeout(resolve, 250));
+
+  const currentPage = ensureCoursePage(input.courseSlug);
+
+  if (!currentPage) {
+    throw new Error(`Course page not found: ${input.courseSlug}`);
   }
 
-  return {
-    ...course,
-    description:
-      COURSE_DESCRIPTIONS[course.courseId] ??
-      'Материалы курса, задания и полезные ссылки собраны в одном месте.',
-    resources: buildCourseResources(course),
-    content: buildCourseContent(course),
+  const nextCourseSummary: CourseSummary = {
+    courseId: input.courseId,
+    title: input.title,
+    color: input.color,
+    iconName: input.iconName,
+    teachers: currentPage.teachers,
   };
+
+  const nextPage: CoursePage = {
+    ...nextCourseSummary,
+    teachers: currentPage.teachers,
+    description: input.description,
+    resources: input.resources ?? currentPage.resources,
+    content: input.content,
+  };
+
+  delete COURSE_PAGE_STORE[input.courseSlug];
+  COURSE_PAGE_STORE[nextPage.courseId] = cloneCoursePage(nextPage);
+
+  updateMockCourseSummary({
+    courseSlug: input.courseSlug,
+    summary: nextCourseSummary,
+  });
+  renameMockCourseAccessSlug({
+    oldSlug: input.courseSlug,
+    newSlug: nextPage.courseId,
+  });
+
+  return cloneCoursePage(nextPage);
 }

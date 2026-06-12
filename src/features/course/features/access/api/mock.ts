@@ -36,6 +36,21 @@ const MOCK_COURSE_ACCESS: Record<string, MockCourseAccess> = {
   },
 };
 
+export function renameMockCourseAccessSlug({
+  oldSlug,
+  newSlug,
+}: {
+  oldSlug: string;
+  newSlug: string;
+}) {
+  if (oldSlug === newSlug || !MOCK_COURSE_ACCESS[oldSlug]) {
+    return;
+  }
+
+  MOCK_COURSE_ACCESS[newSlug] = MOCK_COURSE_ACCESS[oldSlug];
+  delete MOCK_COURSE_ACCESS[oldSlug];
+}
+
 // NOTE: In real code, this should not accept username as an input;
 // instead, it should get the current user from the session.
 // For now, though, this is fine.
