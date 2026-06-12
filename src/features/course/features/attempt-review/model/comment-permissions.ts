@@ -1,9 +1,10 @@
+import { getLineCommentStatus } from './comment-lifecycle';
 import type { AttemptReviewLineComment } from './types';
 
 export function canManageLineComment(
   comment: AttemptReviewLineComment
 ): boolean {
-  const status = comment.status ?? 'saved';
+  const status = getLineCommentStatus(comment);
 
   return (
     status === 'saved' ||
@@ -15,5 +16,5 @@ export function canManageLineComment(
 export function canReplyToLineComment(
   comment: AttemptReviewLineComment
 ): boolean {
-  return (comment.status ?? 'saved') === 'saved';
+  return getLineCommentStatus(comment) === 'saved';
 }

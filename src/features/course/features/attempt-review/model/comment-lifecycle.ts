@@ -3,10 +3,36 @@ import type {
   AttemptReviewLineCommentStatus,
 } from './types';
 
-function getLineCommentStatus(
+export function getLineCommentStatus(
   comment: AttemptReviewLineComment
 ): AttemptReviewLineCommentStatus {
   return comment.status ?? 'saved';
+}
+
+export function isPendingLineComment(
+  comment: AttemptReviewLineComment
+): boolean {
+  const status = getLineCommentStatus(comment);
+
+  return (
+    status === 'pending-create' ||
+    status === 'pending-update' ||
+    status === 'pending-delete'
+  );
+}
+
+export function isEditableLineComment({
+  comment,
+  mode,
+}: {
+  comment: AttemptReviewLineComment;
+  mode: 'editable' | 'readonly';
+}): boolean {
+  const status = getLineCommentStatus(comment);
+
+  return (
+    mode === 'editable' && (status === 'draft' || comment.isEditing === true)
+  );
 }
 
 export function submitLineCommentChange(

@@ -1,3 +1,4 @@
+import { getLineCommentStatus } from './comment-lifecycle';
 import type { AttemptReviewLineComment } from './types';
 
 export function prepareLineCommentsForSave(
@@ -6,10 +7,11 @@ export function prepareLineCommentsForSave(
   const now = new Date().toISOString();
 
   return comments
-    .filter(
-      (comment) =>
-        comment.status !== 'draft' && comment.status !== 'pending-delete'
-    )
+    .filter((comment) => {
+      const status = getLineCommentStatus(comment);
+
+      return status !== 'draft' && status !== 'pending-delete';
+    })
     .map((comment) => prepareLineCommentForSave(comment, now));
 }
 
@@ -17,7 +19,7 @@ function prepareLineCommentForSave(
   comment: AttemptReviewLineComment,
   fallbackDate: string
 ): AttemptReviewLineComment {
-  const status = comment.status ?? 'saved';
+  const status = getLineCommentStatus(comment);
   const createdAt =
     status === 'pending-create'
       ? fallbackDate

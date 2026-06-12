@@ -1,6 +1,7 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 
 import { scoreDraftMaxScoreError } from '@/features/course/features/grading';
+import { getLineCommentStatus } from './comment-lifecycle';
 import type { AttemptReviewAggregate, AttemptReviewLineComment } from './types';
 
 export type AttemptReviewDraft = {
@@ -101,7 +102,7 @@ function areLineCommentsEqual(
       comment.authorUsername === other.authorUsername &&
       comment.createdAt === other.createdAt &&
       comment.updatedAt === other.updatedAt &&
-      (comment.status ?? 'saved') === (other.status ?? 'saved') &&
+      getLineCommentStatus(comment) === getLineCommentStatus(other) &&
       areRepliesEqual(comment.replies ?? [], other.replies ?? [])
     );
   });
@@ -131,5 +132,5 @@ function areRepliesEqual(
 }
 
 function isPersistedLineComment(comment: AttemptReviewLineComment): boolean {
-  return comment.status !== 'draft';
+  return getLineCommentStatus(comment) !== 'draft';
 }
