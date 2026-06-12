@@ -1,0 +1,21 @@
+.trigger {
+  container-type: inline-size;
+}
+
+.labelFull {
+  display: none;
+}
+
+.labelShort {
+  display: inline;
+}
+
+@container (min-width: 12rem) {
+  .labelFull {
+    display: inline;
+  }
+
+  .labelShort {
+    display: none;
+  }
+}
