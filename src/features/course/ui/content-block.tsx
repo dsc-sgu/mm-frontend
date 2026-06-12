@@ -82,7 +82,12 @@ function CourseContentBlock({
     }
     case 'quote':
       return (
-        <blockquote className="my-4 rounded-r-2xl border-l-4 border-primary/70 bg-muted/60 px-5 py-4 text-base leading-7 text-foreground/85 md:text-lg">
+        <blockquote
+          className={cn(
+            'my-4 rounded-r-2xl border-l-4 border-primary/70 bg-muted/60',
+            'px-5 py-4 text-base leading-7 text-foreground/85 md:text-lg'
+          )}
+        >
           <CourseRichText nodes={block.children} />
         </blockquote>
       );
@@ -91,7 +96,13 @@ function CourseContentBlock({
     case 'spoiler':
       return (
         <details className="my-5" open={block.defaultOpen}>
-          <summary className="cursor-pointer select-none rounded-lg px-1 text-base font-semibold outline-none marker:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring">
+          <summary
+            className={cn(
+              'cursor-pointer select-none rounded-lg px-1',
+              'text-base font-semibold marker:text-muted-foreground',
+              'outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            )}
+          >
             <CourseRichText nodes={block.title} />
           </summary>
           <CourseContentBlocks
@@ -131,7 +142,14 @@ function CourseContentBlock({
             <a
               key={file.id}
               href={file.href}
-              className="flex flex-col gap-1 border border-black/10 dark:border-white/10 rounded-xl bg-primary/3 hover:bg-primary/6 px-4 py-3 transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
+              className={cn(
+                'flex flex-col gap-1 rounded-xl border',
+                'border-black/10 bg-primary/3 dark:border-white/10',
+                'px-4 py-3 transition-colors',
+                'hover:bg-primary/6 hover:bg-muted/70',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'sm:flex-row sm:items-center sm:justify-between'
+              )}
             >
               <span className="font-medium text-foreground">{file.name}</span>
               {(file.size || file.mimeType) && (
@@ -148,11 +166,22 @@ function CourseContentBlock({
         <Link
           to="/courses/$courseSlug/tasks/$taskId"
           params={{ courseSlug, taskId: block.taskId }}
-          className="group my-4 block rounded-xl border border-black/10 bg-primary/3 p-4 transition-colors hover:bg-primary/6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 md:rounded-2xl md:p-5"
+          className={cn(
+            'group my-4 block rounded-xl border border-black/10 bg-primary/3',
+            'p-4 transition-colors hover:bg-primary/6',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            'dark:border-white/10 md:rounded-2xl md:p-5'
+          )}
         >
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary md:text-sm">
+              <div
+                className={cn(
+                  'mb-2 flex items-center gap-2',
+                  'text-xs font-semibold uppercase tracking-wide text-primary',
+                  'md:text-sm'
+                )}
+              >
                 <Trophy className="size-4" aria-hidden="true" />
                 Задание
               </div>
