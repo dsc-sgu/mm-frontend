@@ -47,6 +47,8 @@ type AttemptReviewPageLoadedProps = {
   review: AttemptReviewAggregate;
 } & AttemptReviewPageProps;
 
+type AttemptReviewMobileDrawerState = 'none' | 'file-tree' | 'review-panel';
+
 export function AttemptReviewPage(props: AttemptReviewPageProps) {
   const reviewQuery = useAttemptReviewQuery(props);
   const isWorkerPoolReady = useAttemptReviewWorkerPoolReady();
@@ -101,8 +103,8 @@ function AttemptReviewPageLoaded({
     review.changedFiles[0]?.path ?? null
   );
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
-  const [isFileTreeDrawerOpen, setIsFileTreeDrawerOpen] = useState(false);
-  const [isReviewPanelOpen, setIsReviewPanelOpen] = useState(false);
+  const [mobileDrawer, setMobileDrawer] =
+    useState<AttemptReviewMobileDrawerState>('none');
   const [diffViewMode, setDiffViewMode] = useState<AttemptReviewDiffViewMode>(
     getStoredDiffViewMode
   );
@@ -158,7 +160,7 @@ function AttemptReviewPageLoaded({
     diffSectionRef,
     diffViewerRef,
     isDesktopReviewLayout,
-    onCloseMobileFileTree: () => setIsFileTreeDrawerOpen(false),
+    onCloseMobileFileTree: () => setMobileDrawer('none'),
   });
   const handleSelectFile = useCallback(
     (path: string) => {
@@ -234,22 +236,16 @@ function AttemptReviewPageLoaded({
         totalAdded={totalAdded}
         totalDeleted={totalDeleted}
         onDiffViewModeChange={handleDiffViewModeChange}
-        onOpenFileTree={() => {
-          setIsReviewPanelOpen(false);
-          setIsFileTreeDrawerOpen(true);
-        }}
-        onOpenReviewPanel={() => {
-          setIsFileTreeDrawerOpen(false);
-          setIsReviewPanelOpen(true);
-        }}
+        onOpenFileTree={() => setMobileDrawer('file-tree')}
+        onOpenReviewPanel={() => setMobileDrawer('review-panel')}
       />
 
-      {isFileTreeDrawerOpen && !isDesktopReviewLayout ? (
+      {mobileDrawer === 'file-tree' && !isDesktopReviewLayout ? (
         <AttemptReviewMobileDrawer
           titleId="attempt-review-mobile-file-tree-title"
           title="Изменённые файлы"
           description="Выберите файл, чтобы перейти к его diff."
-          onClose={() => setIsFileTreeDrawerOpen(false)}
+          onClose={() => setMobileDrawer('none')}
         >
           <div className="min-h-0 flex-1 overflow-hidden overscroll-contain">
             <AttemptReviewFileTree
@@ -265,12 +261,12 @@ function AttemptReviewPageLoaded({
         </AttemptReviewMobileDrawer>
       ) : null}
 
-      {isReviewPanelOpen && !isDesktopReviewLayout ? (
+      {mobileDrawer === 'review-panel' && !isDesktopReviewLayout ? (
         <AttemptReviewMobileDrawer
           titleId="attempt-review-mobile-review-title"
           title="Отзыв по попытке"
           description="Оценка, общий отзыв и сохранение изменений."
-          onClose={() => setIsReviewPanelOpen(false)}
+          onClose={() => setMobileDrawer('none')}
         >
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <AttemptReviewReviewPanel
