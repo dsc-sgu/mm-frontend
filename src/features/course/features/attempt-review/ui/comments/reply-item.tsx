@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Check, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -22,56 +22,110 @@ type AttemptReviewCommentReplyItemProps = {
   onDelete: (replyId: string) => void | Promise<void>;
 };
 
+type ReplyItemState =
+  | { mode: 'view'; pending: false }
+  | { mode: 'view'; pending: 'delete' }
+  | {
+      mode: 'editing';
+      draftHtml: string;
+      sourceHtml: string;
+      pending: false;
+    }
+  | {
+      mode: 'editing';
+      draftHtml: string;
+      sourceHtml: string;
+      pending: 'update';
+    };
+
 export function AttemptReviewCommentReplyItem({
   reply,
   canManage,
   onUpdate,
   onDelete,
 }: AttemptReviewCommentReplyItemProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [draftHtml, setDraftHtml] = useState(reply.html);
-  const [isPending, setIsPending] = useState(false);
+  const [state, setState] = useState<ReplyItemState>({
+    mode: 'view',
+    pending: false,
+  });
+  const isEditing = state.mode === 'editing';
+  const isPending = state.pending !== false;
+  const draftHtml =
+    state.mode === 'editing' && state.sourceHtml === reply.html
+      ? state.draftHtml
+      : reply.html;
   const isSubmitDisabled = isPending || isRichTextHtmlEmpty(draftHtml);
   const submitShortcutKeys = getAttemptReviewSubmitShortcutKeys();
   const cancelShortcutKeys = getAttemptReviewCancelShortcutKeys();
 
-  useEffect(() => {
-    if (!isEditing) {
-      setDraftHtml(reply.html);
-    }
-  }, [isEditing, reply.html]);
+  function startEdit() {
+    setState({
+      mode: 'editing',
+      draftHtml: reply.html,
+      sourceHtml: reply.html,
+      pending: false,
+    });
+  }
+
+  function changeDraftHtml(nextDraftHtml: string) {
+    setState((current) => {
+      if (current.mode !== 'editing' || current.pending === 'update') {
+        return current;
+      }
+
+      return {
+        mode: 'editing',
+        draftHtml: nextDraftHtml,
+        sourceHtml: reply.html,
+        pending: false,
+      };
+    });
+  }
 
   async function submitEdit() {
-    if (isSubmitDisabled) {
+    if (state.mode !== 'editing' || isSubmitDisabled) {
       return;
     }
 
-    setIsPending(true);
+    const submittedHtml = draftHtml;
+    setState({
+      mode: 'editing',
+      draftHtml: submittedHtml,
+      sourceHtml: reply.html,
+      pending: 'update',
+    });
 
     try {
-      await onUpdate(reply.id, draftHtml);
-      setIsEditing(false);
-    } finally {
-      setIsPending(false);
+      await onUpdate(reply.id, submittedHtml);
+      setState({ mode: 'view', pending: false });
+    } catch (error) {
+      setState({
+        mode: 'editing',
+        draftHtml: submittedHtml,
+        sourceHtml: reply.html,
+        pending: false,
+      });
+      throw error;
     }
   }
 
   function cancelEdit() {
-    if (isPending) {
-      return;
-    }
-
-    setDraftHtml(reply.html);
-    setIsEditing(false);
+    setState((current) =>
+      current.pending === 'update' ? current : { mode: 'view', pending: false }
+    );
   }
 
   async function deleteReply() {
-    setIsPending(true);
+    if (state.mode !== 'view' || state.pending === 'delete') {
+      return;
+    }
+
+    setState({ mode: 'view', pending: 'delete' });
 
     try {
       await onDelete(reply.id);
     } finally {
-      setIsPending(false);
+      setState({ mode: 'view', pending: false });
     }
   }
 
@@ -94,7 +148,7 @@ export function AttemptReviewCommentReplyItem({
           autoFocus
           minHeightClassName="min-h-16"
           placeholder="Ответить на комментарий…"
-          onChange={setDraftHtml}
+          onChange={changeDraftHtml}
           onSubmitShortcut={() => {
             void submitEdit();
           }}
@@ -161,7 +215,7 @@ export function AttemptReviewCommentReplyItem({
               disabled={isPending}
               aria-label="Редактировать ответ"
               title="Редактировать ответ"
-              onClick={() => setIsEditing(true)}
+              onClick={startEdit}
             >
               <Pencil className="size-3.5" />
             </Button>
