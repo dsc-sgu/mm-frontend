@@ -1,3 +1,10 @@
+import {
+  cancelLineCommentChange,
+  deleteLineCommentChange,
+  revertLineCommentChange,
+  startLineCommentEditing,
+  submitLineCommentChange,
+} from './comment-lifecycle';
 import type {
   AttemptReviewCommentAuthor,
   AttemptReviewCommentSide,
@@ -48,51 +55,30 @@ export function submitLineComment(
   commentId: string,
   html: string
 ): AttemptReviewLineComment[] {
-  return updateLineComment(comments, commentId, (comment) => ({
-    ...comment,
-    html,
-    status:
-      comment.status === 'draft' || comment.status === 'pending-create'
-        ? 'pending-create'
-        : 'pending-update',
-    isEditing: false,
-  }));
+  return updateLineComment(comments, commentId, (comment) =>
+    submitLineCommentChange(comment, html)
+  );
 }
 
 export function cancelLineComment(
   comments: AttemptReviewLineComment[],
   commentId: string
 ): AttemptReviewLineComment[] {
-  return updateLineComment(comments, commentId, (comment) => {
-    if (comment.status === 'draft') {
-      return null;
-    }
-
-    return { ...comment, isEditing: false };
-  });
+  return updateLineComment(comments, commentId, cancelLineCommentChange);
 }
 
 export function editLineComment(
   comments: AttemptReviewLineComment[],
   commentId: string
 ): AttemptReviewLineComment[] {
-  return updateLineComment(comments, commentId, (comment) => ({
-    ...comment,
-    isEditing: true,
-  }));
+  return updateLineComment(comments, commentId, startLineCommentEditing);
 }
 
 export function deleteLineComment(
   comments: AttemptReviewLineComment[],
   commentId: string
 ): AttemptReviewLineComment[] {
-  return updateLineComment(comments, commentId, (comment) => {
-    if (comment.status === 'draft' || comment.status === 'pending-create') {
-      return null;
-    }
-
-    return { ...comment, status: 'pending-delete', isEditing: false };
-  });
+  return updateLineComment(comments, commentId, deleteLineCommentChange);
 }
 
 export function revertPendingLineComment(
@@ -100,13 +86,12 @@ export function revertPendingLineComment(
   commentId: string,
   savedCommentsById: Map<string, AttemptReviewLineComment>
 ): AttemptReviewLineComment[] {
-  return updateLineComment(comments, commentId, (comment) => {
-    if (comment.status === 'pending-create') {
-      return null;
-    }
-
-    return savedCommentsById.get(comment.id) ?? null;
-  });
+  return updateLineComment(comments, commentId, (comment) =>
+    revertLineCommentChange({
+      comment,
+      savedComment: savedCommentsById.get(comment.id),
+    })
+  );
 }
 
 export function addLineCommentReply({
