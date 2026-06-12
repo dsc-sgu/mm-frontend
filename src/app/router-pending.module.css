@@ -1,0 +1,19 @@
+@keyframes router-pending-bar {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+.bar {
+  height: 100%;
+  width: 50%;
+  border-top-right-radius: 9999px;
+  border-bottom-right-radius: 9999px;
+  background: var(--primary);
+  box-shadow: 0 0 16px color-mix(in oklch, var(--primary) 70%, transparent);
+  animation: router-pending-bar 0.8s ease-in-out infinite;
+}

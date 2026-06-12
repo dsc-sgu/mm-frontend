@@ -1,6 +1,8 @@
 import { useRouterState } from '@tanstack/react-router';
 import { useDebounce } from 'use-debounce';
 
+import styles from './router-pending.module.css';
+
 const LOADER_SHOW_DELAY = 200;
 const LOADER_HIDE_DELAY = 600;
 
@@ -23,7 +25,7 @@ export function RouterPending() {
       role="status"
       aria-label="Загрузка страницы"
     >
-      <div className="h-full w-1/2 animate-router-pending-bar rounded-r-full bg-primary shadow-[0_0_16px_color-mix(in_oklch,var(--primary)_70%,transparent)]" />
+      <div className={styles.bar} />
     </div>
   );
 }

@@ -124,15 +124,6 @@
   }
 }
 
-@keyframes router-pending-bar {
-  0% {
-    transform: translateX(-120%);
-  }
-  100% {
-    transform: translateX(220%);
-  }
-}
-
 @layer utilities {
   .attempt-review-editor-content p,
   .attempt-review-editor-readonly p {
@@ -185,10 +176,6 @@
 
   .dark .code-block .shiki span {
     color: var(--shiki-dark) !important;
-  }
-
-  .animate-router-pending-bar {
-    animation: router-pending-bar 0.8s ease-in-out infinite;
   }
 
   .animate-deadlines-calendar-title-shimmer {
