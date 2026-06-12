@@ -6,6 +6,7 @@ import { MonthCell } from './ui/month-cell';
 import { useDeadlinesIsFetching, useDeadlinesQuery } from './api/queries';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useCalendarHeaderText } from './hooks/use-header-text';
+import styles from './calendar.module.css';
 
 type DeadlinesCalendarProps = {
   className?: string;
@@ -57,7 +58,10 @@ function DeadlinesCalendarTitle({ isFetching }: { isFetching: boolean }) {
         <>
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 animate-deadlines-calendar-title-shimmer"
+            className={cn(
+              'pointer-events-none absolute inset-0',
+              styles.titleShimmer
+            )}
           >
             {title}
           </span>
