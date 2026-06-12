@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { cn } from '@/shadcn/lib/utils';
-import { COURSE_COLORS } from '@/features/course/model/colors';
+import { COURSE_COLORS } from '@/features/course/ui/theme';
 import type {
   CourseColor,
   LucideIconName,
