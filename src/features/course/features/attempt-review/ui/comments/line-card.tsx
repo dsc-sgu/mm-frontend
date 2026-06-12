@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Check, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -39,6 +39,13 @@ type AttemptReviewLineCommentCardProps = {
   onReplyDelete: (replyId: string) => void | Promise<void>;
 };
 
+type ReplyComposerState =
+  | { status: 'idle' }
+  | { status: 'editing'; html: string }
+  | { status: 'submitting'; html: string };
+
+const EMPTY_REPLY_HTML = '<p></p>';
+
 export function AttemptReviewLineCommentCard({
   comment,
   mode,
@@ -64,36 +71,66 @@ export function AttemptReviewLineCommentCard({
   const isEditableComment =
     mode === 'editable' &&
     (commentStatus === 'draft' || comment.isEditing === true);
-  const [draftHtml, setDraftHtml] = useState(comment.html);
-  const [isReplying, setIsReplying] = useState(false);
-  const [replyHtml, setReplyHtml] = useState('<p></p>');
-  const [isReplySubmitting, setIsReplySubmitting] = useState(false);
+  const [draftState, setDraftState] = useState(() => ({
+    sourceHtml: comment.html,
+    html: comment.html,
+  }));
+  const [replyComposer, setReplyComposer] = useState<ReplyComposerState>({
+    status: 'idle',
+  });
+  const draftHtml =
+    draftState.sourceHtml === comment.html ? draftState.html : comment.html;
   const isSubmitDisabled = isRichTextHtmlEmpty(draftHtml);
+  const isReplying = replyComposer.status !== 'idle';
+  const isReplySubmitting = replyComposer.status === 'submitting';
+  const replyHtml = isReplying ? replyComposer.html : EMPTY_REPLY_HTML;
   const isReplySubmitDisabled =
     isReplySubmitting || isRichTextHtmlEmpty(replyHtml);
   const submitShortcutKeys = getAttemptReviewSubmitShortcutKeys();
   const cancelShortcutKeys = getAttemptReviewCancelShortcutKeys();
 
-  useEffect(() => {
-    if (!isEditableComment) {
-      setDraftHtml(comment.html);
-    }
-  }, [comment.html, isEditableComment]);
+  function changeDraftHtml(html: string) {
+    setDraftState({ sourceHtml: comment.html, html });
+  }
 
   async function submitReply() {
-    if (isReplySubmitDisabled) {
+    if (
+      replyComposer.status !== 'editing' ||
+      isRichTextHtmlEmpty(replyComposer.html)
+    ) {
       return;
     }
 
-    setIsReplySubmitting(true);
+    const submittedHtml = replyComposer.html;
+    setReplyComposer({ status: 'submitting', html: submittedHtml });
 
     try {
-      await onReplySubmit(replyHtml);
-      setReplyHtml('<p></p>');
-      setIsReplying(false);
-    } finally {
-      setIsReplySubmitting(false);
+      await onReplySubmit(submittedHtml);
+      setReplyComposer({ status: 'idle' });
+    } catch (error) {
+      setReplyComposer({ status: 'editing', html: submittedHtml });
+      throw error;
     }
+  }
+
+  function changeReplyHtml(html: string) {
+    setReplyComposer((current) => {
+      if (current.status !== 'editing') {
+        return current;
+      }
+
+      return { status: 'editing', html };
+    });
+  }
+
+  function startReply() {
+    setReplyComposer({ status: 'editing', html: EMPTY_REPLY_HTML });
+  }
+
+  function cancelReply() {
+    setReplyComposer((current) =>
+      current.status === 'submitting' ? current : { status: 'idle' }
+    );
   }
 
   return (
@@ -191,7 +228,7 @@ export function AttemptReviewLineCommentCard({
             autoFocus
             minHeightClassName="min-h-20"
             placeholder="Комментарий к строке…"
-            onChange={setDraftHtml}
+            onChange={changeDraftHtml}
             onSubmitShortcut={() => {
               if (!isSubmitDisabled) {
                 onSubmit(draftHtml);
@@ -248,12 +285,9 @@ export function AttemptReviewLineCommentCard({
           isReplying={isReplying}
           replyHtml={replyHtml}
           isReplySubmitDisabled={isReplySubmitDisabled}
-          onReplyHtmlChange={setReplyHtml}
-          onStartReply={() => setIsReplying(true)}
-          onCancelReply={() => {
-            setReplyHtml('<p></p>');
-            setIsReplying(false);
-          }}
+          onReplyHtmlChange={changeReplyHtml}
+          onStartReply={startReply}
+          onCancelReply={cancelReply}
           onSubmitReply={() => {
             void submitReply();
           }}
