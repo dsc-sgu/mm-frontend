@@ -2,6 +2,21 @@
 
 ## Code style
 
+### Package manager
+
+Use `bun` for package management and scripts.
+
+Prefer:
+
+```bash
+bun install
+bun add <package>
+bun run lint
+bun run build
+```
+
+Avoid using `npm`, `npx`, `yarn`, or `pnpm` commands unless there is a specific documented reason.
+
 ### File and directory naming
 
 - Prefer feature-based structure.
