@@ -32,6 +32,7 @@ import type { FetchSessionResponse } from '@/features/auth/api/client';
 import { HeaderBreadcrumbs } from '@/app/header/ui/breadcrumbs';
 import { HeaderSectionNav } from '@/app/header/ui/section-nav';
 import { getHeaderState } from '@/app/header/model/state';
+import { cn } from '@/shadcn/lib/utils';
 
 export function Header() {
   const matches = useMatches();
@@ -40,8 +41,17 @@ export function Header() {
   const { mutateAsync: logoutMut } = useLogoutMutation();
 
   return (
-    <header className="w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center justify-between gap-3 px-3 md:px-4">
+    <header
+      className={cn(
+        'w-full border-b bg-background/80 backdrop-blur',
+        'supports-[backdrop-filter]:bg-background/60'
+      )}
+    >
+      <div
+        className={cn(
+          'flex h-14 items-center justify-between gap-3 px-3 md:px-4'
+        )}
+      >
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <Logo />
           {breadcrumbs.length > 0 && <HeaderDivider />}
@@ -66,7 +76,12 @@ function Logo() {
     <Link
       to="/"
       aria-label="На главную"
-      className="flex shrink-0 items-center rounded-md px-2 py-1 text-lg font-semibold tracking-tight text-foreground underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className={cn(
+        'flex shrink-0 items-center rounded-md px-2 py-1 text-lg',
+        'font-semibold tracking-tight text-foreground underline-offset-4',
+        'hover:underline focus-visible:ring-2 focus-visible:ring-ring',
+        'focus-visible:outline-none'
+      )}
     >
       <GitPullRequest className="mr-2 h-5 w-5" />
       MergeMinds

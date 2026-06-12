@@ -14,7 +14,10 @@ export function AttemptReviewDiffViewToggle({
 }: AttemptReviewDiffViewToggleProps) {
   return (
     <div
-      className="inline-grid grid-cols-2 rounded-lg bg-muted/50 p-0.5 text-xs font-medium text-muted-foreground"
+      className={cn(
+        'inline-grid grid-cols-2 rounded-lg bg-muted/50 p-0.5 text-xs',
+        'font-medium text-muted-foreground'
+      )}
       aria-label="Режим отображения diff"
     >
       {(['unified', 'split'] as const).map((mode) => {

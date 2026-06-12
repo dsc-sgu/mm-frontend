@@ -4,6 +4,7 @@ import { DeadlinesCalendar } from '@/features/deadlines-calendar/calendar';
 import { createFileRoute } from '@tanstack/react-router';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
+import { cn } from '@/shadcn/lib/utils';
 
 export const Route = createFileRoute('/_authenticated/')({
   staticData: {
@@ -18,7 +19,12 @@ function RouteComponent() {
   const { data: courses = [], isPending } = useCoursesQuery();
 
   return (
-    <main className="min-h-[calc(100vh-3.5rem)] bg-muted/30 xl:h-[calc(100vh-3.5rem)] xl:overflow-hidden">
+    <main
+      className={cn(
+        'min-h-[calc(100vh-3.5rem)] bg-muted/30 xl:h-[calc(100vh-3.5rem)]',
+        'xl:overflow-hidden'
+      )}
+    >
       <div className="box-border h-full px-4 py-6 md:px-6 lg:px-8">
         <div className="grid w-full gap-6 xl:h-full xl:min-h-0 xl:grid-cols-2">
           <DashboardSection title="Мои курсы" bordered scrollable>
@@ -42,7 +48,9 @@ function RouteComponent() {
             )}
           </DashboardSection>
 
-          <DeadlinesCalendar className="h-[720px] w-full xl:h-full xl:min-h-0" />
+          <DeadlinesCalendar
+            className={cn('h-[720px] w-full', 'xl:h-full xl:min-h-0')}
+          />
         </div>
       </div>
     </main>
@@ -115,7 +123,13 @@ function CourseListSkeleton() {
 
 function SectionPlaceholder({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-48 items-center justify-center rounded-3xl border border-dashed border-border/80 bg-muted/30 px-6 py-10 text-center text-sm leading-6 text-muted-foreground">
+    <div
+      className={cn(
+        'flex min-h-48 items-center justify-center rounded-3xl border',
+        'border-dashed border-border/80 bg-muted/30 px-6 py-10 text-center',
+        'text-sm leading-6 text-muted-foreground'
+      )}
+    >
       <p className="max-w-md">{children}</p>
     </div>
   );

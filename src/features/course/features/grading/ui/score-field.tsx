@@ -145,7 +145,10 @@ export function CourseScoreField({
       {error ? (
         <span
           id={errorId}
-          className="max-w-full text-sm leading-snug font-medium break-words text-destructive"
+          className={cn(
+            'max-w-full text-sm leading-snug font-medium break-words',
+            'text-destructive'
+          )}
         >
           {error}
         </span>

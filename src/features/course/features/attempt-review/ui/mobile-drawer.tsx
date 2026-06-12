@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
+import { cn } from '@/shadcn/lib/utils';
 
 type AttemptReviewMobileDrawerProps = {
   titleId: string;
@@ -25,7 +26,12 @@ export function AttemptReviewMobileDrawer({
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      <div className="flex shrink-0 items-start justify-between gap-4 border-b p-4 text-left">
+      <div
+        className={cn(
+          'flex shrink-0 items-start justify-between gap-4 border-b p-4',
+          'text-left'
+        )}
+      >
         <div className="min-w-0">
           <h2 id={titleId} className="font-semibold text-foreground">
             {title}

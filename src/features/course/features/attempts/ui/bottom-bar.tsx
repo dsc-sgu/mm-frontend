@@ -35,7 +35,12 @@ export function QuickGradingBottomActions({
   onSaveQuickGrades: () => void | Promise<void>;
 }) {
   return (
-    <div className="grid min-h-10 gap-3 lg:grid-cols-[minmax(12rem,1fr)_auto] lg:items-center">
+    <div
+      className={cn(
+        'grid min-h-10 gap-3 lg:grid-cols-[minmax(12rem,1fr)_auto]',
+        'lg:items-center'
+      )}
+    >
       <div className="grid gap-1">
         <p className="text-sm font-semibold">Быстрая оценка</p>
         {hasDraftValidationErrors ? (
@@ -44,7 +49,12 @@ export function QuickGradingBottomActions({
           </p>
         ) : null}
       </div>
-      <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:flex-wrap lg:items-center lg:justify-end">
+      <div
+        className={cn(
+          'grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:flex-wrap',
+          'lg:items-center lg:justify-end'
+        )}
+      >
         <Button
           type="button"
           variant="outline"
@@ -78,7 +88,12 @@ export function SelectionBottomActions({
   onSaveSelectedMaxGrade: () => Promise<void>;
 }) {
   return (
-    <div className="flex min-h-10 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div
+      className={cn(
+        'flex min-h-10 flex-col gap-3 lg:flex-row lg:items-center',
+        'lg:justify-between'
+      )}
+    >
       <div className="flex min-w-0 items-center justify-between gap-3">
         <p className="min-w-0 text-sm font-semibold">
           Выбрано попыток: {selectedCount}
@@ -92,7 +107,11 @@ export function SelectionBottomActions({
           <X className="size-4" /> Очистить
         </Button>
       </div>
-      <div className="grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:items-center">
+      <div
+        className={cn(
+          'grid gap-2 min-[480px]:grid-cols-2 lg:flex lg:items-center'
+        )}
+      >
         <Button
           type="button"
           variant="ghost"
@@ -128,11 +147,20 @@ export function IdleBottomActions({
   onOpenFilters: () => void;
 }) {
   return (
-    <div className="flex min-h-10 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div
+      className={cn(
+        'flex min-h-10 flex-col gap-3 lg:flex-row lg:items-center',
+        'lg:justify-between'
+      )}
+    >
       <p className="min-w-0 text-sm break-words text-muted-foreground">
         Выберите отдельные попытки или запустите оценку всех видимых.
       </p>
-      <div className="grid gap-2 min-[496px]:grid-cols-3 lg:flex lg:items-center">
+      <div
+        className={cn(
+          'grid gap-2 min-[496px]:grid-cols-3 lg:flex lg:items-center'
+        )}
+      >
         <Button
           type="button"
           variant="outline"

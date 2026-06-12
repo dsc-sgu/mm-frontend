@@ -55,7 +55,11 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
 
   if (reviewQuery.isLoading || !isWorkerPoolReady) {
     return (
-      <main className="mx-auto grid min-h-[60vh] w-full max-w-7xl place-items-center p-6">
+      <main
+        className={cn(
+          'mx-auto grid min-h-[60vh] w-full max-w-7xl place-items-center p-6'
+        )}
+      >
         <div className="inline-flex items-center gap-2 text-muted-foreground">
           <Spinner /> Загружаем страницу проверки…
         </div>

@@ -48,15 +48,29 @@ export function AttemptReviewReviewPanel({
         className
       )}
     >
-      <div className="grid content-start gap-4 border-b p-3 sm:p-4 lg:border-r lg:border-b-0">
+      <div
+        className={cn(
+          'grid content-start gap-4 border-b p-3 sm:p-4 lg:border-r',
+          'lg:border-b-0'
+        )}
+      >
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-semibold">Оценка</h2>
           {hasChanges && mode === 'editable' ? (
-            <span className="rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 dark:bg-orange-950/40 dark:text-orange-200">
+            <span
+              className={cn(
+                'rounded-full bg-orange-100 px-2 py-1 text-xs font-medium',
+                'text-orange-800 dark:bg-orange-950/40 dark:text-orange-200'
+              )}
+            >
               Есть изменения
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 text-xs text-muted-foreground'
+              )}
+            >
               <Check className="size-3.5" /> Сохранено
             </span>
           )}
@@ -94,7 +108,11 @@ export function AttemptReviewReviewPanel({
             · {review.current.grade.gradedBy}
           </p>
         ) : (
-          <p className="text-sm font-medium text-orange-600 dark:text-orange-300">
+          <p
+            className={cn(
+              'text-sm font-medium text-orange-600 dark:text-orange-300'
+            )}
+          >
             Попытка ещё не оценена
           </p>
         )}

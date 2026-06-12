@@ -45,16 +45,23 @@ export function AttemptCard(props: AttemptCardProps) {
   return (
     <article
       className={cn(
-        'max-w-full overflow-hidden rounded-2xl border bg-card px-4 py-4 transition-colors sm:px-7 sm:py-6',
+        'max-w-full overflow-hidden rounded-2xl border bg-card',
+        'px-4 py-4 transition-colors sm:px-7 sm:py-6',
         selected ? 'border-primary' : 'border-border'
       )}
     >
-      <div className="grid min-w-0 gap-2 sm:flex sm:items-start sm:justify-between sm:gap-4">
+      <div
+        className={cn(
+          'grid min-w-0 gap-2 sm:flex sm:items-start sm:justify-between',
+          'sm:gap-4'
+        )}
+      >
         <div className="flex min-w-0 items-start">
           {!props.attempt.reviewLock ? (
             <div
               className={cn(
-                'mt-[0.1875rem] mr-2 grid w-5 shrink-0 place-items-center overflow-hidden transition-[opacity,transform] duration-200 ease-out sm:mt-1',
+                'mt-[0.1875rem] mr-2 grid w-5 shrink-0 place-items-center overflow-hidden',
+                'transition-[opacity,transform] duration-200 ease-out sm:mt-1',
                 canSelect ? 'scale-100 opacity-100' : 'scale-75 opacity-0'
               )}
               aria-hidden={!canSelect}
@@ -75,7 +82,8 @@ export function AttemptCard(props: AttemptCardProps) {
           ) : null}
           <h3
             className={cn(
-              'min-w-0 text-lg leading-tight font-semibold tracking-tight break-words transition-transform duration-200 ease-out sm:text-xl',
+              'min-w-0 text-lg leading-tight font-semibold tracking-tight',
+              'break-words transition-transform duration-200 ease-out sm:text-xl',
               props.mode !== 'default' && !props.attempt.reviewLock
                 ? '-translate-x-7'
                 : 'translate-x-0'
@@ -84,7 +92,11 @@ export function AttemptCard(props: AttemptCardProps) {
             {canSelect ? (
               <button
                 type="button"
-                className="block min-w-0 cursor-pointer text-left break-words select-none focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                className={cn(
+                  'block min-w-0 cursor-pointer text-left break-words',
+                  'select-none focus-visible:rounded-md focus-visible:ring-2',
+                  'focus-visible:ring-ring focus-visible:outline-none'
+                )}
                 onClick={() => props.onSelectedChange(!selected)}
               >
                 <AttemptTitle attempt={props.attempt} />
@@ -180,7 +192,12 @@ function getGradeClassName(grade: CourseAttemptGrade): string {
 
 export function AttemptDiffStats({ attempt }: { attempt: CourseAttempt }) {
   return (
-    <div className="flex shrink-0 items-center gap-2 text-xs font-medium sm:gap-3 sm:text-sm">
+    <div
+      className={cn(
+        'flex shrink-0 items-center gap-2 text-xs font-medium sm:gap-3',
+        'sm:text-sm'
+      )}
+    >
       <span className="text-emerald-700 dark:text-emerald-300">
         +{attempt.diff.addedLines}
       </span>
@@ -195,7 +212,12 @@ export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
   const timing = getTimingLabel(attempt);
 
   return (
-    <div className="mt-1 min-w-0 text-sm leading-6 break-words text-muted-foreground sm:text-base sm:leading-7">
+    <div
+      className={cn(
+        'mt-1 min-w-0 text-sm leading-6 break-words text-muted-foreground',
+        'sm:text-base sm:leading-7'
+      )}
+    >
       <p className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-0">
         <span className="font-medium text-foreground">
           {attempt.student.fullName}
@@ -218,7 +240,12 @@ export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
         </span>
       </p>
       {attempt.grade ? (
-        <p className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0 text-foreground">
+        <p
+          className={cn(
+            'flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0',
+            'text-foreground'
+          )}
+        >
           <span className="whitespace-nowrap">
             Оценено {formatDateTime(attempt.grade.gradedAt)}
           </span>
@@ -235,7 +262,12 @@ export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
         </p>
       )}
       {attempt.reviewLock ? (
-        <p className="inline-flex min-w-0 items-center gap-2 font-medium break-words text-amber-700 dark:text-amber-300">
+        <p
+          className={cn(
+            'inline-flex min-w-0 items-center gap-2 font-medium break-words',
+            'text-amber-700 dark:text-amber-300'
+          )}
+        >
           <LockKeyhole className="size-4" /> На проверке у{' '}
           {attempt.reviewLock.teacherName}
         </p>
