@@ -53,8 +53,8 @@ function RouteComponent() {
   return (
     <div
       className={cn(
-        'min-h-[calc(100vh-4rem)] flex items-center justify-center bg-linear-to-br',
-        'from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4'
+        'min-h-[calc(100vh-4rem)] flex items-center justify-center',
+        'bg-linear-to-br from-background via-muted/30 to-muted p-4'
       )}
     >
       <Card className="w-full max-w-2xl shadow-xl">
@@ -71,16 +71,16 @@ function RouteComponent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="lastName">
-                  Фамилия <span className="text-red-500">*</span>
+                  Фамилия <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="lastName"
                   placeholder="Иванов"
                   {...register('lastName')}
-                  className={errors.lastName ? 'border-red-500' : ''}
+                  className={errors.lastName ? 'border-destructive' : ''}
                 />
                 {errors.lastName && (
-                  <p className="text-sm text-red-500 dark:text-red-400">
+                  <p className="text-sm text-destructive">
                     {errors.lastName.message}
                   </p>
                 )}
@@ -88,16 +88,16 @@ function RouteComponent() {
 
               <div className="space-y-2">
                 <Label htmlFor="firstName">
-                  Имя <span className="text-red-500">*</span>
+                  Имя <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="firstName"
                   placeholder="Иван"
                   {...register('firstName')}
-                  className={errors.firstName ? 'border-red-500' : ''}
+                  className={errors.firstName ? 'border-destructive' : ''}
                 />
                 {errors.firstName && (
-                  <p className="text-sm text-red-500 dark:text-red-400">
+                  <p className="text-sm text-destructive">
                     {errors.firstName.message}
                   </p>
                 )}
@@ -115,16 +115,16 @@ function RouteComponent() {
 
             <div className="space-y-2">
               <Label htmlFor="username">
-                Имя пользователя <span className="text-red-500">*</span>
+                Имя пользователя <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="username"
                 placeholder="ivan_ivanov"
                 {...register('username')}
-                className={errors.username ? 'border-red-500' : ''}
+                className={errors.username ? 'border-destructive' : ''}
               />
               {errors.username && (
-                <p className="text-sm text-red-500 dark:text-red-400">
+                <p className="text-sm text-destructive">
                   {errors.username.message}
                 </p>
               )}
@@ -132,17 +132,17 @@ function RouteComponent() {
 
             <div className="space-y-2">
               <Label htmlFor="email">
-                Email <span className="text-red-500">*</span>
+                Email <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="ivan@example.com"
                 {...register('email')}
-                className={errors.email ? 'border-red-500' : ''}
+                className={errors.email ? 'border-destructive' : ''}
               />
               {errors.email && (
-                <p className="text-sm text-red-500 dark:text-red-400">
+                <p className="text-sm text-destructive">
                   {errors.email.message}
                 </p>
               )}
@@ -151,17 +151,17 @@ function RouteComponent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="password">
-                  Пароль <span className="text-red-500">*</span>
+                  Пароль <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   {...register('password')}
-                  className={errors.password ? 'border-red-500' : ''}
+                  className={errors.password ? 'border-destructive' : ''}
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-500 dark:text-red-400">
+                  <p className="text-sm text-destructive">
                     {errors.password.message}
                   </p>
                 )}
@@ -169,17 +169,18 @@ function RouteComponent() {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">
-                  Подтверждение пароля <span className="text-red-500">*</span>
+                  Подтверждение пароля{' '}
+                  <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   placeholder="••••••••"
                   {...register('confirmPassword')}
-                  className={errors.confirmPassword ? 'border-red-500' : ''}
+                  className={errors.confirmPassword ? 'border-destructive' : ''}
                 />
                 {errors.confirmPassword && (
-                  <p className="text-sm text-red-500 dark:text-red-400">
+                  <p className="text-sm text-destructive">
                     {errors.confirmPassword.message}
                   </p>
                 )}
@@ -191,9 +192,7 @@ function RouteComponent() {
             </Button>
 
             <div className="text-center text-sm">
-              <span className="text-gray-600 dark:text-gray-400">
-                Уже есть аккаунт?{' '}
-              </span>
+              <span className="text-muted-foreground">Уже есть аккаунт?</span>{' '}
               <Link
                 to="/login"
                 className="text-primary hover:underline font-medium"

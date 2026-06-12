@@ -46,8 +46,7 @@ function RouteComponent() {
     <div
       className={cn(
         'min-h-[calc(100vh-4rem)] flex items-center justify-center',
-        'bg-linear-to-br from-gray-50 to-gray-100',
-        'dark:from-gray-900 dark:to-gray-800 p-4'
+        'bg-linear-to-br from-background via-muted/30 to-muted p-4'
       )}
     >
       <Card className="w-full max-w-md shadow-xl">
@@ -68,10 +67,10 @@ function RouteComponent() {
                 type="email"
                 placeholder="user@example.com"
                 {...register('email')}
-                className={errors.email ? 'border-red-500' : ''}
+                className={errors.email ? 'border-destructive' : ''}
               />
               {errors.email && (
-                <p className="text-sm text-red-500 dark:text-red-400">
+                <p className="text-sm text-destructive">
                   {errors.email.message}
                 </p>
               )}
@@ -84,10 +83,10 @@ function RouteComponent() {
                 type="password"
                 placeholder="••••••••"
                 {...register('password')}
-                className={errors.password ? 'border-red-500' : ''}
+                className={errors.password ? 'border-destructive' : ''}
               />
               {errors.password && (
-                <p className="text-sm text-red-500 dark:text-red-400">
+                <p className="text-sm text-destructive">
                   {errors.password.message}
                 </p>
               )}
@@ -98,9 +97,7 @@ function RouteComponent() {
             </Button>
 
             <div className="text-center text-sm">
-              <span className="text-gray-600 dark:text-gray-400">
-                Нет аккаунта?{' '}
-              </span>
+              <span className="text-muted-foreground">Нет аккаунта?</span>{' '}
               <Link
                 to="/register"
                 className="text-primary hover:underline font-medium"
