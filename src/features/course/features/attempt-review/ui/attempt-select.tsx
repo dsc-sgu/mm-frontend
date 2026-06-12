@@ -13,6 +13,7 @@ import type {
   AttemptReviewAggregate,
   AttemptReviewMode,
 } from '@/features/course/features/attempt-review/model/types';
+import styles from './attempt-select.module.css';
 
 type AttemptReviewAttemptSelectProps = {
   review: AttemptReviewAggregate;
@@ -136,16 +137,17 @@ function AttemptOptionCard({
     return (
       <div
         className={cn(
-          'attempt-review-attempt-trigger flex h-9 min-w-0 items-center justify-between gap-2 rounded-lg bg-muted/50 px-2.5 transition-colors hover:bg-muted/70 lg:block lg:h-auto lg:px-3 lg:py-2',
+          'flex h-9 min-w-0 items-center justify-between gap-2',
+          'rounded-lg bg-muted/50 px-2.5 transition-colors hover:bg-muted/70',
+          'lg:block lg:h-auto lg:px-3 lg:py-2',
+          styles.trigger,
           selected && 'bg-primary/5'
         )}
       >
         <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
           <span className="min-w-0 truncate text-sm font-semibold">
-            <span className="attempt-review-attempt-label-short">
-              #{attempt.attemptNumber}
-            </span>
-            <span className="attempt-review-attempt-label-full">
+            <span className={styles.labelShort}>#{attempt.attemptNumber}</span>
+            <span className={styles.labelFull}>
               Попытка #{attempt.attemptNumber}
             </span>
           </span>

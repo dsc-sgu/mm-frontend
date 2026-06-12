@@ -121,30 +121,6 @@
   }
 }
 
-@layer components {
-  .attempt-review-attempt-trigger {
-    container-type: inline-size;
-  }
-
-  .attempt-review-attempt-label-full {
-    display: none;
-  }
-
-  .attempt-review-attempt-label-short {
-    display: inline;
-  }
-
-  @container (min-width: 12rem) {
-    .attempt-review-attempt-label-full {
-      display: inline;
-    }
-
-    .attempt-review-attempt-label-short {
-      display: none;
-    }
-  }
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
