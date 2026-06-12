@@ -222,6 +222,65 @@ declare global {
 }
 ```
 
+### State modeling
+
+Prefer explicit algebraic data types (ADT) with discriminated unions for UI and domain state.
+
+Use union variants when a state has mutually exclusive modes, phases, or lifecycle steps.
+
+Prefer:
+
+```ts
+type SaveState =
+  | { status: 'idle' }
+  | { status: 'dirty'; draft: Draft }
+  | { status: 'saving'; draft: Draft }
+  | { status: 'failed'; draft: Draft; error: string };
+```
+
+Avoid parallel booleans or optional fields that can describe impossible states:
+
+```ts
+type SaveState = {
+  isDirty: boolean;
+  isSaving: boolean;
+  error?: string;
+};
+```
+
+When state changes follow a lifecycle, model them as an explicit finite state machine (FSM):
+
+- name states with domain language;
+- name events/actions with domain language;
+- keep transition logic in `model`;
+- keep rendering logic in `ui`;
+- make impossible transitions impossible or explicit no-ops.
+
+Prefer small transition functions or reducers before adding an FSM library:
+
+```ts
+type CommentState =
+  | { status: 'draft'; html: string }
+  | { status: 'saved'; html: string }
+  | { status: 'editing'; html: string; savedHtml: string }
+  | { status: 'pending-delete'; html: string };
+
+type CommentEvent =
+  | { type: 'submit'; html: string }
+  | { type: 'edit' }
+  | { type: 'cancel' }
+  | { type: 'delete' };
+
+function transitionComment(
+  state: CommentState,
+  event: CommentEvent
+): CommentState | null {
+  // null may represent removal when that is the domain behavior.
+}
+```
+
+Do not add FSM libraries such as `xstate` or `robot` by default. Consider them only when local reducers/transition functions are no longer enough, for example with nested states, parallel states, long-running actors, retries, or complex async workflows.
+
 ### `types.ts`
 
 Do not create `types.ts` automatically in every feature.
