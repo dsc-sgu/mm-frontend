@@ -32,7 +32,7 @@ const MOCK_COURSE_ACCESS: Record<string, MockCourseAccess> = {
   },
   'modern-information-technologies': {
     teachers: ['gohy279', 't3m8ch', 'teacher', 'mit-teacher'],
-    students: ['student', 'mit-student', 'bob'],
+    students: ['student', 'mit-student', 'bob', 'anthropic'],
   },
 };
 

@@ -1,5 +1,6 @@
 import { parseDiffFromFile, type FileDiffMetadata } from '@pierre/diffs';
 
+import { fetchGitHubPullRequestChangedFiles } from './github-pull-request-diff';
 import {
   findMockCourseAttempt,
   upsertMockCourseAttemptGrade,
@@ -40,6 +41,10 @@ type ReviewSeries = {
 
 const reviewSeriesByKey = new Map<string, ReviewSeries>();
 
+const BUN_RUST_COURSE_SLUG = 'modern-information-technologies';
+const BUN_RUST_TASK_ID = '13';
+const BUN_RUST_STUDENT_USERNAME = 'anthropic';
+
 const EMPTY_FEEDBACK: AttemptReviewRichFeedback = {
   html: '',
   updatedAt: null,
@@ -59,11 +64,31 @@ export async function fetchAttemptReview(
   const series = getReviewSeries(params);
   const current = findAttemptOrThrow(series, params.attemptId);
   const previous = findPreviousAttempt(series, params.attemptId);
-  const changedFiles = buildChangedFiles(previous?.files ?? {}, current.files);
+  const bunRustAttempt = isBunRustAttempt(params);
+  const changedFiles = bunRustAttempt
+    ? await fetchGitHubPullRequestChangedFiles({
+        owner: 'oven-sh',
+        repo: 'bun',
+        pullNumber: 30412,
+      })
+    : buildChangedFiles(previous?.files ?? {}, current.files);
+  const attempts = bunRustAttempt
+    ? [toHistoryItemFromChangedFiles(series, current, changedFiles)]
+    : series.attempts
+        .map((attempt) => toHistoryItem(series, attempt))
+        .reverse();
+  const history = bunRustAttempt
+    ? []
+    : series.attempts
+        .filter((attempt) => attempt.attemptNumber < current.attemptNumber)
+        .map((attempt) => toHistoryItem(series, attempt))
+        .reverse();
 
   return {
     courseSlug: params.courseSlug,
-    baselineAttemptNumber: previous?.attemptNumber ?? null,
+    baselineAttemptNumber: bunRustAttempt
+      ? null
+      : (previous?.attemptNumber ?? null),
     current: {
       id: `${seriesKey(params)}:${current.attemptNumber}`,
       attemptNumber: current.attemptNumber,
@@ -73,13 +98,8 @@ export async function fetchAttemptReview(
       deadlineAt: current.deadlineAt,
       grade: current.grade,
     },
-    attempts: series.attempts
-      .map((attempt) => toHistoryItem(series, attempt))
-      .reverse(),
-    history: series.attempts
-      .filter((attempt) => attempt.attemptNumber < current.attemptNumber)
-      .map((attempt) => toHistoryItem(series, attempt))
-      .reverse(),
+    attempts,
+    history,
     changedFiles,
     lineComments: current.lineComments.map(cloneLineComment),
     overallFeedback: { ...current.overallFeedback },
@@ -218,6 +238,12 @@ function getReviewSeries(params: AttemptReviewRouteParams): ReviewSeries {
     return existing;
   }
 
+  if (isBunRustAttempt(params)) {
+    const series = buildBunRustReviewSeries(params);
+    reviewSeriesByKey.set(key, series);
+    return series;
+  }
+
   const listAttempt = findMockCourseAttempt({
     courseSlug: params.courseSlug,
     taskId: params.taskId,
@@ -276,6 +302,54 @@ function getReviewSeries(params: AttemptReviewRouteParams): ReviewSeries {
 
   reviewSeriesByKey.set(key, series);
   return series;
+}
+
+function buildBunRustReviewSeries(
+  params: AttemptReviewRouteParams
+): ReviewSeries {
+  const listAttempt = findMockCourseAttempt({
+    courseSlug: params.courseSlug,
+    taskId: params.taskId,
+    studentUsername: params.studentUsername,
+    attemptNumber: params.attemptId,
+  });
+
+  return {
+    task: listAttempt?.task ?? {
+      id: BUN_RUST_TASK_ID,
+      title: 'Переписать Bun с Zig на Rust',
+      maxScore: 100,
+    },
+    student: listAttempt?.student ?? {
+      username: BUN_RUST_STUDENT_USERNAME,
+      fullName: 'Anthropic',
+      group: 'AI Lab',
+      subgroup: 'Claude',
+    },
+    attempts: [
+      {
+        attemptNumber: 1,
+        submittedAt: listAttempt?.submittedAt ?? '2026-05-25T17:40:00.000Z',
+        deadlineAt: listAttempt?.deadlineAt ?? '2026-06-01T20:59:00.000Z',
+        files: {},
+        grade: listAttempt?.grade ?? null,
+        overallFeedback: buildFeedback(1, listAttempt?.grade ?? null),
+        lineComments: [],
+      },
+    ],
+  };
+}
+
+function isBunRustAttempt({
+  courseSlug,
+  taskId,
+  studentUsername,
+}: AttemptReviewRouteParams): boolean {
+  return (
+    courseSlug === BUN_RUST_COURSE_SLUG &&
+    taskId === BUN_RUST_TASK_ID &&
+    studentUsername === BUN_RUST_STUDENT_USERNAME
+  );
 }
 
 function seriesKey({
@@ -397,6 +471,25 @@ function toHistoryItem(
   const previous = findPreviousAttempt(series, attempt.attemptNumber);
   const changedFiles = buildChangedFiles(previous?.files ?? {}, attempt.files);
 
+  return {
+    attemptNumber: attempt.attemptNumber,
+    submittedAt: attempt.submittedAt,
+    score: attempt.grade?.score ?? null,
+    maxScore: series.task.maxScore,
+    addedLines: changedFiles.reduce((sum, file) => sum + file.addedLines, 0),
+    deletedLines: changedFiles.reduce(
+      (sum, file) => sum + file.deletedLines,
+      0
+    ),
+    commentCount: attempt.lineComments.length,
+  };
+}
+
+function toHistoryItemFromChangedFiles(
+  series: ReviewSeries,
+  attempt: StoredAttemptReview,
+  changedFiles: AttemptReviewChangedFile[]
+): AttemptReviewHistoryItem {
   return {
     attemptNumber: attempt.attemptNumber,
     submittedAt: attempt.submittedAt,

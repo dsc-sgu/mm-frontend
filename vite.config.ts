@@ -39,6 +39,10 @@ export default defineConfig(({ mode }) => {
             });
           },
         },
+        '/api/diff': {
+          target: 'https://diffshub.com',
+          changeOrigin: true,
+        },
       },
     },
     resolve: {

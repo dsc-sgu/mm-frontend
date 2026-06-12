@@ -11,6 +11,21 @@ import type {
   SaveQuickGradesInput,
 } from '@/features/course/features/attempts/model/types';
 
+const BUN_RUST_COURSE_SLUG = 'modern-information-technologies';
+
+const BUN_RUST_TASK: CourseAttemptTask = {
+  id: '13',
+  title: 'Переписать Bun с Zig на Rust',
+  maxScore: 100,
+};
+
+const ANTHROPIC_STUDENT: CourseAttemptStudent = {
+  username: 'anthropic',
+  fullName: 'Anthropic',
+  group: 'AI Lab',
+  subgroup: 'Claude',
+};
+
 const MOCK_TASKS: CourseAttemptTask[] = [
   { id: '1', title: 'Вводное практическое задание', maxScore: 10 },
   { id: '2', title: 'Анализ pull request и диффов', maxScore: 10 },
@@ -93,6 +108,22 @@ function getStudents(): CourseAttemptStudent[] {
   return MOCK_STUDENTS;
 }
 
+function getCourseStudents(courseSlug: string): CourseAttemptStudent[] {
+  if (courseSlug !== BUN_RUST_COURSE_SLUG) {
+    return getStudents();
+  }
+
+  return [ANTHROPIC_STUDENT, ...getStudents()];
+}
+
+function getCourseTasks(courseSlug: string): CourseAttemptTask[] {
+  if (courseSlug !== BUN_RUST_COURSE_SLUG) {
+    return MOCK_TASKS;
+  }
+
+  return [BUN_RUST_TASK, ...MOCK_TASKS];
+}
+
 function buildAttempts(courseSlug: string): CourseAttempt[] {
   const attempts: CourseAttempt[] = [];
   const students = getStudents();
@@ -155,7 +186,28 @@ function buildAttempts(courseSlug: string): CourseAttempt[] {
     }
   });
 
+  if (courseSlug === BUN_RUST_COURSE_SLUG) {
+    attempts.unshift(buildBunRustAttempt(courseSlug));
+  }
+
   return attempts;
+}
+
+function buildBunRustAttempt(courseSlug: string): CourseAttempt {
+  return {
+    id: `${courseSlug}:attempt:bun-rust-anthropic`,
+    attemptNumber: 1,
+    task: BUN_RUST_TASK,
+    student: ANTHROPIC_STUDENT,
+    submittedAt: '2026-05-25T17:40:00.000Z',
+    deadlineAt: '2026-06-01T20:59:00.000Z',
+    diff: {
+      addedLines: 923_586,
+      deletedLines: 3_676,
+    },
+    grade: null,
+    reviewLock: null,
+  };
 }
 
 function getCourseAttempts(courseSlug: string): CourseAttempt[] {
@@ -203,8 +255,8 @@ export async function fetchCourseAttemptsList({
 
   return {
     attempts: filterAttempts(attempts, filters),
-    tasks: MOCK_TASKS,
-    students: getStudents(),
+    tasks: getCourseTasks(courseSlug),
+    students: getCourseStudents(courseSlug),
   };
 }
 

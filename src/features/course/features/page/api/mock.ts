@@ -291,6 +291,26 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       dueDate: '2026-06-01T20:59:00Z',
       maxScore: 10,
     },
+    ...(course.courseId === 'modern-information-technologies'
+      ? [
+          {
+            id: `${course.courseId}:assignment:bun-rust`,
+            rank: 'l1',
+            type: 'assignment' as const,
+            taskId: '13',
+            title: 'Переписать Bun с Zig на Rust',
+            description: [
+              {
+                id: `${course.courseId}:assignment:bun-rust:description`,
+                type: 'text' as const,
+                text: 'Разберите большой pull request oven-sh/bun#30412: студент должен показать миграцию проекта с Zig на Rust и сохранить обзорность изменений в diff.',
+              },
+            ],
+            dueDate: '2026-06-01T20:59:00Z',
+            maxScore: 100,
+          },
+        ]
+      : []),
     {
       id: `${course.courseId}:external`,
       rank: 'm0',
