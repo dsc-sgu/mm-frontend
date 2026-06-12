@@ -13,18 +13,37 @@ type AttemptReviewCodeViewHeaderProps = {
   onToggleCollapsed: () => void;
 };
 
+type FileStatusIconVariant = 'added' | 'deleted' | 'modified';
+
 const fileStatusIconVariants = cva(
-  'flex size-5 shrink-0 items-center justify-center rounded-md border text-xs leading-none',
+  [
+    'flex size-5 shrink-0 items-center justify-center',
+    'rounded-md border text-xs leading-none',
+  ],
   {
     variants: {
       status: {
-        added: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-500',
-        deleted: 'border-rose-500/50 bg-rose-500/10 text-rose-500',
-        changed: 'border-blue-500/50 bg-blue-500/10 text-blue-500',
-      } satisfies Record<AttemptReviewFileStatus, string>,
+        added: [
+          'border-emerald-500/50',
+          'bg-emerald-500/10',
+          'text-emerald-500',
+        ],
+        deleted: ['border-rose-500/50', 'bg-rose-500/10', 'text-rose-500'],
+        modified: ['border-blue-500/50', 'bg-blue-500/10', 'text-blue-500'],
+      } satisfies Record<FileStatusIconVariant, string[]>,
     },
   }
 );
+
+function getFileStatusIconVariant(
+  status: AttemptReviewFileStatus
+): FileStatusIconVariant {
+  if (status === 'changed') {
+    return 'modified';
+  }
+
+  return status;
+}
 
 export function AttemptReviewCodeViewHeader({
   file,
@@ -53,7 +72,9 @@ export function AttemptReviewCodeViewHeader({
           )}
         </button>
         <span
-          className={fileStatusIconVariants({ status: file.status })}
+          className={fileStatusIconVariants({
+            status: getFileStatusIconVariant(file.status),
+          })}
           aria-hidden="true"
         >
           <span className="-translate-y-px leading-none">
