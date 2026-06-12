@@ -1,16 +1,30 @@
+import { cva } from 'class-variance-authority';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
-import {
-  getAttemptReviewFileStatusGlyph,
-  getAttemptReviewFileStatusIconClassName,
-} from '@/features/course/features/attempt-review/model/file-status';
-import type { AttemptReviewChangedFile } from '@/features/course/features/attempt-review/model/types';
+import { getAttemptReviewFileStatusGlyph } from '@/features/course/features/attempt-review/model/file-status';
+import type {
+  AttemptReviewChangedFile,
+  AttemptReviewFileStatus,
+} from '@/features/course/features/attempt-review/model/types';
 
 type AttemptReviewCodeViewHeaderProps = {
   file: AttemptReviewChangedFile;
   collapsed: boolean;
   onToggleCollapsed: () => void;
 };
+
+const fileStatusIconVariants = cva(
+  'flex size-5 shrink-0 items-center justify-center rounded-md border text-xs leading-none',
+  {
+    variants: {
+      status: {
+        added: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-500',
+        deleted: 'border-rose-500/50 bg-rose-500/10 text-rose-500',
+        changed: 'border-blue-500/50 bg-blue-500/10 text-blue-500',
+      } satisfies Record<AttemptReviewFileStatus, string>,
+    },
+  }
+);
 
 export function AttemptReviewCodeViewHeader({
   file,
@@ -39,7 +53,7 @@ export function AttemptReviewCodeViewHeader({
           )}
         </button>
         <span
-          className={`flex size-5 shrink-0 items-center justify-center rounded-md border text-xs leading-none ${getAttemptReviewFileStatusIconClassName(file.status)}`}
+          className={fileStatusIconVariants({ status: file.status })}
           aria-hidden="true"
         >
           <span className="-translate-y-px leading-none">
