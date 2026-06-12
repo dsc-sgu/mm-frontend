@@ -161,7 +161,11 @@ export function AttemptReviewFileTree({
 
   if (files.length === 0) {
     return (
-      <p className="rounded-xl border bg-muted/30 p-3 text-sm text-muted-foreground">
+      <p
+        className={cn(
+          'rounded-xl border bg-muted/30 p-3 text-sm text-muted-foreground'
+        )}
+      >
         Нет изменённых файлов.
       </p>
     );
@@ -190,7 +194,12 @@ export function AttemptReviewFileTree({
           {onToggleCollapsed ? (
             <button
               type="button"
-              className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              className={cn(
+                'grid size-8 shrink-0 place-items-center rounded-lg',
+                'text-muted-foreground transition-colors hover:bg-muted',
+                'hover:text-foreground focus-visible:ring-2',
+                'focus-visible:ring-ring focus-visible:outline-none'
+              )}
               aria-label={
                 collapsed
                   ? 'Показать список изменённых файлов'

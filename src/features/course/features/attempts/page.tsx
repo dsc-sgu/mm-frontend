@@ -31,6 +31,7 @@ import {
 import { AttemptsFilterSidebar, AttemptsFiltersContent } from './ui/sidebar';
 import { VirtualizedAttemptsList } from './ui/virtualized-list';
 import type { CourseAttemptsFilters } from './model/types';
+import { cn } from '@/shadcn/lib/utils';
 
 type CourseAttemptsPageProps = {
   courseSlug: string;
@@ -97,8 +98,18 @@ export function CourseAttemptsPage({
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
-      <div className="mt-4 grid min-w-0 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
+    <main
+      className={cn(
+        'mx-auto flex w-full max-w-7xl flex-col px-3 py-4 sm:px-6 sm:py-5',
+        'lg:px-8'
+      )}
+    >
+      <div
+        className={cn(
+          'mt-4 grid min-w-0 gap-4 sm:mt-6 sm:gap-6',
+          'lg:grid-cols-[20rem_minmax(0,1fr)]'
+        )}
+      >
         <AttemptsFilterSidebar panel={filtersPanel} />
 
         <section className="min-w-0 overflow-hidden pb-44 sm:pb-36">
@@ -107,12 +118,20 @@ export function CourseAttemptsPage({
               {[0, 1, 2].map((item) => (
                 <div
                   key={item}
-                  className="h-44 animate-pulse rounded-3xl border border-border bg-muted"
+                  className={cn(
+                    'h-44 animate-pulse rounded-3xl border border-border',
+                    'bg-muted'
+                  )}
                 />
               ))}
             </div>
           ) : pageMode === 'empty' ? (
-            <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
+            <div
+              className={cn(
+                'rounded-3xl border border-dashed border-border bg-card p-10',
+                'text-center'
+              )}
+            >
               <h2 className="text-xl font-semibold">Попытки не найдены</h2>
               <p className="mt-2 text-muted-foreground">
                 Измените фильтры и нажмите «Применить».
@@ -159,7 +178,9 @@ export function CourseAttemptsPage({
                 <DrawerHeader className="shrink-0 px-4 pt-5 pb-3 text-left">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <DrawerTitle className="flex items-center gap-2 text-base">
+                      <DrawerTitle
+                        className={cn('flex items-center', 'gap-2 text-base')}
+                      >
                         <Filter className="size-4" /> Фильтры попыток
                       </DrawerTitle>
                     </div>
@@ -169,13 +190,23 @@ export function CourseAttemptsPage({
                         aria-label="Загрузка количества попыток"
                       />
                     ) : (
-                      <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
+                      <span
+                        className={cn(
+                          'rounded-full bg-secondary px-3 py-1 text-sm',
+                          'font-medium'
+                        )}
+                      >
                         Попыток: {attempts.length}
                       </span>
                     )}
                   </div>
                 </DrawerHeader>
-                <div className="min-h-0 flex-1 scroll-pb-24 overflow-y-auto overscroll-contain px-4">
+                <div
+                  className={cn(
+                    'min-h-0 flex-1 scroll-pb-24 overflow-y-auto',
+                    'overscroll-contain px-4'
+                  )}
+                >
                   <AttemptsFiltersContent
                     idPrefix="mobile"
                     panel={filtersPanel}

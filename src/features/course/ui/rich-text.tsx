@@ -32,7 +32,10 @@ function renderNode(node: RichTextNode) {
         href={node.href}
         target="_blank"
         rel="noreferrer"
-        className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+        className={cn(
+          'font-medium text-primary underline underline-offset-4',
+          'hover:text-primary/80'
+        )}
       >
         {content}
       </a>
@@ -43,7 +46,10 @@ function renderNode(node: RichTextNode) {
     <a
       key={node.id}
       href={node.href}
-      className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+      className={cn(
+        'font-medium text-primary underline underline-offset-4',
+        'hover:text-primary/80'
+      )}
     >
       {content}
     </a>

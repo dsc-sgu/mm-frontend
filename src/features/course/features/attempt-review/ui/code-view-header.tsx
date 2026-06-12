@@ -6,6 +6,7 @@ import type {
   AttemptReviewChangedFile,
   AttemptReviewFileStatus,
 } from '@/features/course/features/attempt-review/model/types';
+import { cn } from '@/shadcn/lib/utils';
 
 type AttemptReviewCodeViewHeaderProps = {
   file: AttemptReviewChangedFile;
@@ -51,11 +52,26 @@ export function AttemptReviewCodeViewHeader({
   onToggleCollapsed,
 }: AttemptReviewCodeViewHeaderProps) {
   return (
-    <div className="flex h-14 min-w-0 items-center justify-between gap-3 border-b bg-card/95 px-4 text-sm backdrop-blur supports-[backdrop-filter]:bg-card/85">
-      <div className="flex min-w-0 items-center gap-2 font-medium text-card-foreground">
+    <div
+      className={cn(
+        'flex h-14 min-w-0 items-center justify-between gap-3 border-b',
+        'bg-card/95 px-4 text-sm backdrop-blur',
+        'supports-[backdrop-filter]:bg-card/85'
+      )}
+    >
+      <div
+        className={cn(
+          'flex min-w-0 items-center gap-2 font-medium text-card-foreground'
+        )}
+      >
         <button
           type="button"
-          className="grid size-7 shrink-0 cursor-pointer place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className={cn(
+            'grid size-7 shrink-0 cursor-pointer place-items-center',
+            'rounded-md text-muted-foreground transition-colors',
+            'hover:bg-muted hover:text-foreground focus-visible:ring-2',
+            'focus-visible:ring-ring focus-visible:outline-none'
+          )}
           aria-label={
             collapsed ? 'Показать изменение файла' : 'Скрыть изменение файла'
           }

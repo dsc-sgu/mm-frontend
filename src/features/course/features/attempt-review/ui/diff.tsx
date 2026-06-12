@@ -35,6 +35,7 @@ import type {
   AttemptReviewLineCommentReply,
   AttemptReviewMode,
 } from '@/features/course/features/attempt-review/model/types';
+import { cn } from '@/shadcn/lib/utils';
 
 type AttemptReviewDiffProps = {
   files: AttemptReviewChangedFile[];
@@ -282,7 +283,12 @@ export function AttemptReviewDiff({
         ref={handleViewerChange}
         containerRef={codeViewContainerRef}
         items={items}
-        className="attempt-review-code-view h-full min-h-0 min-w-0 overflow-x-clip overflow-y-auto overscroll-contain bg-card [will-change:scroll-position] [overflow-anchor:none] [&_diffs-container]:overflow-clip"
+        className={cn(
+          'attempt-review-code-view h-full min-h-0 min-w-0 overflow-x-clip',
+          'overflow-y-auto overscroll-contain bg-card',
+          '[will-change:scroll-position] [overflow-anchor:none]',
+          '[&_diffs-container]:overflow-clip'
+        )}
         options={options}
         renderCustomHeader={(item) => {
           if (item.type !== 'diff') {
@@ -344,7 +350,13 @@ export function AttemptReviewDiff({
       {enableScrollHandoff && onScrollToReview ? (
         <button
           type="button"
-          className="absolute right-4 bottom-4 z-20 inline-flex items-center gap-2 rounded-full border bg-background/95 px-3 py-2 text-sm font-medium shadow-lg backdrop-blur transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className={cn(
+            'absolute right-4 bottom-4 z-20 inline-flex items-center gap-2',
+            'rounded-full border bg-background/95 px-3 py-2 text-sm',
+            'font-medium shadow-lg backdrop-blur transition-colors',
+            'hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring',
+            'focus-visible:outline-none'
+          )}
           onClick={onScrollToReview}
         >
           <ArrowUp className="size-4" /> <span>К отзыву</span>

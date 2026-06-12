@@ -22,7 +22,11 @@ export function HeaderBreadcrumbs({
       aria-label="Навигационная цепочка"
       className={cn('min-w-0 flex-1 overflow-hidden', className)}
     >
-      <ol className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
+      <ol
+        className={cn(
+          'flex min-w-0 items-center gap-1 text-sm text-muted-foreground'
+        )}
+      >
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
           return <BreadcrumbItemLi item={item} index={index} isLast={isLast} />;

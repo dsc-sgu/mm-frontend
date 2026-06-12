@@ -122,14 +122,22 @@ function CourseContentBlock({
       );
     case 'image':
       return (
-        <figure className="my-4 overflow-hidden rounded-3xl border border-border bg-card">
+        <figure
+          className={cn(
+            'my-4 overflow-hidden rounded-3xl border border-border bg-card'
+          )}
+        >
           <img
             src={block.src}
             alt={block.alt}
             className="max-h-[28rem] w-full object-cover"
           />
           {block.caption && (
-            <figcaption className="px-4 py-3 text-sm leading-6 text-muted-foreground">
+            <figcaption
+              className={cn(
+                'px-4 py-3 text-sm leading-6 text-muted-foreground'
+              )}
+            >
               <CourseRichText nodes={block.caption} />
             </figcaption>
           )}
@@ -173,7 +181,12 @@ function CourseContentBlock({
             'md:rounded-2xl md:p-5 dark:border-white/10'
           )}
         >
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div
+            className={cn(
+              'flex flex-col gap-4 md:flex-row md:items-start',
+              'md:justify-between'
+            )}
+          >
             <div className="min-w-0">
               <div
                 className={cn(
@@ -185,7 +198,12 @@ function CourseContentBlock({
                 <Trophy className="size-4" aria-hidden="true" />
                 Задание
               </div>
-              <h3 className="text-lg font-semibold tracking-tight group-hover:underline md:text-xl">
+              <h3
+                className={cn(
+                  'text-lg font-semibold tracking-tight group-hover:underline',
+                  'md:text-xl'
+                )}
+              >
                 {block.title}
               </h3>
               {block.description && (
@@ -194,7 +212,12 @@ function CourseContentBlock({
                 </p>
               )}
             </div>
-            <div className="flex shrink-0 flex-col items-start gap-2 text-sm text-muted-foreground md:items-end">
+            <div
+              className={cn(
+                'flex shrink-0 flex-col items-start gap-2 text-sm',
+                'text-muted-foreground md:items-end'
+              )}
+            >
               {block.dueDate && (
                 <span className="inline-flex items-center gap-2">
                   <CalendarDays className="size-4" aria-hidden="true" />

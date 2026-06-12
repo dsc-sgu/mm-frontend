@@ -10,6 +10,7 @@ import type {
   AttemptReviewDiffViewMode,
   AttemptReviewMode,
 } from '@/features/course/features/attempt-review/model/types';
+import { cn } from '@/shadcn/lib/utils';
 
 type AttemptReviewHeaderProps = {
   mode: AttemptReviewMode;
@@ -43,21 +44,38 @@ export const AttemptReviewHeader = forwardRef<
   return (
     <header
       ref={ref}
-      className="sticky top-0 z-30 -mx-3 overflow-hidden border-b bg-background/95 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-4 lg:-mx-8 lg:px-4"
+      className={cn(
+        'sticky top-0 z-30 -mx-3 overflow-hidden border-b bg-background/95',
+        'px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80',
+        'sm:-mx-6 sm:px-4 lg:-mx-8 lg:px-4'
+      )}
     >
       <div className="grid gap-3 lg:flex lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <h1 className="text-lg leading-6 font-semibold tracking-tight break-words">
+          <h1
+            className={cn(
+              'text-lg leading-6 font-semibold tracking-tight break-words'
+            )}
+          >
             Попытка #{review.current.attemptNumber}: {review.current.task.title}
           </h1>
-          <p className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0 text-xs leading-4 text-muted-foreground">
+          <p
+            className={cn(
+              'mt-0.5 flex flex-wrap gap-x-2 gap-y-0 text-xs leading-4',
+              'text-muted-foreground'
+            )}
+          >
             <span>{review.current.student.fullName}</span>
             <span>Максимум: {review.current.task.maxScore}</span>
             <span>
               Отправлено{' '}
               {formatAttemptReviewDateTime(review.current.submittedAt)}
             </span>
-            <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
+            <span
+              className={cn(
+                'inline-flex shrink-0 items-center gap-2 whitespace-nowrap'
+              )}
+            >
               <span className="text-emerald-700 dark:text-emerald-300">
                 +{totalAdded}
               </span>
@@ -73,7 +91,12 @@ export const AttemptReviewHeader = forwardRef<
           </p>
         </div>
 
-        <div className="grid w-full min-w-0 gap-2 lg:flex lg:w-auto lg:shrink-0 lg:items-center">
+        <div
+          className={cn(
+            'grid w-full min-w-0 gap-2 lg:flex lg:w-auto lg:shrink-0',
+            'lg:items-center'
+          )}
+        >
           <div className="grid grid-cols-2 gap-2 lg:hidden">
             <Button
               type="button"
@@ -94,13 +117,19 @@ export const AttemptReviewHeader = forwardRef<
               Отзыв
               {hasChanges ? (
                 <span
-                  className="absolute top-2 right-2 size-2 rounded-full bg-amber-500"
+                  className={cn(
+                    'absolute top-2 right-2 size-2 rounded-full bg-amber-500'
+                  )}
                   aria-hidden="true"
                 />
               ) : null}
             </Button>
           </div>
-          <div className="flex min-w-0 gap-2 lg:w-auto lg:shrink-0 lg:items-center">
+          <div
+            className={cn(
+              'flex min-w-0 gap-2 lg:w-auto lg:shrink-0 lg:items-center'
+            )}
+          >
             <AttemptReviewDiffViewToggle
               value={diffViewMode}
               onChange={onDiffViewModeChange}

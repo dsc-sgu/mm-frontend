@@ -141,9 +141,18 @@ export function AttemptReviewLineCommentCard({
         isPendingDelete && 'bg-muted/40 opacity-70'
       )}
     >
-      <div className="mb-2 flex flex-wrap items-start justify-between gap-2 text-xs text-muted-foreground">
+      <div
+        className={cn(
+          'mb-2 flex flex-wrap items-start justify-between gap-2 text-xs',
+          'text-muted-foreground'
+        )}
+      >
         <div className="min-w-0">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+          <div
+            className={cn(
+              'flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5'
+            )}
+          >
             <span className="truncate font-medium text-foreground">
               {comment.authorName}
             </span>
@@ -209,7 +218,10 @@ export function AttemptReviewLineCommentCard({
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                className={cn(
+                  'text-muted-foreground hover:bg-destructive/10',
+                  'hover:text-destructive'
+                )}
                 aria-label="Удалить комментарий"
                 title="Удалить комментарий"
                 onClick={onDelete}

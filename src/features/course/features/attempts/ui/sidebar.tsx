@@ -206,7 +206,13 @@ export function AttemptsFilterSidebar(
 ) {
   return (
     <aside className="hidden min-w-0 lg:sticky lg:top-4 lg:block lg:self-start">
-      <div className="w-full max-w-full overflow-hidden rounded-2xl border border-border bg-card p-3 sm:rounded-3xl sm:p-4 lg:max-h-[calc(100dvh-2rem)] lg:w-80 lg:overflow-y-auto">
+      <div
+        className={cn(
+          'w-full max-w-full overflow-hidden rounded-2xl border border-border',
+          'bg-card p-3 sm:rounded-3xl sm:p-4 lg:max-h-[calc(100dvh-2rem)]',
+          'lg:w-80 lg:overflow-y-auto'
+        )}
+      >
         <AttemptsFiltersContent idPrefix="desktop" {...props} />
       </div>
     </aside>
@@ -273,7 +279,10 @@ function FilterOption({
   return (
     <label
       htmlFor={id}
-      className="flex min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors select-none hover:bg-accent"
+      className={cn(
+        'flex min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2',
+        'py-1.5 text-sm transition-colors select-none hover:bg-accent'
+      )}
     >
       <Checkbox
         id={id}
@@ -299,7 +308,12 @@ function AttemptsFiltersHeader({
   return (
     <div className="flex items-center justify-between gap-3">
       <div>
-        <p className="flex items-center gap-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+        <p
+          className={cn(
+            'flex items-center gap-2 text-sm font-semibold tracking-wide',
+            'text-muted-foreground uppercase'
+          )}
+        >
           <Filter className="size-4" /> Фильтры
         </p>
       </div>
@@ -309,7 +323,11 @@ function AttemptsFiltersHeader({
           aria-label="Загрузка количества попыток"
         />
       ) : (
-        <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
+        <span
+          className={cn(
+            'rounded-full bg-secondary px-3 py-1 text-sm font-medium'
+          )}
+        >
           Попыток: {attemptsCount}
         </span>
       )}
@@ -358,7 +376,12 @@ function TasksFilterSection({
         </Button>
       </div>
       <div className="relative mt-2">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search
+          className={cn(
+            'pointer-events-none absolute top-1/2 left-3 size-4',
+            '-translate-y-1/2 text-muted-foreground'
+          )}
+        />
         <Input
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
@@ -428,7 +451,12 @@ function StudentsFilterSection({
         </Button>
       </div>
       <div className="relative mt-2">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search
+          className={cn(
+            'pointer-events-none absolute top-1/2 left-3 size-4',
+            '-translate-y-1/2 text-muted-foreground'
+          )}
+        />
         <Input
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
@@ -483,7 +511,9 @@ function GradedFilterSection({
             type="button"
             onClick={() => onGradedChange(option.value)}
             className={cn(
-              'cursor-pointer rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+              'cursor-pointer rounded-md border px-3 py-2 text-sm font-medium',
+              'transition-colors hover:bg-accent focus-visible:ring-2',
+              'focus-visible:ring-ring focus-visible:outline-none',
               graded === option.value
                 ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
                 : 'border-border bg-background'
@@ -520,7 +550,9 @@ function AttemptsFiltersActions({
         className={cn(
           'mt-6 grid grid-cols-2 gap-2',
           isDrawer &&
-            'sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/80'
+            'sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95' +
+              'px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur' +
+              'supports-[backdrop-filter]:bg-background/80'
         )}
       >
         {filterActionsDisabledReason ? (

@@ -42,11 +42,17 @@ export function CourseCard({
         bg.base,
         bg.darkBase,
         'transition-shadow duration-150 hover:shadow-md',
-        'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background',
+        'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+        'focus-within:ring-offset-background',
         className
       )}
     >
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-6">
+      <div
+        className={cn(
+          'pointer-events-none absolute inset-y-0 right-0 flex items-center',
+          'pr-6'
+        )}
+      >
         <DynamicIcon
           name={iconName}
           className={cn(
@@ -110,19 +116,52 @@ export function CourseCardSkeleton({ className }: { className?: string }) {
       )}
       aria-hidden="true"
     >
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-6">
-        <div className="h-36 w-36 rotate-12 rounded-[2rem] bg-background/45 dark:bg-foreground/8" />
+      <div
+        className={cn(
+          'pointer-events-none absolute inset-y-0 right-0 flex items-center',
+          'pr-6'
+        )}
+      >
+        <div
+          className={cn(
+            'h-36 w-36 rotate-12 rounded-[2rem] bg-background/45',
+            'dark:bg-foreground/8'
+          )}
+        />
       </div>
 
       <div className="relative p-6">
-        <div className="h-6 w-3/4 rounded-full bg-foreground/12 dark:bg-foreground/14" />
-        <div className="mt-3 h-6 w-1/2 rounded-full bg-foreground/10 dark:bg-foreground/12" />
+        <div
+          className={cn(
+            'h-6 w-3/4 rounded-full bg-foreground/12 dark:bg-foreground/14'
+          )}
+        />
+        <div
+          className={cn(
+            'mt-3 h-6 w-1/2 rounded-full bg-foreground/10',
+            'dark:bg-foreground/12'
+          )}
+        />
 
-        <div className="mt-7 h-4 w-32 rounded-full bg-foreground/12 dark:bg-foreground/14" />
+        <div
+          className={cn(
+            'mt-7 h-4 w-32 rounded-full bg-foreground/12 dark:bg-foreground/14'
+          )}
+        />
 
         <div className="mt-3 flex flex-col gap-2">
-          <div className="h-4 w-56 max-w-[70%] rounded-full bg-foreground/10 dark:bg-foreground/12" />
-          <div className="h-4 w-44 max-w-[55%] rounded-full bg-foreground/8 dark:bg-foreground/10" />
+          <div
+            className={cn(
+              'h-4 w-56 max-w-[70%] rounded-full bg-foreground/10',
+              'dark:bg-foreground/12'
+            )}
+          />
+          <div
+            className={cn(
+              'h-4 w-44 max-w-[55%] rounded-full bg-foreground/8',
+              'dark:bg-foreground/10'
+            )}
+          />
         </div>
       </div>
     </div>

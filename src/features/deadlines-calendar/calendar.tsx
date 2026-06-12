@@ -52,7 +52,12 @@ function DeadlinesCalendarTitle({ isFetching }: { isFetching: boolean }) {
   const title = 'Календарь дедлайнов';
 
   return (
-    <h2 className="relative inline-block overflow-hidden text-2xl font-semibold tracking-tight text-foreground">
+    <h2
+      className={cn(
+        'relative inline-block overflow-hidden text-2xl font-semibold',
+        'tracking-tight text-foreground'
+      )}
+    >
       <span>{title}</span>
       {isFetching && (
         <>

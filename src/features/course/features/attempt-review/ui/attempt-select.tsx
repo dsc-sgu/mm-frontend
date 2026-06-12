@@ -55,14 +55,22 @@ export function AttemptReviewAttemptSelect({
               selected
               variant={headerVariant ? 'header-trigger' : 'trigger'}
               trailing={
-                <ChevronsUpDown className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+                <ChevronsUpDown
+                  className={cn(
+                    'size-4 text-muted-foreground transition-colors',
+                    'group-hover:text-foreground'
+                  )}
+                />
               }
             />
           </button>
         </PopoverTrigger>
         <PopoverContent
           align={headerVariant ? 'end' : 'start'}
-          className="w-[var(--radix-popover-trigger-width)] min-w-72 overflow-hidden p-0"
+          className={cn(
+            'w-[var(--radix-popover-trigger-width)] min-w-72 overflow-hidden',
+            'p-0'
+          )}
         >
           <div className="max-h-80 overflow-y-auto">
             <div className="divide-y">
@@ -74,7 +82,11 @@ export function AttemptReviewAttemptSelect({
                   <button
                     key={attempt.attemptNumber}
                     type="button"
-                    className="block w-full cursor-pointer text-left transition-colors outline-none hover:bg-muted/60 focus-visible:bg-muted/60"
+                    className={cn(
+                      'block w-full cursor-pointer text-left',
+                      'transition-colors outline-none hover:bg-muted/60',
+                      'focus-visible:bg-muted/60'
+                    )}
                     onClick={() => {
                       setOpen(false);
 
@@ -151,14 +163,24 @@ function AttemptOptionCard({
               Попытка #{attempt.attemptNumber}
             </span>
           </span>
-          <span className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <span
+            className={cn(
+              'ml-auto flex shrink-0 items-center gap-1.5 text-xs',
+              'text-muted-foreground'
+            )}
+          >
             {attempt.score === null
               ? 'Не оценено'
               : `${attempt.score}/${attempt.maxScore}`}
             {trailing}
           </span>
         </div>
-        <div className="mt-0.5 hidden items-center gap-2 overflow-hidden text-xs text-muted-foreground lg:flex">
+        <div
+          className={cn(
+            'mt-0.5 hidden items-center gap-2 overflow-hidden text-xs',
+            'text-muted-foreground lg:flex'
+          )}
+        >
           <span className="truncate">
             {formatAttemptReviewDateTime(attempt.submittedAt)}
           </span>
@@ -192,12 +214,21 @@ function AttemptOptionCard({
         <span className="text-sm font-semibold">
           Попытка #{attempt.attemptNumber}
         </span>
-        <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+        <span
+          className={cn(
+            'flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground'
+          )}
+        >
           {formatAttemptReviewDateTime(attempt.submittedAt)}
           {trailing}
         </span>
       </div>
-      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+      <div
+        className={cn(
+          'mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs',
+          'text-muted-foreground'
+        )}
+      >
         <span>
           {attempt.score === null
             ? 'Не оценено'

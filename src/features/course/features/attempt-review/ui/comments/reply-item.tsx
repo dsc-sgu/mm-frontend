@@ -14,6 +14,7 @@ import {
 import { isRichTextHtmlEmpty } from '@/features/course/features/attempt-review/ui/rich-text/empty';
 import { AttemptReviewCommentTimestamp } from './timestamp';
 import type { AttemptReviewLineCommentReply } from '@/features/course/features/attempt-review/model/types';
+import { cn } from '@/shadcn/lib/utils';
 
 type AttemptReviewCommentReplyItemProps = {
   reply: AttemptReviewLineCommentReply;
@@ -132,7 +133,12 @@ export function AttemptReviewCommentReplyItem({
   if (isEditing) {
     return (
       <div className="grid gap-2 border-l-2 border-muted pl-3 text-sm">
-        <div className="mb-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
+        <div
+          className={cn(
+            'mb-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs',
+            'text-muted-foreground'
+          )}
+        >
           <span className="font-medium text-foreground">
             {reply.authorName}
           </span>
@@ -195,7 +201,12 @@ export function AttemptReviewCommentReplyItem({
 
   return (
     <div className="border-l-2 border-muted pl-3 text-sm">
-      <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+      <div
+        className={cn(
+          'mb-1 flex flex-wrap items-center justify-between gap-2 text-xs',
+          'text-muted-foreground'
+        )}
+      >
         <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
           <span className="font-medium text-foreground">
             {reply.authorName}
@@ -224,7 +235,10 @@ export function AttemptReviewCommentReplyItem({
               variant="ghost"
               size="icon-xs"
               disabled={isPending}
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              className={cn(
+                'text-muted-foreground hover:bg-destructive/10',
+                'hover:text-destructive'
+              )}
               aria-label="Удалить ответ"
               title="Удалить ответ"
               onClick={() => {
