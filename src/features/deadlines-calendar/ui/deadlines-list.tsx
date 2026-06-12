@@ -52,8 +52,8 @@ export function DeadlinesList({ deadlines }: DeadlinesListProps) {
           onClick={() => setIsExpanded(true)}
           className={cn(
             'w-full text-left px-2 py-1 rounded text-xs font-medium',
-            'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700',
-            'text-foreground transition-colors'
+            'bg-card hover:bg-muted',
+            'text-card-foreground transition-colors'
           )}
         >
           показать +{hiddenCount}
@@ -65,8 +65,8 @@ export function DeadlinesList({ deadlines }: DeadlinesListProps) {
           onClick={() => setIsExpanded(false)}
           className={cn(
             'w-full text-left px-2 py-1 rounded text-xs font-medium',
-            'bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700',
-            'text-foreground transition-colors'
+            'bg-card hover:bg-muted',
+            'text-card-foreground transition-colors'
           )}
         >
           свернуть
