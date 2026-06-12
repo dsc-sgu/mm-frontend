@@ -55,6 +55,32 @@ Keep technical suffixes when they are useful for tooling or clarity:
 *.worker.ts
 ```
 
+### Top-level structure
+
+Product and domain modules should live in `src/features`.
+Application shell code should live in `src/app`.
+Generic project-level hooks may live in `src/hooks`.
+
+Prefer:
+
+```txt
+src/
+  app/
+    header/
+    router-pending.tsx
+
+  features/
+    auth/
+    course/
+    deadlines-calendar/
+
+  hooks/
+    use-media-query.ts
+```
+
+Avoid placing product features directly under `src/`.
+Avoid adding `src/shared` unless there is a clearly justified need.
+
 ### Feature module structure
 
 Large feature modules should be split into subdirectories:
@@ -83,6 +109,41 @@ feature/
 
 Small features may keep a flatter structure until the number of files makes navigation harder.
 
+### Nested features
+
+If a feature contains both shared layers and sub-features, put sub-features under `features/` inside the parent feature.
+
+Prefer:
+
+```txt
+features/course/
+  api/
+  model/
+  routing/
+  ui/
+
+  features/
+    attempts/
+    attempt-review/
+    access/
+```
+
+Avoid mixing feature folders with shared layer folders at the same level:
+
+```txt
+course/
+  api/
+  model/
+  routing/
+  ui/
+  attempts/
+  attempt-review/
+  access/
+```
+
+Create a nested feature when the module has its own user flow, domain language, data loading, page, or independently meaningful UI/model.
+Keep code in the parent `api/model/ui/routing` when it is shared by multiple nested features or describes the parent context itself.
+
 ### Imports
 
 Use the `@/` alias for imports that leave the current directory.
@@ -90,8 +151,8 @@ Use the `@/` alias for imports that leave the current directory.
 Prefer:
 
 ```ts
-import { CourseScoreField } from '@/course/grading';
-import type { Deadline } from '@/deadlines-calendar/model/types';
+import { CourseScoreField } from '@/features/course/features/grading';
+import type { Deadline } from '@/features/deadlines-calendar/model/types';
 ```
 
 Avoid parent-relative imports:

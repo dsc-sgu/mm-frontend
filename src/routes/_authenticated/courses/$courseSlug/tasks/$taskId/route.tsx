@@ -1,5 +1,5 @@
-import { ensurePositiveIntegerOrRedirect } from '@/course/routing/params';
-import { getTaskBreadcrumb } from '@/course/routing/header';
+import { ensurePositiveIntegerOrRedirect } from '@/features/course/routing/params';
+import { getTaskBreadcrumb } from '@/features/course/routing/header';
 import { Outlet, createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

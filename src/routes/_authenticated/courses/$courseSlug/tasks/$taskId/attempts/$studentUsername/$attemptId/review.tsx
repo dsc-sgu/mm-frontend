@@ -1,6 +1,6 @@
-import { AttemptReviewPage } from '@/course/attempt-review/page';
-import { requireCourseRole } from '@/course/routing/guards';
-import { getAttemptReviewBreadcrumb } from '@/course/routing/header';
+import { AttemptReviewPage } from '@/features/course/features/attempt-review/page';
+import { requireCourseRole } from '@/features/course/routing/guards';
+import { getAttemptReviewBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(

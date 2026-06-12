@@ -1,5 +1,5 @@
-import { SESSION_OPTIONS } from '@/auth/api/queries';
-import { AttemptReviewWorkerPool } from '@/course/attempt-review/providers/worker-pool';
+import { SESSION_OPTIONS } from '@/features/auth/api/queries';
+import { AttemptReviewWorkerPool } from '@/features/course/features/attempt-review/providers/worker-pool';
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authenticated')({
