@@ -15,11 +15,11 @@ export function DayCell({ date, deadlines, isToday }: DayCellProps) {
   return (
     <div
       className={cn(
-        'flex flex-col border border-border rounded-lg p-3 min-h-34 overflow-hidden',
+        'flex min-h-34 flex-col overflow-hidden rounded-lg border border-border p-3',
         isToday ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-card'
       )}
     >
-      <div className="flex items-center justify-between mb-2 shrink-0">
+      <div className="mb-2 flex shrink-0 items-center justify-between">
         <span className="text-xs text-muted-foreground uppercase">
           {dayOfWeek}
         </span>

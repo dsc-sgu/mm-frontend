@@ -20,7 +20,7 @@ export function RichTextContent({
   return (
     <div
       className={cn(
-        'prose prose-sm max-w-none font-sans dark:prose-invert',
+        'prose prose-sm dark:prose-invert max-w-none font-sans',
         styles.readonly,
         className
       )}

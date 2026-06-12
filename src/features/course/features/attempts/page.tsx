@@ -150,7 +150,7 @@ export function CourseAttemptsPage({
               onOpenChange={setFiltersDrawerOpen}
             >
               <DrawerContent className="rounded-t-3xl">
-                <DrawerHeader className="shrink-0 px-4 pb-3 pt-5 text-left">
+                <DrawerHeader className="shrink-0 px-4 pt-5 pb-3 text-left">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <DrawerTitle className="flex items-center gap-2 text-base">
@@ -169,7 +169,7 @@ export function CourseAttemptsPage({
                     )}
                   </div>
                 </DrawerHeader>
-                <div className="min-h-0 flex-1 overflow-y-auto px-4 scroll-pb-24 overscroll-contain">
+                <div className="min-h-0 flex-1 scroll-pb-24 overflow-y-auto overscroll-contain px-4">
                   <AttemptsFiltersContent
                     idPrefix="mobile"
                     panel={filtersPanel}

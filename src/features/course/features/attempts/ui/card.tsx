@@ -54,7 +54,7 @@ export function AttemptCard(props: AttemptCardProps) {
           {!props.attempt.reviewLock ? (
             <div
               className={cn(
-                'mr-2 mt-[0.1875rem] grid w-5 shrink-0 place-items-center overflow-hidden transition-[opacity,transform] duration-200 ease-out sm:mt-1',
+                'mt-[0.1875rem] mr-2 grid w-5 shrink-0 place-items-center overflow-hidden transition-[opacity,transform] duration-200 ease-out sm:mt-1',
                 canSelect ? 'scale-100 opacity-100' : 'scale-75 opacity-0'
               )}
               aria-hidden={!canSelect}
@@ -75,7 +75,7 @@ export function AttemptCard(props: AttemptCardProps) {
           ) : null}
           <h3
             className={cn(
-              'min-w-0 break-words text-lg font-semibold leading-tight tracking-tight transition-transform duration-200 ease-out sm:text-xl',
+              'min-w-0 text-lg leading-tight font-semibold tracking-tight break-words transition-transform duration-200 ease-out sm:text-xl',
               props.mode !== 'default' && !props.attempt.reviewLock
                 ? '-translate-x-7'
                 : 'translate-x-0'
@@ -84,7 +84,7 @@ export function AttemptCard(props: AttemptCardProps) {
             {canSelect ? (
               <button
                 type="button"
-                className="block min-w-0 cursor-pointer break-words text-left select-none focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="block min-w-0 cursor-pointer text-left break-words select-none focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 onClick={() => props.onSelectedChange(!selected)}
               >
                 <AttemptTitle attempt={props.attempt} />
@@ -195,7 +195,7 @@ export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
   const timing = getTimingLabel(attempt);
 
   return (
-    <div className="mt-1 min-w-0 break-words text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+    <div className="mt-1 min-w-0 text-sm leading-6 break-words text-muted-foreground sm:text-base sm:leading-7">
       <p className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-0">
         <span className="font-medium text-foreground">
           {attempt.student.fullName}
@@ -210,7 +210,7 @@ export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
         </span>
         <span
           className={cn(
-            '-mt-0.5 whitespace-nowrap font-semibold sm:mt-0',
+            '-mt-0.5 font-semibold whitespace-nowrap sm:mt-0',
             timing.className
           )}
         >
@@ -235,7 +235,7 @@ export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
         </p>
       )}
       {attempt.reviewLock ? (
-        <p className="inline-flex min-w-0 items-center gap-2 break-words font-medium text-amber-700 dark:text-amber-300">
+        <p className="inline-flex min-w-0 items-center gap-2 font-medium break-words text-amber-700 dark:text-amber-300">
           <LockKeyhole className="size-4" /> На проверке у{' '}
           {attempt.reviewLock.teacherName}
         </p>

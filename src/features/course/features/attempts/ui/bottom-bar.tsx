@@ -129,7 +129,7 @@ export function IdleBottomActions({
 }) {
   return (
     <div className="flex min-h-10 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <p className="min-w-0 break-words text-sm text-muted-foreground">
+      <p className="min-w-0 text-sm break-words text-muted-foreground">
         Выберите отдельные попытки или запустите оценку всех видимых.
       </p>
       <div className="grid gap-2 min-[496px]:grid-cols-3 lg:flex lg:items-center">

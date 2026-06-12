@@ -73,7 +73,7 @@ function BreadcrumbItemText({
         className={cn(
           'truncate rounded-sm px-1 py-0.5 underline-offset-4 transition-colors',
           'hover:text-foreground hover:underline',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
         )}
       >
         {item.label}

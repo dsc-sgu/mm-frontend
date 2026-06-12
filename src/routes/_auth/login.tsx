@@ -45,13 +45,13 @@ function RouteComponent() {
   return (
     <div
       className={cn(
-        'min-h-[calc(100vh-4rem)] flex items-center justify-center',
+        'flex min-h-[calc(100vh-4rem)] items-center justify-center',
         'bg-linear-to-br from-background via-muted/30 to-muted p-4'
       )}
     >
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="text-center text-2xl font-bold">
             Вход в систему
           </CardTitle>
           <CardDescription className="text-center">
@@ -100,7 +100,7 @@ function RouteComponent() {
               <span className="text-muted-foreground">Нет аккаунта?</span>{' '}
               <Link
                 to="/register"
-                className="text-primary hover:underline font-medium"
+                className="font-medium text-primary hover:underline"
               >
                 Зарегистрироваться
               </Link>
