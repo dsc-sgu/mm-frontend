@@ -2,10 +2,20 @@ import type { ReactNode } from 'react';
 import { Filter, Save, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
+import { cn } from '@/shadcn/lib/utils';
 
 export function BottomActionBar({ children }: { children: ReactNode }) {
   return (
-    <div className="fixed inset-x-3 bottom-2 z-50 mx-auto max-w-7xl rounded-2xl border border-border bg-background/92 p-2 shadow-xl backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:inset-x-6 sm:bottom-4 sm:rounded-3xl sm:p-3 lg:left-[max(2rem,calc((100vw-80rem)/2+23.5rem))] lg:right-[max(2rem,calc((100vw-80rem)/2+2rem))]">
+    <div
+      className={cn(
+        'fixed inset-x-3 bottom-2 z-50 mx-auto max-w-7xl',
+        'rounded-2xl border border-border bg-background/92 p-2 shadow-xl',
+        'backdrop-blur supports-[backdrop-filter]:bg-background/75',
+        'sm:inset-x-6 sm:bottom-4 sm:rounded-3xl sm:p-3',
+        'lg:left-[max(2rem,calc((100vw-80rem)/2+23.5rem))]',
+        'lg:right-[max(2rem,calc((100vw-80rem)/2+2rem))]'
+      )}
+    >
       {children}
     </div>
   );

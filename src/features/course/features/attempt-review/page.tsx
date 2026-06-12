@@ -220,7 +220,10 @@ function AttemptReviewPageLoaded({
   return (
     <main
       ref={pageRootRef}
-      className="flex w-full flex-col gap-0 px-3 pt-0 pb-0 sm:px-6 sm:pt-0 sm:pb-0 lg:px-8"
+      className={cn(
+        'flex w-full flex-col gap-0',
+        'px-3 pt-0 pb-0 sm:px-6 sm:pt-0 sm:pb-0 lg:px-8'
+      )}
     >
       <AttemptReviewHeader
         ref={pageHeaderRef}
@@ -307,7 +310,12 @@ function AttemptReviewPageLoaded({
       <div
         ref={diffSectionRef}
         className={cn(
-          '-mx-3 grid min-w-0 items-start gap-0 transition-[grid-template-columns] duration-200 sm:-mx-6 lg:-mx-8 lg:sticky lg:top-[var(--attempt-review-sticky-top,4rem)] lg:h-[calc(100dvh_-_var(--attempt-review-sticky-top,4rem))] lg:overflow-hidden',
+          '-mx-3 grid min-w-0 items-start gap-0',
+          'transition-[grid-template-columns] duration-200',
+          'sm:-mx-6 lg:-mx-8',
+          'lg:sticky lg:top-[var(--attempt-review-sticky-top,4rem)]',
+          'lg:h-[calc(100dvh_-_var(--attempt-review-sticky-top,4rem))]',
+          'lg:overflow-hidden',
           isFileTreeCollapsed
             ? 'lg:grid-cols-[3rem_minmax(0,1fr)]'
             : 'lg:grid-cols-[20rem_minmax(0,1fr)]'
