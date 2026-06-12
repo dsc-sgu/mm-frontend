@@ -260,6 +260,40 @@ schema.ts
 guards.ts
 ```
 
+### Tailwind
+
+Prefer semantic design tokens over raw palette classes when possible:
+
+```txt
+text-destructive
+text-muted-foreground
+bg-card
+bg-background
+border-border
+```
+
+Use raw palette classes only when the color is part of the domain meaning, such as course colors, diff added/deleted colors, or status tones.
+
+Do not keep very long Tailwind class strings on one line. Use `cn()` with logical grouping for one-off long class lists.
+
+Use `cva` for reusable components with variants, sizes, tones, or visual states.
+
+Do not extract Tailwind class lists into constants just to shorten JSX. Extract only when reused or when the name represents a real UI concept. If a class list grows because the UI chunk is complex, prefer extracting a component.
+
+Do not put Tailwind class logic in `model`. Keep Tailwind classes in `ui`, local component files, or UI theme files.
+
+Avoid dynamically constructing Tailwind class names with template strings. Use explicit maps instead.
+
+Keep `src/index.css` for global theme/base styles only. Avoid adding feature-specific styles there.
+
+For feature-specific CSS that cannot be expressed cleanly with Tailwind utilities, use CSS modules colocated with the feature/component:
+
+```txt
+features/course/features/attempt-review/ui/rich-text/editor.module.css
+features/deadlines-calendar/ui/calendar.module.css
+app/router-pending.module.css
+```
+
 ### ESLint
 
 The project should enforce type aliases over interfaces:
