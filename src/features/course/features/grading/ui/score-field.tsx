@@ -4,10 +4,7 @@ import { RotateCcw } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { Input } from '@/shadcn/components/ui/input';
 import { cn } from '@/shadcn/lib/utils';
-import {
-  normalizeScoreDraftInput,
-  scoreDraftTextSizeClass,
-} from '@/features/course/features/grading/model/grading';
+import { normalizeScoreDraftInput } from '@/features/course/features/grading/model/grading';
 
 type CourseScoreFieldProps = {
   value: string;
@@ -22,6 +19,22 @@ type CourseScoreFieldProps = {
   onChange: (value: string) => void;
   onReset?: () => void;
 };
+
+function scoreDraftTextSizeClass(value: string): string {
+  if (value.length <= 4) {
+    return 'text-xl md:text-xl';
+  }
+
+  if (value.length <= 6) {
+    return 'text-lg md:text-lg';
+  }
+
+  if (value.length <= 8) {
+    return 'text-base md:text-base';
+  }
+
+  return 'text-sm md:text-sm';
+}
 
 export function CourseScoreField({
   value,
