@@ -332,7 +332,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       type: 'code',
       language: 'ts',
       fileName: 'checklist.ts',
-      code: "const steps = ['read', 'practice', 'review'];\n\nexport function isReady(done: string[]) {\n  return steps.every((step) => done.includes(step));\n}\n",
+      code: "const steps = ['read', 'practice', 'review'];\n\nexport function isReady(done: string[]) {\n  return steps.every((step) => done.includes(step));\n}",
     },
     {
       id: `${course.courseId}:image`,
