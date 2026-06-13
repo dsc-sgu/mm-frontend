@@ -22,7 +22,12 @@ import {
   H3Plugin,
   ItalicPlugin,
 } from '@platejs/basic-nodes/react';
-import { KEYS, NodeIdPlugin, TrailingBlockPlugin } from 'platejs';
+import {
+  KEYS,
+  NodeIdPlugin,
+  TrailingBlockPlugin,
+  type SlateEditor,
+} from 'platejs';
 import { createPlatePlugin, ParagraphPlugin } from 'platejs/react';
 
 import {
@@ -97,6 +102,12 @@ function isSamePath(left: number[], right: number[]) {
   );
 }
 
+function isMarkdownInputEnabled({ editor }: { editor: SlateEditor }) {
+  return !editor.api.some({
+    match: { type: editor.getType(KEYS.codeBlock) },
+  });
+}
+
 const CourseCodeBlockBackspacePlugin = createPlatePlugin({
   key: 'course_code_block_backspace',
 }).overrideEditor(({ editor, tf: { deleteBackward } }) => ({
@@ -136,7 +147,7 @@ export const coursePagePlatePlugins = [
   NodeIdPlugin,
   ParagraphPlugin.withComponent(ParagraphElement),
   H1Plugin.configure({
-    inputRules: [HeadingRules.markdown()],
+    inputRules: [HeadingRules.markdown({ enabled: isMarkdownInputEnabled })],
     node: { component: HeadingOneElement },
     rules: {
       break: { empty: 'reset', splitReset: true },
@@ -145,7 +156,7 @@ export const coursePagePlatePlugins = [
     shortcuts: { toggle: { keys: 'mod+alt+1' } },
   }),
   H2Plugin.configure({
-    inputRules: [HeadingRules.markdown()],
+    inputRules: [HeadingRules.markdown({ enabled: isMarkdownInputEnabled })],
     node: { component: HeadingTwoElement },
     rules: {
       break: { empty: 'reset', splitReset: true },
@@ -154,7 +165,7 @@ export const coursePagePlatePlugins = [
     shortcuts: { toggle: { keys: 'mod+alt+2' } },
   }),
   H3Plugin.configure({
-    inputRules: [HeadingRules.markdown()],
+    inputRules: [HeadingRules.markdown({ enabled: isMarkdownInputEnabled })],
     node: { component: HeadingThreeElement },
     rules: {
       break: { empty: 'reset', splitReset: true },
@@ -163,26 +174,45 @@ export const coursePagePlatePlugins = [
     shortcuts: { toggle: { keys: 'mod+alt+3' } },
   }),
   BlockquotePlugin.configure({
-    inputRules: [BlockquoteRules.markdown()],
+    inputRules: [BlockquoteRules.markdown({ enabled: isMarkdownInputEnabled })],
     node: { component: BlockquoteElement },
   }),
   BoldPlugin.configure({
-    inputRules: [BoldRules.markdown({ variant: '*' })],
+    inputRules: [
+      BoldRules.markdown({
+        enabled: isMarkdownInputEnabled,
+        variant: '*',
+      }),
+    ],
   }).withComponent(BoldLeaf),
   ItalicPlugin.configure({
-    inputRules: [ItalicRules.markdown({ variant: '*' })],
+    inputRules: [
+      ItalicRules.markdown({
+        enabled: isMarkdownInputEnabled,
+        variant: '*',
+      }),
+    ],
   }).withComponent(ItalicLeaf),
   CodePlugin.configure({
-    inputRules: [CodeRules.markdown()],
+    inputRules: [CodeRules.markdown({ enabled: isMarkdownInputEnabled })],
     node: { component: InlineCodeLeaf },
     shortcuts: { toggle: { keys: 'mod+e' } },
   }),
   LinkPlugin.configure({
     inputRules: [
-      LinkRules.markdown(),
-      LinkRules.autolink({ variant: 'paste' }),
-      LinkRules.autolink({ variant: 'space' }),
-      LinkRules.autolink({ variant: 'break' }),
+      LinkRules.markdown({ enabled: isMarkdownInputEnabled }),
+      LinkRules.autolink({
+        enabled: isMarkdownInputEnabled,
+        variant: 'paste',
+      }),
+      LinkRules.autolink({
+        enabled: isMarkdownInputEnabled,
+        variant: 'space',
+      }),
+      LinkRules.autolink({
+        enabled: isMarkdownInputEnabled,
+        variant: 'break',
+      }),
     ],
     node: { component: LinkElement },
   }),
@@ -193,8 +223,14 @@ export const coursePagePlatePlugins = [
   }),
   ListPlugin.configure({
     inputRules: [
-      BulletedListRules.markdown({ variant: '-' }),
-      OrderedListRules.markdown({ variant: '.' }),
+      BulletedListRules.markdown({
+        enabled: isMarkdownInputEnabled,
+        variant: '-',
+      }),
+      OrderedListRules.markdown({
+        enabled: isMarkdownInputEnabled,
+        variant: '.',
+      }),
     ],
     inject: {
       targetPlugins: [KEYS.p, KEYS.h1, KEYS.h2, KEYS.h3, KEYS.blockquote],
@@ -208,7 +244,12 @@ export const coursePagePlatePlugins = [
     },
   }),
   CodeBlockPlugin.configure({
-    inputRules: [CodeBlockRules.markdown({ on: 'match' })],
+    inputRules: [
+      CodeBlockRules.markdown({
+        enabled: isMarkdownInputEnabled,
+        on: 'match',
+      }),
+    ],
     node: { component: CodeBlockElement },
   }),
   CodeLinePlugin.withComponent(CodeLineElement),
