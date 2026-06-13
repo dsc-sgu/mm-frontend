@@ -20,6 +20,7 @@ const preferredBadgeByLanguage: Record<string, string> = {
   typescript: 'TS',
   ts: 'TS',
   tsx: 'TSX',
+  markdown: 'MD',
 };
 
 let codeLanguageOptionsPromise: Promise<CodeLanguageOption[]> | null = null;
