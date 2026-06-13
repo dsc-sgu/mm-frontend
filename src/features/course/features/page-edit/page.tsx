@@ -10,8 +10,8 @@ import {
 import { CoursePageLoading } from '@/features/course/features/page/ui/page';
 import { useCoursePageWorkingCopy } from '@/features/course/features/page-edit/hooks/use-working-copy';
 import { CoursePageEditApplyBar } from '@/features/course/features/page-edit/ui/apply-bar';
+import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui/content-editor';
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
-import { CourseContentBlocks } from '@/features/course/ui/content-block';
 
 const FIELD_BY_ERROR = {
   title: 'course-edit-title',
@@ -132,10 +132,12 @@ function CoursePageEditLoaded({
           'md:bg-card md:px-8 lg:px-10'
         )}
       >
-        <CourseContentBlocks
-          blocks={workingCopy.content}
-          courseSlug={workingCopy.courseId}
+        <CoursePageContentEditor
+          content={workingCopy.content}
           resources={workingCopy.resources}
+          onChange={(content) =>
+            setWorkingCopy((current) => ({ ...current, content }))
+          }
         />
       </article>
 

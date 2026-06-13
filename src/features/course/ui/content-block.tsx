@@ -133,7 +133,9 @@ function CourseContentBlock({
             'px-5 py-4 text-base leading-7 text-foreground/85 md:text-lg'
           )}
         >
-          <CourseRichText nodes={block.children} />
+          <p className="m-0">
+            <CourseRichText nodes={block.children} />
+          </p>
         </blockquote>
       );
     case 'list':
