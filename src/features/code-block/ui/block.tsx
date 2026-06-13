@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/shadcn/lib/utils';
 import { CodeBlockCopyBtn } from '@/features/code-block/ui/copy-button';
 import { highlightCode } from '@/features/code-block/model/highlight';
+import { getCodeLanguageBadge } from '@/features/code-block/model/languages';
 
 export type CodeBlockProps = {
   code: string;
@@ -81,13 +82,14 @@ function CodeBlockBody({ code, language }: CodeBlockBodyProps) {
 export function CodeBlock({ code, language, fileName }: CodeBlockProps) {
   const displayFileName = fileName ?? 'Фрагмент кода';
   const codeBodyKey = `${language ?? 'plain'}\u0000${code}`;
+  const languageBadge = getCodeLanguageBadge(language);
 
   return (
     <figure className={codeBlockClassName}>
       <figcaption className={captionClassName}>
         <div className="flex min-w-0 items-center gap-2">
-          {language && (
-            <span className={languageBadgeClassName}>{language}</span>
+          {languageBadge && (
+            <span className={languageBadgeClassName}>{languageBadge}</span>
           )}
           <span className="truncate">{displayFileName}</span>
         </div>

@@ -16,6 +16,7 @@ import {
 import { cn } from '@/shadcn/lib/utils';
 import { CourseRichText } from '@/features/course/ui/rich-text';
 import { useCoursePageEditorResources } from '@/features/course/features/page-edit/model/resource-context';
+import { CodeLanguageSelect } from '@/features/course/features/page-edit/ui/plate/code-language-select';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
 
 function getElement(element: unknown) {
@@ -192,11 +193,15 @@ export function CodeBlockElement({ children, ...props }: PlateElementProps) {
           'text-xs text-slate-600 dark:border-white/10 dark:text-zinc-300'
         )}
       >
-        {language && (
-          <span className="rounded-full bg-black/5 px-2 py-0.5 tracking-wide uppercase dark:bg-white/10">
-            {language}
-          </span>
-        )}
+        <CodeLanguageSelect
+          language={language}
+          onChange={(nextLanguage) => {
+            props.editor.tf.setNodes(
+              { lang: nextLanguage },
+              { at: props.path }
+            );
+          }}
+        />
         <input
           contentEditable={false}
           className="min-w-0 flex-1 truncate bg-transparent px-1 py-0.5 outline-none"
