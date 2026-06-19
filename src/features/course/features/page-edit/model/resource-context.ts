@@ -2,15 +2,24 @@ import { createContext, useContext } from 'react';
 
 import type { CoursePageResources } from '@/features/course/features/page/model/types';
 
+type CoursePageEditorResourceContextValue = {
+  resources: CoursePageResources;
+  onResourcesChange?: (resources: CoursePageResources) => void;
+};
+
 export const CoursePageEditorResourceContext =
-  createContext<CoursePageResources | null>(null);
+  createContext<CoursePageEditorResourceContextValue | null>(null);
 
-export function useCoursePageEditorResources() {
-  const resources = useContext(CoursePageEditorResourceContext);
+export function useCoursePageEditorResourceContext() {
+  const context = useContext(CoursePageEditorResourceContext);
 
-  if (!resources) {
+  if (!context) {
     throw new Error('Course page editor resources are not provided');
   }
 
-  return resources;
+  return context;
+}
+
+export function useCoursePageEditorResources() {
+  return useCoursePageEditorResourceContext().resources;
 }

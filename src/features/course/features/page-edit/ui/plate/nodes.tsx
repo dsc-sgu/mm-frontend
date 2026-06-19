@@ -15,7 +15,11 @@ import {
 
 import { cn } from '@/shadcn/lib/utils';
 import { CourseRichText } from '@/features/course/ui/rich-text';
-import { useCoursePageEditorResources } from '@/features/course/features/page-edit/model/resource-context';
+import type { RichTextNode } from '@/features/course/features/page/model/types';
+import {
+  useCoursePageEditorResourceContext,
+  useCoursePageEditorResources,
+} from '@/features/course/features/page-edit/model/resource-context';
 import { CodeLanguageSelect } from '@/features/course/features/page-edit/ui/plate/code-language-select';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
 
@@ -31,6 +35,25 @@ function formatDueDate(value: string) {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(value));
+}
+
+function getRichTextPlainText(nodes: RichTextNode[] | undefined) {
+  return nodes?.map((node) => node.text).join('') ?? '';
+}
+
+function createCaptionNodes(
+  imageId: string,
+  text: string
+): RichTextNode[] | undefined {
+  return text.length > 0
+    ? [
+        {
+          id: `${imageId}:caption`,
+          type: 'text',
+          text,
+        },
+      ]
+    : undefined;
 }
 
 export function ParagraphElement({ children, ...props }: PlateElementProps) {
@@ -313,9 +336,28 @@ function MissingResource({ children }: { children: ReactNode }) {
 
 export function CourseImageElement({ children, ...props }: PlateElementProps) {
   const element = getElement(props.element);
-  const resources = useCoursePageEditorResources();
+  const { onResourcesChange, resources } = useCoursePageEditorResourceContext();
   const imageId = typeof element.imageId === 'string' ? element.imageId : '';
   const image = resources.images.find((item) => item.id === imageId);
+  const captionText = getRichTextPlainText(image?.caption);
+
+  function updateCaption(nextCaptionText: string) {
+    if (!onResourcesChange) {
+      return;
+    }
+
+    onResourcesChange({
+      ...resources,
+      images: resources.images.map((resource) =>
+        resource.id === imageId
+          ? {
+              ...resource,
+              caption: createCaptionNodes(imageId, nextCaptionText),
+            }
+          : resource
+      ),
+    });
+  }
 
   return (
     <PlateElement as="div" className="my-4 outline-none" {...props}>
@@ -327,11 +369,33 @@ export function CourseImageElement({ children, ...props }: PlateElementProps) {
               alt={image.alt}
               className="max-h-[28rem] w-full object-cover"
             />
-            {image.caption && (
-              <figcaption className="px-4 py-3 text-sm leading-6 text-muted-foreground">
-                <CourseRichText nodes={image.caption} />
-              </figcaption>
-            )}
+            <figcaption className="px-4 py-3 text-sm leading-6 text-muted-foreground">
+              <textarea
+                aria-label="Подпись к картинке"
+                className={cn(
+                  'block min-h-7 w-full resize-y bg-transparent outline-none',
+                  'cursor-text select-text placeholder:text-muted-foreground/70',
+                  'focus:text-foreground'
+                )}
+                placeholder="Добавьте подпись…"
+                rows={1}
+                value={captionText}
+                onChange={(event) => updateCaption(event.target.value)}
+                onKeyDown={(event) => {
+                  const isSaveShortcut =
+                    (event.metaKey || event.ctrlKey) &&
+                    !event.altKey &&
+                    !event.shiftKey &&
+                    event.key.toLowerCase() === 's';
+
+                  if (!isSaveShortcut) {
+                    event.stopPropagation();
+                  }
+                }}
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
+              />
+            </figcaption>
           </figure>
         ) : (
           <MissingResource>
