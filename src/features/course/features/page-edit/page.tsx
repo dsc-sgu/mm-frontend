@@ -138,6 +138,9 @@ function CoursePageEditLoaded({
           onChange={(content) =>
             setWorkingCopy((current) => ({ ...current, content }))
           }
+          onResourcesChange={(resources) =>
+            setWorkingCopy((current) => ({ ...current, resources }))
+          }
         />
       </article>
 

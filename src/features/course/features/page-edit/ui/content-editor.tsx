@@ -21,10 +21,12 @@ export function CoursePageContentEditor({
   content,
   resources,
   onChange,
+  onResourcesChange,
 }: {
   content: CourseContentBlockItem[];
   resources: CoursePageResources;
   onChange: (content: CourseContentBlockItem[]) => void;
+  onResourcesChange: (resources: CoursePageResources) => void;
 }) {
   const initialValue = useMemo(
     () => deserializeCourseContentToPlate(content),
@@ -57,7 +59,10 @@ export function CoursePageContentEditor({
   }, [content, editor, externalContentKey]);
 
   return (
-    <CoursePageEditorResourceProvider resources={resources}>
+    <CoursePageEditorResourceProvider
+      resources={resources}
+      onResourcesChange={onResourcesChange}
+    >
       <Plate
         editor={editor}
         onValueChange={({ value }) => {
