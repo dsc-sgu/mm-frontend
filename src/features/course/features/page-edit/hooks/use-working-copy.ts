@@ -7,15 +7,11 @@ import {
   validateCoursePageEdit,
 } from '@/features/course/features/page-edit/model/validation';
 
-function cloneCoursePage(course: CoursePage): CoursePage {
-  return structuredClone(course);
-}
-
 export function useCoursePageWorkingCopy(course: CoursePage) {
-  const [workingCopy, setWorkingCopy] = useState(() => cloneCoursePage(course));
+  const [workingCopy, setWorkingCopy] = useState(() => structuredClone(course));
 
   useEffect(() => {
-    setWorkingCopy(cloneCoursePage(course));
+    setWorkingCopy(structuredClone(course));
   }, [course]);
 
   const errors = useMemo(
@@ -41,6 +37,6 @@ export function useCoursePageWorkingCopy(course: CoursePage) {
     errors,
     isDirty,
     canApply: isDirty && !hasCoursePageEditErrors(errors),
-    reset: () => setWorkingCopy(cloneCoursePage(course)),
+    reset: () => setWorkingCopy(structuredClone(course)),
   };
 }
