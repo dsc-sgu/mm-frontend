@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { CoursePage } from '@/features/course/features/page/model/types';
-import { getComparableCoursePage } from '@/features/course/features/page-edit/model/dirty-compare';
+import { compareCoursePages } from '@/features/course/features/page-edit/model/dirty-compare';
 import {
   hasCoursePageEditErrors,
   validateCoursePageEdit,
@@ -25,9 +25,7 @@ export function useCoursePageWorkingCopy(course: CoursePage) {
   );
 
   const isDirty = useMemo(
-    () =>
-      JSON.stringify(getComparableCoursePage(course)) !==
-      JSON.stringify(getComparableCoursePage(workingCopy)),
+    () => compareCoursePages(course, workingCopy),
     [course, workingCopy]
   );
 
