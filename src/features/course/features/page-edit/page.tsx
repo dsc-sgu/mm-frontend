@@ -12,6 +12,7 @@ import { useCoursePageWorkingCopy } from '@/features/course/features/page-edit/h
 import { CoursePageEditApplyBar } from '@/features/course/features/page-edit/ui/apply-bar';
 import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui/content-editor';
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
+import type { CoursePage } from '@/features/course/features/page/model/types';
 
 const FIELD_BY_ERROR = {
   title: 'course-edit-title',
@@ -35,7 +36,7 @@ function CoursePageEditLoaded({
   course,
 }: {
   courseSlug: string;
-  course: NonNullable<ReturnType<typeof useCoursePageQuery>['data']>;
+  course: CoursePage;
 }) {
   const navigate = useNavigate();
   const router = useRouter();
