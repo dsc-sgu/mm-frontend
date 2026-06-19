@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { CoursePage } from '@/features/course/features/page/model/types';
+import { getComparableCoursePage } from '@/features/course/features/page-edit/model/dirty-compare';
 import {
   hasCoursePageEditErrors,
   validateCoursePageEdit,
@@ -8,18 +9,6 @@ import {
 
 function cloneCoursePage(course: CoursePage): CoursePage {
   return structuredClone(course);
-}
-
-function getComparableCoursePage(course: CoursePage) {
-  return {
-    courseId: course.courseId,
-    title: course.title,
-    description: course.description,
-    color: course.color,
-    iconName: course.iconName,
-    content: course.content,
-    resources: course.resources,
-  };
 }
 
 export function useCoursePageWorkingCopy(course: CoursePage) {
