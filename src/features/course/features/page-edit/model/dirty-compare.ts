@@ -7,6 +7,13 @@ import type {
   RichTextNode,
 } from '@/features/course/features/page/model/types';
 
+export function compareCoursePages(first: CoursePage, second: CoursePage) {
+  return (
+    JSON.stringify(getComparableCoursePage(first)) !==
+    JSON.stringify(getComparableCoursePage(second))
+  );
+}
+
 function normalizeOptionalText(value: string | undefined) {
   return value && value.length > 0 ? value : undefined;
 }
@@ -208,7 +215,7 @@ function normalizeResources(resources: CoursePageResources) {
   };
 }
 
-export function getComparableCoursePage(course: CoursePage) {
+function getComparableCoursePage(course: CoursePage) {
   return {
     courseId: course.courseId,
     title: course.title,
