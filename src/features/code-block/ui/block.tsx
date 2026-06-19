@@ -11,6 +11,7 @@ export type CodeBlockProps = {
   fileName?: string;
 };
 
+// TODO: Remove this constants
 const codeBlockClassName = cn(
   'code-block my-4 overflow-hidden rounded-2xl',
   'border border-border bg-slate-50 text-slate-950',
