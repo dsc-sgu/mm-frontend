@@ -319,23 +319,27 @@ export function CourseImageElement({ children, ...props }: PlateElementProps) {
 
   return (
     <PlateElement as="div" className="my-4 outline-none" {...props}>
-      {image ? (
-        <figure className="overflow-hidden rounded-3xl border border-border bg-card">
-          <img
-            src={image.src}
-            alt={image.alt}
-            className="max-h-[28rem] w-full object-cover"
-          />
-          {image.caption && (
-            <figcaption className="px-4 py-3 text-sm leading-6 text-muted-foreground">
-              <CourseRichText nodes={image.caption} />
-            </figcaption>
-          )}
-        </figure>
-      ) : (
-        <MissingResource>Картинка курса недоступна: {imageId}</MissingResource>
-      )}
-      <span className="sr-only">{children}</span>
+      <div contentEditable={false} className="cursor-default select-none">
+        {image ? (
+          <figure className="overflow-hidden rounded-3xl border border-border bg-card">
+            <img
+              src={image.src}
+              alt={image.alt}
+              className="max-h-[28rem] w-full object-cover"
+            />
+            {image.caption && (
+              <figcaption className="px-4 py-3 text-sm leading-6 text-muted-foreground">
+                <CourseRichText nodes={image.caption} />
+              </figcaption>
+            )}
+          </figure>
+        ) : (
+          <MissingResource>
+            Картинка курса недоступна: {imageId}
+          </MissingResource>
+        )}
+      </div>
+      {children}
     </PlateElement>
   );
 }
@@ -350,42 +354,47 @@ export function CourseFilesElement({ children, ...props }: PlateElementProps) {
     : [];
 
   return (
-    <PlateElement as="div" className="my-4 grid gap-2 outline-none" {...props}>
-      {fileIds.length > 0 ? (
-        fileIds.map((fileId) => {
-          const file = resources.files.find((item) => item.id === fileId);
+    <PlateElement as="div" className="my-4 outline-none" {...props}>
+      <div
+        contentEditable={false}
+        className="grid cursor-default gap-2 select-none"
+      >
+        {fileIds.length > 0 ? (
+          fileIds.map((fileId) => {
+            const file = resources.files.find((item) => item.id === fileId);
 
-          return file ? (
-            <div
-              key={file.id}
-              className={cn(
-                'flex flex-col gap-1 rounded-xl border border-black/10 bg-primary/3',
-                'px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/10'
-              )}
-            >
-              <span className="flex items-center gap-2 font-medium text-foreground">
-                <FileText
-                  className="size-4 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                {file.name}
-              </span>
-              {(file.size || file.mimeType) && (
-                <span className="text-sm text-muted-foreground">
-                  {[file.size, file.mimeType].filter(Boolean).join(' • ')}
+            return file ? (
+              <div
+                key={file.id}
+                className={cn(
+                  'flex flex-col gap-1 rounded-xl border border-black/10 bg-primary/3',
+                  'px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/10'
+                )}
+              >
+                <span className="flex items-center gap-2 font-medium text-foreground">
+                  <FileText
+                    className="size-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  {file.name}
                 </span>
-              )}
-            </div>
-          ) : (
-            <MissingResource key={fileId}>
-              Файл курса недоступен: {fileId}
-            </MissingResource>
-          );
-        })
-      ) : (
-        <MissingResource>Файлы курса не выбраны</MissingResource>
-      )}
-      <span className="sr-only">{children}</span>
+                {(file.size || file.mimeType) && (
+                  <span className="text-sm text-muted-foreground">
+                    {[file.size, file.mimeType].filter(Boolean).join(' • ')}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <MissingResource key={fileId}>
+                Файл курса недоступен: {fileId}
+              </MissingResource>
+            );
+          })
+        ) : (
+          <MissingResource>Файлы курса не выбраны</MissingResource>
+        )}
+      </div>
+      {children}
     </PlateElement>
   );
 }
@@ -403,47 +412,49 @@ export function CourseAssignmentElement({
 
   return (
     <PlateElement as="div" className="my-4 outline-none" {...props}>
-      {assignment ? (
-        <div
-          className={cn(
-            'block rounded-xl border border-black/10 bg-primary/3 p-4',
-            'md:rounded-2xl md:p-5 dark:border-white/10'
-          )}
-        >
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div className="min-w-0">
-              <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
-                <Trophy className="size-4" aria-hidden="true" />
-                Задание
+      <div contentEditable={false} className="cursor-default select-none">
+        {assignment ? (
+          <div
+            className={cn(
+              'block rounded-xl border border-black/10 bg-primary/3 p-4',
+              'md:rounded-2xl md:p-5 dark:border-white/10'
+            )}
+          >
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="min-w-0">
+                <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
+                  <Trophy className="size-4" aria-hidden="true" />
+                  Задание
+                </div>
+                <div className="text-lg font-semibold text-foreground">
+                  {assignment.title}
+                </div>
+                {assignment.description && (
+                  <div className="mt-2 text-sm leading-6 text-muted-foreground">
+                    <CourseRichText nodes={assignment.description} />
+                  </div>
+                )}
               </div>
-              <div className="text-lg font-semibold text-foreground">
-                {assignment.title}
-              </div>
-              {assignment.description && (
-                <div className="mt-2 text-sm leading-6 text-muted-foreground">
-                  <CourseRichText nodes={assignment.description} />
+              {(assignment.dueDate || assignment.maxScore) && (
+                <div className="grid gap-2 text-sm text-muted-foreground md:min-w-48">
+                  {assignment.dueDate && (
+                    <span className="flex items-center gap-2">
+                      <CalendarDays className="size-4" aria-hidden="true" />
+                      {formatDueDate(assignment.dueDate)}
+                    </span>
+                  )}
+                  {assignment.maxScore !== undefined && (
+                    <span>Максимум: {assignment.maxScore} баллов</span>
+                  )}
                 </div>
               )}
             </div>
-            {(assignment.dueDate || assignment.maxScore) && (
-              <div className="grid gap-2 text-sm text-muted-foreground md:min-w-48">
-                {assignment.dueDate && (
-                  <span className="flex items-center gap-2">
-                    <CalendarDays className="size-4" aria-hidden="true" />
-                    {formatDueDate(assignment.dueDate)}
-                  </span>
-                )}
-                {assignment.maxScore !== undefined && (
-                  <span>Максимум: {assignment.maxScore} баллов</span>
-                )}
-              </div>
-            )}
           </div>
-        </div>
-      ) : (
-        <MissingResource>Задание курса недоступно: {taskId}</MissingResource>
-      )}
-      <span className="sr-only">{children}</span>
+        ) : (
+          <MissingResource>Задание курса недоступно: {taskId}</MissingResource>
+        )}
+      </div>
+      {children}
     </PlateElement>
   );
 }
