@@ -39,6 +39,7 @@ export function CoursePageContentEditor({
   });
   const externalContentKey = getContentKey(content);
   const lastLocalContentKeyRef = useRef(externalContentKey);
+  const isSyncingFromPropsRef = useRef(false);
 
   useEffect(() => {
     if (externalContentKey === lastLocalContentKeyRef.current) {
@@ -46,8 +47,13 @@ export function CoursePageContentEditor({
     }
 
     const nextValue = deserializeCourseContentToPlate(content);
+    isSyncingFromPropsRef.current = true;
     editor.tf.setValue(nextValue);
     lastLocalContentKeyRef.current = externalContentKey;
+
+    queueMicrotask(() => {
+      isSyncingFromPropsRef.current = false;
+    });
   }, [content, editor, externalContentKey]);
 
   return (
@@ -55,6 +61,10 @@ export function CoursePageContentEditor({
       <Plate
         editor={editor}
         onValueChange={({ value }) => {
+          if (isSyncingFromPropsRef.current) {
+            return;
+          }
+
           const nextContent = serializePlateToCourseContent(value);
           lastLocalContentKeyRef.current = getContentKey(nextContent);
           onChange(nextContent);
