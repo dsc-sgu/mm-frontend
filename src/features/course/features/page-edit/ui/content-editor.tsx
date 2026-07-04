@@ -6,11 +6,13 @@ import type {
   CourseContentBlockItem,
   CoursePageResources,
 } from '@/features/course/features/page/model/types';
+import { CoursePageBlockSelectionProvider } from '@/features/course/features/page-edit/model/block-selection';
 import {
   deserializeCourseContentToPlate,
   serializePlateToCourseContent,
 } from '@/features/course/features/page-edit/model/plate-content';
 import { coursePagePlatePlugins } from '@/features/course/features/page-edit/model/plate-plugins';
+import { useCoursePageBlockSelectionValue } from '@/features/course/features/page-edit/hooks/use-block-selection';
 import { CoursePageEditorResourceProvider } from '@/features/course/features/page-edit/ui/plate/resource-context';
 
 function getContentKey(content: CourseContentBlockItem[]) {
@@ -42,6 +44,7 @@ export function CoursePageContentEditor({
   const externalContentKey = getContentKey(content);
   const lastLocalContentKeyRef = useRef(externalContentKey);
   const isSyncingFromPropsRef = useRef(false);
+  const blockSelectionContextValue = useCoursePageBlockSelectionValue();
 
   useEffect(() => {
     if (externalContentKey === lastLocalContentKeyRef.current) {
@@ -75,17 +78,19 @@ export function CoursePageContentEditor({
           onChange(nextContent);
         }}
       >
-        <div className="[&_.slate-selected]:bg-primary/8">
-          <PlateContent
-            className={cn(
-              'min-h-64 px-1 py-2 outline-none',
-              'selection:bg-primary/20',
-              '[&_[data-slate-placeholder=true]]:text-muted-foreground'
-            )}
-            placeholder="Начните писать…"
-            spellCheck={false}
-          />
-        </div>
+        <CoursePageBlockSelectionProvider value={blockSelectionContextValue}>
+          <div className="[&_.slate-selected]:bg-primary/8">
+            <PlateContent
+              className={cn(
+                'min-h-64 px-1 py-2 outline-none',
+                'selection:bg-primary/20',
+                '[&_[data-slate-placeholder=true]]:text-muted-foreground'
+              )}
+              placeholder="Начните писать…"
+              spellCheck={false}
+            />
+          </div>
+        </CoursePageBlockSelectionProvider>
       </Plate>
     </CoursePageEditorResourceProvider>
   );

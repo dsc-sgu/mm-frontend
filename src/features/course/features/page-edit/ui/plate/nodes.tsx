@@ -22,6 +22,7 @@ import {
 } from '@/features/course/features/page-edit/model/resource-context';
 import { CodeLanguageSelect } from '@/features/course/features/page-edit/ui/plate/code-language-select';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
+import { CoursePageBlockFrame } from '@/features/course/features/page-edit/ui/block-frame';
 
 function getElement(element: unknown) {
   return element as CoursePlateElement;
@@ -60,18 +61,31 @@ export function ParagraphElement({ children, ...props }: PlateElementProps) {
   const element = getElement(props.element);
   const isListItem =
     element.listStyleType === 'disc' || element.listStyleType === 'decimal';
+  const paragraphClassName = cn(
+    'text-base leading-7 text-foreground/90 outline-none md:text-lg',
+    isListItem && 'pl-1'
+  );
+
+  if (props.path.length > 1) {
+    return (
+      <PlateElement
+        as="div"
+        className={cn(paragraphClassName, isListItem ? 'my-1' : 'my-4')}
+        {...props}
+      >
+        {children}
+      </PlateElement>
+    );
+  }
 
   return (
-    <PlateElement
-      as="div"
-      className={cn(
-        'text-base leading-7 text-foreground/90 outline-none md:text-lg',
-        isListItem ? 'my-1 pl-1' : 'my-4'
-      )}
+    <CoursePageBlockFrame
+      frameClassName={isListItem ? 'my-1' : 'my-4'}
+      contentClassName={paragraphClassName}
       {...props}
     >
       {children}
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }
 
@@ -104,53 +118,57 @@ export function CourseListWrapper({ children, element }: PlateElementProps) {
 
 export function HeadingOneElement({ children, ...props }: PlateElementProps) {
   return (
-    <PlateElement
-      as="h1"
-      className="mt-8 text-3xl font-bold tracking-tight outline-none md:text-4xl"
+    <CoursePageBlockFrame
+      contentAs="h1"
+      frameClassName="mt-8"
+      contentClassName="text-3xl font-bold tracking-tight outline-none md:text-4xl"
       {...props}
     >
       {children}
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }
 
 export function HeadingTwoElement({ children, ...props }: PlateElementProps) {
   return (
-    <PlateElement
-      as="h2"
-      className="mt-8 text-2xl font-bold tracking-tight outline-none md:text-3xl"
+    <CoursePageBlockFrame
+      contentAs="h2"
+      frameClassName="mt-8"
+      contentClassName="text-2xl font-bold tracking-tight outline-none md:text-3xl"
       {...props}
     >
       {children}
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }
 
 export function HeadingThreeElement({ children, ...props }: PlateElementProps) {
   return (
-    <PlateElement
-      as="h3"
-      className="mt-8 text-xl font-semibold tracking-tight outline-none md:text-2xl"
+    <CoursePageBlockFrame
+      contentAs="h3"
+      frameClassName="mt-8"
+      contentClassName="text-xl font-semibold tracking-tight outline-none md:text-2xl"
       {...props}
     >
       {children}
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }
 
 export function BlockquoteElement({ children, ...props }: PlateElementProps) {
   return (
-    <PlateElement
-      as="blockquote"
-      className={cn(
-        'my-4 rounded-r-2xl border-l-4 border-primary/70 bg-muted/60',
+    <CoursePageBlockFrame
+      contentAs="blockquote"
+      frameClassName="my-4"
+      contentClassName={cn(
+        'rounded-r-2xl border-l-4 border-primary/70 bg-muted/60',
         'px-5 py-4 text-base leading-7 text-foreground/85 outline-none md:text-lg',
         '[&_.slate-p]:my-0'
       )}
       {...props}
     >
       {children}
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }
 
@@ -201,10 +219,11 @@ export function CodeBlockElement({ children, ...props }: PlateElementProps) {
     typeof element.fileName === 'string' ? element.fileName : undefined;
 
   return (
-    <PlateElement
-      as="figure"
-      className={cn(
-        'my-4 overflow-hidden rounded-2xl border border-border',
+    <CoursePageBlockFrame
+      contentAs="figure"
+      frameClassName="my-4"
+      contentClassName={cn(
+        'overflow-hidden rounded-2xl border border-border',
         'bg-slate-50 text-slate-950 outline-none dark:bg-zinc-950/90 dark:text-zinc-50'
       )}
       {...props}
@@ -253,7 +272,7 @@ export function CodeBlockElement({ children, ...props }: PlateElementProps) {
       <pre className="overflow-x-auto p-4 font-mono text-sm leading-7 outline-none">
         {children}
       </pre>
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }
 
@@ -286,7 +305,7 @@ export function ToggleElement({ children, ...props }: PlateElementProps) {
   const [title, ...body] = Children.toArray(children);
 
   return (
-    <PlateElement as="div" className="my-5 outline-none" {...props}>
+    <CoursePageBlockFrame frameClassName="my-5" {...props}>
       <div
         className={cn(
           'flex cursor-default items-center gap-2 rounded-lg px-1',
@@ -316,7 +335,7 @@ export function ToggleElement({ children, ...props }: PlateElementProps) {
       {isOpen && body.length > 0 && (
         <div className="border-l border-border/80 pl-4">{body}</div>
       )}
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }
 
@@ -360,7 +379,7 @@ export function CourseImageElement({ children, ...props }: PlateElementProps) {
   }
 
   return (
-    <PlateElement as="div" className="my-4 outline-none" {...props}>
+    <CoursePageBlockFrame frameClassName="my-4" {...props}>
       <div contentEditable={false} className="cursor-default select-none">
         {image ? (
           <figure className="overflow-hidden rounded-3xl border border-border bg-card">
@@ -404,7 +423,7 @@ export function CourseImageElement({ children, ...props }: PlateElementProps) {
         )}
       </div>
       {children}
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }
 
@@ -418,7 +437,7 @@ export function CourseFilesElement({ children, ...props }: PlateElementProps) {
     : [];
 
   return (
-    <PlateElement as="div" className="my-4 outline-none" {...props}>
+    <CoursePageBlockFrame frameClassName="my-4" {...props}>
       <div
         contentEditable={false}
         className="grid cursor-default gap-2 select-none"
@@ -459,7 +478,7 @@ export function CourseFilesElement({ children, ...props }: PlateElementProps) {
         )}
       </div>
       {children}
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }
 
@@ -475,7 +494,7 @@ export function CourseAssignmentElement({
   );
 
   return (
-    <PlateElement as="div" className="my-4 outline-none" {...props}>
+    <CoursePageBlockFrame frameClassName="my-4" {...props}>
       <div contentEditable={false} className="cursor-default select-none">
         {assignment ? (
           <div
@@ -519,7 +538,7 @@ export function CourseAssignmentElement({
         )}
       </div>
       {children}
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }
 
@@ -528,9 +547,9 @@ export function CourseUnknownElement({
   ...props
 }: PlateElementProps) {
   return (
-    <PlateElement
-      as="div"
-      className="my-4 rounded-xl border border-dashed border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground outline-none"
+    <CoursePageBlockFrame
+      frameClassName="my-4"
+      contentClassName="rounded-xl border border-dashed border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground outline-none"
       {...props}
     >
       <span className="inline-flex items-center gap-2">
@@ -538,6 +557,6 @@ export function CourseUnknownElement({
         Неизвестный блок
       </span>
       {children}
-    </PlateElement>
+    </CoursePageBlockFrame>
   );
 }

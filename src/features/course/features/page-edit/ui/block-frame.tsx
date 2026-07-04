@@ -1,0 +1,152 @@
+import { type ReactNode } from 'react';
+import { GripVertical, Plus } from 'lucide-react';
+import { type PlateElementProps, PlateElement } from 'platejs/react';
+
+import { cn } from '@/shadcn/lib/utils';
+import {
+  isCoursePageBlockSelected,
+  useCoursePageBlockSelection,
+  type CoursePageBlockSelectionTarget,
+} from '@/features/course/features/page-edit/model/block-selection';
+import { selectBlock as selectSlateBlock } from '@/features/course/features/page-edit/model/block-operations';
+import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
+import { CoursePageBlockMenu } from '@/features/course/features/page-edit/ui/block-menu';
+
+type BlockFrameContentTag = keyof Pick<
+  HTMLElementTagNameMap,
+  'blockquote' | 'div' | 'figure' | 'h1' | 'h2' | 'h3'
+>;
+
+type CoursePageBlockFrameProps = PlateElementProps & {
+  children: ReactNode;
+  contentAs?: BlockFrameContentTag;
+  contentClassName?: string;
+  frameClassName?: string;
+};
+
+function getSelectionTarget(
+  element: CoursePlateElement,
+  path: PlateElementProps['path']
+): CoursePageBlockSelectionTarget {
+  return typeof element.id === 'string'
+    ? { source: 'id', id: element.id, path }
+    : { source: 'path', path };
+}
+
+export function CoursePageBlockFrame({
+  children,
+  contentAs,
+  contentClassName,
+  frameClassName,
+  ...props
+}: CoursePageBlockFrameProps) {
+  const { clearBlockSelection, selectOnlyBlock, selection } =
+    useCoursePageBlockSelection();
+  const element = props.element as CoursePlateElement;
+  const selectionTarget = getSelectionTarget(element, props.path);
+  const isSelected = isCoursePageBlockSelected(selection, selectionTarget);
+  const Content = contentAs ?? 'div';
+
+  function selectCurrentBlock({
+    preserveExisting = false,
+  }: {
+    preserveExisting?: boolean;
+  } = {}) {
+    if (!selectSlateBlock(props.editor, props.path)) {
+      clearBlockSelection();
+      return;
+    }
+
+    if (preserveExisting && isSelected) {
+      return;
+    }
+
+    selectOnlyBlock(selectionTarget);
+  }
+
+  return (
+    <PlateElement
+      as="div"
+      className={cn(
+        'group/course-page-block relative',
+        'transition-colors outline-none',
+        frameClassName
+      )}
+      {...props}
+      attributes={{
+        ...props.attributes,
+        onContextMenu: () => selectCurrentBlock({ preserveExisting: true }),
+      }}
+    >
+      <div
+        contentEditable={false}
+        className={cn(
+          'group/course-page-gutter absolute top-0 bottom-0 -left-14 z-10',
+          'flex items-start gap-1',
+          'opacity-0 transition-opacity',
+          'group-focus-within/course-page-block:opacity-100',
+          'group-hover/course-page-block:opacity-100',
+          isSelected && 'opacity-100'
+        )}
+      >
+        <button
+          type="button"
+          className={cn(
+            'mt-1 inline-flex size-7 items-center justify-center',
+            'rounded-full',
+            'bg-muted/70 text-muted-foreground shadow-sm',
+            'backdrop-blur transition-all',
+            'pointer-events-none opacity-0',
+            'group-hover/course-page-gutter:pointer-events-auto',
+            'group-hover/course-page-gutter:opacity-100',
+            'hover:bg-foreground hover:text-background',
+            'focus-visible:ring-2 focus-visible:ring-ring',
+            'focus-visible:outline-none'
+          )}
+          aria-label="Добавить блок ниже"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            selectCurrentBlock();
+          }}
+        >
+          <Plus className="size-4" aria-hidden="true" />
+        </button>
+        <CoursePageBlockMenu
+          onOpen={() => selectCurrentBlock({ preserveExisting: true })}
+        >
+          <button
+            type="button"
+            className={cn(
+              'flex h-full max-h-20 min-h-10 w-7 cursor-grab',
+              'items-center justify-center rounded-full',
+              'border border-border/60 bg-background/10',
+              'text-muted-foreground/70 backdrop-blur transition-colors',
+              'hover:border-border hover:bg-muted/70 hover:text-foreground',
+              'active:cursor-grabbing',
+              'focus-visible:ring-2 focus-visible:ring-ring',
+              'focus-visible:outline-none'
+            )}
+            aria-label="Открыть меню блока"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              selectCurrentBlock();
+            }}
+          >
+            <GripVertical className="size-4" aria-hidden="true" />
+          </button>
+        </CoursePageBlockMenu>
+      </div>
+
+      {isSelected && (
+        <div
+          contentEditable={false}
+          className="pointer-events-none absolute inset-0 z-20 bg-primary/20"
+        />
+      )}
+
+      <Content className={contentClassName} onMouseDown={clearBlockSelection}>
+        {children}
+      </Content>
+    </PlateElement>
+  );
+}
