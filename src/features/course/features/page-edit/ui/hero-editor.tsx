@@ -157,7 +157,8 @@ export function CoursePageEditHeroEditor({
     <section
       className={cn(
         'relative overflow-hidden bg-linear-to-br px-5 py-6',
-        'sm:rounded-3xl sm:border sm:p-8 lg:p-10',
+        'sm:rounded-3xl sm:border sm:p-8',
+        'md:-mx-12 md:px-20 lg:-mx-10 lg:px-20 lg:py-10',
         theme.base,
         theme.darkBase,
         theme.border
