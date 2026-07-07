@@ -29,6 +29,13 @@ type BlockCandidate = {
   rect: DOMRect;
 };
 
+type InsertPanelTargetHoverDetail =
+  | { status: 'inactive' }
+  | {
+      status: 'active';
+      target: Extract<InsertPanelState, { status: 'visible' }>['target'];
+    };
+
 function parseBlockPath(value: string | undefined): Path | null {
   if (!value) {
     return null;
@@ -127,6 +134,18 @@ function insertParagraphAtTarget(
   return insertParagraphRelative(editor, state.target.path, state.placement);
 }
 
+function dispatchTargetHoverEvent(
+  container: HTMLElement,
+  detail: InsertPanelTargetHoverDetail
+) {
+  container.dispatchEvent(
+    new CustomEvent('course-page-insert-panel-target-hover', {
+      bubbles: true,
+      detail,
+    })
+  );
+}
+
 export function CoursePageBlockInsertPanel({
   containerRef,
   editor,
@@ -151,6 +170,34 @@ export function CoursePageBlockInsertPanel({
     },
     [containerRef]
   );
+
+  useEffect(() => {
+    const container = containerRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    if (isPanelHovered && state.status === 'visible') {
+      dispatchTargetHoverEvent(container, {
+        status: 'active',
+        target: state.target,
+      });
+      return;
+    }
+
+    dispatchTargetHoverEvent(container, { status: 'inactive' });
+  }, [containerRef, isPanelHovered, state]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+
+    return () => {
+      if (container) {
+        dispatchTargetHoverEvent(container, { status: 'inactive' });
+      }
+    };
+  }, [containerRef]);
 
   useEffect(() => {
     const container = containerRef.current;
