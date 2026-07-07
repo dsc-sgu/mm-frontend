@@ -13,6 +13,7 @@ import {
 } from '@/features/course/features/page-edit/model/plate-content';
 import { coursePagePlatePlugins } from '@/features/course/features/page-edit/model/plate-plugins';
 import { useCoursePageBlockSelectionValue } from '@/features/course/features/page-edit/hooks/use-block-selection';
+import { CoursePageBlockInsertPanel } from '@/features/course/features/page-edit/ui/block-insert-panel';
 import { CoursePageEditorResourceProvider } from '@/features/course/features/page-edit/ui/plate/resource-context';
 
 function getContentKey(content: CourseContentBlockItem[]) {
@@ -44,6 +45,7 @@ export function CoursePageContentEditor({
   const externalContentKey = getContentKey(content);
   const lastLocalContentKeyRef = useRef(externalContentKey);
   const isSyncingFromPropsRef = useRef(false);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
   const blockSelectionContextValue = useCoursePageBlockSelectionValue();
 
   useEffect(() => {
@@ -79,7 +81,15 @@ export function CoursePageContentEditor({
         }}
       >
         <CoursePageBlockSelectionProvider value={blockSelectionContextValue}>
-          <div className="[&_.slate-selected]:bg-primary/8">
+          <div
+            ref={editorContainerRef}
+            data-course-page-editor-container="true"
+            className="relative [&_.slate-selected]:bg-primary/8"
+          >
+            <CoursePageBlockInsertPanel
+              containerRef={editorContainerRef}
+              editor={editor}
+            />
             <PlateContent
               className={cn(
                 'min-h-64 px-1 py-2 outline-none',

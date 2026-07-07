@@ -182,7 +182,7 @@ function ensureEditorHasContent(value: CoursePlateElement[]) {
 function selectPathSoon(editor: SlateEditor, path: Path) {
   queueMicrotask(() => {
     if (editor.api.hasPath(path)) {
-      editor.tf.select(path);
+      editor.tf.focus({ at: path, edge: 'start', retries: 3 });
     }
   });
 }
@@ -398,9 +398,10 @@ export function selectBlock(editor: SlateEditor, path: Path) {
   return true;
 }
 
-export function insertBlockBelow(
+export function insertBlockRelative(
   editor: SlateEditor,
   path: Path,
+  placement: 'before' | 'after',
   block: CoursePlateElement
 ) {
   const nextValue = getEditorValue(editor);
@@ -411,7 +412,7 @@ export function insertBlockBelow(
     return false;
   }
 
-  const insertIndex = getPathIndex(path) + 1;
+  const insertIndex = getPathIndex(path) + (placement === 'after' ? 1 : 0);
   parentChildren.splice(insertIndex, 0, block);
   setEditorValue(editor, nextValue);
   selectPathSoon(editor, [...parentPath, insertIndex]);
@@ -419,8 +420,24 @@ export function insertBlockBelow(
   return true;
 }
 
+export function insertBlockBelow(
+  editor: SlateEditor,
+  path: Path,
+  block: CoursePlateElement
+) {
+  return insertBlockRelative(editor, path, 'after', block);
+}
+
+export function insertParagraphRelative(
+  editor: SlateEditor,
+  path: Path,
+  placement: 'before' | 'after'
+) {
+  return insertBlockRelative(editor, path, placement, createParagraph());
+}
+
 export function insertParagraphBelow(editor: SlateEditor, path: Path) {
-  return insertBlockBelow(editor, path, createParagraph());
+  return insertParagraphRelative(editor, path, 'after');
 }
 
 export function duplicateBlock(editor: SlateEditor, path: Path) {
@@ -534,6 +551,16 @@ export function insertParagraphBelowById(editor: SlateEditor, blockId: string) {
   const entry = getBlockEntryById(editor, blockId);
 
   return entry ? insertParagraphBelow(editor, entry.path) : false;
+}
+
+export function insertParagraphRelativeById(
+  editor: SlateEditor,
+  blockId: string,
+  placement: 'before' | 'after'
+) {
+  const entry = getBlockEntryById(editor, blockId);
+
+  return entry ? insertParagraphRelative(editor, entry.path, placement) : false;
 }
 
 export function duplicateBlockById(editor: SlateEditor, blockId: string) {
