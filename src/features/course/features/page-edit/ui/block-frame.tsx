@@ -1,5 +1,4 @@
-import { type ReactNode } from 'react';
-import { Plus } from 'lucide-react';
+import { type MouseEvent, type ReactNode } from 'react';
 import { type PlateElementProps, PlateElement } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
@@ -31,6 +30,28 @@ function getSelectionTarget(
   return typeof element.id === 'string'
     ? { source: 'id', id: element.id, path }
     : { source: 'path', path };
+}
+
+function dispatchInsertPanelPreviewEvent(
+  event: MouseEvent<HTMLElement>,
+  type: 'show' | 'hide'
+) {
+  const container = event.currentTarget.closest(
+    '[data-course-page-editor-container="true"]'
+  );
+
+  if (!container) {
+    return;
+  }
+
+  container.dispatchEvent(
+    new CustomEvent(
+      type === 'show'
+        ? 'course-page-insert-panel-preview'
+        : 'course-page-insert-panel-preview-end',
+      { detail: { clientY: event.clientY } }
+    )
+  );
 }
 
 export function CoursePageBlockFrame({
@@ -75,13 +96,16 @@ export function CoursePageBlockFrame({
       {...props}
       attributes={{
         ...props.attributes,
+        'data-course-page-block': 'true',
+        'data-course-page-block-id': element.id,
+        'data-course-page-block-path': props.path.join('.'),
         onContextMenu: () => selectCurrentBlock({ preserveExisting: true }),
       }}
     >
       <div
         contentEditable={false}
         className={cn(
-          'group/course-page-gutter absolute top-0 bottom-0 -left-14 z-10',
+          'group/course-page-gutter absolute top-0 bottom-0 -left-8 z-10',
           'flex items-stretch gap-1',
           'opacity-0 transition-opacity',
           'group-focus-within/course-page-block:opacity-100',
@@ -89,28 +113,6 @@ export function CoursePageBlockFrame({
           isSelected && 'opacity-100'
         )}
       >
-        <button
-          type="button"
-          className={cn(
-            'mt-1 inline-flex size-7 items-center justify-center',
-            'rounded-full',
-            'bg-muted/70 text-muted-foreground shadow-sm',
-            'backdrop-blur transition-all',
-            'pointer-events-none opacity-0',
-            'group-hover/course-page-gutter:pointer-events-auto',
-            'group-hover/course-page-gutter:opacity-100',
-            'hover:bg-foreground hover:text-background',
-            'focus-visible:ring-2 focus-visible:ring-ring',
-            'focus-visible:outline-none'
-          )}
-          aria-label="Добавить блок ниже"
-          onMouseDown={(event) => {
-            event.preventDefault();
-            selectCurrentBlock();
-          }}
-        >
-          <Plus className="size-4" aria-hidden="true" />
-        </button>
         <CoursePageBlockMenu
           onOpen={() => selectCurrentBlock({ preserveExisting: true })}
         >
@@ -125,6 +127,15 @@ export function CoursePageBlockFrame({
               'focus-visible:outline-none'
             )}
             aria-label="Открыть меню блока"
+            onMouseEnter={(event) =>
+              dispatchInsertPanelPreviewEvent(event, 'show')
+            }
+            onMouseMove={(event) =>
+              dispatchInsertPanelPreviewEvent(event, 'show')
+            }
+            onMouseLeave={(event) =>
+              dispatchInsertPanelPreviewEvent(event, 'hide')
+            }
             onMouseDown={(event) => {
               event.preventDefault();
               selectCurrentBlock();
