@@ -1,4 +1,10 @@
-import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
 import { type PlateElementProps, PlateElement } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
@@ -64,6 +70,10 @@ function isInsertPanelTargetHoveringBlock(
   }
 
   return arePathsEqual(detail.target.path, target.path);
+}
+
+function isPrimaryPointerEvent(event: PointerEvent<HTMLElement>) {
+  return event.button === 0;
 }
 
 function dispatchInsertPanelPreviewEvent(
@@ -175,40 +185,58 @@ export function CoursePageBlockFrame({
         <CoursePageBlockMenu
           onOpen={() => selectCurrentBlock({ preserveExisting: true })}
         >
-          <button
-            type="button"
-            className={cn(
-              'flex h-full w-4 cursor-grab items-center justify-center',
-              'rounded-sm text-muted-foreground/70 transition-colors',
-              'hover:bg-muted/60 hover:text-foreground',
-              'active:cursor-grabbing',
-              'focus-visible:ring-2 focus-visible:ring-ring',
-              'focus-visible:outline-none'
-            )}
-            aria-label="Открыть меню блока"
-            onMouseEnter={(event) =>
-              dispatchInsertPanelPreviewEvent(event, 'show')
-            }
-            onMouseMove={(event) =>
-              dispatchInsertPanelPreviewEvent(event, 'show')
-            }
-            onMouseLeave={(event) =>
-              dispatchInsertPanelPreviewEvent(event, 'hide')
-            }
-            onMouseDown={(event) => {
-              event.preventDefault();
-              selectCurrentBlock();
-            }}
-          >
-            <span
-              className="flex flex-col items-center gap-1"
-              aria-hidden="true"
+          {({ openMenu }) => (
+            <button
+              type="button"
+              className={cn(
+                'flex h-full w-4 cursor-grab items-center justify-center',
+                'rounded-sm border border-transparent text-muted-foreground/70',
+                'transition-colors',
+                isInsertPanelTargetHovered &&
+                  'border-muted/60 bg-muted/25 text-muted-foreground',
+                'hover:bg-muted/60 hover:text-foreground',
+                'active:cursor-grabbing',
+                'focus-visible:ring-2 focus-visible:ring-ring',
+                'focus-visible:outline-none'
+              )}
+              aria-label="Открыть меню блока"
+              onMouseEnter={(event) =>
+                dispatchInsertPanelPreviewEvent(event, 'show')
+              }
+              onMouseMove={(event) =>
+                dispatchInsertPanelPreviewEvent(event, 'show')
+              }
+              onMouseLeave={(event) =>
+                dispatchInsertPanelPreviewEvent(event, 'hide')
+              }
+              onPointerDownCapture={(event) => {
+                if (!isPrimaryPointerEvent(event)) {
+                  return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+              }}
+              onPointerUp={(event) => {
+                if (!isPrimaryPointerEvent(event)) {
+                  return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+                openMenu();
+              }}
             >
-              <span className="size-1 rounded-full bg-current" />
-              <span className="size-1 rounded-full bg-current" />
-              <span className="size-1 rounded-full bg-current" />
-            </span>
-          </button>
+              <span
+                className="flex flex-col items-center gap-1"
+                aria-hidden="true"
+              >
+                <span className="size-1 rounded-full bg-current" />
+                <span className="size-1 rounded-full bg-current" />
+                <span className="size-1 rounded-full bg-current" />
+              </span>
+            </button>
+          )}
         </CoursePageBlockMenu>
       </div>
 
