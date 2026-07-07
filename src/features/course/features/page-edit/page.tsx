@@ -130,7 +130,7 @@ function CoursePageEditLoaded({
       <article
         className={cn(
           'px-5 pt-2 pb-8 md:mt-8 md:rounded-3xl md:border md:border-border',
-          'md:bg-card md:px-8 lg:px-10'
+          'md:-mx-12 md:bg-card md:px-20 lg:-mx-10'
         )}
       >
         <CoursePageContentEditor
