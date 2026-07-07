@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { GripVertical, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { type PlateElementProps, PlateElement } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
@@ -82,7 +82,7 @@ export function CoursePageBlockFrame({
         contentEditable={false}
         className={cn(
           'group/course-page-gutter absolute top-0 bottom-0 -left-14 z-10',
-          'flex items-start gap-1',
+          'flex items-stretch gap-1',
           'opacity-0 transition-opacity',
           'group-focus-within/course-page-block:opacity-100',
           'group-hover/course-page-block:opacity-100',
@@ -117,11 +117,9 @@ export function CoursePageBlockFrame({
           <button
             type="button"
             className={cn(
-              'flex h-full max-h-20 min-h-10 w-7 cursor-grab',
-              'items-center justify-center rounded-full',
-              'border border-border/60 bg-background/10',
-              'text-muted-foreground/70 backdrop-blur transition-colors',
-              'hover:border-border hover:bg-muted/70 hover:text-foreground',
+              'flex h-full w-4 cursor-grab items-center justify-center',
+              'rounded-sm text-muted-foreground/70 transition-colors',
+              'hover:bg-muted/60 hover:text-foreground',
               'active:cursor-grabbing',
               'focus-visible:ring-2 focus-visible:ring-ring',
               'focus-visible:outline-none'
@@ -132,7 +130,14 @@ export function CoursePageBlockFrame({
               selectCurrentBlock();
             }}
           >
-            <GripVertical className="size-4" aria-hidden="true" />
+            <span
+              className="flex flex-col items-center gap-1"
+              aria-hidden="true"
+            >
+              <span className="size-1 rounded-full bg-current" />
+              <span className="size-1 rounded-full bg-current" />
+              <span className="size-1 rounded-full bg-current" />
+            </span>
           </button>
         </CoursePageBlockMenu>
       </div>
