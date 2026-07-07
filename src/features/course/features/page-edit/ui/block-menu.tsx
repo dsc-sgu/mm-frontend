@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import {
   DropdownMenu,
@@ -7,22 +7,32 @@ import {
   DropdownMenuTrigger,
 } from '@/shadcn/components/ui/dropdown-menu';
 
+type CoursePageBlockMenuTriggerProps = {
+  openMenu: () => void;
+};
+
 export function CoursePageBlockMenu({
   children,
   onOpen,
 }: {
-  children: ReactNode;
+  children: (props: CoursePageBlockMenuTriggerProps) => ReactNode;
   onOpen: () => void;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  function setMenuOpen(nextIsOpen: boolean) {
+    if (nextIsOpen && !isOpen) {
+      onOpen();
+    }
+
+    setIsOpen(nextIsOpen);
+  }
+
   return (
-    <DropdownMenu
-      onOpenChange={(isOpen) => {
-        if (isOpen) {
-          onOpen();
-        }
-      }}
-    >
-      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+    <DropdownMenu open={isOpen} onOpenChange={setMenuOpen}>
+      <DropdownMenuTrigger asChild>
+        {children({ openMenu: () => setMenuOpen(true) })}
+      </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
         side="left"
