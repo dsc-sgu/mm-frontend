@@ -43,6 +43,7 @@ export type CourseQuoteBlock = RankedContent & {
 
 export type CourseListItem = RankedContent & {
   children: RichTextNode[];
+  indent?: number;
 };
 
 export type CourseListBlock = RankedContent & {
