@@ -9,6 +9,7 @@ import type {
   CourseContentBlockItem,
   CourseFileResource,
   CourseListBlock,
+  CourseListItem,
   CoursePageResources,
 } from '@/features/course/features/page/model/types';
 import { CourseRichText } from '@/features/course/ui/rich-text';
@@ -23,23 +24,82 @@ function formatDueDate(value: string) {
   }).format(new Date(value));
 }
 
-function ListBlock({ block }: { block: CourseListBlock }) {
-  const items = sortRankedContent(block.items);
-  const ListTag = block.variant === 'ordered' ? 'ol' : 'ul';
+type RenderableCourseListItem = CourseListItem & {
+  nestedItems: RenderableCourseListItem[];
+};
+
+function getListItemIndent(item: CourseListItem) {
+  return typeof item.indent === 'number' && Number.isFinite(item.indent)
+    ? Math.max(1, Math.round(item.indent))
+    : 1;
+}
+
+function buildListTree(items: CourseListItem[]) {
+  const rootItems: RenderableCourseListItem[] = [];
+  const stack: Array<{ indent: number; items: RenderableCourseListItem[] }> = [
+    { indent: 1, items: rootItems },
+  ];
+
+  items.forEach((item) => {
+    const indent = getListItemIndent(item);
+    const listItem = { ...item, nestedItems: [] };
+
+    while (stack.length > 1 && indent < stack[stack.length - 1].indent) {
+      stack.pop();
+    }
+
+    const currentLevel = stack[stack.length - 1];
+
+    if (indent > currentLevel.indent) {
+      const parentItem = currentLevel.items.at(-1);
+
+      if (parentItem) {
+        stack.push({ indent, items: parentItem.nestedItems });
+      }
+    }
+
+    stack[stack.length - 1].items.push(listItem);
+  });
+
+  return rootItems;
+}
+
+function ListItems({
+  items,
+  variant,
+}: {
+  items: RenderableCourseListItem[];
+  variant: CourseListBlock['variant'];
+}) {
+  const ListTag = variant === 'ordered' ? 'ol' : 'ul';
 
   return (
     <ListTag
       className={cn(
-        'my-4 space-y-2 pl-6 text-base leading-7 text-foreground/90',
-        block.variant === 'ordered' ? 'list-decimal' : 'list-disc'
+        'space-y-2 pl-6 text-base leading-7 text-foreground/90',
+        variant === 'ordered' ? 'list-decimal' : 'list-disc'
       )}
     >
       {items.map((item) => (
         <li key={item.id} className="my-1">
           <CourseRichText nodes={item.children} />
+          {item.nestedItems.length > 0 && (
+            <ListItems items={item.nestedItems} variant={variant} />
+          )}
         </li>
       ))}
     </ListTag>
+  );
+}
+
+function ListBlock({ block }: { block: CourseListBlock }) {
+  return (
+    <div className="my-4">
+      <ListItems
+        items={buildListTree(sortRankedContent(block.items))}
+        variant={block.variant}
+      />
+    </div>
   );
 }
 
