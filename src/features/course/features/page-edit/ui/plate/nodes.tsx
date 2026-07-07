@@ -80,6 +80,7 @@ export function ParagraphElement({ children, ...props }: PlateElementProps) {
 
   return (
     <CoursePageBlockFrame
+      alignGutterToEditorContent={isListItem}
       frameClassName={isListItem ? 'my-1' : 'my-4'}
       contentClassName={paragraphClassName}
       {...props}

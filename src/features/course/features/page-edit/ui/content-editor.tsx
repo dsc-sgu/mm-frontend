@@ -91,6 +91,7 @@ export function CoursePageContentEditor({
               editor={editor}
             />
             <PlateContent
+              data-course-page-editor-content="true"
               className={cn(
                 'min-h-64 px-1 py-2 outline-none',
                 'selection:bg-primary/20',
