@@ -1,4 +1,3 @@
-import { createContext, useContext } from 'react';
 import type { Path } from 'platejs';
 
 import {
@@ -21,26 +20,6 @@ export type CoursePageBlockSelection =
       items: CoursePageBlockSelectionItem[];
     };
 
-export type CoursePageBlockSelectionContextValue = {
-  selection: CoursePageBlockSelection;
-  selectOnlyBlock: (target: CoursePageBlockSelectionTarget) => void;
-  replaceBlockSelection: (targets: CoursePageBlockSelectionTarget[]) => void;
-  clearBlockSelection: () => void;
-};
-
-const defaultContextValue: CoursePageBlockSelectionContextValue = {
-  selection: { status: 'none' },
-  selectOnlyBlock: () => {},
-  replaceBlockSelection: () => {},
-  clearBlockSelection: () => {},
-};
-
-const CoursePageBlockSelectionContext =
-  createContext<CoursePageBlockSelectionContextValue>(defaultContextValue);
-
-export const CoursePageBlockSelectionProvider =
-  CoursePageBlockSelectionContext.Provider;
-
 export function createCoursePageBlockSelectionItem(
   target: CoursePageBlockSelectionTarget
 ): CoursePageBlockSelectionItem {
@@ -61,8 +40,4 @@ export function isCoursePageBlockSelected(
   const key = getCoursePageBlockTargetKey(target);
 
   return selection.items.some((item) => item.key === key);
-}
-
-export function useCoursePageBlockSelection() {
-  return useContext(CoursePageBlockSelectionContext);
 }
