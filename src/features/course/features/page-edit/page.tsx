@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useEffectEvent,
-  useLayoutEffect,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
@@ -42,13 +36,7 @@ function focusFirstInvalidField(errors: Record<string, string | undefined>) {
   document.getElementById(fieldId)?.focus();
 }
 
-function CoursePageEditContent({
-  courseSlug,
-  course,
-}: {
-  courseSlug: string;
-  course: CoursePage;
-}) {
+function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
   const navigate = useNavigate();
   const router = useRouter();
   const saveMutation = useSaveCoursePageMutation();
@@ -63,10 +51,6 @@ function CoursePageEditContent({
   );
   const syncCourse = useCoursePageEditStore((state) => state.syncCourse);
   const workingCopy = useCoursePageEditStore((state) => state.workingCopy);
-
-  useLayoutEffect(() => {
-    syncCourse(course);
-  }, [course, syncCourse]);
 
   const apply = useCallback(async () => {
     if (!isDirty) {
@@ -185,7 +169,7 @@ function CoursePageEditLoaded({
 
   return (
     <CoursePageEditStoreProvider store={editStore}>
-      <CoursePageEditContent courseSlug={courseSlug} course={course} />
+      <CoursePageEditContent courseSlug={courseSlug} />
     </CoursePageEditStoreProvider>
   );
 }
@@ -201,5 +185,11 @@ export function CoursePageEditPage({ courseSlug }: { courseSlug: string }) {
     return null;
   }
 
-  return <CoursePageEditLoaded courseSlug={courseSlug} course={course} />;
+  return (
+    <CoursePageEditLoaded
+      key={courseSlug}
+      courseSlug={courseSlug}
+      course={course}
+    />
+  );
 }
