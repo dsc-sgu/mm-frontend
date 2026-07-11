@@ -6,7 +6,6 @@ import { useCoursePageBlockGutterAlignment } from '@/features/course/features/pa
 import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import {
   isCoursePageBlockSelected,
-  useCoursePageBlockSelection,
   type CoursePageBlockSelectionTarget,
 } from '@/features/course/features/page-edit/model/block-selection';
 import { getCoursePageBlockTargetKey } from '@/features/course/features/page-edit/model/block-target';
@@ -48,10 +47,14 @@ export function CoursePageBlockFrame({
   frameClassName,
   ...props
 }: CoursePageBlockFrameProps) {
-  const { clearBlockSelection, selectOnlyBlock, selection } =
-    useCoursePageBlockSelection();
+  const clearBlockSelection = useCoursePageEditStore(
+    (state) => state.clearBlockSelection
+  );
   const hideInsertPanelPreview = useCoursePageEditStore(
     (state) => state.hideInsertPanelPreview
+  );
+  const selectOnlyBlock = useCoursePageEditStore(
+    (state) => state.selectOnlyBlock
   );
   const showInsertPanelPreview = useCoursePageEditStore(
     (state) => state.showInsertPanelPreview
@@ -59,7 +62,9 @@ export function CoursePageBlockFrame({
   const element = props.element as CoursePlateElement;
   const selectionTarget = getSelectionTarget(element, props.path);
   const selectionTargetKey = getCoursePageBlockTargetKey(selectionTarget);
-  const isSelected = isCoursePageBlockSelected(selection, selectionTarget);
+  const isSelected = useCoursePageEditStore((state) =>
+    isCoursePageBlockSelected(state.blockSelection, selectionTarget)
+  );
   const isInsertPanelTargetHovered = useCoursePageEditStore(
     (state) => state.hoveredInsertPanelTargetKey === selectionTargetKey
   );

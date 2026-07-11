@@ -6,13 +6,11 @@ import type {
   CourseContentBlockItem,
   CoursePageResources,
 } from '@/features/course/features/page/model/types';
-import { CoursePageBlockSelectionProvider } from '@/features/course/features/page-edit/model/block-selection';
 import {
   deserializeCourseContentToPlate,
   serializePlateToCourseContent,
 } from '@/features/course/features/page-edit/model/plate-content';
 import { coursePagePlatePlugins } from '@/features/course/features/page-edit/model/plate-plugins';
-import { useCoursePageBlockSelectionValue } from '@/features/course/features/page-edit/hooks/use-block-selection';
 import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CoursePageBlockInsertPanel } from '@/features/course/features/page-edit/ui/block-insert-panel';
 import { CoursePageEditorResourceProvider } from '@/features/course/features/page-edit/ui/plate/resource-context';
@@ -46,7 +44,6 @@ export function CoursePageContentEditor({
   const externalContentKey = getContentKey(content);
   const lastLocalContentKeyRef = useRef(externalContentKey);
   const isSyncingFromPropsRef = useRef(false);
-  const blockSelectionContextValue = useCoursePageBlockSelectionValue();
   const setContentEditorContainer = useCoursePageEditStore(
     (state) => state.setContentEditorContainer
   );
@@ -87,25 +84,23 @@ export function CoursePageContentEditor({
           onChange(nextContent);
         }}
       >
-        <CoursePageBlockSelectionProvider value={blockSelectionContextValue}>
-          <div
-            ref={setEditorContainerRef}
-            data-course-page-editor-container="true"
-            className="relative [&_.slate-selected]:bg-primary/8"
-          >
-            <CoursePageBlockInsertPanel editor={editor} />
-            <PlateContent
-              data-course-page-editor-content="true"
-              className={cn(
-                'min-h-64 px-1 py-2 outline-none',
-                'selection:bg-primary/20',
-                '[&_[data-slate-placeholder=true]]:text-muted-foreground'
-              )}
-              placeholder="Начните писать…"
-              spellCheck={false}
-            />
-          </div>
-        </CoursePageBlockSelectionProvider>
+        <div
+          ref={setEditorContainerRef}
+          data-course-page-editor-container="true"
+          className="relative [&_.slate-selected]:bg-primary/8"
+        >
+          <CoursePageBlockInsertPanel editor={editor} />
+          <PlateContent
+            data-course-page-editor-content="true"
+            className={cn(
+              'min-h-64 px-1 py-2 outline-none',
+              'selection:bg-primary/20',
+              '[&_[data-slate-placeholder=true]]:text-muted-foreground'
+            )}
+            placeholder="Начните писать…"
+            spellCheck={false}
+          />
+        </div>
       </Plate>
     </CoursePageEditorResourceProvider>
   );
