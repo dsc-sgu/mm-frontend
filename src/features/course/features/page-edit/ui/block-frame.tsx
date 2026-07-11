@@ -3,13 +3,13 @@ import { type PlateElementProps, PlateElement } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
 import { useCoursePageBlockGutterAlignment } from '@/features/course/features/page-edit/hooks/use-block-gutter-alignment';
-import { useCoursePageBlockInsertPanel } from '@/features/course/features/page-edit/hooks/use-block-insert-panel';
+import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import {
   isCoursePageBlockSelected,
   useCoursePageBlockSelection,
   type CoursePageBlockSelectionTarget,
 } from '@/features/course/features/page-edit/model/block-selection';
-import { isCoursePageBlockTargetEqual } from '@/features/course/features/page-edit/model/block-target';
+import { getCoursePageBlockTargetKey } from '@/features/course/features/page-edit/model/block-target';
 import { selectBlock as selectSlateBlock } from '@/features/course/features/page-edit/model/block-operations';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
 import { CoursePageBlockMenu } from '@/features/course/features/page-edit/ui/block-menu';
@@ -50,13 +50,19 @@ export function CoursePageBlockFrame({
 }: CoursePageBlockFrameProps) {
   const { clearBlockSelection, selectOnlyBlock, selection } =
     useCoursePageBlockSelection();
-  const insertPanel = useCoursePageBlockInsertPanel();
+  const hideInsertPanelPreview = useCoursePageEditStore(
+    (state) => state.hideInsertPanelPreview
+  );
+  const showInsertPanelPreview = useCoursePageEditStore(
+    (state) => state.showInsertPanelPreview
+  );
   const element = props.element as CoursePlateElement;
   const selectionTarget = getSelectionTarget(element, props.path);
+  const selectionTargetKey = getCoursePageBlockTargetKey(selectionTarget);
   const isSelected = isCoursePageBlockSelected(selection, selectionTarget);
-  const isInsertPanelTargetHovered = insertPanel.hoveredTarget
-    ? isCoursePageBlockTargetEqual(insertPanel.hoveredTarget, selectionTarget)
-    : false;
+  const isInsertPanelTargetHovered = useCoursePageEditStore(
+    (state) => state.hoveredInsertPanelTargetKey === selectionTargetKey
+  );
   const blockRef = useRef<HTMLElement | null>(null);
   const Content = contentAs ?? 'div';
 
@@ -135,9 +141,9 @@ export function CoursePageBlockFrame({
                 'focus-visible:outline-none'
               )}
               aria-label="Открыть меню блока"
-              onMouseEnter={(event) => insertPanel.showPreview(event.clientY)}
-              onMouseMove={(event) => insertPanel.showPreview(event.clientY)}
-              onMouseLeave={insertPanel.hidePreview}
+              onMouseEnter={(event) => showInsertPanelPreview(event.clientY)}
+              onMouseMove={(event) => showInsertPanelPreview(event.clientY)}
+              onMouseLeave={hideInsertPanelPreview}
               onPointerDownCapture={(event) => {
                 if (!isPrimaryPointerEvent(event)) {
                   return;

@@ -6,10 +6,8 @@ import {
   insertParagraphRelative,
   insertParagraphRelativeById,
 } from '@/features/course/features/page-edit/model/block-operations';
-import {
-  useCoursePageBlockInsertPanel,
-  type CoursePageBlockInsertPanelVisibleState,
-} from '@/features/course/features/page-edit/hooks/use-block-insert-panel';
+import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
+import type { CoursePageBlockInsertPanelVisibleState } from '@/features/course/features/page-edit/model/editor-store';
 
 function insertParagraphAtTarget(
   editor: SlateEditor,
@@ -31,32 +29,45 @@ export function CoursePageBlockInsertPanel({
 }: {
   editor: SlateEditor;
 }) {
-  const insertPanel = useCoursePageBlockInsertPanel();
-  const { isPanelHovered, state } = insertPanel;
-  const isVisible = state.status === 'visible';
+  const hideInsertPanel = useCoursePageEditStore(
+    (state) => state.hideInsertPanel
+  );
+  const insertPanelState = useCoursePageEditStore(
+    (state) => state.insertPanelState
+  );
+  const isInsertPanelHovered = useCoursePageEditStore(
+    (state) => state.isInsertPanelHovered
+  );
+  const setInsertPanelHovered = useCoursePageEditStore(
+    (state) => state.setInsertPanelHovered
+  );
+  const showInsertPanelPreview = useCoursePageEditStore(
+    (state) => state.showInsertPanelPreview
+  );
+  const isVisible = insertPanelState.status === 'visible';
 
   return (
     <div
       contentEditable={false}
       className="pointer-events-none absolute inset-0 z-30"
     >
-      {isVisible && isPanelHovered && (
+      {isVisible && isInsertPanelHovered && (
         <div
           className={cn(
             'pointer-events-none absolute right-0 left-0 h-0.5',
             'bg-foreground/70'
           )}
-          style={{ top: state.lineY }}
+          style={{ top: insertPanelState.lineY }}
         />
       )}
 
       <div
         className="group/course-insert-panel pointer-events-auto absolute top-0 bottom-0 -left-20 w-12"
-        onMouseEnter={() => insertPanel.setPanelHovered(true)}
-        onMouseMove={(event) => insertPanel.showPreview(event.clientY)}
+        onMouseEnter={() => setInsertPanelHovered(true)}
+        onMouseMove={(event) => showInsertPanelPreview(event.clientY)}
         onMouseLeave={() => {
-          insertPanel.setPanelHovered(false);
-          insertPanel.hide();
+          setInsertPanelHovered(false);
+          hideInsertPanel();
         }}
       >
         {isVisible && (
@@ -72,16 +83,16 @@ export function CoursePageBlockInsertPanel({
               'focus-visible:ring-2 focus-visible:ring-ring',
               'focus-visible:outline-none'
             )}
-            style={{ top: state.cursorY }}
+            style={{ top: insertPanelState.cursorY }}
             aria-label={
-              state.placement === 'before'
+              insertPanelState.placement === 'before'
                 ? 'Добавить блок выше'
                 : 'Добавить блок ниже'
             }
             onMouseDown={(event) => {
               event.preventDefault();
-              insertParagraphAtTarget(editor, state);
-              insertPanel.hide();
+              insertParagraphAtTarget(editor, insertPanelState);
+              hideInsertPanel();
             }}
           >
             <Plus className="size-4" aria-hidden="true" />
