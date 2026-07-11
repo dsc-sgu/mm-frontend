@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
@@ -8,7 +8,10 @@ import {
   serializePlateToCourseContent,
 } from '@/features/course/features/page-edit/model/plate-content';
 import { coursePagePlatePlugins } from '@/features/course/features/page-edit/model/plate-plugins';
-import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
+import {
+  useCoursePageEditStore,
+  useCoursePageEditStoreApi,
+} from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CoursePageBlockInsertPanel } from '@/features/course/features/page-edit/ui/block-insert-panel';
 
 function CoursePagePlateEditor({
@@ -70,17 +73,25 @@ function CoursePagePlateEditor({
   );
 }
 
-export function CoursePageContentEditor() {
-  const content = useCoursePageEditStore((state) => state.workingCopy.content);
+function CoursePageContentEditorBase() {
+  const store = useCoursePageEditStoreApi();
   const contentEditorRevision = useCoursePageEditStore(
     (state) => state.contentEditorRevision
   );
+  // This component intentionally does not subscribe to workingCopy.content:
+  // Plate owns the live document while the user edits, and local Plate changes
+  // already flow into Zustand through onValueChange. We only need a fresh
+  // content snapshot when reset bumps contentEditorRevision and the Plate editor
+  // is recreated from the reset working copy.
+  const initialContent = store.getState().workingCopy.content;
 
   return (
     <CoursePagePlateEditor
       key={contentEditorRevision}
       contentEditorRevision={contentEditorRevision}
-      initialContent={content}
+      initialContent={initialContent}
     />
   );
 }
+
+export const CoursePageContentEditor = memo(CoursePageContentEditorBase);
