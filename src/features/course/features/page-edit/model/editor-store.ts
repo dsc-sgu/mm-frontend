@@ -1,17 +1,27 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
-import type { CoursePageResources } from '@/features/course/features/page/model/types';
+import type {
+  CourseContentBlockItem,
+  CoursePage,
+  CoursePageResources,
+} from '@/features/course/features/page/model/types';
 import {
   createCoursePageBlockSelectionItem,
   type CoursePageBlockSelection,
   type CoursePageBlockSelectionTarget,
 } from '@/features/course/features/page-edit/model/block-selection';
+import { compareCoursePages } from '@/features/course/features/page-edit/model/dirty-compare';
 import {
   areCoursePageBlockInsertPanelStatesEqual,
   getCoursePageBlockInsertPanelTargetKey,
   getNextCoursePageBlockInsertPanelState,
   type CoursePageBlockInsertPanelState,
 } from '@/features/course/features/page-edit/model/insert-panel-targeting';
+import {
+  hasCoursePageEditErrors,
+  validateCoursePageEdit,
+  type CoursePageEditValidationErrors,
+} from '@/features/course/features/page-edit/model/validation';
 
 export type {
   CoursePageBlockInsertPanelState,
@@ -19,14 +29,21 @@ export type {
   CoursePageBlockInsertPlacement,
 } from '@/features/course/features/page-edit/model/insert-panel-targeting';
 
+export type CoursePageWorkingCopyUpdate =
+  | CoursePage
+  | ((current: CoursePage) => CoursePage);
+
 export type CoursePageEditStoreState = {
   blockSelection: CoursePageBlockSelection;
+  canApply: boolean;
   contentEditorContainer: HTMLElement | null;
+  errors: CoursePageEditValidationErrors;
   hoveredInsertPanelTargetKey: string | null;
+  initialCourse: CoursePage;
   insertPanelState: CoursePageBlockInsertPanelState;
+  isDirty: boolean;
   isInsertPanelHovered: boolean;
-  onResourcesChange: ((resources: CoursePageResources) => void) | null;
-  resources: CoursePageResources;
+  workingCopy: CoursePage;
 };
 
 export type CoursePageEditStoreActions = {
@@ -35,14 +52,14 @@ export type CoursePageEditStoreActions = {
   hideInsertPanel: () => void;
   hideInsertPanelPreview: () => void;
   replaceBlockSelection: (targets: CoursePageBlockSelectionTarget[]) => void;
+  resetWorkingCopy: () => void;
   selectOnlyBlock: (target: CoursePageBlockSelectionTarget) => void;
+  setContent: (content: CourseContentBlockItem[]) => void;
   setContentEditorContainer: (container: HTMLElement | null) => void;
-  setEditorResources: (
-    resources: CoursePageResources,
-    onResourcesChange: ((resources: CoursePageResources) => void) | null
-  ) => void;
   setInsertPanelHovered: (isHovered: boolean) => void;
+  setWorkingCopy: (update: CoursePageWorkingCopyUpdate) => void;
   showInsertPanelPreview: (cursorY: number) => void;
+  syncCourse: (course: CoursePage) => void;
 };
 
 export type CoursePageEditStore = CoursePageEditStoreState &
@@ -51,20 +68,53 @@ export type CoursePageEditStore = CoursePageEditStoreState &
 export type CoursePageEditStoreApi = StoreApi<CoursePageEditStore>;
 
 export type CoursePageEditStoreOptions = {
-  resources?: CoursePageResources;
+  course: CoursePage;
 };
-
-function getEmptyResources(): CoursePageResources {
-  return { assignments: [], files: [], images: [] };
-}
 
 function getHiddenInsertPanelState(): CoursePageBlockInsertPanelState {
   return { status: 'hidden' };
 }
 
+function getCoursePageEditDerivedState(
+  initialCourse: CoursePage,
+  workingCopy: CoursePage
+) {
+  const errors = validateCoursePageEdit({
+    title: workingCopy.title,
+    courseId: workingCopy.courseId,
+    description: workingCopy.description,
+  });
+  const isDirty = compareCoursePages(initialCourse, workingCopy);
+
+  return {
+    errors,
+    isDirty,
+    canApply: isDirty && !hasCoursePageEditErrors(errors),
+  };
+}
+
+function getCoursePageEditWorkingCopyState(
+  initialCourse: CoursePage,
+  workingCopy: CoursePage
+) {
+  return {
+    initialCourse,
+    workingCopy,
+    ...getCoursePageEditDerivedState(initialCourse, workingCopy),
+  };
+}
+
+function resolveWorkingCopyUpdate(
+  current: CoursePage,
+  update: CoursePageWorkingCopyUpdate
+) {
+  return typeof update === 'function' ? update(current) : update;
+}
+
 export function createCoursePageEditStore({
-  resources = getEmptyResources(),
-}: CoursePageEditStoreOptions = {}): CoursePageEditStoreApi {
+  course,
+}: CoursePageEditStoreOptions): CoursePageEditStoreApi {
+  const initialWorkingCopy = structuredClone(course);
   let pendingPreviewCursorY: number | null = null;
   let previewAnimationFrame: number | null = null;
 
@@ -137,12 +187,9 @@ export function createCoursePageEditStore({
       hoveredInsertPanelTargetKey: null,
       insertPanelState: getHiddenInsertPanelState(),
       isInsertPanelHovered: false,
-      onResourcesChange: null,
-      resources,
-      changeResources: (nextResources) => {
-        set({ resources: nextResources });
-        get().onResourcesChange?.(nextResources);
-      },
+      ...getCoursePageEditWorkingCopyState(course, initialWorkingCopy),
+      changeResources: (resources) =>
+        get().setWorkingCopy((current) => ({ ...current, resources })),
       clearBlockSelection: () =>
         set((state) =>
           state.blockSelection.status === 'none'
@@ -174,6 +221,13 @@ export function createCoursePageEditStore({
           },
         });
       },
+      resetWorkingCopy: () =>
+        set((state) =>
+          getCoursePageEditWorkingCopyState(
+            state.initialCourse,
+            structuredClone(state.initialCourse)
+          )
+        ),
       selectOnlyBlock: (target) => {
         const item = createCoursePageBlockSelectionItem(target);
 
@@ -185,18 +239,13 @@ export function createCoursePageEditStore({
           },
         });
       },
+      setContent: (content) =>
+        get().setWorkingCopy((current) => ({ ...current, content })),
       setContentEditorContainer: (container) =>
         set((state) =>
           state.contentEditorContainer === container
             ? state
             : { contentEditorContainer: container }
-        ),
-      setEditorResources: (nextResources, onResourcesChange) =>
-        set((state) =>
-          state.resources === nextResources &&
-          state.onResourcesChange === onResourcesChange
-            ? state
-            : { onResourcesChange, resources: nextResources }
         ),
       setInsertPanelHovered: (isHovered) =>
         set((state) => {
@@ -218,10 +267,29 @@ export function createCoursePageEditStore({
             isInsertPanelHovered: isHovered,
           };
         }),
+      setWorkingCopy: (update) =>
+        set((state) => {
+          const workingCopy = resolveWorkingCopyUpdate(
+            state.workingCopy,
+            update
+          );
+
+          return getCoursePageEditWorkingCopyState(
+            state.initialCourse,
+            workingCopy
+          );
+        }),
       showInsertPanelPreview: (cursorY) => {
         pendingPreviewCursorY = cursorY;
         schedulePreviewCommit();
       },
+      syncCourse: (nextCourse) =>
+        set(
+          getCoursePageEditWorkingCopyState(
+            nextCourse,
+            structuredClone(nextCourse)
+          )
+        ),
     };
   });
 }

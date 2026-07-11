@@ -1,17 +1,8 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
-import type {
-  CourseContentBlockItem,
-  CoursePageResources,
-} from '@/features/course/features/page/model/types';
+import type { CourseContentBlockItem } from '@/features/course/features/page/model/types';
 import {
   deserializeCourseContentToPlate,
   serializePlateToCourseContent,
@@ -24,17 +15,9 @@ function getContentKey(content: CourseContentBlockItem[]) {
   return JSON.stringify(content);
 }
 
-export function CoursePageContentEditor({
-  content,
-  resources,
-  onChange,
-  onResourcesChange,
-}: {
-  content: CourseContentBlockItem[];
-  resources: CoursePageResources;
-  onChange: (content: CourseContentBlockItem[]) => void;
-  onResourcesChange: (resources: CoursePageResources) => void;
-}) {
+export function CoursePageContentEditor() {
+  const content = useCoursePageEditStore((state) => state.workingCopy.content);
+  const setContent = useCoursePageEditStore((state) => state.setContent);
   const initialValue = useMemo(
     () => deserializeCourseContentToPlate(content),
     // Plate owns live content after initialization. This memo is only the first
@@ -52,17 +35,10 @@ export function CoursePageContentEditor({
   const setContentEditorContainer = useCoursePageEditStore(
     (state) => state.setContentEditorContainer
   );
-  const setEditorResources = useCoursePageEditStore(
-    (state) => state.setEditorResources
-  );
   const setEditorContainerRef = useCallback(
     (node: HTMLDivElement | null) => setContentEditorContainer(node),
     [setContentEditorContainer]
   );
-
-  useLayoutEffect(() => {
-    setEditorResources(resources, onResourcesChange);
-  }, [onResourcesChange, resources, setEditorResources]);
 
   useEffect(() => {
     if (externalContentKey === lastLocalContentKeyRef.current) {
@@ -89,7 +65,7 @@ export function CoursePageContentEditor({
 
         const nextContent = serializePlateToCourseContent(value);
         lastLocalContentKeyRef.current = getContentKey(nextContent);
-        onChange(nextContent);
+        setContent(nextContent);
       }}
     >
       <div
