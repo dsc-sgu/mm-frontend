@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
@@ -8,6 +8,8 @@ import {
   useSaveCoursePageMutation,
 } from '@/features/course/features/page/api/queries';
 import { CoursePageLoading } from '@/features/course/features/page/ui/page';
+import { createCoursePageEditStore } from '@/features/course/features/page-edit/model/editor-store';
+import { CoursePageEditStoreProvider } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { useCoursePageWorkingCopy } from '@/features/course/features/page-edit/hooks/use-working-copy';
 import { CoursePageEditApplyBar } from '@/features/course/features/page-edit/ui/apply-bar';
 import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui/content-editor';
@@ -41,6 +43,7 @@ function CoursePageEditLoaded({
   const navigate = useNavigate();
   const router = useRouter();
   const saveMutation = useSaveCoursePageMutation();
+  const [editStore] = useState(createCoursePageEditStore);
   const { workingCopy, setWorkingCopy, errors, isDirty, canApply, reset } =
     useCoursePageWorkingCopy(course);
 
@@ -115,46 +118,48 @@ function CoursePageEditLoaded({
   }, [apply]);
 
   return (
-    <main
-      className={cn(
-        'mx-auto flex w-full max-w-6xl flex-col pb-32',
-        'sm:px-6 sm:py-6 lg:px-8'
-      )}
-    >
-      <CoursePageEditHeroEditor
-        course={workingCopy}
-        errors={errors}
-        onChange={setWorkingCopy}
-      />
-
-      <article
+    <CoursePageEditStoreProvider store={editStore}>
+      <main
         className={cn(
-          'px-5 pt-2 pb-8 md:mt-8 md:rounded-3xl md:border md:border-border',
-          'md:-mx-12 md:bg-card md:px-20 lg:-mx-10'
+          'mx-auto flex w-full max-w-6xl flex-col pb-32',
+          'sm:px-6 sm:py-6 lg:px-8'
         )}
       >
-        <CoursePageContentEditor
-          content={workingCopy.content}
-          resources={workingCopy.resources}
-          onChange={(content) =>
-            setWorkingCopy((current) => ({ ...current, content }))
-          }
-          onResourcesChange={(resources) =>
-            setWorkingCopy((current) => ({ ...current, resources }))
-          }
+        <CoursePageEditHeroEditor
+          course={workingCopy}
+          errors={errors}
+          onChange={setWorkingCopy}
         />
-      </article>
 
-      <CoursePageEditApplyBar
-        isDirty={isDirty}
-        canApply={canApply}
-        isSaving={saveMutation.isPending}
-        oldSlug={courseSlug}
-        newSlug={workingCopy.courseId}
-        onReset={reset}
-        onApply={apply}
-      />
-    </main>
+        <article
+          className={cn(
+            'px-5 pt-2 pb-8 md:mt-8 md:rounded-3xl md:border md:border-border',
+            'md:-mx-12 md:bg-card md:px-20 lg:-mx-10'
+          )}
+        >
+          <CoursePageContentEditor
+            content={workingCopy.content}
+            resources={workingCopy.resources}
+            onChange={(content) =>
+              setWorkingCopy((current) => ({ ...current, content }))
+            }
+            onResourcesChange={(resources) =>
+              setWorkingCopy((current) => ({ ...current, resources }))
+            }
+          />
+        </article>
+
+        <CoursePageEditApplyBar
+          isDirty={isDirty}
+          canApply={canApply}
+          isSaving={saveMutation.isPending}
+          oldSlug={courseSlug}
+          newSlug={workingCopy.courseId}
+          onReset={reset}
+          onApply={apply}
+        />
+      </main>
+    </CoursePageEditStoreProvider>
   );
 }
 
