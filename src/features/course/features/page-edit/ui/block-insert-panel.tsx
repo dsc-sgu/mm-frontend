@@ -7,6 +7,7 @@ import {
   insertParagraphRelative,
   insertParagraphRelativeById,
 } from '@/features/course/features/page-edit/model/block-operations';
+import type { CoursePageBlockTarget } from '@/features/course/features/page-edit/model/block-target';
 
 type InsertPlacement = 'before' | 'after';
 
@@ -16,9 +17,7 @@ type InsertPanelState =
       status: 'visible';
       cursorY: number;
       lineY: number;
-      target:
-        | { source: 'id'; id: string; path: Path }
-        | { source: 'path'; path: Path };
+      target: CoursePageBlockTarget;
       placement: InsertPlacement;
     };
 
@@ -33,7 +32,7 @@ type InsertPanelTargetHoverDetail =
   | { status: 'inactive' }
   | {
       status: 'active';
-      target: Extract<InsertPanelState, { status: 'visible' }>['target'];
+      target: CoursePageBlockTarget;
     };
 
 function parseBlockPath(value: string | undefined): Path | null {

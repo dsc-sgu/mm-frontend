@@ -4,6 +4,7 @@ import { CalendarDays, Paperclip, Trophy } from 'lucide-react';
 
 import { CodeBlock } from '@/features/code-block/ui/block';
 import { cn } from '@/shadcn/lib/utils';
+import { normalizeCourseListIndent } from '@/features/course/features/page/model/list-indent';
 import { sortRankedContent } from '@/features/course/features/page/model/rank';
 import type {
   CourseContentBlockItem,
@@ -29,9 +30,7 @@ type RenderableCourseListItem = CourseListItem & {
 };
 
 function getListItemIndent(item: CourseListItem) {
-  return typeof item.indent === 'number' && Number.isFinite(item.indent)
-    ? Math.max(1, Math.round(item.indent))
-    : 1;
+  return normalizeCourseListIndent(item.indent);
 }
 
 function buildListTree(items: CourseListItem[]) {

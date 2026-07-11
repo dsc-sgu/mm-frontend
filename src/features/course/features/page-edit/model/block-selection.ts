@@ -1,9 +1,12 @@
 import { createContext, useContext } from 'react';
 import type { Path } from 'platejs';
 
-export type CoursePageBlockSelectionTarget =
-  | { source: 'id'; id: string; path: Path }
-  | { source: 'path'; path: Path };
+import {
+  getCoursePageBlockTargetKey,
+  type CoursePageBlockTarget,
+} from '@/features/course/features/page-edit/model/block-target';
+
+export type CoursePageBlockSelectionTarget = CoursePageBlockTarget;
 
 export type CoursePageBlockSelectionItem = {
   key: string;
@@ -38,21 +41,11 @@ const CoursePageBlockSelectionContext =
 export const CoursePageBlockSelectionProvider =
   CoursePageBlockSelectionContext.Provider;
 
-export function getCoursePageBlockSelectionKey(
-  target: CoursePageBlockSelectionTarget
-) {
-  if (target.source === 'id') {
-    return `id:${target.id}`;
-  }
-
-  return `path:${target.path.join('.')}`;
-}
-
 export function createCoursePageBlockSelectionItem(
   target: CoursePageBlockSelectionTarget
 ): CoursePageBlockSelectionItem {
   return {
-    key: getCoursePageBlockSelectionKey(target),
+    key: getCoursePageBlockTargetKey(target),
     path: target.path,
   };
 }
@@ -65,7 +58,7 @@ export function isCoursePageBlockSelected(
     return false;
   }
 
-  const key = getCoursePageBlockSelectionKey(target);
+  const key = getCoursePageBlockTargetKey(target);
 
   return selection.items.some((item) => item.key === key);
 }
