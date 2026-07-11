@@ -13,6 +13,10 @@ import {
 } from '@/features/course/features/page-edit/model/plate-content';
 import { coursePagePlatePlugins } from '@/features/course/features/page-edit/model/plate-plugins';
 import { useCoursePageBlockSelectionValue } from '@/features/course/features/page-edit/hooks/use-block-selection';
+import {
+  CoursePageBlockInsertPanelProvider,
+  useCoursePageBlockInsertPanelValue,
+} from '@/features/course/features/page-edit/hooks/use-block-insert-panel';
 import { CoursePageBlockInsertPanel } from '@/features/course/features/page-edit/ui/block-insert-panel';
 import { CoursePageEditorResourceProvider } from '@/features/course/features/page-edit/ui/plate/resource-context';
 
@@ -47,6 +51,8 @@ export function CoursePageContentEditor({
   const isSyncingFromPropsRef = useRef(false);
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const blockSelectionContextValue = useCoursePageBlockSelectionValue();
+  const insertPanelContextValue =
+    useCoursePageBlockInsertPanelValue(editorContainerRef);
 
   useEffect(() => {
     if (externalContentKey === lastLocalContentKeyRef.current) {
@@ -81,26 +87,25 @@ export function CoursePageContentEditor({
         }}
       >
         <CoursePageBlockSelectionProvider value={blockSelectionContextValue}>
-          <div
-            ref={editorContainerRef}
-            data-course-page-editor-container="true"
-            className="relative [&_.slate-selected]:bg-primary/8"
-          >
-            <CoursePageBlockInsertPanel
-              containerRef={editorContainerRef}
-              editor={editor}
-            />
-            <PlateContent
-              data-course-page-editor-content="true"
-              className={cn(
-                'min-h-64 px-1 py-2 outline-none',
-                'selection:bg-primary/20',
-                '[&_[data-slate-placeholder=true]]:text-muted-foreground'
-              )}
-              placeholder="Начните писать…"
-              spellCheck={false}
-            />
-          </div>
+          <CoursePageBlockInsertPanelProvider value={insertPanelContextValue}>
+            <div
+              ref={editorContainerRef}
+              data-course-page-editor-container="true"
+              className="relative [&_.slate-selected]:bg-primary/8"
+            >
+              <CoursePageBlockInsertPanel editor={editor} />
+              <PlateContent
+                data-course-page-editor-content="true"
+                className={cn(
+                  'min-h-64 px-1 py-2 outline-none',
+                  'selection:bg-primary/20',
+                  '[&_[data-slate-placeholder=true]]:text-muted-foreground'
+                )}
+                placeholder="Начните писать…"
+                spellCheck={false}
+              />
+            </div>
+          </CoursePageBlockInsertPanelProvider>
         </CoursePageBlockSelectionProvider>
       </Plate>
     </CoursePageEditorResourceProvider>

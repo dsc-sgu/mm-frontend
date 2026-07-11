@@ -1,126 +1,19 @@
-import { useCallback, useEffect, useState, type RefObject } from 'react';
 import { Plus } from 'lucide-react';
-import type { Path, SlateEditor } from 'platejs';
+import type { SlateEditor } from 'platejs';
 
 import { cn } from '@/shadcn/lib/utils';
 import {
   insertParagraphRelative,
   insertParagraphRelativeById,
 } from '@/features/course/features/page-edit/model/block-operations';
-import type { CoursePageBlockTarget } from '@/features/course/features/page-edit/model/block-target';
-
-type InsertPlacement = 'before' | 'after';
-
-type InsertPanelState =
-  | { status: 'hidden' }
-  | {
-      status: 'visible';
-      cursorY: number;
-      lineY: number;
-      target: CoursePageBlockTarget;
-      placement: InsertPlacement;
-    };
-
-type BlockCandidate = {
-  element: HTMLElement;
-  id?: string;
-  path: Path;
-  rect: DOMRect;
-};
-
-type InsertPanelTargetHoverDetail =
-  | { status: 'inactive' }
-  | {
-      status: 'active';
-      target: CoursePageBlockTarget;
-    };
-
-function parseBlockPath(value: string | undefined): Path | null {
-  if (!value) {
-    return null;
-  }
-
-  const path = value.split('.').map((segment) => Number(segment));
-
-  return path.every(Number.isInteger) ? path : null;
-}
-
-function getBlockCandidates(container: HTMLElement): BlockCandidate[] {
-  return Array.from(
-    container.querySelectorAll<HTMLElement>('[data-course-page-block="true"]')
-  ).flatMap((element): BlockCandidate[] => {
-    const path = parseBlockPath(element.dataset.coursePageBlockPath);
-
-    if (!path) {
-      return [];
-    }
-
-    return [
-      {
-        element,
-        id: element.dataset.coursePageBlockId,
-        path,
-        rect: element.getBoundingClientRect(),
-      },
-    ];
-  });
-}
-
-function getNearestBlockCandidate(
-  candidates: BlockCandidate[],
-  cursorY: number
-): BlockCandidate | null {
-  return candidates.reduce<BlockCandidate | null>((nearest, candidate) => {
-    if (!nearest) {
-      return candidate;
-    }
-
-    const candidateMiddle = candidate.rect.top + candidate.rect.height / 2;
-    const nearestMiddle = nearest.rect.top + nearest.rect.height / 2;
-
-    return Math.abs(candidateMiddle - cursorY) <
-      Math.abs(nearestMiddle - cursorY)
-      ? candidate
-      : nearest;
-  }, null);
-}
-
-function getNextPanelState(
-  container: HTMLElement,
-  cursorY: number
-): InsertPanelState {
-  const containerRect = container.getBoundingClientRect();
-  const nearestBlock = getNearestBlockCandidate(
-    getBlockCandidates(container),
-    cursorY
-  );
-
-  if (!nearestBlock) {
-    return { status: 'hidden' };
-  }
-
-  const placement: InsertPlacement =
-    cursorY < nearestBlock.rect.top + nearestBlock.rect.height / 2
-      ? 'before'
-      : 'after';
-  const lineY =
-    placement === 'before' ? nearestBlock.rect.top : nearestBlock.rect.bottom;
-
-  return {
-    status: 'visible',
-    cursorY: cursorY - containerRect.top,
-    lineY: lineY - containerRect.top,
-    target:
-      typeof nearestBlock.id === 'string'
-        ? { source: 'id', id: nearestBlock.id, path: nearestBlock.path }
-        : { source: 'path', path: nearestBlock.path },
-    placement,
-  };
-}
+import {
+  useCoursePageBlockInsertPanel,
+  type CoursePageBlockInsertPanelVisibleState,
+} from '@/features/course/features/page-edit/hooks/use-block-insert-panel';
 
 function insertParagraphAtTarget(
   editor: SlateEditor,
-  state: Extract<InsertPanelState, { status: 'visible' }>
+  state: CoursePageBlockInsertPanelVisibleState
 ) {
   if (state.target.source === 'id') {
     return insertParagraphRelativeById(
@@ -133,109 +26,14 @@ function insertParagraphAtTarget(
   return insertParagraphRelative(editor, state.target.path, state.placement);
 }
 
-function dispatchTargetHoverEvent(
-  container: HTMLElement,
-  detail: InsertPanelTargetHoverDetail
-) {
-  container.dispatchEvent(
-    new CustomEvent('course-page-insert-panel-target-hover', {
-      bubbles: true,
-      detail,
-    })
-  );
-}
-
 export function CoursePageBlockInsertPanel({
-  containerRef,
   editor,
 }: {
-  containerRef: RefObject<HTMLDivElement | null>;
   editor: SlateEditor;
 }) {
-  const [state, setState] = useState<InsertPanelState>({ status: 'hidden' });
-  const [isPanelHovered, setIsPanelHovered] = useState(false);
+  const insertPanel = useCoursePageBlockInsertPanel();
+  const { isPanelHovered, state } = insertPanel;
   const isVisible = state.status === 'visible';
-
-  const updateFromCursor = useCallback(
-    (cursorY: number) => {
-      const container = containerRef.current;
-
-      if (!container) {
-        setState({ status: 'hidden' });
-        return;
-      }
-
-      setState(getNextPanelState(container, cursorY));
-    },
-    [containerRef]
-  );
-
-  useEffect(() => {
-    const container = containerRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    if (isPanelHovered && state.status === 'visible') {
-      dispatchTargetHoverEvent(container, {
-        status: 'active',
-        target: state.target,
-      });
-      return;
-    }
-
-    dispatchTargetHoverEvent(container, { status: 'inactive' });
-  }, [containerRef, isPanelHovered, state]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-
-    return () => {
-      if (container) {
-        dispatchTargetHoverEvent(container, { status: 'inactive' });
-      }
-    };
-  }, [containerRef]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    function handlePreview(event: Event) {
-      const { clientY } = (event as CustomEvent<{ clientY: number }>).detail;
-      updateFromCursor(clientY);
-    }
-
-    function handlePreviewEnd() {
-      if (!isPanelHovered) {
-        setState({ status: 'hidden' });
-      }
-    }
-
-    container.addEventListener(
-      'course-page-insert-panel-preview',
-      handlePreview
-    );
-    container.addEventListener(
-      'course-page-insert-panel-preview-end',
-      handlePreviewEnd
-    );
-
-    return () => {
-      container.removeEventListener(
-        'course-page-insert-panel-preview',
-        handlePreview
-      );
-      container.removeEventListener(
-        'course-page-insert-panel-preview-end',
-        handlePreviewEnd
-      );
-    };
-  }, [containerRef, isPanelHovered, updateFromCursor]);
 
   return (
     <div
@@ -254,11 +52,11 @@ export function CoursePageBlockInsertPanel({
 
       <div
         className="group/course-insert-panel pointer-events-auto absolute top-0 bottom-0 -left-20 w-12"
-        onMouseEnter={() => setIsPanelHovered(true)}
-        onMouseMove={(event) => updateFromCursor(event.clientY)}
+        onMouseEnter={() => insertPanel.setPanelHovered(true)}
+        onMouseMove={(event) => insertPanel.showPreview(event.clientY)}
         onMouseLeave={() => {
-          setIsPanelHovered(false);
-          setState({ status: 'hidden' });
+          insertPanel.setPanelHovered(false);
+          insertPanel.hide();
         }}
       >
         {isVisible && (
@@ -283,7 +81,7 @@ export function CoursePageBlockInsertPanel({
             onMouseDown={(event) => {
               event.preventDefault();
               insertParagraphAtTarget(editor, state);
-              setState({ status: 'hidden' });
+              insertPanel.hide();
             }}
           >
             <Plus className="size-4" aria-hidden="true" />

@@ -1,25 +1,15 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type MouseEvent,
-  type PointerEvent,
-  type ReactNode,
-} from 'react';
+import { useCallback, useRef, type PointerEvent, type ReactNode } from 'react';
 import { type PlateElementProps, PlateElement } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
 import { useCoursePageBlockGutterAlignment } from '@/features/course/features/page-edit/hooks/use-block-gutter-alignment';
+import { useCoursePageBlockInsertPanel } from '@/features/course/features/page-edit/hooks/use-block-insert-panel';
 import {
   isCoursePageBlockSelected,
   useCoursePageBlockSelection,
   type CoursePageBlockSelectionTarget,
 } from '@/features/course/features/page-edit/model/block-selection';
-import {
-  isCoursePageBlockTargetEqual,
-  type CoursePageBlockTarget,
-} from '@/features/course/features/page-edit/model/block-target';
+import { isCoursePageBlockTargetEqual } from '@/features/course/features/page-edit/model/block-target';
 import { selectBlock as selectSlateBlock } from '@/features/course/features/page-edit/model/block-operations';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
 import { CoursePageBlockMenu } from '@/features/course/features/page-edit/ui/block-menu';
@@ -37,13 +27,6 @@ type CoursePageBlockFrameProps = PlateElementProps & {
   frameClassName?: string;
 };
 
-type InsertPanelTargetHoverDetail =
-  | { status: 'inactive' }
-  | {
-      status: 'active';
-      target: CoursePageBlockTarget;
-    };
-
 function getSelectionTarget(
   element: CoursePlateElement,
   path: PlateElementProps['path']
@@ -53,40 +36,8 @@ function getSelectionTarget(
     : { source: 'path', path };
 }
 
-function isInsertPanelTargetHoveringBlock(
-  detail: InsertPanelTargetHoverDetail,
-  target: CoursePageBlockSelectionTarget
-) {
-  return (
-    detail.status === 'active' &&
-    isCoursePageBlockTargetEqual(detail.target, target)
-  );
-}
-
 function isPrimaryPointerEvent(event: PointerEvent<HTMLElement>) {
   return event.button === 0;
-}
-
-function dispatchInsertPanelPreviewEvent(
-  event: MouseEvent<HTMLElement>,
-  type: 'show' | 'hide'
-) {
-  const container = event.currentTarget.closest(
-    '[data-course-page-editor-container="true"]'
-  );
-
-  if (!container) {
-    return;
-  }
-
-  container.dispatchEvent(
-    new CustomEvent(
-      type === 'show'
-        ? 'course-page-insert-panel-preview'
-        : 'course-page-insert-panel-preview-end',
-      { detail: { clientY: event.clientY } }
-    )
-  );
 }
 
 export function CoursePageBlockFrame({
@@ -99,12 +50,14 @@ export function CoursePageBlockFrame({
 }: CoursePageBlockFrameProps) {
   const { clearBlockSelection, selectOnlyBlock, selection } =
     useCoursePageBlockSelection();
+  const insertPanel = useCoursePageBlockInsertPanel();
   const element = props.element as CoursePlateElement;
   const selectionTarget = getSelectionTarget(element, props.path);
   const isSelected = isCoursePageBlockSelected(selection, selectionTarget);
+  const isInsertPanelTargetHovered = insertPanel.hoveredTarget
+    ? isCoursePageBlockTargetEqual(insertPanel.hoveredTarget, selectionTarget)
+    : false;
   const blockRef = useRef<HTMLElement | null>(null);
-  const [isInsertPanelTargetHovered, setIsInsertPanelTargetHovered] =
-    useState(false);
   const Content = contentAs ?? 'div';
 
   const setBlockRef = useCallback((node: HTMLElement | null) => {
@@ -116,29 +69,6 @@ export function CoursePageBlockFrame({
     enabled: alignGutterToEditorContent,
     refreshKey: `${String(element.listStyleType)}:${String(element.indent)}`,
   });
-
-  useEffect(() => {
-    function handleInsertPanelTargetHover(event: Event) {
-      const detail = (event as CustomEvent<InsertPanelTargetHoverDetail>)
-        .detail;
-
-      setIsInsertPanelTargetHovered(
-        isInsertPanelTargetHoveringBlock(detail, selectionTarget)
-      );
-    }
-
-    document.addEventListener(
-      'course-page-insert-panel-target-hover',
-      handleInsertPanelTargetHover
-    );
-
-    return () => {
-      document.removeEventListener(
-        'course-page-insert-panel-target-hover',
-        handleInsertPanelTargetHover
-      );
-    };
-  }, [selectionTarget]);
 
   function selectCurrentBlock({
     preserveExisting = false,
@@ -205,15 +135,9 @@ export function CoursePageBlockFrame({
                 'focus-visible:outline-none'
               )}
               aria-label="Открыть меню блока"
-              onMouseEnter={(event) =>
-                dispatchInsertPanelPreviewEvent(event, 'show')
-              }
-              onMouseMove={(event) =>
-                dispatchInsertPanelPreviewEvent(event, 'show')
-              }
-              onMouseLeave={(event) =>
-                dispatchInsertPanelPreviewEvent(event, 'hide')
-              }
+              onMouseEnter={(event) => insertPanel.showPreview(event.clientY)}
+              onMouseMove={(event) => insertPanel.showPreview(event.clientY)}
+              onMouseLeave={insertPanel.hidePreview}
               onPointerDownCapture={(event) => {
                 if (!isPrimaryPointerEvent(event)) {
                   return;
