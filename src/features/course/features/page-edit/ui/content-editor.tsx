@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
@@ -11,27 +11,29 @@ import { coursePagePlatePlugins } from '@/features/course/features/page-edit/mod
 import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CoursePageBlockInsertPanel } from '@/features/course/features/page-edit/ui/block-insert-panel';
 
-function getContentKey(content: CourseContentBlockItem[]) {
-  return JSON.stringify(content);
-}
-
-export function CoursePageContentEditor() {
-  const content = useCoursePageEditStore((state) => state.workingCopy.content);
+function CoursePagePlateEditor({
+  contentEditorRevision,
+  initialContent,
+}: {
+  contentEditorRevision: number;
+  initialContent: CourseContentBlockItem[];
+}) {
   const setContent = useCoursePageEditStore((state) => state.setContent);
   const initialValue = useMemo(
-    () => deserializeCourseContentToPlate(content),
-    // Plate owns live content after initialization. This memo is only the first
-    // value for the editor instance; external resets are handled below.
+    () => deserializeCourseContentToPlate(initialContent),
+    // Plate owns live content after initialization. Recompute the initial value
+    // only when reset bumps the editor revision, not on every local edit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [contentEditorRevision]
   );
-  const editor = usePlateEditor({
-    plugins: coursePagePlatePlugins,
-    value: initialValue,
-  });
-  const externalContentKey = getContentKey(content);
-  const lastLocalContentKeyRef = useRef(externalContentKey);
-  const isSyncingFromPropsRef = useRef(false);
+  const editor = usePlateEditor(
+    {
+      id: `course-page-content-${contentEditorRevision}`,
+      plugins: coursePagePlatePlugins,
+      value: initialValue,
+    },
+    [contentEditorRevision]
+  );
   const setContentEditorContainer = useCoursePageEditStore(
     (state) => state.setContentEditorContainer
   );
@@ -40,32 +42,11 @@ export function CoursePageContentEditor() {
     [setContentEditorContainer]
   );
 
-  useEffect(() => {
-    if (externalContentKey === lastLocalContentKeyRef.current) {
-      return;
-    }
-
-    const nextValue = deserializeCourseContentToPlate(content);
-    isSyncingFromPropsRef.current = true;
-    editor.tf.setValue(nextValue);
-    lastLocalContentKeyRef.current = externalContentKey;
-
-    queueMicrotask(() => {
-      isSyncingFromPropsRef.current = false;
-    });
-  }, [content, editor, externalContentKey]);
-
   return (
     <Plate
       editor={editor}
       onValueChange={({ value }) => {
-        if (isSyncingFromPropsRef.current) {
-          return;
-        }
-
-        const nextContent = serializePlateToCourseContent(value);
-        lastLocalContentKeyRef.current = getContentKey(nextContent);
-        setContent(nextContent);
+        setContent(serializePlateToCourseContent(value));
       }}
     >
       <div
@@ -86,5 +67,20 @@ export function CoursePageContentEditor() {
         />
       </div>
     </Plate>
+  );
+}
+
+export function CoursePageContentEditor() {
+  const content = useCoursePageEditStore((state) => state.workingCopy.content);
+  const contentEditorRevision = useCoursePageEditStore(
+    (state) => state.contentEditorRevision
+  );
+
+  return (
+    <CoursePagePlateEditor
+      key={contentEditorRevision}
+      contentEditorRevision={contentEditorRevision}
+      initialContent={content}
+    />
   );
 }

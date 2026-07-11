@@ -26,6 +26,7 @@ export type CoursePageEditStoreState = {
   blockSelection: CoursePageBlockSelection;
   canApply: boolean;
   contentEditorContainer: HTMLElement | null;
+  contentEditorRevision: number;
   errors: CoursePageEditValidationErrors;
   hoveredInsertPanelTargetKey: string | null;
   initialCourse: CoursePage;

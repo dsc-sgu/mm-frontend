@@ -44,8 +44,21 @@ export function getCoursePageEditWorkingCopyState(
   };
 }
 
-export function createWorkingCopyInitialState(course: CoursePage) {
-  return getCoursePageEditWorkingCopyState(course, structuredClone(course));
+export function createWorkingCopyInitialState(
+  course: CoursePage
+): Pick<
+  CoursePageEditStoreState,
+  | 'canApply'
+  | 'contentEditorRevision'
+  | 'errors'
+  | 'initialCourse'
+  | 'isDirty'
+  | 'workingCopy'
+> {
+  return {
+    contentEditorRevision: 0,
+    ...getCoursePageEditWorkingCopyState(course, structuredClone(course)),
+  };
 }
 
 function resolveWorkingCopyUpdate(
@@ -70,12 +83,13 @@ export function createWorkingCopyActions(
     changeResources: (resources) =>
       get().setWorkingCopy((current) => ({ ...current, resources })),
     resetWorkingCopy: () =>
-      set((state) =>
-        getCoursePageEditWorkingCopyState(
+      set((state) => ({
+        ...getCoursePageEditWorkingCopyState(
           state.initialCourse,
           structuredClone(state.initialCourse)
-        )
-      ),
+        ),
+        contentEditorRevision: state.contentEditorRevision + 1,
+      })),
     setContent: (content) =>
       get().setWorkingCopy((current) => ({ ...current, content })),
     setWorkingCopy: (update) =>
