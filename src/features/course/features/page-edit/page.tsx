@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useState,
+} from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
@@ -13,6 +19,7 @@ import {
   CoursePageEditStoreProvider,
   useCoursePageEditStore,
 } from '@/features/course/features/page-edit/hooks/use-editor-store';
+import { isModShortcut } from '@/features/course/features/page-edit/model/shortcuts';
 import { CoursePageEditApplyBar } from '@/features/course/features/page-edit/ui/apply-bar';
 import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui/content-editor';
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
@@ -113,26 +120,24 @@ function CoursePageEditContent({
     workingCopy,
   ]);
 
+  const applySaveShortcut = useEffectEvent(() => {
+    void apply();
+  });
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      const isSaveShortcut =
-        (event.metaKey || event.ctrlKey) &&
-        !event.altKey &&
-        !event.shiftKey &&
-        event.key.toLowerCase() === 's';
-
-      if (!isSaveShortcut) {
+      if (!isModShortcut(event, 's')) {
         return;
       }
 
       event.preventDefault();
-      void apply();
+      applySaveShortcut();
     }
 
     window.addEventListener('keydown', handleKeyDown);
 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [apply]);
+  }, []);
 
   return (
     <main
