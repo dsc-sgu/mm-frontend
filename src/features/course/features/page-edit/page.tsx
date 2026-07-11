@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
@@ -9,8 +9,10 @@ import {
 } from '@/features/course/features/page/api/queries';
 import { CoursePageLoading } from '@/features/course/features/page/ui/page';
 import { createCoursePageEditStore } from '@/features/course/features/page-edit/model/editor-store';
-import { CoursePageEditStoreProvider } from '@/features/course/features/page-edit/hooks/use-editor-store';
-import { useCoursePageWorkingCopy } from '@/features/course/features/page-edit/hooks/use-working-copy';
+import {
+  CoursePageEditStoreProvider,
+  useCoursePageEditStore,
+} from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CoursePageEditApplyBar } from '@/features/course/features/page-edit/ui/apply-bar';
 import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui/content-editor';
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
@@ -33,7 +35,7 @@ function focusFirstInvalidField(errors: Record<string, string | undefined>) {
   document.getElementById(fieldId)?.focus();
 }
 
-function CoursePageEditLoaded({
+function CoursePageEditContent({
   courseSlug,
   course,
 }: {
@@ -43,11 +45,21 @@ function CoursePageEditLoaded({
   const navigate = useNavigate();
   const router = useRouter();
   const saveMutation = useSaveCoursePageMutation();
-  const [editStore] = useState(() =>
-    createCoursePageEditStore({ resources: course.resources })
+  const canApply = useCoursePageEditStore((state) => state.canApply);
+  const errors = useCoursePageEditStore((state) => state.errors);
+  const isDirty = useCoursePageEditStore((state) => state.isDirty);
+  const resetWorkingCopy = useCoursePageEditStore(
+    (state) => state.resetWorkingCopy
   );
-  const { workingCopy, setWorkingCopy, errors, isDirty, canApply, reset } =
-    useCoursePageWorkingCopy(course);
+  const setWorkingCopy = useCoursePageEditStore(
+    (state) => state.setWorkingCopy
+  );
+  const syncCourse = useCoursePageEditStore((state) => state.syncCourse);
+  const workingCopy = useCoursePageEditStore((state) => state.workingCopy);
+
+  useLayoutEffect(() => {
+    syncCourse(course);
+  }, [course, syncCourse]);
 
   const apply = useCallback(async () => {
     if (!isDirty) {
@@ -76,6 +88,8 @@ function CoursePageEditLoaded({
       resources: workingCopy.resources,
     });
 
+    syncCourse(savedCourse);
+
     await router.invalidate();
 
     if (savedCourse.courseId !== courseSlug) {
@@ -95,6 +109,7 @@ function CoursePageEditLoaded({
     navigate,
     router,
     saveMutation,
+    syncCourse,
     workingCopy,
   ]);
 
@@ -120,47 +135,52 @@ function CoursePageEditLoaded({
   }, [apply]);
 
   return (
-    <CoursePageEditStoreProvider store={editStore}>
-      <main
+    <main
+      className={cn(
+        'mx-auto flex w-full max-w-6xl flex-col pb-32',
+        'sm:px-6 sm:py-6 lg:px-8'
+      )}
+    >
+      <CoursePageEditHeroEditor
+        course={workingCopy}
+        errors={errors}
+        onChange={setWorkingCopy}
+      />
+
+      <article
         className={cn(
-          'mx-auto flex w-full max-w-6xl flex-col pb-32',
-          'sm:px-6 sm:py-6 lg:px-8'
+          'px-5 pt-2 pb-8 md:mt-8 md:rounded-3xl md:border md:border-border',
+          'md:-mx-12 md:bg-card md:px-20 lg:-mx-10'
         )}
       >
-        <CoursePageEditHeroEditor
-          course={workingCopy}
-          errors={errors}
-          onChange={setWorkingCopy}
-        />
+        <CoursePageContentEditor />
+      </article>
 
-        <article
-          className={cn(
-            'px-5 pt-2 pb-8 md:mt-8 md:rounded-3xl md:border md:border-border',
-            'md:-mx-12 md:bg-card md:px-20 lg:-mx-10'
-          )}
-        >
-          <CoursePageContentEditor
-            content={workingCopy.content}
-            resources={workingCopy.resources}
-            onChange={(content) =>
-              setWorkingCopy((current) => ({ ...current, content }))
-            }
-            onResourcesChange={(resources) =>
-              setWorkingCopy((current) => ({ ...current, resources }))
-            }
-          />
-        </article>
+      <CoursePageEditApplyBar
+        isDirty={isDirty}
+        canApply={canApply}
+        isSaving={saveMutation.isPending}
+        oldSlug={courseSlug}
+        newSlug={workingCopy.courseId}
+        onReset={resetWorkingCopy}
+        onApply={apply}
+      />
+    </main>
+  );
+}
 
-        <CoursePageEditApplyBar
-          isDirty={isDirty}
-          canApply={canApply}
-          isSaving={saveMutation.isPending}
-          oldSlug={courseSlug}
-          newSlug={workingCopy.courseId}
-          onReset={reset}
-          onApply={apply}
-        />
-      </main>
+function CoursePageEditLoaded({
+  courseSlug,
+  course,
+}: {
+  courseSlug: string;
+  course: CoursePage;
+}) {
+  const [editStore] = useState(() => createCoursePageEditStore({ course }));
+
+  return (
+    <CoursePageEditStoreProvider store={editStore}>
+      <CoursePageEditContent courseSlug={courseSlug} course={course} />
     </CoursePageEditStoreProvider>
   );
 }

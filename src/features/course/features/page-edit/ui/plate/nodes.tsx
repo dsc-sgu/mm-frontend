@@ -356,7 +356,9 @@ export function CourseImageElement({ children, ...props }: PlateElementProps) {
   const changeResources = useCoursePageEditStore(
     (state) => state.changeResources
   );
-  const resources = useCoursePageEditStore((state) => state.resources);
+  const resources = useCoursePageEditStore(
+    (state) => state.workingCopy.resources
+  );
   const imageId = typeof element.imageId === 'string' ? element.imageId : '';
   const image = resources.images.find((item) => item.id === imageId);
   const captionText = getRichTextPlainText(image?.caption);
@@ -426,7 +428,9 @@ export function CourseImageElement({ children, ...props }: PlateElementProps) {
 
 export function CourseFilesElement({ children, ...props }: PlateElementProps) {
   const element = getElement(props.element);
-  const resources = useCoursePageEditStore((state) => state.resources);
+  const resources = useCoursePageEditStore(
+    (state) => state.workingCopy.resources
+  );
   const fileIds = Array.isArray(element.fileIds)
     ? element.fileIds.filter(
         (fileId): fileId is string => typeof fileId === 'string'
@@ -484,7 +488,9 @@ export function CourseAssignmentElement({
   ...props
 }: PlateElementProps) {
   const element = getElement(props.element);
-  const resources = useCoursePageEditStore((state) => state.resources);
+  const resources = useCoursePageEditStore(
+    (state) => state.workingCopy.resources
+  );
   const taskId = typeof element.taskId === 'string' ? element.taskId : '';
   const assignment = resources.assignments.find(
     (item) => item.taskId === taskId
