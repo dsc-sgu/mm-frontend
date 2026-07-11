@@ -1,5 +1,6 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
+import type { CoursePageResources } from '@/features/course/features/page/model/types';
 import {
   createCoursePageBlockSelectionItem,
   type CoursePageBlockSelection,
@@ -24,15 +25,22 @@ export type CoursePageEditStoreState = {
   hoveredInsertPanelTargetKey: string | null;
   insertPanelState: CoursePageBlockInsertPanelState;
   isInsertPanelHovered: boolean;
+  onResourcesChange: ((resources: CoursePageResources) => void) | null;
+  resources: CoursePageResources;
 };
 
 export type CoursePageEditStoreActions = {
+  changeResources: (resources: CoursePageResources) => void;
   clearBlockSelection: () => void;
   hideInsertPanel: () => void;
   hideInsertPanelPreview: () => void;
   replaceBlockSelection: (targets: CoursePageBlockSelectionTarget[]) => void;
   selectOnlyBlock: (target: CoursePageBlockSelectionTarget) => void;
   setContentEditorContainer: (container: HTMLElement | null) => void;
+  setEditorResources: (
+    resources: CoursePageResources,
+    onResourcesChange: ((resources: CoursePageResources) => void) | null
+  ) => void;
   setInsertPanelHovered: (isHovered: boolean) => void;
   showInsertPanelPreview: (cursorY: number) => void;
 };
@@ -42,11 +50,21 @@ export type CoursePageEditStore = CoursePageEditStoreState &
 
 export type CoursePageEditStoreApi = StoreApi<CoursePageEditStore>;
 
+export type CoursePageEditStoreOptions = {
+  resources?: CoursePageResources;
+};
+
+function getEmptyResources(): CoursePageResources {
+  return { assignments: [], files: [], images: [] };
+}
+
 function getHiddenInsertPanelState(): CoursePageBlockInsertPanelState {
   return { status: 'hidden' };
 }
 
-export function createCoursePageEditStore(): CoursePageEditStoreApi {
+export function createCoursePageEditStore({
+  resources = getEmptyResources(),
+}: CoursePageEditStoreOptions = {}): CoursePageEditStoreApi {
   let pendingPreviewCursorY: number | null = null;
   let previewAnimationFrame: number | null = null;
 
@@ -119,6 +137,12 @@ export function createCoursePageEditStore(): CoursePageEditStoreApi {
       hoveredInsertPanelTargetKey: null,
       insertPanelState: getHiddenInsertPanelState(),
       isInsertPanelHovered: false,
+      onResourcesChange: null,
+      resources,
+      changeResources: (nextResources) => {
+        set({ resources: nextResources });
+        get().onResourcesChange?.(nextResources);
+      },
       clearBlockSelection: () =>
         set((state) =>
           state.blockSelection.status === 'none'
@@ -166,6 +190,13 @@ export function createCoursePageEditStore(): CoursePageEditStoreApi {
           state.contentEditorContainer === container
             ? state
             : { contentEditorContainer: container }
+        ),
+      setEditorResources: (nextResources, onResourcesChange) =>
+        set((state) =>
+          state.resources === nextResources &&
+          state.onResourcesChange === onResourcesChange
+            ? state
+            : { onResourcesChange, resources: nextResources }
         ),
       setInsertPanelHovered: (isHovered) =>
         set((state) => {

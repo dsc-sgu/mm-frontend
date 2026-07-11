@@ -16,10 +16,7 @@ import {
 import { cn } from '@/shadcn/lib/utils';
 import { CourseRichText } from '@/features/course/ui/rich-text';
 import type { RichTextNode } from '@/features/course/features/page/model/types';
-import {
-  useCoursePageEditorResourceContext,
-  useCoursePageEditorResources,
-} from '@/features/course/features/page-edit/model/resource-context';
+import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CodeLanguageSelect } from '@/features/course/features/page-edit/ui/plate/code-language-select';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
 import { CoursePageBlockFrame } from '@/features/course/features/page-edit/ui/block-frame';
@@ -356,17 +353,16 @@ function MissingResource({ children }: { children: ReactNode }) {
 
 export function CourseImageElement({ children, ...props }: PlateElementProps) {
   const element = getElement(props.element);
-  const { onResourcesChange, resources } = useCoursePageEditorResourceContext();
+  const changeResources = useCoursePageEditStore(
+    (state) => state.changeResources
+  );
+  const resources = useCoursePageEditStore((state) => state.resources);
   const imageId = typeof element.imageId === 'string' ? element.imageId : '';
   const image = resources.images.find((item) => item.id === imageId);
   const captionText = getRichTextPlainText(image?.caption);
 
   function updateCaption(nextCaptionText: string) {
-    if (!onResourcesChange) {
-      return;
-    }
-
-    onResourcesChange({
+    changeResources({
       ...resources,
       images: resources.images.map((resource) =>
         resource.id === imageId
@@ -430,7 +426,7 @@ export function CourseImageElement({ children, ...props }: PlateElementProps) {
 
 export function CourseFilesElement({ children, ...props }: PlateElementProps) {
   const element = getElement(props.element);
-  const resources = useCoursePageEditorResources();
+  const resources = useCoursePageEditStore((state) => state.resources);
   const fileIds = Array.isArray(element.fileIds)
     ? element.fileIds.filter(
         (fileId): fileId is string => typeof fileId === 'string'
@@ -488,7 +484,7 @@ export function CourseAssignmentElement({
   ...props
 }: PlateElementProps) {
   const element = getElement(props.element);
-  const resources = useCoursePageEditorResources();
+  const resources = useCoursePageEditStore((state) => state.resources);
   const taskId = typeof element.taskId === 'string' ? element.taskId : '';
   const assignment = resources.assignments.find(
     (item) => item.taskId === taskId

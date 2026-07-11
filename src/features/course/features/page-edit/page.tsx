@@ -43,7 +43,9 @@ function CoursePageEditLoaded({
   const navigate = useNavigate();
   const router = useRouter();
   const saveMutation = useSaveCoursePageMutation();
-  const [editStore] = useState(createCoursePageEditStore);
+  const [editStore] = useState(() =>
+    createCoursePageEditStore({ resources: course.resources })
+  );
   const { workingCopy, setWorkingCopy, errors, isDirty, canApply, reset } =
     useCoursePageWorkingCopy(course);
 
