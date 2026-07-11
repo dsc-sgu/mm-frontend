@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
@@ -13,7 +19,6 @@ import {
 import { coursePagePlatePlugins } from '@/features/course/features/page-edit/model/plate-plugins';
 import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CoursePageBlockInsertPanel } from '@/features/course/features/page-edit/ui/block-insert-panel';
-import { CoursePageEditorResourceProvider } from '@/features/course/features/page-edit/ui/plate/resource-context';
 
 function getContentKey(content: CourseContentBlockItem[]) {
   return JSON.stringify(content);
@@ -47,10 +52,17 @@ export function CoursePageContentEditor({
   const setContentEditorContainer = useCoursePageEditStore(
     (state) => state.setContentEditorContainer
   );
+  const setEditorResources = useCoursePageEditStore(
+    (state) => state.setEditorResources
+  );
   const setEditorContainerRef = useCallback(
     (node: HTMLDivElement | null) => setContentEditorContainer(node),
     [setContentEditorContainer]
   );
+
+  useLayoutEffect(() => {
+    setEditorResources(resources, onResourcesChange);
+  }, [onResourcesChange, resources, setEditorResources]);
 
   useEffect(() => {
     if (externalContentKey === lastLocalContentKeyRef.current) {
@@ -68,40 +80,35 @@ export function CoursePageContentEditor({
   }, [content, editor, externalContentKey]);
 
   return (
-    <CoursePageEditorResourceProvider
-      resources={resources}
-      onResourcesChange={onResourcesChange}
-    >
-      <Plate
-        editor={editor}
-        onValueChange={({ value }) => {
-          if (isSyncingFromPropsRef.current) {
-            return;
-          }
+    <Plate
+      editor={editor}
+      onValueChange={({ value }) => {
+        if (isSyncingFromPropsRef.current) {
+          return;
+        }
 
-          const nextContent = serializePlateToCourseContent(value);
-          lastLocalContentKeyRef.current = getContentKey(nextContent);
-          onChange(nextContent);
-        }}
+        const nextContent = serializePlateToCourseContent(value);
+        lastLocalContentKeyRef.current = getContentKey(nextContent);
+        onChange(nextContent);
+      }}
+    >
+      <div
+        ref={setEditorContainerRef}
+        data-course-page-editor-container="true"
+        className="relative [&_.slate-selected]:bg-primary/8"
       >
-        <div
-          ref={setEditorContainerRef}
-          data-course-page-editor-container="true"
-          className="relative [&_.slate-selected]:bg-primary/8"
-        >
-          <CoursePageBlockInsertPanel editor={editor} />
-          <PlateContent
-            data-course-page-editor-content="true"
-            className={cn(
-              'min-h-64 px-1 py-2 outline-none',
-              'selection:bg-primary/20',
-              '[&_[data-slate-placeholder=true]]:text-muted-foreground'
-            )}
-            placeholder="Начните писать…"
-            spellCheck={false}
-          />
-        </div>
-      </Plate>
-    </CoursePageEditorResourceProvider>
+        <CoursePageBlockInsertPanel editor={editor} />
+        <PlateContent
+          data-course-page-editor-content="true"
+          className={cn(
+            'min-h-64 px-1 py-2 outline-none',
+            'selection:bg-primary/20',
+            '[&_[data-slate-placeholder=true]]:text-muted-foreground'
+          )}
+          placeholder="Начните писать…"
+          spellCheck={false}
+        />
+      </div>
+    </Plate>
   );
 }
