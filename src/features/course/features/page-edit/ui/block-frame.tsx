@@ -1,10 +1,8 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
-  type CSSProperties,
   type MouseEvent,
   type PointerEvent,
   type ReactNode,
@@ -12,6 +10,7 @@ import {
 import { type PlateElementProps, PlateElement } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
+import { useCoursePageBlockGutterAlignment } from '@/features/course/features/page-edit/hooks/use-block-gutter-alignment';
 import {
   isCoursePageBlockSelected,
   useCoursePageBlockSelection,
@@ -29,8 +28,6 @@ type BlockFrameContentTag = keyof Pick<
   HTMLElementTagNameMap,
   'blockquote' | 'div' | 'figure' | 'h1' | 'h2' | 'h3'
 >;
-
-const GUTTER_INLINE_OFFSET_PX = 32;
 
 type CoursePageBlockFrameProps = PlateElementProps & {
   alignGutterToEditorContent?: boolean;
@@ -70,21 +67,6 @@ function isPrimaryPointerEvent(event: PointerEvent<HTMLElement>) {
   return event.button === 0;
 }
 
-function getEditorContentInlineStart(container: Element) {
-  const editorContent = container.querySelector<HTMLElement>(
-    '[data-course-page-editor-content="true"]'
-  );
-
-  if (!editorContent) {
-    return container.getBoundingClientRect().left;
-  }
-
-  const contentStyle = window.getComputedStyle(editorContent);
-  const paddingLeft = Number.parseFloat(contentStyle.paddingLeft) || 0;
-
-  return editorContent.getBoundingClientRect().left + paddingLeft;
-}
-
 function dispatchInsertPanelPreviewEvent(
   event: MouseEvent<HTMLElement>,
   type: 'show' | 'hide'
@@ -121,7 +103,6 @@ export function CoursePageBlockFrame({
   const selectionTarget = getSelectionTarget(element, props.path);
   const isSelected = isCoursePageBlockSelected(selection, selectionTarget);
   const blockRef = useRef<HTMLElement | null>(null);
-  const [gutterLeft, setGutterLeft] = useState<number | null>(null);
   const [isInsertPanelTargetHovered, setIsInsertPanelTargetHovered] =
     useState(false);
   const Content = contentAs ?? 'div';
@@ -130,72 +111,11 @@ export function CoursePageBlockFrame({
     blockRef.current = node;
   }, []);
 
-  useLayoutEffect(() => {
-    if (!alignGutterToEditorContent) {
-      return;
-    }
-
-    if (!blockRef.current) {
-      return;
-    }
-
-    const blockElement: HTMLElement = blockRef.current;
-
-    let animationFrameId: number | null = null;
-
-    function updateGutterLeft() {
-      const container = blockElement.closest(
-        '[data-course-page-editor-container="true"]'
-      );
-
-      if (!container) {
-        return;
-      }
-
-      const nextGutterLeft =
-        getEditorContentInlineStart(container) -
-        blockElement.getBoundingClientRect().left -
-        GUTTER_INLINE_OFFSET_PX;
-
-      setGutterLeft(nextGutterLeft);
-    }
-
-    function scheduleUpdateGutterLeft() {
-      if (animationFrameId !== null) {
-        cancelAnimationFrame(animationFrameId);
-      }
-
-      animationFrameId = requestAnimationFrame(updateGutterLeft);
-    }
-
-    const container = blockElement.closest(
-      '[data-course-page-editor-container="true"]'
-    );
-    const resizeObserver = new ResizeObserver(scheduleUpdateGutterLeft);
-
-    resizeObserver.observe(blockElement);
-
-    if (container) {
-      resizeObserver.observe(container);
-    }
-
-    updateGutterLeft();
-    window.addEventListener('resize', scheduleUpdateGutterLeft);
-
-    return () => {
-      if (animationFrameId !== null) {
-        cancelAnimationFrame(animationFrameId);
-      }
-
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', scheduleUpdateGutterLeft);
-    };
-  }, [alignGutterToEditorContent, element.indent, element.listStyleType]);
-
-  const gutterStyle: CSSProperties | undefined =
-    alignGutterToEditorContent && gutterLeft !== null
-      ? { left: gutterLeft }
-      : undefined;
+  const gutterStyle = useCoursePageBlockGutterAlignment({
+    blockRef,
+    enabled: alignGutterToEditorContent,
+    refreshKey: `${String(element.listStyleType)}:${String(element.indent)}`,
+  });
 
   useEffect(() => {
     function handleInsertPanelTargetHover(event: Event) {
