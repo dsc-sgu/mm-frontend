@@ -1,5 +1,9 @@
 import { KEYS, type Value } from 'platejs';
 
+import {
+  normalizeCourseListIndent,
+  serializeCourseListIndent,
+} from '@/features/course/features/page/model/list-indent';
 import { sortRankedContent } from '@/features/course/features/page/model/rank';
 import type {
   CourseContentBlockItem,
@@ -184,7 +188,7 @@ function deserializeBlock(block: CourseContentBlockItem): CoursePlateElement[] {
         type: KEYS.p,
         listStyleType: block.variant === 'ordered' ? KEYS.ol : KEYS.ul,
         listStart: block.variant === 'ordered' ? itemIndex + 1 : undefined,
-        indent: item.indent ?? 1,
+        indent: normalizeCourseListIndent(item.indent),
         courseListId: block.id,
         children: deserializeRichText(item.children),
       }));
@@ -267,12 +271,6 @@ function getBlockId(element: CoursePlateElement, index: number) {
 
 function isListElement(element: CoursePlateElement) {
   return element.listStyleType === KEYS.ul || element.listStyleType === KEYS.ol;
-}
-
-function getListIndent(value: unknown) {
-  return typeof value === 'number' && Number.isFinite(value) && value > 1
-    ? Math.round(value)
-    : undefined;
 }
 
 function serializeCode(
@@ -413,7 +411,7 @@ export function serializePlateToCourseContent(
         id: getBlockId(element, index),
         rank: createRank(currentList.items.length),
         children: serializeRichText(element.children),
-        indent: getListIndent(element.indent),
+        indent: serializeCourseListIndent(element.indent),
       });
       return;
     }

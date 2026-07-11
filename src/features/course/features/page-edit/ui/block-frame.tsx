@@ -17,6 +17,10 @@ import {
   useCoursePageBlockSelection,
   type CoursePageBlockSelectionTarget,
 } from '@/features/course/features/page-edit/model/block-selection';
+import {
+  isCoursePageBlockTargetEqual,
+  type CoursePageBlockTarget,
+} from '@/features/course/features/page-edit/model/block-target';
 import { selectBlock as selectSlateBlock } from '@/features/course/features/page-edit/model/block-operations';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
 import { CoursePageBlockMenu } from '@/features/course/features/page-edit/ui/block-menu';
@@ -40,9 +44,7 @@ type InsertPanelTargetHoverDetail =
   | { status: 'inactive' }
   | {
       status: 'active';
-      target:
-        | { source: 'id'; id: string; path: PlateElementProps['path'] }
-        | { source: 'path'; path: PlateElementProps['path'] };
+      target: CoursePageBlockTarget;
     };
 
 function getSelectionTarget(
@@ -54,29 +56,14 @@ function getSelectionTarget(
     : { source: 'path', path };
 }
 
-function arePathsEqual(
-  first: PlateElementProps['path'],
-  second: PlateElementProps['path']
-) {
-  return (
-    first.length === second.length &&
-    first.every((segment, index) => segment === second[index])
-  );
-}
-
 function isInsertPanelTargetHoveringBlock(
   detail: InsertPanelTargetHoverDetail,
   target: CoursePageBlockSelectionTarget
 ) {
-  if (detail.status === 'inactive') {
-    return false;
-  }
-
-  if (detail.target.source === 'id' && target.source === 'id') {
-    return detail.target.id === target.id;
-  }
-
-  return arePathsEqual(detail.target.path, target.path);
+  return (
+    detail.status === 'active' &&
+    isCoursePageBlockTargetEqual(detail.target, target)
+  );
 }
 
 function isPrimaryPointerEvent(event: PointerEvent<HTMLElement>) {

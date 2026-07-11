@@ -1,3 +1,4 @@
+import { normalizeCourseListIndent } from '@/features/course/features/page/model/list-indent';
 import { sortRankedContent } from '@/features/course/features/page/model/rank';
 import type {
   CourseContentBlockItem,
@@ -122,12 +123,6 @@ function normalizeRichText(nodes: RichTextNode[]): ComparableRichTextNode[] {
   }, []);
 }
 
-function normalizeListIndent(value: number | undefined) {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? Math.max(1, Math.round(value))
-    : 1;
-}
-
 function normalizeContent(blocks: CourseContentBlockItem[]): unknown[] {
   return sortRankedContent(blocks).map((block) => {
     switch (block.type) {
@@ -153,7 +148,7 @@ function normalizeContent(blocks: CourseContentBlockItem[]): unknown[] {
           variant: block.variant,
           items: sortRankedContent(block.items).map((item) => ({
             children: normalizeRichText(item.children),
-            indent: normalizeListIndent(item.indent),
+            indent: normalizeCourseListIndent(item.indent),
           })),
         };
       case 'spoiler':
