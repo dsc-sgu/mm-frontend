@@ -29,7 +29,14 @@ export function HeaderBreadcrumbs({
       >
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
-          return <BreadcrumbItemLi item={item} index={index} isLast={isLast} />;
+          return (
+            <BreadcrumbItemLi
+              key={`${item.label}-${index}`}
+              item={item}
+              index={index}
+              isLast={isLast}
+            />
+          );
         })}
       </ol>
     </nav>
@@ -46,10 +53,7 @@ function BreadcrumbItemLi({
   isLast: boolean;
 }) {
   return (
-    <li
-      key={`${item.label}-${index}`}
-      className="flex min-w-0 items-center gap-1"
-    >
+    <li className="flex min-w-0 items-center gap-1">
       {index > 0 && (
         <ChevronRight
           aria-hidden="true"
