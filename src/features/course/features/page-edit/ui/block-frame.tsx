@@ -129,6 +129,8 @@ export function CoursePageBlockFrame({
         style={gutterStyle}
       >
         <CoursePageBlockMenu
+          editor={props.editor}
+          target={selectionTarget}
           onOpen={() => selectCurrentBlock({ preserveExisting: true })}
         >
           {({ openMenu }) => (
