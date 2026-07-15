@@ -22,11 +22,16 @@ export type CoursePageWorkingCopyUpdate =
   | CoursePage
   | ((current: CoursePage) => CoursePage);
 
+export type CoursePageContentEditorReset = {
+  initialContent: CourseContentBlockItem[];
+  revision: number;
+};
+
 export type CoursePageEditStoreState = {
   blockSelection: CoursePageBlockSelection;
   canApply: boolean;
   contentEditorContainer: HTMLElement | null;
-  contentEditorRevision: number;
+  contentEditorReset: CoursePageContentEditorReset;
   errors: CoursePageEditValidationErrors;
   hoveredInsertPanelTargetKey: string | null;
   initialCourse: CoursePage;
@@ -41,15 +46,18 @@ export type CoursePageEditStoreActions = {
   clearBlockSelection: () => void;
   hideInsertPanel: () => void;
   hideInsertPanelPreview: () => void;
+  markWorkingCopySaved: (savedWorkingCopy: CoursePage) => void;
   replaceBlockSelection: (targets: CoursePageBlockSelectionTarget[]) => void;
   resetWorkingCopy: () => void;
   selectOnlyBlock: (target: CoursePageBlockSelectionTarget) => void;
-  setContent: (content: CourseContentBlockItem[]) => void;
+  setContentFromEditor: (input: {
+    content: CourseContentBlockItem[];
+    editorRevision: number;
+  }) => void;
   setContentEditorContainer: (container: HTMLElement | null) => void;
   setInsertPanelHovered: (isHovered: boolean) => void;
   setWorkingCopy: (update: CoursePageWorkingCopyUpdate) => void;
   showInsertPanelPreview: (cursorY: number) => void;
-  syncCourse: (course: CoursePage) => void;
 };
 
 export type CoursePageEditStore = CoursePageEditStoreState &

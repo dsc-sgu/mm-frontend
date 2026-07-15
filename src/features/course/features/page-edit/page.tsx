@@ -43,13 +43,15 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
   const canApply = useCoursePageEditStore((state) => state.canApply);
   const errors = useCoursePageEditStore((state) => state.errors);
   const isDirty = useCoursePageEditStore((state) => state.isDirty);
+  const markWorkingCopySaved = useCoursePageEditStore(
+    (state) => state.markWorkingCopySaved
+  );
   const resetWorkingCopy = useCoursePageEditStore(
     (state) => state.resetWorkingCopy
   );
   const setWorkingCopy = useCoursePageEditStore(
     (state) => state.setWorkingCopy
   );
-  const syncCourse = useCoursePageEditStore((state) => state.syncCourse);
   const workingCopy = useCoursePageEditStore((state) => state.workingCopy);
 
   const apply = useCallback(async () => {
@@ -68,25 +70,27 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
       return;
     }
 
-    const savedCourse = await saveMutation.mutateAsync({
+    const submittedWorkingCopy = structuredClone(workingCopy);
+
+    await saveMutation.mutateAsync({
       courseSlug,
-      courseId: workingCopy.courseId,
-      title: workingCopy.title,
-      description: workingCopy.description,
-      color: workingCopy.color,
-      iconName: workingCopy.iconName,
-      content: workingCopy.content,
-      resources: workingCopy.resources,
+      courseId: submittedWorkingCopy.courseId,
+      title: submittedWorkingCopy.title,
+      description: submittedWorkingCopy.description,
+      color: submittedWorkingCopy.color,
+      iconName: submittedWorkingCopy.iconName,
+      content: submittedWorkingCopy.content,
+      resources: submittedWorkingCopy.resources,
     });
 
-    syncCourse(savedCourse);
+    markWorkingCopySaved(submittedWorkingCopy);
 
     await router.invalidate();
 
-    if (savedCourse.courseId !== courseSlug) {
+    if (submittedWorkingCopy.courseId !== courseSlug) {
       await navigate({
         to: '/courses/$courseSlug/edit',
-        params: { courseSlug: savedCourse.courseId },
+        params: { courseSlug: submittedWorkingCopy.courseId },
         replace: true,
       });
     }
@@ -97,10 +101,10 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
     courseSlug,
     errors,
     isDirty,
+    markWorkingCopySaved,
     navigate,
     router,
     saveMutation,
-    syncCourse,
     workingCopy,
   ]);
 

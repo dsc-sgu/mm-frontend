@@ -4,6 +4,7 @@ export type {
   CoursePageBlockInsertPanelState,
   CoursePageBlockInsertPanelVisibleState,
   CoursePageBlockInsertPlacement,
+  CoursePageContentEditorReset,
   CoursePageEditStore,
   CoursePageEditStoreActions,
   CoursePageEditStoreApi,
