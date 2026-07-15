@@ -1,4 +1,22 @@
 import { useState, type ReactNode } from 'react';
+import {
+  ArrowDown,
+  ArrowUp,
+  Code2,
+  Copy,
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  ListCollapse,
+  ListOrdered,
+  Plus,
+  Quote,
+  Trash2,
+  Type,
+  Wand2,
+  type LucideIcon,
+} from 'lucide-react';
 import type { Path, SlateEditor } from 'platejs';
 
 import {
@@ -40,26 +58,41 @@ type CoursePageBlockMenuProps = {
 };
 
 type TransformBlockOption = {
+  icon: LucideIcon;
   input: CreatePlateBlockInput;
   label: string;
 };
 
 const TRANSFORM_BLOCK_OPTIONS: TransformBlockOption[] = [
-  { label: 'Текст', input: { type: 'paragraph' } },
-  { label: 'Заголовок 1', input: { type: 'heading', level: 1 } },
-  { label: 'Заголовок 2', input: { type: 'heading', level: 2 } },
-  { label: 'Заголовок 3', input: { type: 'heading', level: 3 } },
-  { label: 'Цитата', input: { type: 'quote' } },
+  { label: 'Текст', icon: Type, input: { type: 'paragraph' } },
+  {
+    label: 'Заголовок 1',
+    icon: Heading1,
+    input: { type: 'heading', level: 1 },
+  },
+  {
+    label: 'Заголовок 2',
+    icon: Heading2,
+    input: { type: 'heading', level: 2 },
+  },
+  {
+    label: 'Заголовок 3',
+    icon: Heading3,
+    input: { type: 'heading', level: 3 },
+  },
+  { label: 'Цитата', icon: Quote, input: { type: 'quote' } },
   {
     label: 'Маркированный список',
+    icon: List,
     input: { type: 'list', variant: 'unordered' },
   },
   {
     label: 'Нумерованный список',
+    icon: ListOrdered,
     input: { type: 'list', variant: 'ordered' },
   },
-  { label: 'Код', input: { type: 'code' } },
-  { label: 'Спойлер', input: { type: 'spoiler' } },
+  { label: 'Код', icon: Code2, input: { type: 'code' } },
+  { label: 'Спойлер', icon: ListCollapse, input: { type: 'spoiler' } },
 ];
 
 function runTargetedBlockOperation({
@@ -166,6 +199,7 @@ export function CoursePageBlockMenu({
             insertParagraphAtTarget({ editor, placement: 'before', target })
           }
         >
+          <Plus />
           Добавить выше
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -173,40 +207,53 @@ export function CoursePageBlockMenu({
             insertParagraphAtTarget({ editor, placement: 'after', target })
           }
         >
+          <Plus />
           Добавить ниже
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
         <DropdownMenuItem onSelect={duplicateCurrentBlock}>
+          <Copy />
           Дублировать
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={moveCurrentBlockUp}>
+          <ArrowUp />
           Переместить вверх
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={moveCurrentBlockDown}>
+          <ArrowDown />
           Переместить вниз
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Превратить в</DropdownMenuSubTrigger>
+          <DropdownMenuSubTrigger>
+            <Wand2 />
+            Превратить в
+          </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-56">
-            {TRANSFORM_BLOCK_OPTIONS.map((option) => (
-              <DropdownMenuItem
-                key={option.label}
-                onSelect={() => transformCurrentBlock(option.input)}
-              >
-                {option.label}
-              </DropdownMenuItem>
-            ))}
+            {TRANSFORM_BLOCK_OPTIONS.map((option) => {
+              const Icon = option.icon;
+
+              return (
+                <DropdownMenuItem
+                  key={option.label}
+                  onSelect={() => transformCurrentBlock(option.input)}
+                >
+                  <Icon />
+                  {option.label}
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 
         <DropdownMenuSeparator />
 
         <DropdownMenuItem variant="destructive" onSelect={removeCurrentBlock}>
+          <Trash2 />
           Удалить
         </DropdownMenuItem>
       </DropdownMenuContent>
