@@ -154,9 +154,35 @@ function getPlainText(children: CoursePlateElement['children']): string {
     .join('');
 }
 
+function getCodeBlockPlainText(element: CoursePlateElement): string {
+  return element.children
+    .map((line) => {
+      if (isTextNode(line)) {
+        return line.text;
+      }
+
+      if (isElementNode(line)) {
+        return getPlainText(line.children);
+      }
+
+      return '';
+    })
+    .join('\n');
+}
+
+function getPlainTextForTransform(element: CoursePlateElement): string {
+  return element.type === KEYS.codeBlock
+    ? getCodeBlockPlainText(element)
+    : getPlainText(element.children);
+}
+
 function getReusableInlineChildren(
   element: CoursePlateElement
 ): CoursePlateInline[] {
+  if (element.type === KEYS.codeBlock) {
+    return [{ text: getCodeBlockPlainText(element) }];
+  }
+
   const directInlineChildren = element.children.filter(isInlineNode);
 
   if (directInlineChildren.length > 0) {
@@ -172,7 +198,7 @@ function getReusableInlineChildren(
     return structuredClone(firstTextContainer.children.filter(isInlineNode));
   }
 
-  return [{ text: getPlainText(element.children) }];
+  return [{ text: getPlainTextForTransform(element) }];
 }
 
 function ensureEditorHasContent(value: CoursePlateElement[]) {
@@ -322,7 +348,7 @@ export function createTransformedPlateBlock(
       return {
         ...nextBlock,
         id: element.id ?? nextBlock.id,
-        children: getPlainText(element.children)
+        children: getPlainTextForTransform(element)
           .split('\n')
           .map((line) => ({
             type: KEYS.codeLine,
@@ -376,7 +402,7 @@ export function getBlockEntryById(editor: SlateEditor, blockId: string) {
 }
 
 export function getBlockEntryAtPath(editor: SlateEditor, path: Path) {
-  const node = editor.api.node({ at: path })?.[0];
+  const node = getNodeAtPath(editor.children, path);
 
   if (!isElementNode(node)) {
     return null;
