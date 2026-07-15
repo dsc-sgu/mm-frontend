@@ -2,40 +2,37 @@ import { memo, useCallback, useMemo } from 'react';
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
-import type { CourseContentBlockItem } from '@/features/course/features/page/model/types';
+import type { CoursePageContentEditorReset } from '@/features/course/features/page-edit/model/editor-store';
 import {
   deserializeCourseContentToPlate,
   serializePlateToCourseContent,
 } from '@/features/course/features/page-edit/model/plate-content';
 import { coursePagePlatePlugins } from '@/features/course/features/page-edit/model/plate-plugins';
-import {
-  useCoursePageEditStore,
-  useCoursePageEditStoreApi,
-} from '@/features/course/features/page-edit/hooks/use-editor-store';
+import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CoursePageBlockInsertPanel } from '@/features/course/features/page-edit/ui/block-insert-panel';
 
 function CoursePagePlateEditor({
-  contentEditorRevision,
-  initialContent,
+  contentEditorReset,
 }: {
-  contentEditorRevision: number;
-  initialContent: CourseContentBlockItem[];
+  contentEditorReset: CoursePageContentEditorReset;
 }) {
-  const setContent = useCoursePageEditStore((state) => state.setContent);
+  const setContentFromEditor = useCoursePageEditStore(
+    (state) => state.setContentFromEditor
+  );
   const initialValue = useMemo(
-    () => deserializeCourseContentToPlate(initialContent),
+    () => deserializeCourseContentToPlate(contentEditorReset.initialContent),
     // Plate owns live content after initialization. Recompute the initial value
     // only when reset bumps the editor revision, not on every local edit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [contentEditorRevision]
+    [contentEditorReset.revision]
   );
   const editor = usePlateEditor(
     {
-      id: `course-page-content-${contentEditorRevision}`,
+      id: `course-page-content-${contentEditorReset.revision}`,
       plugins: coursePagePlatePlugins,
       value: initialValue,
     },
-    [contentEditorRevision]
+    [contentEditorReset.revision]
   );
   const setContentEditorContainer = useCoursePageEditStore(
     (state) => state.setContentEditorContainer
@@ -49,7 +46,10 @@ function CoursePagePlateEditor({
     <Plate
       editor={editor}
       onValueChange={({ value }) => {
-        setContent(serializePlateToCourseContent(value));
+        setContentFromEditor({
+          content: serializePlateToCourseContent(value),
+          editorRevision: contentEditorReset.revision,
+        });
       }}
     >
       <div
@@ -74,22 +74,19 @@ function CoursePagePlateEditor({
 }
 
 function CoursePageContentEditorBase() {
-  const store = useCoursePageEditStoreApi();
-  const contentEditorRevision = useCoursePageEditStore(
-    (state) => state.contentEditorRevision
+  const contentEditorReset = useCoursePageEditStore(
+    (state) => state.contentEditorReset
   );
   // This component intentionally does not subscribe to workingCopy.content:
   // Plate owns the live document while the user edits, and local Plate changes
-  // already flow into Zustand through onValueChange. We only need a fresh
-  // content snapshot when reset bumps contentEditorRevision and the Plate editor
-  // is recreated from the reset working copy.
-  const initialContent = store.getState().workingCopy.content;
+  // already flow into Zustand through onValueChange. The reset-only content
+  // snapshot is updated together with its revision, so editor remounts
+  // never depend on a reactive live document read during render.
 
   return (
     <CoursePagePlateEditor
-      key={contentEditorRevision}
-      contentEditorRevision={contentEditorRevision}
-      initialContent={initialContent}
+      key={contentEditorReset.revision}
+      contentEditorReset={contentEditorReset}
     />
   );
 }

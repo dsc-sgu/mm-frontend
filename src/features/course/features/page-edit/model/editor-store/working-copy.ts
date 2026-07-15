@@ -49,14 +49,17 @@ export function createWorkingCopyInitialState(
 ): Pick<
   CoursePageEditStoreState,
   | 'canApply'
-  | 'contentEditorRevision'
+  | 'contentEditorReset'
   | 'errors'
   | 'initialCourse'
   | 'isDirty'
   | 'workingCopy'
 > {
   return {
-    contentEditorRevision: 0,
+    contentEditorReset: {
+      initialContent: structuredClone(course.content),
+      revision: 0,
+    },
     ...getCoursePageEditWorkingCopyState(course, structuredClone(course)),
   };
 }
@@ -74,24 +77,43 @@ export function createWorkingCopyActions(
 ): Pick<
   CoursePageEditStoreActions,
   | 'changeResources'
+  | 'markWorkingCopySaved'
   | 'resetWorkingCopy'
-  | 'setContent'
+  | 'setContentFromEditor'
   | 'setWorkingCopy'
-  | 'syncCourse'
 > {
   return {
     changeResources: (resources) =>
       get().setWorkingCopy((current) => ({ ...current, resources })),
+    markWorkingCopySaved: (savedWorkingCopy) =>
+      set((state) =>
+        getCoursePageEditWorkingCopyState(
+          structuredClone(savedWorkingCopy),
+          state.workingCopy
+        )
+      ),
     resetWorkingCopy: () =>
       set((state) => ({
         ...getCoursePageEditWorkingCopyState(
           state.initialCourse,
           structuredClone(state.initialCourse)
         ),
-        contentEditorRevision: state.contentEditorRevision + 1,
+        contentEditorReset: {
+          initialContent: structuredClone(state.initialCourse.content),
+          revision: state.contentEditorReset.revision + 1,
+        },
       })),
-    setContent: (content) =>
-      get().setWorkingCopy((current) => ({ ...current, content })),
+    setContentFromEditor: ({ content, editorRevision }) =>
+      set((state) => {
+        if (state.contentEditorReset.revision !== editorRevision) {
+          return state;
+        }
+
+        return getCoursePageEditWorkingCopyState(state.initialCourse, {
+          ...state.workingCopy,
+          content,
+        });
+      }),
     setWorkingCopy: (update) =>
       set((state) => {
         const workingCopy = resolveWorkingCopyUpdate(state.workingCopy, update);
@@ -101,12 +123,5 @@ export function createWorkingCopyActions(
           workingCopy
         );
       }),
-    syncCourse: (nextCourse) =>
-      set(
-        getCoursePageEditWorkingCopyState(
-          nextCourse,
-          structuredClone(nextCourse)
-        )
-      ),
   };
 }
