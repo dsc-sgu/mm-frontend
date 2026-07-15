@@ -28,3 +28,4 @@ dist-ssr
 prompt.txt
 prompt.md
 .playwright-mcp
+.pi-subagents
