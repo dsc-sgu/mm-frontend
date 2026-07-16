@@ -30,6 +30,7 @@ import {
   CommandList,
 } from '@/shadcn/components/ui/command';
 import { cn } from '@/shadcn/lib/utils';
+import { useSlashMenuScroll } from '@/features/course/features/page-edit/hooks/use-slash-menu-scroll';
 import {
   applyCoursePageSlashMenuItem,
   filterCoursePageSlashMenuItems,
@@ -90,6 +91,11 @@ export function CoursePageSlashMenu({
     state.status === 'open' ? filterCoursePageSlashMenuItems(state.query) : [];
   const activeIndex = Math.min(selectedIndex, Math.max(items.length - 1, 0));
   const activeItem = items[activeIndex] ?? null;
+  const { activeItemRef, commandListRef } = useSlashMenuScroll({
+    activeIndex,
+    activeItemId: activeItem?.id,
+    isOpen,
+  });
 
   useLayoutEffect(() => {
     if (!isOpen || !containerRef.current) {
@@ -201,13 +207,14 @@ export function CoursePageSlashMenu({
       style={position}
     >
       <Command value={activeItem?.id} shouldFilter={false}>
-        <CommandList>
+        <CommandList ref={commandListRef}>
           <CommandGroup heading="Добавить блок">
             {items.map((item, index) => {
               const Icon = ICON_BY_SLASH_MENU_ITEM_ID[item.id];
 
               return (
                 <CommandItem
+                  ref={index === activeIndex ? activeItemRef : undefined}
                   key={item.id}
                   value={item.id}
                   onMouseDown={(event) => event.preventDefault()}
