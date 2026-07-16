@@ -14,7 +14,6 @@ import {
   ListCollapse,
   ListOrdered,
   Quote,
-  Type,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -44,7 +43,6 @@ type SlashMenuPosition = {
 };
 
 const ICON_BY_SLASH_MENU_ITEM_ID: Record<string, LucideIcon> = {
-  paragraph: Type,
   'heading-1': Heading1,
   'heading-2': Heading2,
   'heading-3': Heading3,
