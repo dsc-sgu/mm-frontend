@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useRef,
   useState,
   type RefObject,
 } from 'react';
@@ -30,7 +31,6 @@ import {
   CommandList,
 } from '@/shadcn/components/ui/command';
 import { cn } from '@/shadcn/lib/utils';
-import { useSlashMenuScroll } from '@/features/course/features/page-edit/hooks/use-slash-menu-scroll';
 import {
   applyCoursePageSlashMenuItem,
   filterCoursePageSlashMenuItems,
@@ -64,21 +64,12 @@ function getSlashMenuTriggerKey({
   return `${blockPath.join('.')}:${query}`;
 }
 
-export function CoursePageSlashMenu({
-  containerRef,
-  editor,
-}: {
-  containerRef: RefObject<HTMLDivElement | null>;
-  editor: SlateEditor;
-}) {
+function useSlashMenuController({ editor }: { editor: SlateEditor }) {
   const value = useEditorValue();
-  const selectionVersion = useSelectionVersion();
-  const valueVersion = useValueVersion();
   const [dismissedTriggerKey, setDismissedTriggerKey] = useState<string | null>(
     null
   );
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [position, setPosition] = useState<SlashMenuPosition | null>(null);
   const state = getCoursePageSlashMenuState({
     selection: editor.selection,
     value,
@@ -91,41 +82,6 @@ export function CoursePageSlashMenu({
     state.status === 'open' ? filterCoursePageSlashMenuItems(state.query) : [];
   const activeIndex = Math.min(selectedIndex, Math.max(items.length - 1, 0));
   const activeItem = items[activeIndex] ?? null;
-  const { activeItemRef, commandListRef } = useSlashMenuScroll({
-    activeIndex,
-    activeItemId: activeItem?.id,
-    isOpen,
-  });
-
-  useLayoutEffect(() => {
-    if (!isOpen || !containerRef.current) {
-      return;
-    }
-
-    const animationFrame = window.requestAnimationFrame(() => {
-      const selection = editor.selection;
-
-      if (!selection || !containerRef.current) {
-        return;
-      }
-
-      const range = editor.api.toDOMRange(selection);
-
-      if (!range) {
-        return;
-      }
-
-      const rangeRect = range.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
-
-      setPosition({
-        left: rangeRect.left - containerRect.left,
-        top: rangeRect.bottom - containerRect.top + 8,
-      });
-    });
-
-    return () => window.cancelAnimationFrame(animationFrame);
-  }, [containerRef, editor, isOpen, selectionVersion, valueVersion]);
 
   const applyItem = useCallback(
     (item: CoursePageSlashMenuItem) => {
@@ -195,6 +151,126 @@ export function CoursePageSlashMenu({
 
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, handleKeyDown]);
+
+  return {
+    activeIndex,
+    activeItem,
+    applyItem,
+    isOpen,
+    items,
+    setSelectedIndex,
+  };
+}
+
+function useSlashMenuPosition({
+  containerRef,
+  editor,
+  isOpen,
+}: {
+  containerRef: RefObject<HTMLDivElement | null>;
+  editor: SlateEditor;
+  isOpen: boolean;
+}) {
+  const selectionVersion = useSelectionVersion();
+  const valueVersion = useValueVersion();
+  const [position, setPosition] = useState<SlashMenuPosition | null>(null);
+
+  useLayoutEffect(() => {
+    if (!isOpen || !containerRef.current) {
+      return;
+    }
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      const selection = editor.selection;
+
+      if (!selection || !containerRef.current) {
+        return;
+      }
+
+      const range = editor.api.toDOMRange(selection);
+
+      if (!range) {
+        return;
+      }
+
+      const rangeRect = range.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
+
+      setPosition({
+        left: rangeRect.left - containerRect.left,
+        top: rangeRect.bottom - containerRect.top + 8,
+      });
+    });
+
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [containerRef, editor, isOpen, selectionVersion, valueVersion]);
+
+  return position;
+}
+
+function useSlashMenuScroll({
+  activeIndex,
+  activeItemId,
+  isOpen,
+}: {
+  activeIndex: number;
+  activeItemId: string | undefined;
+  isOpen: boolean;
+}) {
+  const commandListRef = useRef<HTMLDivElement | null>(null);
+  const activeItemRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const commandList = commandListRef.current;
+    const activeItemElement = activeItemRef.current;
+
+    if (!commandList || !activeItemElement) {
+      return;
+    }
+
+    if (activeIndex === 0) {
+      commandList.scrollTop = 0;
+      return;
+    }
+
+    const commandListRect = commandList.getBoundingClientRect();
+    const activeItemRect = activeItemElement.getBoundingClientRect();
+
+    if (activeItemRect.top < commandListRect.top) {
+      commandList.scrollTop -= commandListRect.top - activeItemRect.top;
+    } else if (activeItemRect.bottom > commandListRect.bottom) {
+      commandList.scrollTop += activeItemRect.bottom - commandListRect.bottom;
+    }
+  }, [activeIndex, activeItemId, isOpen]);
+
+  return { activeItemRef, commandListRef };
+}
+
+export function CoursePageSlashMenu({
+  containerRef,
+  editor,
+}: {
+  containerRef: RefObject<HTMLDivElement | null>;
+  editor: SlateEditor;
+}) {
+  const {
+    activeIndex,
+    activeItem,
+    applyItem,
+    isOpen,
+    items,
+    setSelectedIndex,
+  } = useSlashMenuController({ editor });
+  const position = useSlashMenuPosition({ containerRef, editor, isOpen });
+  const { activeItemRef, commandListRef } = useSlashMenuScroll({
+    activeIndex,
+    activeItemId: activeItem?.id,
+    isOpen,
+  });
 
   if (!isOpen || !position) {
     return null;
