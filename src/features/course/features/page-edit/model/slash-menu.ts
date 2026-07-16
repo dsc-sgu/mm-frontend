@@ -28,13 +28,6 @@ export type CoursePageSlashMenuState =
 
 export const COURSE_PAGE_SLASH_MENU_ITEMS: CoursePageSlashMenuItem[] = [
   {
-    id: 'paragraph',
-    label: 'Текст',
-    description: 'Обычный текстовый блок',
-    keywords: ['абзац', 'текст', 'paragraph'],
-    input: { type: 'paragraph' },
-  },
-  {
     id: 'heading-1',
     label: 'Заголовок 1',
     description: 'Крупный заголовок раздела',
