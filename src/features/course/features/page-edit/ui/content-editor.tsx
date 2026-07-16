@@ -1,7 +1,6 @@
 import { memo, useCallback, useMemo, useRef } from 'react';
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 
-import { cn } from '@/shadcn/lib/utils';
 import type { CoursePageContentEditorReset } from '@/features/course/features/page-edit/model/editor-store';
 import {
   deserializeCourseContentToPlate,
@@ -69,12 +68,7 @@ function CoursePagePlateEditor({
         />
         <PlateContent
           data-course-page-editor-content="true"
-          className={cn(
-            'min-h-64 px-1 py-2 outline-none',
-            'selection:bg-primary/20',
-            '[&_[data-slate-placeholder=true]]:text-muted-foreground'
-          )}
-          placeholder="Начните писать…"
+          className={'min-h-64 px-1 py-2 outline-none selection:bg-primary/20'}
           spellCheck={false}
         />
       </div>

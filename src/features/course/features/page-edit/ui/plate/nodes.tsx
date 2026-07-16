@@ -9,6 +9,8 @@ import {
 import {
   PlateElement,
   PlateLeaf,
+  useFocused,
+  useSelected,
   type PlateElementProps,
   type PlateLeafProps,
 } from 'platejs/react';
@@ -55,6 +57,8 @@ function createCaptionNodes(
 }
 
 export function ParagraphElement({ children, ...props }: PlateElementProps) {
+  const isFocused = useFocused();
+  const isSelected = useSelected();
   const element = getElement(props.element);
   const isListItem =
     element.listStyleType === 'disc' || element.listStyleType === 'decimal';
@@ -62,6 +66,12 @@ export function ParagraphElement({ children, ...props }: PlateElementProps) {
     'text-base leading-7 text-foreground/90 outline-none md:text-lg',
     isListItem && 'pl-1'
   );
+  const showPlaceholder =
+    isFocused &&
+    isSelected &&
+    !isListItem &&
+    props.path.length === 1 &&
+    props.editor.api.string(props.path).length === 0;
 
   if (props.path.length > 1) {
     return (
@@ -82,6 +92,15 @@ export function ParagraphElement({ children, ...props }: PlateElementProps) {
       contentClassName={paragraphClassName}
       {...props}
     >
+      {showPlaceholder && (
+        <span
+          aria-hidden="true"
+          contentEditable={false}
+          className="pointer-events-none absolute top-0 left-0 text-muted-foreground/70"
+        >
+          Введите текст или / для команд
+        </span>
+      )}
       {children}
     </CoursePageBlockFrame>
   );
