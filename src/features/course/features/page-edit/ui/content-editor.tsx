@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useRef } from 'react';
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
@@ -10,6 +10,7 @@ import {
 import { coursePagePlatePlugins } from '@/features/course/features/page-edit/model/plate-plugins';
 import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CoursePageBlockInsertPanel } from '@/features/course/features/page-edit/ui/block-insert-panel';
+import { CoursePageSlashMenu } from '@/features/course/features/page-edit/ui/slash-menu';
 
 function CoursePagePlateEditor({
   contentEditorReset,
@@ -37,8 +38,12 @@ function CoursePagePlateEditor({
   const setContentEditorContainer = useCoursePageEditStore(
     (state) => state.setContentEditorContainer
   );
+  const editorContainerRef = useRef<HTMLDivElement | null>(null);
   const setEditorContainerRef = useCallback(
-    (node: HTMLDivElement | null) => setContentEditorContainer(node),
+    (node: HTMLDivElement | null) => {
+      editorContainerRef.current = node;
+      setContentEditorContainer(node);
+    },
     [setContentEditorContainer]
   );
 
@@ -58,6 +63,10 @@ function CoursePagePlateEditor({
         className="relative [&_.slate-selected]:bg-primary/8"
       >
         <CoursePageBlockInsertPanel editor={editor} />
+        <CoursePageSlashMenu
+          containerRef={editorContainerRef}
+          editor={editor}
+        />
         <PlateContent
           data-course-page-editor-content="true"
           className={cn(
