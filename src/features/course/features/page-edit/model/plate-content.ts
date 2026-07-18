@@ -259,6 +259,7 @@ export function deserializeCourseContentToPlate(
     ? value
     : [
         {
+          id: createId('paragraph'),
           type: KEYS.p,
           children: [{ text: '' }],
         },
