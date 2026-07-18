@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type RefObject,
+  type SetStateAction,
 } from 'react';
 import {
   Code2,
@@ -35,12 +36,28 @@ import {
   applyCoursePageSlashMenuItem,
   filterCoursePageSlashMenuItems,
   getCoursePageSlashMenuState,
+  hasCoursePageSlashMenuTrigger,
   type CoursePageSlashMenuItem,
 } from '@/features/course/features/page-edit/model/slash-menu';
 
 type SlashMenuPosition = {
   left: number;
   top: number;
+};
+
+type SlashMenuDismissal =
+  | { status: 'ready' }
+  | { status: 'dismissed'; triggerId: string };
+
+type SlashMenuSelection = {
+  index: number;
+  key: string | null;
+};
+
+const READY_SLASH_MENU_DISMISSAL: SlashMenuDismissal = { status: 'ready' };
+const INITIAL_SLASH_MENU_SELECTION: SlashMenuSelection = {
+  index: 0,
+  key: null,
 };
 
 const ICON_BY_SLASH_MENU_ITEM_ID: Record<string, LucideIcon> = {
@@ -54,34 +71,99 @@ const ICON_BY_SLASH_MENU_ITEM_ID: Record<string, LucideIcon> = {
   spoiler: ListCollapse,
 };
 
-function getSlashMenuTriggerKey({
-  blockPath,
-  query,
-}: Extract<
-  ReturnType<typeof getCoursePageSlashMenuState>,
-  { status: 'open' }
->) {
-  return `${blockPath.join('.')}:${query}`;
+function useSlashMenuEditorFocus(
+  containerRef: RefObject<HTMLDivElement | null>
+) {
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    function isEditorContent(target: EventTarget | null) {
+      return (
+        target instanceof HTMLElement &&
+        target.dataset.coursePageEditorContent === 'true' &&
+        containerRef.current?.contains(target)
+      );
+    }
+
+    function handleFocusIn(event: FocusEvent) {
+      setIsFocused(Boolean(isEditorContent(event.target)));
+    }
+
+    function handleFocusOut(event: FocusEvent) {
+      if (isEditorContent(event.relatedTarget)) {
+        return;
+      }
+
+      setIsFocused(false);
+    }
+
+    window.addEventListener('focusin', handleFocusIn, true);
+    window.addEventListener('focusout', handleFocusOut, true);
+
+    return () => {
+      window.removeEventListener('focusin', handleFocusIn, true);
+      window.removeEventListener('focusout', handleFocusOut, true);
+    };
+  }, [containerRef]);
+
+  return isFocused;
 }
 
-function useSlashMenuController({ editor }: { editor: SlateEditor }) {
+function useSlashMenuController({
+  containerRef,
+  editor,
+}: {
+  containerRef: RefObject<HTMLDivElement | null>;
+  editor: SlateEditor;
+}) {
   const value = useEditorValue();
-  const [dismissedTriggerKey, setDismissedTriggerKey] = useState<string | null>(
-    null
+  const isFocused = useSlashMenuEditorFocus(containerRef);
+  const [dismissal, setDismissal] = useState<SlashMenuDismissal>(
+    READY_SLASH_MENU_DISMISSAL
   );
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selection, setSelection] = useState<SlashMenuSelection>(
+    INITIAL_SLASH_MENU_SELECTION
+  );
   const state = getCoursePageSlashMenuState({
     selection: editor.selection,
     value,
   });
 
-  const triggerKey =
-    state.status === 'open' ? getSlashMenuTriggerKey(state) : null;
-  const isOpen = state.status === 'open' && dismissedTriggerKey !== triggerKey;
+  const triggerId = state.status === 'open' ? state.triggerId : null;
+  const query = state.status === 'open' ? state.query : null;
+  const selectionKey =
+    triggerId && query !== null ? `${triggerId}:${query}` : null;
+  const dismissedTriggerExists =
+    dismissal.status === 'dismissed' &&
+    hasCoursePageSlashMenuTrigger({
+      triggerId: dismissal.triggerId,
+      value,
+    });
+
+  if (dismissal.status === 'dismissed' && !dismissedTriggerExists) {
+    setDismissal(READY_SLASH_MENU_DISMISSAL);
+  }
+
+  const isDismissed =
+    dismissedTriggerExists && dismissal.triggerId === triggerId;
+  const isOpen = isFocused && state.status === 'open' && !isDismissed;
   const items =
     state.status === 'open' ? filterCoursePageSlashMenuItems(state.query) : [];
+  const selectedIndex = selection.key === selectionKey ? selection.index : 0;
   const activeIndex = Math.min(selectedIndex, Math.max(items.length - 1, 0));
   const activeItem = items[activeIndex] ?? null;
+  const setSelectedIndex = useCallback(
+    (action: SetStateAction<number>) => {
+      setSelection((current) => {
+        const currentIndex = current.key === selectionKey ? current.index : 0;
+        const nextIndex =
+          typeof action === 'function' ? action(currentIndex) : action;
+
+        return { index: nextIndex, key: selectionKey };
+      });
+    },
+    [selectionKey]
+  );
 
   const applyItem = useCallback(
     (item: CoursePageSlashMenuItem) => {
@@ -90,15 +172,15 @@ function useSlashMenuController({ editor }: { editor: SlateEditor }) {
       }
 
       applyCoursePageSlashMenuItem({ editor, item, state });
-      setDismissedTriggerKey(null);
+      setDismissal(READY_SLASH_MENU_DISMISSAL);
       setSelectedIndex(0);
     },
-    [editor, state]
+    [editor, setSelectedIndex, state]
   );
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (!isOpen) {
+      if (!isOpen || event.isComposing) {
         return;
       }
 
@@ -133,13 +215,20 @@ function useSlashMenuController({ editor }: { editor: SlateEditor }) {
         return;
       }
 
-      if (event.key === 'Escape' && triggerKey) {
+      if (
+        event.key === 'Escape' &&
+        triggerId &&
+        !event.altKey &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey
+      ) {
         event.preventDefault();
         event.stopPropagation();
-        setDismissedTriggerKey(triggerKey);
+        setDismissal({ status: 'dismissed', triggerId });
       }
     },
-    [activeItem, applyItem, isOpen, items.length, triggerKey]
+    [activeItem, applyItem, isOpen, items.length, setSelectedIndex, triggerId]
   );
 
   useEffect(() => {
@@ -264,7 +353,7 @@ export function CoursePageSlashMenu({
     isOpen,
     items,
     setSelectedIndex,
-  } = useSlashMenuController({ editor });
+  } = useSlashMenuController({ containerRef, editor });
   const position = useSlashMenuPosition({ containerRef, editor, isOpen });
   const { activeItemRef, commandListRef } = useSlashMenuScroll({
     activeIndex,

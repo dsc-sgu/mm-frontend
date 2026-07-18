@@ -23,6 +23,7 @@ export type CoursePageSlashMenuState =
       blockPath: Path;
       query: string;
       status: 'open';
+      triggerId: string;
       triggerRange: Range;
     };
 
@@ -134,7 +135,11 @@ export function getCoursePageSlashMenuState({
   const blockPath = [textPath[0]];
   const block = value[blockPath[0]];
 
-  if (!isCoursePlateElement(block) || block.type !== KEYS.p) {
+  if (
+    !isCoursePlateElement(block) ||
+    block.type !== KEYS.p ||
+    typeof block.id !== 'string'
+  ) {
     return { status: 'closed' };
   }
 
@@ -161,11 +166,27 @@ export function getCoursePageSlashMenuState({
     status: 'open',
     blockPath,
     query: triggerText.slice(1),
+    triggerId: block.id,
     triggerRange: {
       anchor: { path: textPath, offset: 0 },
       focus: selection.anchor,
     },
   };
+}
+
+export function hasCoursePageSlashMenuTrigger({
+  triggerId,
+  value,
+}: {
+  triggerId: string;
+  value: CoursePlateElement[];
+}) {
+  const block = value.find(
+    (candidate) => isCoursePlateElement(candidate) && candidate.id === triggerId
+  );
+  const firstChild = block?.children[0];
+
+  return isCoursePlateText(firstChild) && firstChild.text.startsWith('/');
 }
 
 export function filterCoursePageSlashMenuItems(query: string) {
