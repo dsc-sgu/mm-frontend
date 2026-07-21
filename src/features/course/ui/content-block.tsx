@@ -4,7 +4,7 @@ import { CalendarDays, Paperclip, Trophy } from 'lucide-react';
 
 import { CodeBlock } from '@/features/code-block/ui/block';
 import { cn } from '@/shadcn/lib/utils';
-import { normalizeCourseListIndent } from '@/features/course/features/page/model/list-indent';
+import { clampCourseListIndent } from '@/features/course/features/page/model/list-indent';
 import { sortRankedContent } from '@/features/course/features/page/model/rank';
 import type {
   CourseContentBlockItem,
@@ -29,19 +29,18 @@ type RenderableCourseListItem = CourseListItem & {
   nestedItems: RenderableCourseListItem[];
 };
 
-function getListItemIndent(item: CourseListItem) {
-  return normalizeCourseListIndent(item.indent);
-}
-
 function buildListTree(items: CourseListItem[]) {
   const rootItems: RenderableCourseListItem[] = [];
   const stack: Array<{ indent: number; items: RenderableCourseListItem[] }> = [
     { indent: 1, items: rootItems },
   ];
+  let previousIndent: number | null = null;
 
   items.forEach((item) => {
-    const indent = getListItemIndent(item);
+    const indent = clampCourseListIndent(item.indent, previousIndent);
     const listItem = { ...item, nestedItems: [] };
+
+    previousIndent = indent;
 
     while (stack.length > 1 && indent < stack[stack.length - 1].indent) {
       stack.pop();

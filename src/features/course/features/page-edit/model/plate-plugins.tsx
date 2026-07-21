@@ -30,11 +30,13 @@ import {
 } from 'platejs';
 import { createPlatePlugin, ParagraphPlugin } from 'platejs/react';
 
+import { clampCourseListIndent } from '@/features/course/features/page/model/list-indent';
 import {
   COURSE_ASSIGNMENT_NODE,
   COURSE_FILES_NODE,
   COURSE_IMAGE_NODE,
   COURSE_SPOILER_TITLE_NODE,
+  type CoursePlateElement,
 } from '@/features/course/features/page-edit/model/plate-content';
 import {
   BlockquoteElement,
@@ -143,6 +145,58 @@ const CourseCodeBlockBackspacePlugin = createPlatePlugin({
   },
 }));
 
+function isCourseListElement(node: unknown): node is CoursePlateElement {
+  if (typeof node !== 'object' || node === null) return false;
+
+  const element = node as CoursePlateElement;
+
+  return element.listStyleType === KEYS.ol || element.listStyleType === KEYS.ul;
+}
+
+function isSameCourseList(
+  current: CoursePlateElement,
+  previous: CoursePlateElement
+) {
+  const currentListId = current.courseListId;
+  const previousListId = previous.courseListId;
+
+  if (typeof currentListId === 'string' || typeof previousListId === 'string') {
+    return currentListId === previousListId;
+  }
+
+  return true;
+}
+
+const CourseListIndentPlugin = createPlatePlugin({
+  key: 'course_list_indent',
+}).overrideEditor(({ editor, tf: { normalizeNode } }) => ({
+  transforms: {
+    normalizeNode([node, path]) {
+      if (isCourseListElement(node)) {
+        const itemIndex = path.at(-1) ?? 0;
+        const previousEntry =
+          itemIndex > 0
+            ? editor.api.node([...path.slice(0, -1), itemIndex - 1])
+            : undefined;
+        const previousNode = previousEntry?.[0];
+        const previousIndent =
+          isCourseListElement(previousNode) &&
+          isSameCourseList(node, previousNode)
+            ? previousNode.indent
+            : null;
+        const indent = clampCourseListIndent(node.indent, previousIndent);
+
+        if (node.indent !== indent) {
+          editor.tf.setNodes({ indent }, { at: path });
+          return;
+        }
+      }
+
+      normalizeNode([node, path]);
+    },
+  },
+}));
+
 export const coursePagePlatePlugins = [
   NodeIdPlugin,
   ParagraphPlugin.withComponent(ParagraphElement),
@@ -244,6 +298,7 @@ export const coursePagePlatePlugins = [
       },
     },
   }),
+  CourseListIndentPlugin,
   CodeBlockPlugin.configure({
     inputRules: [
       CodeBlockRules.markdown({
