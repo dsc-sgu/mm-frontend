@@ -305,12 +305,23 @@ export function CourseSpoilerTitleElement({
   children,
   ...props
 }: PlateElementProps) {
+  const showPlaceholder = props.editor.api.string(props.path).length === 0;
+
   return (
     <PlateElement
       as="span"
-      className="text-base font-semibold text-foreground outline-none md:text-lg"
+      className="relative text-base font-semibold text-foreground outline-none md:text-lg"
       {...props}
     >
+      {showPlaceholder && (
+        <span
+          aria-hidden="true"
+          contentEditable={false}
+          className="pointer-events-none absolute -top-0.5 left-0 whitespace-nowrap text-muted-foreground/70"
+        >
+          Введите заголовок
+        </span>
+      )}
       {children}
     </PlateElement>
   );
