@@ -63,41 +63,54 @@ function buildListTree(items: CourseListItem[]) {
   return rootItems;
 }
 
-function ListItems({
-  items,
-  variant,
-}: {
-  items: RenderableCourseListItem[];
-  variant: CourseListBlock['variant'];
-}) {
-  const ListTag = variant === 'ordered' ? 'ol' : 'ul';
+function groupListItemsByVariant(items: RenderableCourseListItem[]) {
+  return items.reduce<
+    Array<{
+      items: RenderableCourseListItem[];
+      variant: CourseListItem['variant'];
+    }>
+  >((groups, item) => {
+    const currentGroup = groups.at(-1);
 
-  return (
-    <ListTag
-      className={cn(
-        'space-y-2 pl-6 text-base leading-7 text-foreground/90',
-        variant === 'ordered' ? 'list-decimal' : 'list-disc'
-      )}
-    >
-      {items.map((item) => (
-        <li key={item.id} className="my-1">
-          <CourseRichText nodes={item.children} />
-          {item.nestedItems.length > 0 && (
-            <ListItems items={item.nestedItems} variant={variant} />
-          )}
-        </li>
-      ))}
-    </ListTag>
-  );
+    if (currentGroup?.variant === item.variant) {
+      currentGroup.items.push(item);
+    } else {
+      groups.push({ items: [item], variant: item.variant });
+    }
+
+    return groups;
+  }, []);
+}
+
+function ListItems({ items }: { items: RenderableCourseListItem[] }) {
+  return groupListItemsByVariant(items).map((group) => {
+    const ListTag = group.variant === 'ordered' ? 'ol' : 'ul';
+
+    return (
+      <ListTag
+        key={group.items[0].id}
+        className={cn(
+          'space-y-2 pl-6 text-base leading-7 text-foreground/90',
+          group.variant === 'ordered' ? 'list-decimal' : 'list-disc'
+        )}
+      >
+        {group.items.map((item) => (
+          <li key={item.id} className="my-1">
+            <CourseRichText nodes={item.children} />
+            {item.nestedItems.length > 0 && (
+              <ListItems items={item.nestedItems} />
+            )}
+          </li>
+        ))}
+      </ListTag>
+    );
+  });
 }
 
 function ListBlock({ block }: { block: CourseListBlock }) {
   return (
     <div className="my-4">
-      <ListItems
-        items={buildListTree(sortRankedContent(block.items))}
-        variant={block.variant}
-      />
+      <ListItems items={buildListTree(sortRankedContent(block.items))} />
     </div>
   );
 }

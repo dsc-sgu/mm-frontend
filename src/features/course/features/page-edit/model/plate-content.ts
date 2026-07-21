@@ -183,11 +183,10 @@ function deserializeBlock(block: CourseContentBlockItem): CoursePlateElement[] {
         },
       ];
     case 'list':
-      return sortRankedContent(block.items).map((item, itemIndex) => ({
+      return sortRankedContent(block.items).map((item) => ({
         id: item.id,
         type: KEYS.p,
-        listStyleType: block.variant === 'ordered' ? KEYS.ol : KEYS.ul,
-        listStart: block.variant === 'ordered' ? itemIndex + 1 : undefined,
+        listStyleType: item.variant === 'ordered' ? KEYS.ol : KEYS.ul,
         indent: normalizeCourseListIndent(item.indent),
         courseListId: block.id,
         children: deserializeRichText(item.children),
@@ -391,18 +390,18 @@ export function serializePlateToCourseContent(
 
   elements.forEach((element, index) => {
     if (isListElement(element)) {
-      const variant =
-        element.listStyleType === KEYS.ol ? 'ordered' : 'unordered';
+      const courseListId =
+        typeof element.courseListId === 'string'
+          ? element.courseListId
+          : undefined;
+      const startsAnotherList =
+        currentList && courseListId && currentList.id !== courseListId;
 
-      if (!currentList || currentList.variant !== variant) {
+      if (!currentList || startsAnotherList) {
         currentList = {
-          id:
-            typeof element.courseListId === 'string'
-              ? element.courseListId
-              : createId('list'),
+          id: courseListId ?? createId('list'),
           rank: createRank(blocks.length),
           type: 'list',
-          variant,
           items: [],
         };
         blocks.push(currentList);
@@ -413,6 +412,7 @@ export function serializePlateToCourseContent(
         rank: createRank(currentList.items.length),
         children: serializeRichText(element.children),
         indent: serializeCourseListIndent(element.indent),
+        variant: element.listStyleType === KEYS.ol ? 'ordered' : 'unordered',
       });
       return;
     }

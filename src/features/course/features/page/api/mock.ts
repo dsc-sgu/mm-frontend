@@ -171,11 +171,11 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       id: `${course.courseId}:outcomes-list`,
       rank: 'd0',
       type: 'list',
-      variant: 'unordered',
       items: [
         {
           id: `${course.courseId}:outcomes-list:practice`,
           rank: 'b0',
+          variant: 'unordered',
           children: [
             {
               id: `${course.courseId}:outcomes-list:practice:text`,
@@ -187,6 +187,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
         {
           id: `${course.courseId}:outcomes-list:project`,
           rank: 'c0',
+          variant: 'unordered',
           children: [
             {
               id: `${course.courseId}:outcomes-list:project:text`,
@@ -198,6 +199,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
         {
           id: `${course.courseId}:outcomes-list:discussion`,
           rank: 'a0',
+          variant: 'unordered',
           children: [
             {
               id: `${course.courseId}:outcomes-list:discussion:text`,
@@ -238,11 +240,11 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
       id: `${course.courseId}:workflow-list`,
       rank: 'g0',
       type: 'list',
-      variant: 'ordered',
       items: [
         {
           id: `${course.courseId}:workflow-list:lecture`,
           rank: 'a0',
+          variant: 'ordered',
           children: [
             {
               id: `${course.courseId}:workflow-list:lecture:text`,
@@ -254,6 +256,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
         {
           id: `${course.courseId}:workflow-list:practice`,
           rank: 'b0',
+          variant: 'ordered',
           children: [
             {
               id: `${course.courseId}:workflow-list:practice:text`,
@@ -265,6 +268,7 @@ function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
         {
           id: `${course.courseId}:workflow-list:review`,
           rank: 'c0',
+          variant: 'ordered',
           children: [
             {
               id: `${course.courseId}:workflow-list:review:text`,
