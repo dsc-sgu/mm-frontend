@@ -332,12 +332,25 @@ export function createTransformedPlateBlock(
   switch (input.type) {
     case 'paragraph':
     case 'heading':
-    case 'list':
       return {
         ...nextBlock,
         id: element.id ?? nextBlock.id,
         children: inlineChildren,
       };
+    case 'list': {
+      const isExistingListItem =
+        element.listStyleType === KEYS.ol || element.listStyleType === KEYS.ul;
+
+      return {
+        ...nextBlock,
+        id: element.id ?? nextBlock.id,
+        children: inlineChildren,
+        indent: isExistingListItem ? element.indent : nextBlock.indent,
+        courseListId: isExistingListItem
+          ? element.courseListId
+          : nextBlock.courseListId,
+      };
+    }
     case 'quote':
       return {
         ...nextBlock,

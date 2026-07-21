@@ -41,14 +41,16 @@ export type CourseQuoteBlock = RankedContent & {
   children: RichTextNode[];
 };
 
+export type CourseListVariant = 'ordered' | 'unordered';
+
 export type CourseListItem = RankedContent & {
   children: RichTextNode[];
   indent?: number;
+  variant: CourseListVariant;
 };
 
 export type CourseListBlock = RankedContent & {
   type: 'list';
-  variant: 'ordered' | 'unordered';
   items: CourseListItem[];
 };
 

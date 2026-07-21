@@ -145,10 +145,10 @@ function normalizeContent(blocks: CourseContentBlockItem[]): unknown[] {
       case 'list':
         return {
           type: 'list',
-          variant: block.variant,
           items: sortRankedContent(block.items).map((item) => ({
             children: normalizeRichText(item.children),
             indent: normalizeCourseListIndent(item.indent),
+            variant: item.variant,
           })),
         };
       case 'spoiler':
