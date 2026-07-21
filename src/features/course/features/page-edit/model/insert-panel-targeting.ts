@@ -84,6 +84,11 @@ export function getNextCoursePageBlockInsertPanelState(
   cursorY: number
 ): CoursePageBlockInsertPanelState {
   const containerRect = container.getBoundingClientRect();
+
+  if (cursorY < containerRect.top || cursorY > containerRect.bottom) {
+    return { status: 'hidden' };
+  }
+
   const nearestBlock = getNearestBlockCandidate(
     getBlockCandidates(container),
     cursorY
