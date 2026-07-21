@@ -16,6 +16,7 @@ import {
   ListCollapse,
   ListOrdered,
   Quote,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -25,12 +26,14 @@ import {
 } from 'platejs/react';
 import type { SlateEditor } from 'platejs';
 
+import { Button } from '@/shadcn/components/ui/button';
 import {
   Command,
   CommandGroup,
   CommandItem,
   CommandList,
 } from '@/shadcn/components/ui/command';
+import { Kbd } from '@/shadcn/components/ui/kbd';
 import { cn } from '@/shadcn/lib/utils';
 import { isSingleKeyShortcut } from '@/features/course/features/page-edit/model/shortcuts';
 import {
@@ -179,6 +182,14 @@ function useSlashMenuController({
     [editor, setSelectedIndex, state]
   );
 
+  const dismissMenu = useCallback(() => {
+    if (!triggerId) {
+      return;
+    }
+
+    setDismissal({ status: 'dismissed', triggerId });
+  }, [triggerId]);
+
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (!isOpen || event.isComposing) {
@@ -226,10 +237,18 @@ function useSlashMenuController({
       ) {
         event.preventDefault();
         event.stopPropagation();
-        setDismissal({ status: 'dismissed', triggerId });
+        dismissMenu();
       }
     },
-    [activeItem, applyItem, isOpen, items.length, setSelectedIndex, triggerId]
+    [
+      activeItem,
+      applyItem,
+      dismissMenu,
+      isOpen,
+      items.length,
+      setSelectedIndex,
+      triggerId,
+    ]
   );
 
   useEffect(() => {
@@ -246,6 +265,7 @@ function useSlashMenuController({
     activeIndex,
     activeItem,
     applyItem,
+    dismissMenu,
     isOpen,
     items,
     setSelectedIndex,
@@ -351,6 +371,7 @@ export function CoursePageSlashMenu({
     activeIndex,
     activeItem,
     applyItem,
+    dismissMenu,
     isOpen,
     items,
     setSelectedIndex,
@@ -369,12 +390,29 @@ export function CoursePageSlashMenu({
   return (
     <div
       contentEditable={false}
-      className="absolute z-50 w-80 overflow-hidden rounded-xl border bg-popover p-1 shadow-lg"
+      className="absolute z-50 w-80 overflow-hidden rounded-xl border bg-popover shadow-lg"
       style={position}
     >
       <Command value={activeItem?.id} shouldFilter={false}>
+        <div className="flex items-center gap-2 border-b px-3 py-2">
+          <span className="text-xs font-medium text-muted-foreground">
+            Добавить блок
+          </span>
+          <Kbd className="ml-auto">Esc</Kbd>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Закрыть меню добавления блока"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={dismissMenu}
+          >
+            <X />
+          </Button>
+        </div>
         <CommandList ref={commandListRef}>
-          <CommandGroup heading="Добавить блок">
+          <CommandGroup>
             {items.map((item, index) => {
               const Icon = ICON_BY_SLASH_MENU_ITEM_ID[item.id];
 
