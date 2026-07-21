@@ -1,6 +1,7 @@
 import { KEYS, type Value } from 'platejs';
 
 import {
+  clampCourseListIndent,
   normalizeCourseListIndent,
   serializeCourseListIndent,
 } from '@/features/course/features/page/model/list-indent';
@@ -407,11 +408,17 @@ export function serializePlateToCourseContent(
         blocks.push(currentList);
       }
 
+      const previousItem = currentList.items.at(-1);
+      const indent = clampCourseListIndent(
+        element.indent,
+        previousItem ? previousItem.indent : null
+      );
+
       currentList.items.push({
         id: getBlockId(element, index),
         rank: createRank(currentList.items.length),
         children: serializeRichText(element.children),
-        indent: serializeCourseListIndent(element.indent),
+        indent: serializeCourseListIndent(indent),
         variant: element.listStyleType === KEYS.ol ? 'ordered' : 'unordered',
       });
       return;
