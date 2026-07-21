@@ -176,6 +176,7 @@ export const coursePagePlatePlugins = [
   BlockquotePlugin.configure({
     inputRules: [BlockquoteRules.markdown({ enabled: isMarkdownInputEnabled })],
     node: { component: BlockquoteElement },
+    rules: { break: { empty: 'default' } },
   }),
   BoldPlugin.configure({
     inputRules: [

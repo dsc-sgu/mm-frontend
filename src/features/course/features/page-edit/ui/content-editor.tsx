@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo, useRef } from 'react';
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
 
+import { exitCourseStructuredBlock } from '@/features/course/features/page-edit/model/block-exit';
 import type { CoursePageContentEditorReset } from '@/features/course/features/page-edit/model/editor-store';
 import {
   deserializeCourseContentToPlate,
@@ -70,6 +71,11 @@ function CoursePagePlateEditor({
           data-course-page-editor-content="true"
           className={'min-h-64 px-1 py-2 outline-none selection:bg-primary/20'}
           spellCheck={false}
+          onKeyDown={(event) => {
+            if (exitCourseStructuredBlock(editor, event.nativeEvent)) {
+              event.preventDefault();
+            }
+          }}
         />
       </div>
     </Plate>
