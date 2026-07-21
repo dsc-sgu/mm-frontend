@@ -32,6 +32,7 @@ import {
   CommandList,
 } from '@/shadcn/components/ui/command';
 import { cn } from '@/shadcn/lib/utils';
+import { isSingleKeyShortcut } from '@/features/course/features/page-edit/model/shortcuts';
 import {
   applyCoursePageSlashMenuItem,
   filterCoursePageSlashMenuItems,
@@ -208,7 +209,7 @@ function useSlashMenuController({
         return;
       }
 
-      if (event.key === 'Enter' && activeItem) {
+      if (isSingleKeyShortcut(event, 'Enter') && activeItem) {
         event.preventDefault();
         event.stopPropagation();
         applyItem(activeItem);

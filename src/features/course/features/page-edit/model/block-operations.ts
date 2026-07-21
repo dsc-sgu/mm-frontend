@@ -466,6 +466,23 @@ export function insertParagraphBelow(editor: SlateEditor, path: Path) {
   return insertParagraphRelative(editor, path, 'after');
 }
 
+export function focusOrInsertParagraphBelow(editor: SlateEditor, path: Path) {
+  const parentPath = getParentPath(path);
+  const nextPath = [...parentPath, getPathIndex(path) + 1];
+  const nextNode = getNodeAtPath(editor.children, nextPath);
+
+  if (
+    isElementNode(nextNode) &&
+    nextNode.type === KEYS.p &&
+    getPlainText(nextNode.children).length === 0
+  ) {
+    selectPathSoon(editor, nextPath);
+    return true;
+  }
+
+  return insertParagraphBelow(editor, path);
+}
+
 export function duplicateBlock(editor: SlateEditor, path: Path) {
   const block = getBlockEntryAtPath(editor, path)?.element;
 
