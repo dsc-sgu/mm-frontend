@@ -83,7 +83,9 @@ export function CoursePageBlockInsertPanel({
               'focus-visible:ring-2 focus-visible:ring-ring',
               'focus-visible:outline-none'
             )}
-            style={{ top: insertPanelState.cursorY }}
+            style={{
+              top: `clamp(0.875rem, ${insertPanelState.cursorY}px, calc(100% - 0.875rem))`,
+            }}
             aria-label={
               insertPanelState.placement === 'before'
                 ? 'Добавить блок выше'
