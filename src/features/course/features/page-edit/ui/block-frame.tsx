@@ -1,4 +1,6 @@
 import { useCallback, useRef, type PointerEvent, type ReactNode } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { type PlateElementProps, PlateElement } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
@@ -35,10 +37,6 @@ function getSelectionTarget(
     : { source: 'path', path };
 }
 
-function isPrimaryPointerEvent(event: PointerEvent<HTMLElement>) {
-  return event.button === 0;
-}
-
 export function CoursePageBlockFrame({
   alignGutterToEditorContent = false,
   children,
@@ -62,6 +60,19 @@ export function CoursePageBlockFrame({
   const element = props.element as CoursePlateElement;
   const selectionTarget = getSelectionTarget(element, props.path);
   const selectionTargetKey = getCoursePageBlockTargetKey(selectionTarget);
+  const isTopLevelBlock = props.path.length === 1;
+  const {
+    attributes: sortableAttributes,
+    isDragging,
+    listeners: sortableListeners,
+    setActivatorNodeRef,
+    setNodeRef: setSortableNodeRef,
+    transform,
+    transition,
+  } = useSortable({
+    id: selectionTargetKey,
+    disabled: !isTopLevelBlock,
+  });
   const isSelected = useCoursePageEditStore((state) =>
     isCoursePageBlockSelected(state.blockSelection, selectionTarget)
   );
@@ -71,15 +82,30 @@ export function CoursePageBlockFrame({
   const blockRef = useRef<HTMLElement | null>(null);
   const Content = contentAs ?? 'div';
 
-  const setBlockRef = useCallback((node: HTMLElement | null) => {
-    blockRef.current = node;
-  }, []);
+  const setBlockRef = useCallback(
+    (node: HTMLElement | null) => {
+      blockRef.current = node;
+      setSortableNodeRef(node);
+    },
+    [setSortableNodeRef]
+  );
 
   const gutterStyle = useCoursePageBlockGutterAlignment({
     blockRef,
     enabled: alignGutterToEditorContent,
     refreshKey: `${String(element.listStyleType)}:${String(element.indent)}`,
   });
+
+  function handleDragHandlePointerDown(event: PointerEvent<HTMLButtonElement>) {
+    sortableListeners?.onPointerDown?.(event);
+
+    if (event.button === 0) {
+      // Radix opens DropdownMenuTrigger on pointer down. Prevent that default
+      // trigger behavior while preserving dnd-kit's activator; a completed
+      // click opens the menu only after pointer up.
+      event.preventDefault();
+    }
+  }
 
   function selectCurrentBlock({
     preserveExisting = false,
@@ -108,6 +134,15 @@ export function CoursePageBlockFrame({
       )}
       {...props}
       ref={setBlockRef}
+      style={{
+        ...props.style,
+        transform: CSS.Translate.toString(
+          transform ? { ...transform, x: 0 } : null
+        ),
+        transition,
+        zIndex: isDragging ? 40 : props.style?.zIndex,
+        opacity: isDragging ? 0.65 : props.style?.opacity,
+      }}
       attributes={{
         ...props.attributes,
         'data-course-page-block': 'true',
@@ -119,7 +154,7 @@ export function CoursePageBlockFrame({
       <div
         contentEditable={false}
         className={cn(
-          'group/course-page-gutter absolute top-0 bottom-0 -left-8 z-10',
+          'group/course-page-gutter absolute top-0 bottom-0 -left-5 z-10 sm:-left-8',
           'flex items-stretch gap-1',
           'opacity-0 transition-opacity',
           'group-focus-within/course-page-block:opacity-100',
@@ -136,8 +171,12 @@ export function CoursePageBlockFrame({
           {({ openMenu }) => (
             <button
               type="button"
+              ref={setActivatorNodeRef}
+              {...sortableAttributes}
+              {...sortableListeners}
+              onPointerDown={handleDragHandlePointerDown}
               className={cn(
-                'flex h-full w-4 cursor-grab items-center justify-center',
+                'flex h-full w-4 cursor-grab touch-none items-center justify-center',
                 'rounded-sm border border-transparent text-muted-foreground/70',
                 'transition-colors',
                 isInsertPanelTargetHovered &&
@@ -148,25 +187,17 @@ export function CoursePageBlockFrame({
                 'focus-visible:outline-none'
               )}
               aria-label="Открыть меню блока"
+              data-course-page-block-drag-handle={selectionTargetKey}
               onMouseEnter={(event) => showInsertPanelPreview(event.clientY)}
               onMouseMove={(event) => showInsertPanelPreview(event.clientY)}
               onMouseLeave={hideInsertPanelPreview}
-              onPointerDownCapture={(event) => {
-                if (!isPrimaryPointerEvent(event)) {
-                  return;
-                }
-
+              onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
-              }}
-              onPointerUp={(event) => {
-                if (!isPrimaryPointerEvent(event)) {
-                  return;
-                }
 
-                event.preventDefault();
-                event.stopPropagation();
-                openMenu();
+                if (!isDragging) {
+                  openMenu();
+                }
               }}
             >
               <span

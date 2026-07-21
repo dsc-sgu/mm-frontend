@@ -1,4 +1,4 @@
-import { Children, type ReactNode, useState } from 'react';
+import { Children, type ReactNode } from 'react';
 import {
   CalendarDays,
   FileText,
@@ -329,7 +329,10 @@ export function CourseSpoilerTitleElement({
 
 export function ToggleElement({ children, ...props }: PlateElementProps) {
   const element = getElement(props.element);
-  const [isOpen, setIsOpen] = useState(element.defaultOpen === true);
+  const isOpen =
+    typeof element.courseEditorOpen === 'boolean'
+      ? element.courseEditorOpen
+      : element.defaultOpen === true;
   const [title, ...body] = Children.toArray(children);
 
   return (
@@ -353,7 +356,10 @@ export function ToggleElement({ children, ...props }: PlateElementProps) {
           onMouseDown={(event) => event.preventDefault()}
           onClick={(event) => {
             event.preventDefault();
-            setIsOpen((current) => !current);
+            props.editor.tf.setNodes(
+              { courseEditorOpen: !isOpen },
+              { at: props.path }
+            );
           }}
         >
           {isOpen ? '▾' : '▸'}

@@ -8,6 +8,7 @@ import {
   type CoursePlateElement,
   type CoursePlateInline,
 } from '@/features/course/features/page-edit/model/plate-content';
+import { getCoursePageBlockTargetKey } from '@/features/course/features/page-edit/model/block-target';
 
 export type CreatePlateBlockInput =
   | { type: 'paragraph' }
@@ -530,6 +531,42 @@ export function removeBlock(editor: SlateEditor, path: Path) {
   selectPathSoon(editor, nextPath);
 
   return true;
+}
+
+export function moveTopLevelBlockByKey(
+  editor: SlateEditor,
+  activeKey: string,
+  overKey: string
+) {
+  const entries = getTopLevelBlockEntries(editor);
+  const activeIndex = entries.findIndex((entry) =>
+    isEditorBlockEntryKey(entry, activeKey)
+  );
+  const overIndex = entries.findIndex((entry) =>
+    isEditorBlockEntryKey(entry, overKey)
+  );
+
+  if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
+    return false;
+  }
+
+  const nextValue = getEditorValue(editor);
+  const [activeBlock] = nextValue.splice(activeIndex, 1);
+
+  nextValue.splice(overIndex, 0, activeBlock);
+  setEditorValue(editor, nextValue);
+
+  return true;
+}
+
+function isEditorBlockEntryKey(entry: CoursePageEditorBlockEntry, key: string) {
+  return (
+    getCoursePageBlockTargetKey(
+      entry.id
+        ? { source: 'id', id: entry.id, path: entry.path }
+        : { source: 'path', path: entry.path }
+    ) === key
+  );
 }
 
 export function moveBlock(editor: SlateEditor, path: Path, direction: -1 | 1) {
