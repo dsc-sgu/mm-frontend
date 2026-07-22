@@ -21,6 +21,7 @@ export type CoursePlateText = {
   text: string;
   bold?: boolean;
   italic?: boolean;
+  code?: boolean;
 };
 
 export type CoursePlateLink = {
@@ -55,6 +56,7 @@ function textMarks(node: RichTextNode) {
   return {
     bold: node.marks?.includes('bold') || undefined,
     italic: node.marks?.includes('italic') || undefined,
+    code: node.marks?.includes('code') || undefined,
   };
 }
 
@@ -85,6 +87,7 @@ function serializeTextMarks(text: CoursePlateText): RichTextMark[] | undefined {
 
   if (text.bold) marks.push('bold');
   if (text.italic) marks.push('italic');
+  if (text.code) marks.push('code');
 
   return marks.length > 0 ? marks : undefined;
 }
