@@ -1,6 +1,6 @@
 import type { CourseSummary } from '@/features/course/model/types';
 
-export type RichTextMark = 'bold' | 'italic';
+export type RichTextMark = 'bold' | 'italic' | 'code';
 
 export type RichTextTextNode = {
   id: string;

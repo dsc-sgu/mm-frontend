@@ -14,7 +14,15 @@ function applyMarks(node: RichTextNode, children: ReactNode) {
       return <strong>{content}</strong>;
     }
 
-    return <em>{content}</em>;
+    if (mark === 'italic') {
+      return <em>{content}</em>;
+    }
+
+    return (
+      <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.9em]">
+        {content}
+      </code>
+    );
   }, children);
 }
 
