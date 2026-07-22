@@ -2,7 +2,6 @@ import { KEYS, type Value } from 'platejs';
 
 import {
   clampCourseListIndent,
-  normalizeCourseListIndent,
   serializeCourseListIndent,
 } from '@/features/course/features/page/model/list-indent';
 import { sortRankedContent } from '@/features/course/features/page/model/rank';
@@ -151,6 +150,42 @@ function serializeRichText(
   });
 }
 
+// Plate renders every flattened list item in a separate <ol>, so omitting
+// listStart makes all ordered items display as 1. Track counters per nesting
+// level and variant so nested mixed lists do not break their parent numbering.
+function deserializeListBlock(block: CourseListBlock): CoursePlateElement[] {
+  const levels: Array<
+    | {
+        count: number;
+        variant: CourseListBlock['items'][number]['variant'];
+      }
+    | undefined
+  > = [];
+  let previousIndent: number | null = null;
+
+  return sortRankedContent(block.items).map((item) => {
+    const indent = clampCourseListIndent(item.indent, previousIndent);
+
+    previousIndent = indent;
+    levels.length = indent;
+
+    const level = levels[indent - 1];
+    const listStart = level?.variant === item.variant ? level.count + 1 : 1;
+
+    levels[indent - 1] = { count: listStart, variant: item.variant };
+
+    return {
+      id: item.id,
+      type: KEYS.p,
+      listStyleType: item.variant === 'ordered' ? KEYS.ol : KEYS.ul,
+      listStart: item.variant === 'ordered' ? listStart : undefined,
+      indent,
+      courseListId: block.id,
+      children: deserializeRichText(item.children),
+    };
+  });
+}
+
 function deserializeBlock(block: CourseContentBlockItem): CoursePlateElement[] {
   switch (block.type) {
     case 'paragraph':
@@ -184,14 +219,7 @@ function deserializeBlock(block: CourseContentBlockItem): CoursePlateElement[] {
         },
       ];
     case 'list':
-      return sortRankedContent(block.items).map((item) => ({
-        id: item.id,
-        type: KEYS.p,
-        listStyleType: item.variant === 'ordered' ? KEYS.ol : KEYS.ul,
-        indent: normalizeCourseListIndent(item.indent),
-        courseListId: block.id,
-        children: deserializeRichText(item.children),
-      }));
+      return deserializeListBlock(block);
     case 'spoiler':
       return [
         {
