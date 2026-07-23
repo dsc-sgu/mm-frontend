@@ -35,6 +35,7 @@ import { coursePagePlatePlugins } from '@/features/course/features/page-edit/mod
 import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CoursePageBlockInsertPanel } from '@/features/course/features/page-edit/ui/block-insert-panel';
 import { CoursePageSlashMenu } from '@/features/course/features/page-edit/ui/slash-menu';
+import { CoursePageSelectionToolbar } from '@/features/course/features/page-edit/ui/selection-toolbar';
 
 const COURSE_PAGE_DRAG_KEYBOARD_CODES = {
   start: ['Space'],
@@ -173,6 +174,7 @@ function CoursePageSortableEditor({
             containerRef={editorContainerRef}
             editor={editor}
           />
+          <CoursePageSelectionToolbar />
           <PlateContent
             data-course-page-editor-content="true"
             className={
