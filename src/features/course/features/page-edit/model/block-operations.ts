@@ -429,15 +429,6 @@ export function getBlockEntryAtPath(editor: SlateEditor, path: Path) {
   } satisfies CoursePageEditorBlockEntry;
 }
 
-export function selectBlock(editor: SlateEditor, path: Path) {
-  if (!editor.api.hasPath(path)) {
-    return false;
-  }
-
-  editor.tf.select(path);
-  return true;
-}
-
 export function insertBlockRelative(
   editor: SlateEditor,
   path: Path,

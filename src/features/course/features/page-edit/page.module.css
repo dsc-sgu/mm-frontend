@@ -1,0 +1,10 @@
+.selectionSurface {
+  isolation: isolate;
+}
+
+:global(.course-page-selection-area) {
+  pointer-events: none;
+  z-index: 50;
+  border: 1px solid var(--primary);
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+}

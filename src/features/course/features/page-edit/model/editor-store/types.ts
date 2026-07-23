@@ -5,10 +5,6 @@ import type {
   CoursePage,
   CoursePageResources,
 } from '@/features/course/features/page/model/types';
-import type {
-  CoursePageBlockSelection,
-  CoursePageBlockSelectionTarget,
-} from '@/features/course/features/page-edit/model/block-selection';
 import type { CoursePageBlockInsertPanelState } from '@/features/course/features/page-edit/model/insert-panel-targeting';
 import type { CoursePageEditValidationErrors } from '@/features/course/features/page-edit/model/validation';
 
@@ -28,7 +24,6 @@ export type CoursePageContentEditorReset = {
 };
 
 export type CoursePageEditStoreState = {
-  blockSelection: CoursePageBlockSelection;
   canApply: boolean;
   contentEditorContainer: HTMLElement | null;
   contentEditorReset: CoursePageContentEditorReset;
@@ -43,13 +38,10 @@ export type CoursePageEditStoreState = {
 
 export type CoursePageEditStoreActions = {
   changeResources: (resources: CoursePageResources) => void;
-  clearBlockSelection: () => void;
   hideInsertPanel: () => void;
   hideInsertPanelPreview: () => void;
   markWorkingCopySaved: (savedWorkingCopy: CoursePage) => void;
-  replaceBlockSelection: (targets: CoursePageBlockSelectionTarget[]) => void;
   resetWorkingCopy: () => void;
-  selectOnlyBlock: (target: CoursePageBlockSelectionTarget) => void;
   setContentFromEditor: (input: {
     content: CourseContentBlockItem[];
     editorRevision: number;

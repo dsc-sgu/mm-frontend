@@ -5,6 +5,7 @@ import { LinkRules } from '@platejs/link';
 import { LinkPlugin } from '@platejs/link/react';
 import { BulletedListRules, OrderedListRules } from '@platejs/list';
 import { ListPlugin } from '@platejs/list/react';
+import { BlockSelectionPlugin } from '@platejs/selection/react';
 import { TogglePlugin } from '@platejs/toggle/react';
 import {
   BlockquoteRules,
@@ -199,6 +200,28 @@ const CourseListIndentPlugin = createPlatePlugin({
 
 export const coursePagePlatePlugins = [
   NodeIdPlugin,
+  BlockSelectionPlugin.configure({
+    options: {
+      areaOptions: {
+        boundaries: '#course-edit-selection-surface',
+        container: '#course-edit-selection-surface',
+        startAreas: '[data-course-page-selection-start-area="true"]',
+        selectables:
+          '[data-course-page-editor-container="true"] .slate-selectable',
+        selectionAreaClass: 'course-page-selection-area',
+        behaviour: {
+          scrolling: {
+            speedDivider: 0.8,
+          },
+          startThreshold: 4,
+        },
+        features: {
+          touch: false,
+        },
+      },
+      isSelectable: (_element, path) => path.length === 1,
+    },
+  }),
   ParagraphPlugin.withComponent(ParagraphElement),
   H1Plugin.configure({
     inputRules: [HeadingRules.markdown({ enabled: isMarkdownInputEnabled })],
