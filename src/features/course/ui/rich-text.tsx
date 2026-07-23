@@ -33,27 +33,15 @@ function renderNode(node: RichTextNode) {
     return <span key={node.id}>{content}</span>;
   }
 
-  if (node.linkType === 'external') {
-    return (
-      <a
-        key={node.id}
-        href={node.href}
-        target="_blank"
-        rel="noreferrer"
-        className={cn(
-          'font-medium text-primary underline underline-offset-4',
-          'hover:text-primary/80'
-        )}
-      >
-        {content}
-      </a>
-    );
-  }
+  const opensInNewTab =
+    node.linkType === 'external' && /^https?:\/\//iu.test(node.href);
 
   return (
     <a
       key={node.id}
       href={node.href}
+      target={opensInNewTab ? '_blank' : undefined}
+      rel={opensInNewTab ? 'noreferrer' : undefined}
       className={cn(
         'font-medium text-primary underline underline-offset-4',
         'hover:text-primary/80'
