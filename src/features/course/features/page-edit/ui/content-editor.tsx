@@ -34,6 +34,7 @@ import {
 import { coursePagePlatePlugins } from '@/features/course/features/page-edit/model/plate-plugins';
 import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CoursePageBlockInsertPanel } from '@/features/course/features/page-edit/ui/block-insert-panel';
+import { CoursePageBlockSelectionToolbar } from '@/features/course/features/page-edit/ui/block-selection-toolbar';
 import { CoursePageSlashMenu } from '@/features/course/features/page-edit/ui/slash-menu';
 import { CoursePageSelectionToolbar } from '@/features/course/features/page-edit/ui/selection-toolbar';
 
@@ -175,6 +176,7 @@ function CoursePageSortableEditor({
             editor={editor}
           />
           <CoursePageSelectionToolbar />
+          <CoursePageBlockSelectionToolbar />
           <PlateContent
             data-course-page-editor-content="true"
             className={

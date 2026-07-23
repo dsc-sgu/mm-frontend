@@ -1,17 +1,19 @@
 import { useCallback, useRef, type PointerEvent, type ReactNode } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import {
+  BlockSelectionPlugin,
+  useBlockSelected,
+} from '@platejs/selection/react';
 import { type PlateElementProps, PlateElement } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
 import { useCoursePageBlockGutterAlignment } from '@/features/course/features/page-edit/hooks/use-block-gutter-alignment';
 import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import {
-  isCoursePageBlockSelected,
-  type CoursePageBlockSelectionTarget,
-} from '@/features/course/features/page-edit/model/block-selection';
-import { getCoursePageBlockTargetKey } from '@/features/course/features/page-edit/model/block-target';
-import { selectBlock as selectSlateBlock } from '@/features/course/features/page-edit/model/block-operations';
+  getCoursePageBlockTargetKey,
+  type CoursePageBlockTarget,
+} from '@/features/course/features/page-edit/model/block-target';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
 import { CoursePageBlockMenu } from '@/features/course/features/page-edit/ui/block-menu';
 
@@ -28,10 +30,10 @@ type CoursePageBlockFrameProps = PlateElementProps & {
   frameClassName?: string;
 };
 
-function getSelectionTarget(
+function getBlockTarget(
   element: CoursePlateElement,
   path: PlateElementProps['path']
-): CoursePageBlockSelectionTarget {
+): CoursePageBlockTarget {
   return typeof element.id === 'string'
     ? { source: 'id', id: element.id, path }
     : { source: 'path', path };
@@ -45,21 +47,15 @@ export function CoursePageBlockFrame({
   frameClassName,
   ...props
 }: CoursePageBlockFrameProps) {
-  const clearBlockSelection = useCoursePageEditStore(
-    (state) => state.clearBlockSelection
-  );
   const hideInsertPanelPreview = useCoursePageEditStore(
     (state) => state.hideInsertPanelPreview
-  );
-  const selectOnlyBlock = useCoursePageEditStore(
-    (state) => state.selectOnlyBlock
   );
   const showInsertPanelPreview = useCoursePageEditStore(
     (state) => state.showInsertPanelPreview
   );
   const element = props.element as CoursePlateElement;
-  const selectionTarget = getSelectionTarget(element, props.path);
-  const selectionTargetKey = getCoursePageBlockTargetKey(selectionTarget);
+  const blockTarget = getBlockTarget(element, props.path);
+  const blockTargetKey = getCoursePageBlockTargetKey(blockTarget);
   const isTopLevelBlock = props.path.length === 1;
   const {
     attributes: sortableAttributes,
@@ -70,14 +66,12 @@ export function CoursePageBlockFrame({
     transform,
     transition,
   } = useSortable({
-    id: selectionTargetKey,
+    id: blockTargetKey,
     disabled: !isTopLevelBlock,
   });
-  const isSelected = useCoursePageEditStore((state) =>
-    isCoursePageBlockSelected(state.blockSelection, selectionTarget)
-  );
+  const isSelected = useBlockSelected(element.id);
   const isInsertPanelTargetHovered = useCoursePageEditStore(
-    (state) => state.hoveredInsertPanelTargetKey === selectionTargetKey
+    (state) => state.hoveredInsertPanelTargetKey === blockTargetKey
   );
   const blockRef = useRef<HTMLElement | null>(null);
   const Content = contentAs ?? 'div';
@@ -112,28 +106,31 @@ export function CoursePageBlockFrame({
   }: {
     preserveExisting?: boolean;
   } = {}) {
-    if (!selectSlateBlock(props.editor, props.path)) {
-      clearBlockSelection();
+    if (typeof element.id !== 'string') {
       return;
     }
 
-    if (preserveExisting && isSelected) {
-      return;
+    const blockSelection =
+      props.editor.getApi(BlockSelectionPlugin).blockSelection;
+
+    if (!preserveExisting || !blockSelection.has(element.id)) {
+      blockSelection.set(element.id);
     }
 
-    selectOnlyBlock(selectionTarget);
+    blockSelection.focus();
   }
 
   return (
     <PlateElement
       as="div"
+      {...props}
+      ref={setBlockRef}
       className={cn(
         'group/course-page-block relative',
         'transition-colors outline-none',
+        props.className,
         frameClassName
       )}
-      {...props}
-      ref={setBlockRef}
       style={{
         ...props.style,
         transform: CSS.Translate.toString(
@@ -165,7 +162,7 @@ export function CoursePageBlockFrame({
       >
         <CoursePageBlockMenu
           editor={props.editor}
-          target={selectionTarget}
+          target={blockTarget}
           onOpen={() => selectCurrentBlock({ preserveExisting: true })}
         >
           {({ openMenu }) => (
@@ -187,7 +184,8 @@ export function CoursePageBlockFrame({
                 'focus-visible:outline-none'
               )}
               aria-label="Открыть меню блока"
-              data-course-page-block-drag-handle={selectionTargetKey}
+              data-plate-prevent-deselect="true"
+              data-course-page-block-drag-handle={blockTargetKey}
               onMouseEnter={(event) => showInsertPanelPreview(event.clientY)}
               onMouseMove={(event) => showInsertPanelPreview(event.clientY)}
               onMouseLeave={hideInsertPanelPreview}
@@ -201,7 +199,7 @@ export function CoursePageBlockFrame({
               }}
             >
               <span
-                className="flex flex-col items-center gap-1"
+                className="pointer-events-none flex flex-col items-center gap-1"
                 aria-hidden="true"
               >
                 <span className="size-1 rounded-full bg-current" />
@@ -220,9 +218,7 @@ export function CoursePageBlockFrame({
         />
       )}
 
-      <Content className={contentClassName} onMouseDown={clearBlockSelection}>
-        {children}
-      </Content>
+      <Content className={contentClassName}>{children}</Content>
     </PlateElement>
   );
 }

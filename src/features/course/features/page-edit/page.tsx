@@ -19,6 +19,8 @@ import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
 import type { CoursePage } from '@/features/course/features/page/model/types';
 
+import styles from './page.module.css';
+
 const FIELD_BY_ERROR = {
   title: 'course-edit-title',
   courseId: 'course-edit-slug',
@@ -129,35 +131,47 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
 
   return (
     <main
-      className={cn(
-        'mx-auto flex w-full max-w-6xl flex-col pb-32',
-        'sm:px-6 sm:py-6 lg:px-8'
-      )}
+      id="course-edit-selection-surface"
+      className={cn('relative w-full pb-32 sm:py-6', styles.selectionSurface)}
     >
-      <CoursePageEditHeroEditor
-        course={workingCopy}
-        errors={errors}
-        onChange={setWorkingCopy}
+      <div
+        aria-hidden="true"
+        data-plate-selectable="true"
+        data-course-page-selection-start-area="true"
+        className="absolute inset-0 z-0"
       />
 
-      <article
+      <div
         className={cn(
-          'px-5 pt-2 pb-8 md:mt-8 md:rounded-3xl md:border md:border-border',
-          'md:-mx-12 md:bg-card md:px-20 lg:-mx-10'
+          'relative z-10 mx-auto flex w-full max-w-6xl flex-col',
+          'sm:px-6 lg:px-8'
         )}
       >
-        <CoursePageContentEditor />
-      </article>
+        <CoursePageEditHeroEditor
+          course={workingCopy}
+          errors={errors}
+          onChange={setWorkingCopy}
+        />
 
-      <CoursePageEditApplyBar
-        isDirty={isDirty}
-        canApply={canApply}
-        isSaving={saveMutation.isPending}
-        oldSlug={courseSlug}
-        newSlug={workingCopy.courseId}
-        onReset={resetWorkingCopy}
-        onApply={apply}
-      />
+        <article
+          className={cn(
+            'px-5 pt-2 pb-8 md:mt-8 md:rounded-3xl md:border md:border-border',
+            'md:-mx-12 md:bg-card md:px-20 lg:-mx-10'
+          )}
+        >
+          <CoursePageContentEditor />
+        </article>
+
+        <CoursePageEditApplyBar
+          isDirty={isDirty}
+          canApply={canApply}
+          isSaving={saveMutation.isPending}
+          oldSlug={courseSlug}
+          newSlug={workingCopy.courseId}
+          onReset={resetWorkingCopy}
+          onApply={apply}
+        />
+      </div>
     </main>
   );
 }

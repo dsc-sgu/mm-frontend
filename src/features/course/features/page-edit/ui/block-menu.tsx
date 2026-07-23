@@ -17,6 +17,7 @@ import {
   Wand2,
   type LucideIcon,
 } from 'lucide-react';
+import { BlockMenuPlugin } from '@platejs/selection/react';
 import type { Path, SlateEditor } from 'platejs';
 
 import {
@@ -44,7 +45,7 @@ import {
   transformBlockById,
   type CreatePlateBlockInput,
 } from '@/features/course/features/page-edit/model/block-operations';
-import type { CoursePageBlockSelectionTarget } from '@/features/course/features/page-edit/model/block-selection';
+import type { CoursePageBlockTarget } from '@/features/course/features/page-edit/model/block-target';
 
 type CoursePageBlockMenuTriggerProps = {
   openMenu: () => void;
@@ -54,7 +55,7 @@ type CoursePageBlockMenuProps = {
   children: (props: CoursePageBlockMenuTriggerProps) => ReactNode;
   editor: SlateEditor;
   onOpen: () => void;
-  target: CoursePageBlockSelectionTarget;
+  target: CoursePageBlockTarget;
 };
 
 type TransformBlockOption = {
@@ -102,7 +103,7 @@ function runTargetedBlockOperation({
 }: {
   runById: (id: string) => boolean;
   runByPath: (path: Path) => boolean;
-  target: CoursePageBlockSelectionTarget;
+  target: CoursePageBlockTarget;
 }) {
   if (target.source === 'id') {
     return runById(target.id);
@@ -118,7 +119,7 @@ function insertParagraphAtTarget({
 }: {
   editor: SlateEditor;
   placement: 'after' | 'before';
-  target: CoursePageBlockSelectionTarget;
+  target: CoursePageBlockTarget;
 }) {
   return runTargetedBlockOperation({
     target,
@@ -136,8 +137,15 @@ export function CoursePageBlockMenu({
   const [isOpen, setIsOpen] = useState(false);
 
   function setMenuOpen(nextIsOpen: boolean) {
+    const blockMenu = editor.getApi(BlockMenuPlugin).blockMenu;
+
     if (nextIsOpen && !isOpen) {
       onOpen();
+      blockMenu.show(
+        target.source === 'id' ? target.id : `path:${target.path.join('.')}`
+      );
+    } else if (!nextIsOpen && isOpen) {
+      blockMenu.hide();
     }
 
     setIsOpen(nextIsOpen);
