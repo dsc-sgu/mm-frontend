@@ -1,3 +1,4 @@
+import { BlockSelectionPlugin } from '@platejs/selection/react';
 import { KEYS, type Path, type SlateEditor, type Value } from 'platejs';
 
 import {
@@ -208,9 +209,17 @@ function ensureEditorHasContent(value: CoursePlateElement[]) {
 
 function selectPathSoon(editor: SlateEditor, path: Path) {
   queueMicrotask(() => {
-    if (editor.api.hasPath(path)) {
-      editor.tf.focus({ at: path, edge: 'start', retries: 3 });
+    if (!editor.api.hasPath(path)) {
+      return;
     }
+
+    editor.getApi(BlockSelectionPlugin).blockSelection.deselect();
+    // BlockSelectionPlugin intercepts focus and drops its target options, so
+    // move the selection explicitly before forcing focus back to the editor.
+    editor.tf.select(editor.api.start(path));
+    editor.meta._forceFocus = true;
+    editor.tf.focus();
+    editor.meta._forceFocus = undefined;
   });
 }
 
