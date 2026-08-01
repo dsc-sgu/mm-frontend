@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import {
   ArrowDown,
   ArrowUp,
@@ -135,6 +135,7 @@ export function CoursePageBlockMenu({
   target,
 }: CoursePageBlockMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const shouldKeepEditorFocusOnCloseRef = useRef(false);
 
   function setMenuOpen(nextIsOpen: boolean) {
     const blockMenu = editor.getApi(BlockMenuPlugin).blockMenu;
@@ -149,6 +150,14 @@ export function CoursePageBlockMenu({
     }
 
     setIsOpen(nextIsOpen);
+  }
+
+  function insertParagraph(placement: 'after' | 'before') {
+    shouldKeepEditorFocusOnCloseRef.current = insertParagraphAtTarget({
+      editor,
+      placement,
+      target,
+    });
   }
 
   function duplicateCurrentBlock() {
@@ -201,20 +210,18 @@ export function CoursePageBlockMenu({
         side="left"
         sideOffset={8}
         className="w-60"
-      >
-        <DropdownMenuItem
-          onSelect={() =>
-            insertParagraphAtTarget({ editor, placement: 'before', target })
+        onCloseAutoFocus={(event) => {
+          if (shouldKeepEditorFocusOnCloseRef.current) {
+            shouldKeepEditorFocusOnCloseRef.current = false;
+            event.preventDefault();
           }
-        >
+        }}
+      >
+        <DropdownMenuItem onSelect={() => insertParagraph('before')}>
           <Plus />
           Добавить выше
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onSelect={() =>
-            insertParagraphAtTarget({ editor, placement: 'after', target })
-          }
-        >
+        <DropdownMenuItem onSelect={() => insertParagraph('after')}>
           <Plus />
           Добавить ниже
         </DropdownMenuItem>
