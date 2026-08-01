@@ -20,6 +20,7 @@ type AttemptReviewReviewPanelProps = {
   hasChanges: boolean;
   canSave: boolean;
   savePending: boolean;
+  id?: string;
   className?: string;
   onScoreChange: (score: string) => void;
   onFeedbackChange: (html: string) => void;
@@ -35,6 +36,7 @@ export function AttemptReviewReviewPanel({
   hasChanges,
   canSave,
   savePending,
+  id,
   className,
   onScoreChange,
   onFeedbackChange,
@@ -43,15 +45,16 @@ export function AttemptReviewReviewPanel({
 }: AttemptReviewReviewPanelProps) {
   return (
     <section
+      id={id}
       className={cn(
-        '-mx-3 grid gap-0 border-y bg-card sm:-mx-6 lg:-mx-8 lg:grid-cols-[20rem_minmax(0,1fr)]',
+        'grid gap-0 border-t bg-card lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]',
         className
       )}
     >
       <div
         className={cn(
           'grid content-start gap-4 border-b p-3 sm:p-4 lg:border-r',
-          'lg:border-b-0'
+          'lg:min-h-0 lg:overflow-y-auto lg:border-b-0'
         )}
       >
         <div className="flex items-center justify-between gap-3">
@@ -144,18 +147,26 @@ export function AttemptReviewReviewPanel({
         ) : null}
       </div>
 
-      <div className="flex min-w-0 flex-col gap-3 p-3 sm:p-4">
+      <div
+        className={cn(
+          'flex min-w-0 flex-col gap-3 p-3 sm:p-4',
+          'lg:min-h-0 lg:overflow-hidden'
+        )}
+      >
         <h2 className="font-semibold">Общий отзыв</h2>
         {mode === 'editable' ? (
           <RichTextEditor
             value={draft.overallFeedbackHtml}
             placeholder="Итоговый отзыв по попытке…"
             className="flex min-h-0 flex-1 flex-col"
-            minHeightClassName="min-h-0 flex-1"
+            minHeightClassName="min-h-0 flex-1 lg:overflow-y-auto"
             onChange={onFeedbackChange}
           />
         ) : (
-          <RichTextContent html={review.overallFeedback.html} />
+          <RichTextContent
+            html={review.overallFeedback.html}
+            className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+          />
         )}
       </div>
     </section>

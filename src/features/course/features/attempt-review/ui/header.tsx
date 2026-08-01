@@ -1,4 +1,3 @@
-import { forwardRef } from 'react';
 import { MessageSquareText, PanelLeftOpen } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -24,28 +23,21 @@ type AttemptReviewHeaderProps = {
   onOpenReviewPanel: () => void;
 };
 
-export const AttemptReviewHeader = forwardRef<
-  HTMLElement,
-  AttemptReviewHeaderProps
->(function AttemptReviewHeader(
-  {
-    mode,
-    review,
-    diffViewMode,
-    hasChanges,
-    totalAdded,
-    totalDeleted,
-    onDiffViewModeChange,
-    onOpenFileTree,
-    onOpenReviewPanel,
-  },
-  ref
-) {
+export function AttemptReviewHeader({
+  mode,
+  review,
+  diffViewMode,
+  hasChanges,
+  totalAdded,
+  totalDeleted,
+  onDiffViewModeChange,
+  onOpenFileTree,
+  onOpenReviewPanel,
+}: AttemptReviewHeaderProps) {
   return (
     <header
-      ref={ref}
       className={cn(
-        'sticky top-0 z-30 -mx-3 overflow-hidden border-b bg-background/95',
+        'z-30 -mx-3 shrink-0 overflow-hidden border-b bg-background/95',
         'px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80',
         'sm:-mx-6 sm:px-4 lg:-mx-8 lg:px-4'
       )}
@@ -145,4 +137,4 @@ export const AttemptReviewHeader = forwardRef<
       </div>
     </header>
   );
-});
+}

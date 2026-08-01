@@ -1,8 +1,6 @@
-import { useCallback, useMemo, useRef, useState, type RefObject } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { CodeViewOptions } from '@pierre/diffs';
 import { CodeView, type CodeViewHandle } from '@pierre/diffs/react';
-import { ArrowUp } from 'lucide-react';
-
 import { AttemptReviewCodeViewHeader } from './code-view-header';
 import {
   createAttemptReviewCodeViewItems,
@@ -25,7 +23,6 @@ import {
   canManageLineComment,
   canReplyToLineComment,
 } from '@/features/course/features/attempt-review/model/comment-permissions';
-import { useAttemptReviewScrollHandoff } from '@/features/course/features/attempt-review/hooks/use-scroll-handoff';
 import { useHtmlThemeType } from '@/features/course/features/attempt-review/hooks/use-html-theme';
 import { AttemptReviewLineCommentCard } from './comments/line-card';
 import type {
@@ -47,9 +44,6 @@ type AttemptReviewDiffProps = {
   loading?: boolean;
   viewMode?: 'unified' | 'split';
   className?: string;
-  enableScrollHandoff?: boolean;
-  scrollHandoffRootRef?: RefObject<HTMLElement | null>;
-  onScrollToReview?: () => void;
   onCommentsChange?: (comments: AttemptReviewLineComment[]) => void;
   onReplySubmit?: (
     commentId: string,
@@ -99,9 +93,6 @@ export function AttemptReviewDiff({
   loading = false,
   viewMode = 'unified',
   className,
-  enableScrollHandoff = false,
-  scrollHandoffRootRef,
-  onScrollToReview,
   onCommentsChange,
   onReplySubmit,
   onReplyUpdate,
@@ -127,12 +118,6 @@ export function AttemptReviewDiff({
     () => new Map(savedComments.map((comment) => [comment.id, comment])),
     [savedComments]
   );
-
-  useAttemptReviewScrollHandoff({
-    enabled: enableScrollHandoff,
-    rootRef: scrollHandoffRootRef ?? codeViewContainerRef,
-    innerScrollRef: codeViewContainerRef,
-  });
 
   const items = useMemo(
     () =>
@@ -347,21 +332,6 @@ export function AttemptReviewDiff({
           );
         }}
       />
-      {enableScrollHandoff && onScrollToReview ? (
-        <button
-          type="button"
-          className={cn(
-            'absolute right-4 bottom-4 z-20 inline-flex items-center gap-2',
-            'rounded-full border bg-background/95 px-3 py-2 text-sm',
-            'font-medium shadow-lg backdrop-blur transition-colors',
-            'hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring',
-            'focus-visible:outline-none'
-          )}
-          onClick={onScrollToReview}
-        >
-          <ArrowUp className="size-4" /> <span>К отзыву</span>
-        </button>
-      ) : null}
     </div>
   );
 }

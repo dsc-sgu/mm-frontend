@@ -17,9 +17,9 @@ import { useAttemptReviewDraft } from './model/draft';
 import { useAttemptReviewFileScroll } from './hooks/use-file-scroll';
 import { AttemptReviewFileTree } from './ui/file-tree';
 import { AttemptReviewHeader } from './ui/header';
-import { useAttemptReviewStickyOffset } from './hooks/use-sticky-offset';
 import { AttemptReviewMobileDrawer } from './ui/mobile-drawer';
 import { AttemptReviewReviewPanel } from './ui/review-panel';
+import { AttemptReviewReviewPanelToggle } from './ui/review-panel-toggle';
 import {
   useAttemptReviewQuery,
   useCreateAttemptReviewCommentReplyMutation,
@@ -48,6 +48,8 @@ type AttemptReviewPageLoadedProps = {
 } & AttemptReviewPageProps;
 
 type AttemptReviewMobileDrawerState = 'none' | 'file-tree' | 'review-panel';
+
+const REVIEW_PANEL_ID = 'attempt-review-review-panel';
 
 export function AttemptReviewPage(props: AttemptReviewPageProps) {
   const reviewQuery = useAttemptReviewQuery(props);
@@ -107,14 +109,12 @@ function AttemptReviewPageLoaded({
     review.changedFiles[0]?.path ?? null
   );
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
+  const [isReviewPanelCollapsed, setIsReviewPanelCollapsed] = useState(false);
   const [mobileDrawer, setMobileDrawer] =
     useState<AttemptReviewMobileDrawerState>('none');
   const [diffViewMode, setDiffViewMode] = useState<AttemptReviewDiffViewMode>(
     getStoredDiffViewMode
   );
-  const pageHeaderRef = useRef<HTMLElement | null>(null);
-  const pageRootRef = useRef<HTMLElement | null>(null);
-  const diffSectionRef = useRef<HTMLDivElement | null>(null);
   const diffViewerRef =
     useRef<CodeViewHandle<AttemptReviewLineCommentAnnotation> | null>(null);
   const isDesktopReviewLayout = useMediaQuery('(min-width: 1024px)');
@@ -154,14 +154,7 @@ function AttemptReviewPageLoaded({
     []
   );
 
-  useAttemptReviewStickyOffset({
-    pageHeaderRef,
-    pageRootRef,
-    isDesktopReviewLayout,
-  });
-
   const { scrollToFile } = useAttemptReviewFileScroll({
-    diffSectionRef,
     diffViewerRef,
     isDesktopReviewLayout,
     onCloseMobileFileTree: () => setMobileDrawer('none'),
@@ -225,14 +218,12 @@ function AttemptReviewPageLoaded({
 
   return (
     <main
-      ref={pageRootRef}
       className={cn(
-        'flex w-full flex-col gap-0',
-        'px-3 pt-0 pb-0 sm:px-6 sm:pt-0 sm:pb-0 lg:px-8'
+        'flex h-[calc(100dvh-6.25rem-2px)] min-h-0 w-full flex-col gap-0',
+        'overflow-hidden px-3 pt-0 pb-0 sm:px-6 sm:pt-0 sm:pb-0 lg:px-8'
       )}
     >
       <AttemptReviewHeader
-        ref={pageHeaderRef}
         mode={mode}
         review={review}
         diffViewMode={diffViewMode}
@@ -291,37 +282,16 @@ function AttemptReviewPageLoaded({
         </AttemptReviewMobileDrawer>
       ) : null}
 
-      {isDesktopReviewLayout ? (
-        <AttemptReviewReviewPanel
-          review={review}
-          draft={draft}
-          mode={mode}
-          scoreError={scoreError}
-          hasChanges={hasChanges}
-          canSave={canSave}
-          savePending={saveMutation.isPending}
-          onScoreChange={setScore}
-          onFeedbackChange={setOverallFeedbackHtml}
-          onDiscard={discard}
-          onSave={saveReview}
-        />
-      ) : null}
-
       <div
-        ref={diffSectionRef}
         className={cn(
-          '-mx-3 grid min-w-0 items-start gap-0',
-          'transition-[grid-template-columns] duration-200',
-          'sm:-mx-6 lg:-mx-8',
-          'lg:sticky lg:top-[var(--attempt-review-sticky-top,4rem)]',
-          'lg:h-[calc(100dvh_-_var(--attempt-review-sticky-top,4rem))]',
-          'lg:overflow-hidden',
+          '-mx-3 grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-0 overflow-hidden',
+          'transition-[grid-template-columns] duration-200 sm:-mx-6 lg:-mx-8',
           isFileTreeCollapsed
             ? 'lg:grid-cols-[3rem_minmax(0,1fr)]'
             : 'lg:grid-cols-[20rem_minmax(0,1fr)]'
         )}
       >
-        <aside className="hidden min-h-0 lg:block lg:h-full lg:self-start">
+        <aside className="hidden min-h-0 lg:block lg:h-full">
           <AttemptReviewFileTree
             files={review.changedFiles}
             comments={draft.lineComments}
@@ -333,33 +303,68 @@ function AttemptReviewPageLoaded({
           />
         </aside>
 
-        <AttemptReviewDiff
-          files={review.changedFiles}
-          comments={draft.lineComments}
-          savedComments={review.lineComments}
-          mode={mode}
-          currentReviewer={currentReviewer}
-          canReplyToComments={canReplyToComments}
-          viewMode={diffViewMode}
-          enableScrollHandoff={isDesktopReviewLayout}
-          scrollHandoffRootRef={pageRootRef}
-          onScrollToReview={scrollToReview}
-          onViewerChange={handleDiffViewerChange}
-          className="h-[70vh] min-h-0 min-w-0 bg-card lg:h-full"
-          onCommentsChange={(lineComments) => {
-            if (mode === 'editable' || canReplyToComments) {
-              setLineComments(lineComments);
-            }
-          }}
-          onReplySubmit={submitCommentReply}
-          onReplyUpdate={updateCommentReply}
-          onReplyDelete={deleteCommentReply}
-        />
+        <div className="relative flex min-h-0 min-w-0 flex-col overflow-hidden">
+          <AttemptReviewDiff
+            files={review.changedFiles}
+            comments={draft.lineComments}
+            savedComments={review.lineComments}
+            mode={mode}
+            currentReviewer={currentReviewer}
+            canReplyToComments={canReplyToComments}
+            viewMode={diffViewMode}
+            onViewerChange={handleDiffViewerChange}
+            className="min-h-0 min-w-0 flex-1 bg-card"
+            onCommentsChange={(lineComments) => {
+              if (mode === 'editable' || canReplyToComments) {
+                setLineComments(lineComments);
+              }
+            }}
+            onReplySubmit={submitCommentReply}
+            onReplyUpdate={updateCommentReply}
+            onReplyDelete={deleteCommentReply}
+          />
+
+          {isDesktopReviewLayout ? (
+            <div
+              className={cn(
+                'relative shrink-0',
+                isReviewPanelCollapsed && 'h-0'
+              )}
+            >
+              <AttemptReviewReviewPanelToggle
+                expanded={!isReviewPanelCollapsed}
+                controls={REVIEW_PANEL_ID}
+                className={cn(
+                  'absolute left-1/2 z-20 -translate-x-1/2',
+                  isReviewPanelCollapsed ? '-top-10' : 'top-0 -translate-y-1/2'
+                )}
+                onToggle={() =>
+                  setIsReviewPanelCollapsed((collapsed) => !collapsed)
+                }
+              />
+              <AttemptReviewReviewPanel
+                id={REVIEW_PANEL_ID}
+                review={review}
+                draft={draft}
+                mode={mode}
+                scoreError={scoreError}
+                hasChanges={hasChanges}
+                canSave={canSave}
+                savePending={saveMutation.isPending}
+                className={cn(
+                  'h-[clamp(14rem,35dvh,18rem)] min-h-0',
+                  'border-r-0 border-b-0 border-l-0',
+                  isReviewPanelCollapsed && 'hidden'
+                )}
+                onScoreChange={setScore}
+                onFeedbackChange={setOverallFeedbackHtml}
+                onDiscard={discard}
+                onSave={saveReview}
+              />
+            </div>
+          ) : null}
+        </div>
       </div>
     </main>
   );
-}
-
-function scrollToReview() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
