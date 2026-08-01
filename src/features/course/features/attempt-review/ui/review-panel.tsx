@@ -47,13 +47,13 @@ export function AttemptReviewReviewPanel({
     <section
       id={id}
       className={cn(
-        'grid gap-0 border-t bg-card lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]',
+        'grid gap-0 border-t bg-card lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]',
         className
       )}
     >
       <div
         className={cn(
-          'grid content-start gap-4 border-b p-3 sm:p-4 lg:border-r',
+          'flex flex-col gap-4 border-b p-3 sm:p-4 lg:order-2 lg:border-l',
           'lg:min-h-0 lg:overflow-y-auto lg:border-b-0'
         )}
       >
@@ -121,11 +121,11 @@ export function AttemptReviewReviewPanel({
         )}
 
         {mode === 'editable' ? (
-          <div className="grid gap-3 border-t pt-4">
-            <div className="flex flex-wrap justify-start gap-2">
+          <div className="mt-auto grid gap-3 border-t pt-4">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
-                className="rounded-xl"
+                className="w-full rounded-xl"
                 disabled={!canSave}
                 onClick={onSave}
               >
@@ -135,7 +135,7 @@ export function AttemptReviewReviewPanel({
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-xl"
+                className="w-full rounded-xl"
                 disabled={!hasChanges || savePending}
                 onClick={onDiscard}
               >
@@ -150,7 +150,7 @@ export function AttemptReviewReviewPanel({
       <div
         className={cn(
           'flex min-w-0 flex-col gap-3 p-3 sm:p-4',
-          'lg:min-h-0 lg:overflow-hidden'
+          'lg:order-1 lg:min-h-0 lg:overflow-hidden'
         )}
       >
         <h2 className="font-semibold">Общий отзыв</h2>
