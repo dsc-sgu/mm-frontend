@@ -8,27 +8,34 @@ type MockCourseAccess = {
 const MOCK_COURSE_ACCESS: Record<string, MockCourseAccess> = {
   'algorithms-and-data-structures': {
     teachers: ['inna_batraeva', 'maria_safronchik', 'teacher'],
-    students: ['t3m8ch', 'student', 'alice', 'bob', 'ivan-ivanov'],
+    students: [
+      't3m8ch',
+      'mit-teacher',
+      'student',
+      'alice',
+      'bob',
+      'ivan-ivanov',
+    ],
   },
   databases: {
     teachers: ['pavel_kovalev', 'teacher'],
-    students: ['t3m8ch', 'student', 'alice', 'petr-petrov'],
+    students: ['t3m8ch', 'mit-teacher', 'student', 'alice', 'petr-petrov'],
   },
   'programming-languages': {
     teachers: ['anna_levchenko', 'egor_titov', 'teacher'],
-    students: ['t3m8ch', 'student', 'bob', 'maria-ivanova'],
+    students: ['t3m8ch', 'mit-teacher', 'student', 'bob', 'maria-ivanova'],
   },
   'frontend-engineering': {
     teachers: ['elizaveta_gromova', 'teacher'],
-    students: ['t3m8ch', 'student', 'alice', 'frontend-student'],
+    students: ['t3m8ch', 'mit-teacher', 'student', 'alice', 'frontend-student'],
   },
   'operating-systems': {
     teachers: ['andrey_morozov', 'teacher'],
-    students: ['t3m8ch', 'student', 'os-student', 'bob'],
+    students: ['t3m8ch', 'mit-teacher', 'student', 'os-student', 'bob'],
   },
   'computer-networks': {
     teachers: ['daria_semenova', 'teacher'],
-    students: ['t3m8ch', 'student', 'network-student', 'alice'],
+    students: ['t3m8ch', 'mit-teacher', 'student', 'network-student', 'alice'],
   },
   'modern-information-technologies': {
     teachers: ['gohy279', 't3m8ch', 'teacher', 'mit-teacher'],
