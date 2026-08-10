@@ -298,7 +298,7 @@ export function formatAttemptReviewLabel(attemptId: string) {
 // provide real display data. Remove these functions when real data is wired.
 
 export function getStubTaskTitle(taskId: string) {
-  return `Лабораторная работа ${taskId}`;
+  return `Задание №${taskId}`;
 }
 
 export function getStubStudentName(username: string) {
