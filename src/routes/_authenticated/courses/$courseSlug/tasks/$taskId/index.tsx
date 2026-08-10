@@ -1,3 +1,4 @@
+import { CourseTaskPage } from '@/features/course/features/task/page';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
@@ -7,5 +8,7 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  return <main className="p-6 text-2xl font-semibold">Task root page</main>;
+  const { courseSlug, taskId } = Route.useParams();
+
+  return <CourseTaskPage courseSlug={courseSlug} taskId={taskId} />;
 }
