@@ -1,5 +1,17 @@
+export type TaskAttachmentKind =
+  | 'pdf'
+  | 'document'
+  | 'spreadsheet'
+  | 'presentation'
+  | 'archive'
+  | 'code'
+  | 'image'
+  | 'media'
+  | 'other';
+
 export type TaskAttachment = {
   id: string;
+  kind: TaskAttachmentKind;
   name: string;
   mimeType: string;
   sizeBytes: number;
