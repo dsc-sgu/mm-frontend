@@ -13,49 +13,58 @@ const TASK_TITLES: Record<string, string> = {
 
 const ATTACHMENTS = [
   {
+    kind: 'pdf',
     name: 'bash_reference.pdf',
     mimeType: 'application/pdf',
     sizeBytes: 284 * 1024,
   },
   {
+    kind: 'document',
     name: 'task_template.docx',
     mimeType:
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     sizeBytes: 46 * 1024,
   },
   {
+    kind: 'spreadsheet',
     name: 'expected_results.xlsx',
     mimeType:
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     sizeBytes: 32 * 1024,
   },
   {
+    kind: 'presentation',
     name: 'lesson_slides.pptx',
     mimeType:
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     sizeBytes: Math.round(3.4 * 1024 * 1024),
   },
   {
+    kind: 'archive',
     name: 'people_in_the_air.zip',
     mimeType: 'application/zip',
     sizeBytes: Math.round(1.8 * 1024 * 1024),
   },
   {
+    kind: 'code',
     name: 'catall_example.sh',
     mimeType: 'text/x-shellscript',
     sizeBytes: 4 * 1024,
   },
   {
+    kind: 'image',
     name: 'directory_scheme.png',
     mimeType: 'image/png',
     sizeBytes: 612 * 1024,
   },
   {
+    kind: 'media',
     name: 'command_demo.mp4',
     mimeType: 'video/mp4',
     sizeBytes: Math.round(18.6 * 1024 * 1024),
   },
   {
+    kind: 'other',
     name: 'input_sample.bin',
     mimeType: 'application/octet-stream',
     sizeBytes: 96 * 1024,

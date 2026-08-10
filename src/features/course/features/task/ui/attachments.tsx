@@ -16,15 +16,16 @@ import {
 
 import {
   formatFileSize,
-  getAttachmentCategory,
   getAttachmentExtension,
 } from '@/features/course/features/task/model/attachment';
-import type { AttachmentCategory } from '@/features/course/features/task/model/attachment';
-import type { TaskAttachment } from '@/features/course/features/task/model/types';
+import type {
+  TaskAttachment,
+  TaskAttachmentKind,
+} from '@/features/course/features/task/model/types';
 import { cn } from '@/shadcn/lib/utils';
 
 const CATEGORY_VISUALS: Record<
-  AttachmentCategory,
+  TaskAttachmentKind,
   { Icon: LucideIcon; className: string }
 > = {
   pdf: {
@@ -113,8 +114,7 @@ function TaskAttachmentLink({
   attachment: TaskAttachment;
   courseSlug: string;
 }) {
-  const category = getAttachmentCategory(attachment);
-  const { Icon, className: iconClassName } = CATEGORY_VISUALS[category];
+  const { Icon, className: iconClassName } = CATEGORY_VISUALS[attachment.kind];
   const format = getAttachmentExtension(attachment.name);
   const size = formatFileSize(attachment.sizeBytes);
 
