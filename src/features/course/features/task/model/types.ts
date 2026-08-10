@@ -1,48 +1,39 @@
-export type CourseTaskAttachmentKind =
-  | 'pdf'
-  | 'document'
-  | 'spreadsheet'
-  | 'presentation'
-  | 'archive'
-  | 'code'
-  | 'image'
-  | 'media'
-  | 'other';
-
-export type CourseTaskAttachment = {
+export type TaskAttachment = {
   id: string;
-  kind: CourseTaskAttachmentKind;
   name: string;
-  size: string;
+  mimeType: string;
+  sizeBytes: number;
 };
 
-type CourseTaskAttemptBase = {
+export type TaskAttemptReview =
+  | { status: 'pending' }
+  | {
+      status: 'graded';
+      score: number;
+      gradedAt: string;
+      graderName: string;
+    };
+
+export type TaskAttempt = {
   id: string;
-  attemptNumber: number;
+  number: number;
   studentUsername: string;
   submittedAt: string;
+  review: TaskAttemptReview;
 };
 
-export type CourseTaskAttempt =
-  | (CourseTaskAttemptBase & {
-      status: 'pending-review';
-    })
-  | (CourseTaskAttemptBase & {
-      status: 'graded';
-      gradedAt: string;
-      gradedBy: string;
-      score: number;
-      maxScore: number;
-    });
-
-export type CourseTaskPage = {
-  courseSlug: string;
-  taskId: string;
-  taskNumber: number;
+export type Task = {
+  id: string;
+  number: number;
   title: string;
   description: string;
   deadlineAt: string;
   maxScore: number;
-  attachments: CourseTaskAttachment[];
-  attempts: CourseTaskAttempt[];
+  attachments: TaskAttachment[];
+  attempts: TaskAttempt[];
+};
+
+export type TaskPageData = {
+  courseSlug: string;
+  task: Task;
 };
