@@ -8,7 +8,7 @@ To run the frontend with mock authorization, add this to `.env.local` and restar
 VITE_MOCK_AUTH=true
 ```
 
-In mock mode, login accepts any form credentials that pass client-side validation. The password is ignored, and the app signs in as `mit-teacher`, a teacher for the “Современные информационные технологии” course.
+With mock authorization enabled, the app immediately signs in as `mit-teacher` without showing the login form. This user is a teacher for the “Современные информационные технологии” course and a student in every other mock course.
 
 Remove the flag or set it to `false` to use the real `/api/v1/auth/*` backend endpoints.
 
