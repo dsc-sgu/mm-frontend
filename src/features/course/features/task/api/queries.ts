@@ -1,10 +1,16 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
 
-import { fetchCourseTaskPage } from '@/features/course/features/task/api/mock';
+import { fetchTaskPage } from './mock';
 
-export const COURSE_TASK_PAGE_QUERY_KEY = 'course-task-page';
+const TASK_PAGE_QUERY_KEY = ['course-task-page'] as const;
 
-export function courseTaskPageQueryOptions({
+export const taskPageKeys = {
+  all: TASK_PAGE_QUERY_KEY,
+  detail: (courseSlug: string, taskId: string) =>
+    [...TASK_PAGE_QUERY_KEY, courseSlug, taskId] as const,
+};
+
+export function taskPageQueryOptions({
   courseSlug,
   taskId,
 }: {
@@ -12,19 +18,19 @@ export function courseTaskPageQueryOptions({
   taskId: string;
 }) {
   return queryOptions({
-    queryKey: [COURSE_TASK_PAGE_QUERY_KEY, courseSlug, taskId],
-    queryFn: () => fetchCourseTaskPage({ courseSlug, taskId }),
+    queryKey: taskPageKeys.detail(courseSlug, taskId),
+    queryFn: () => fetchTaskPage({ courseSlug, taskId }),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-export function useCourseTaskPageQuery({
+export function useTaskPageQuery({
   courseSlug,
   taskId,
 }: {
   courseSlug: string;
   taskId: string;
 }) {
-  return useQuery(courseTaskPageQueryOptions({ courseSlug, taskId }));
+  return useQuery(taskPageQueryOptions({ courseSlug, taskId }));
 }

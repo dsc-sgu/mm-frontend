@@ -1,14 +1,17 @@
-import { CourseTaskPage } from '@/features/course/features/task/page';
 import { createFileRoute } from '@tanstack/react-router';
+
+import { CourseTaskPage } from '@/features/course/features/task/page';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/tasks/$taskId/'
 )({
-  component: RouteComponent,
+  component: TaskRoute,
 });
 
-function RouteComponent() {
-  const { courseSlug, taskId } = Route.useParams();
+function TaskRoute() {
+  const params = Route.useParams();
 
-  return <CourseTaskPage courseSlug={courseSlug} taskId={taskId} />;
+  return (
+    <CourseTaskPage courseSlug={params.courseSlug} taskId={params.taskId} />
+  );
 }
