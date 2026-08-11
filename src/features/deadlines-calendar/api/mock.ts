@@ -1,21 +1,8 @@
-import type { CourseColor } from '@/features/course/model/types';
+import { MOCK_COURSES } from '@/features/course/api/mock';
 import type {
   Deadline,
   DeadlinesByDay,
 } from '@/features/deadlines-calendar/model/types';
-
-const MOCK_COURSES: { name: string; color: CourseColor }[] = [
-  { name: 'Языки программирования', color: 'red' },
-  { name: 'Базы данных', color: 'blue' },
-  {
-    name: 'Современные информационные технологии',
-    color: 'green',
-  },
-  { name: 'Фронтенд', color: 'orange' },
-  { name: 'Операционные системы', color: 'violet' },
-  { name: 'Алгоритмы и структуры данных', color: 'teal' },
-  { name: 'Компьютерные сети', color: 'pink' },
-];
 
 const MOCK_TASKS = [
   'Лабораторная работа №1',
@@ -41,7 +28,7 @@ function getRandomDeadlineCount(): number {
 }
 
 function generateRandomDeadline(date: Date): Deadline {
-  const subject = MOCK_COURSES[Math.floor(Math.random() * MOCK_COURSES.length)];
+  const course = MOCK_COURSES[Math.floor(Math.random() * MOCK_COURSES.length)];
   const task = MOCK_TASKS[Math.floor(Math.random() * MOCK_TASKS.length)];
 
   const dueDate = new Date(date);
@@ -51,10 +38,10 @@ function generateRandomDeadline(date: Date): Deadline {
 
   return {
     id: `${date.toISOString()}-${Math.random().toString(36).slice(2, 11)}`,
-    subjectName: subject.name,
+    courseShortTitle: course.shortTitle,
     taskText: task,
     dueDate,
-    courseColor: subject.color,
+    courseColor: course.color,
   };
 }
 
