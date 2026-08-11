@@ -36,7 +36,9 @@ function DeadlineContent({ deadline }: { deadline: Deadline }) {
   return (
     <div className="space-y-3">
       <div>
-        <h3 className="mb-1 text-base font-semibold">{deadline.subjectName}</h3>
+        <h3 className="mb-1 text-base font-semibold">
+          {deadline.courseShortTitle}
+        </h3>
         <p className="text-sm text-muted-foreground">{deadline.taskText}</p>
       </div>
 

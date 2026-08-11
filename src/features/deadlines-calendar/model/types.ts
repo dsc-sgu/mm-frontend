@@ -2,7 +2,7 @@ import type { CourseColor } from '@/features/course/model/types';
 
 export type Deadline = {
   id: string;
-  subjectName: string;
+  courseShortTitle: string;
   taskText: string;
   dueDate: Date;
   courseColor: CourseColor;

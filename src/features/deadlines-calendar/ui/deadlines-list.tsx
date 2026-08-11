@@ -42,7 +42,7 @@ export function DeadlinesList({ deadlines }: DeadlinesListProps) {
               COURSE_COLOR_CLASSES[deadline.courseColor]
             )}
           >
-            {deadline.subjectName}
+            {deadline.courseShortTitle}
           </button>
         </DeadlineDetails>
       ))}
