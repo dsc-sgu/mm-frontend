@@ -18,6 +18,7 @@ function getCoursePageEditDerivedState(
 ) {
   const errors = validateCoursePageEdit({
     title: workingCopy.title,
+    shortTitle: workingCopy.shortTitle,
     courseId: workingCopy.courseId,
     description: workingCopy.description,
   });

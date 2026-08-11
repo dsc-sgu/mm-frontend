@@ -221,6 +221,7 @@ function getComparableCoursePage(course: CoursePage) {
   return {
     courseId: course.courseId,
     title: course.title,
+    shortTitle: course.shortTitle,
     description: course.description,
     color: course.color,
     iconName: course.iconName,

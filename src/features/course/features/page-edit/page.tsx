@@ -23,6 +23,7 @@ import styles from './page.module.css';
 
 const FIELD_BY_ERROR = {
   title: 'course-edit-title',
+  shortTitle: 'course-edit-short-title',
   courseId: 'course-edit-slug',
   description: 'course-edit-description',
 } as const;

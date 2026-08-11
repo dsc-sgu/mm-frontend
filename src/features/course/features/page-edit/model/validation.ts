@@ -34,6 +34,11 @@ export const coursePageEditSchema = v.object({
     v.trim(),
     v.minLength(1, 'Введите название курса.')
   ),
+  shortTitle: v.pipe(
+    v.string(),
+    v.trim(),
+    v.minLength(1, 'Введите короткое название курса.')
+  ),
   courseId: v.pipe(
     v.string(),
     v.trim(),
@@ -52,6 +57,7 @@ export const coursePageEditSchema = v.object({
 
 export type CoursePageEditValidationErrors = {
   title?: string;
+  shortTitle?: string;
   courseId?: string;
   description?: string;
 };
@@ -75,6 +81,7 @@ export function validateCoursePageEdit(
 
   return {
     title: nestedErrors?.title?.[0],
+    shortTitle: nestedErrors?.shortTitle?.[0],
     courseId: nestedErrors?.courseId?.[0],
     description: nestedErrors?.description?.[0],
   };

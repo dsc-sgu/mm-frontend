@@ -194,6 +194,22 @@ export function CoursePageEditHeroEditor({
           <FieldError>{errors.title}</FieldError>
         </div>
 
+        <div className="max-w-2xl space-y-2">
+          <Label htmlFor="course-edit-short-title">
+            Короткое название курса
+          </Label>
+          <Input
+            id="course-edit-short-title"
+            value={course.shortTitle}
+            onChange={(event) =>
+              onChange({ ...course, shortTitle: event.target.value })
+            }
+            aria-invalid={!!errors.shortTitle}
+            className="border-0 bg-background/55 shadow-none focus-visible:bg-background/80"
+          />
+          <FieldError>{errors.shortTitle}</FieldError>
+        </div>
+
         <CourseIconPicker
           value={course.iconName}
           onChange={(iconName) => onChange({ ...course, iconName })}
