@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
+import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import {
   Tooltip,
   TooltipContent,
@@ -139,7 +140,23 @@ export function AttemptsFiltersContent({
   }
 
   return (
-    <>
+    <div
+      onKeyDownCapture={(event) => {
+        const isApplyShortcut =
+          event.key === 'Enter' && (event.metaKey || event.ctrlKey);
+
+        if (!isApplyShortcut) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!applyDisabled) {
+          applyFilters();
+        }
+      }}
+    >
       {showHeader ? (
         <AttemptsFiltersHeader
           attemptsCount={attemptsCount}
@@ -195,7 +212,7 @@ export function AttemptsFiltersContent({
         onApply={applyFilters}
         onReset={resetFilters}
       />
-    </>
+    </div>
   );
 }
 
@@ -466,12 +483,13 @@ function AttemptsFiltersActions({
   onReset: () => void;
 }) {
   const isDrawer = variant === 'drawer';
+  const applyShortcutModifier = getApplyShortcutModifier();
 
   return (
     <TooltipProvider>
       <div
         className={cn(
-          'mt-6 grid grid-cols-2 gap-2',
+          'mt-6 grid grid-cols-1 gap-2',
           isDrawer &&
             'sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95' +
               'px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur' +
@@ -482,8 +500,14 @@ function AttemptsFiltersActions({
           <Tooltip>
             <TooltipTrigger asChild>
               <span tabIndex={0} className="inline-flex w-full">
-                <Button type="button" disabled className="w-full">
-                  Применить
+                <Button type="button" disabled className="w-full px-1">
+                  <span>Применить</span>
+                  <KbdGroup className="gap-1">
+                    <Kbd className="h-6 min-w-6 rounded-md px-1.5">
+                      {applyShortcutModifier}
+                    </Kbd>
+                    <Kbd className="h-6 min-w-6 rounded-md px-1.5">↵</Kbd>
+                  </KbdGroup>
                 </Button>
               </span>
             </TooltipTrigger>
@@ -494,9 +518,15 @@ function AttemptsFiltersActions({
             type="button"
             disabled={applyDisabled}
             onClick={onApply}
-            className="w-full"
+            className="w-full px-1"
           >
-            Применить
+            <span>Применить</span>
+            <KbdGroup className="gap-1">
+              <Kbd className="h-6 min-w-6 rounded-md px-1.5">
+                {applyShortcutModifier}
+              </Kbd>
+              <Kbd className="h-6 min-w-6 rounded-md px-1.5">↵</Kbd>
+            </KbdGroup>
           </Button>
         )}
         {filterActionsDisabledReason ? (
@@ -529,6 +559,14 @@ function AttemptsFiltersActions({
       </div>
     </TooltipProvider>
   );
+}
+
+function getApplyShortcutModifier() {
+  if (typeof navigator === 'undefined') {
+    return 'Ctrl';
+  }
+
+  return /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? '⌘' : 'Ctrl';
 }
 
 type AttemptsFiltersPanel = {
