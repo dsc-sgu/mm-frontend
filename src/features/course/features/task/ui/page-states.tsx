@@ -1,5 +1,6 @@
 import { AlertCircle } from 'lucide-react';
 
+import type { CourseRole } from '@/features/course/features/access/model/types';
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 
@@ -8,7 +9,7 @@ const PAGE_CLASS_NAME = cn(
   'lg:px-8 lg:py-9'
 );
 
-export function TaskPageLoading() {
+export function TaskPageLoading({ role }: { role: CourseRole }) {
   return (
     <main
       className={PAGE_CLASS_NAME}
@@ -29,16 +30,25 @@ export function TaskPageLoading() {
             ))}
           </div>
         </div>
+
+        {role === 'teacher' ? (
+          <div className="mt-6 flex flex-col gap-3 border-t pt-5 sm:flex-row">
+            <div className="h-10 rounded-xl bg-muted sm:w-64" />
+            <div className="h-10 rounded-xl bg-muted sm:w-52" />
+          </div>
+        ) : null}
       </div>
 
-      <div className="mt-7 sm:mt-9">
-        <div className="h-9 w-64 animate-pulse rounded-xl bg-muted" />
-        <div className="mt-5 divide-y overflow-hidden rounded-2xl border bg-card">
-          {Array.from({ length: 4 }, (_, index) => (
-            <div key={index} className="h-[84px] animate-pulse bg-muted/60" />
-          ))}
+      {role === 'student' ? (
+        <div className="mt-7 sm:mt-9">
+          <div className="h-9 w-64 animate-pulse rounded-xl bg-muted" />
+          <div className="mt-5 divide-y overflow-hidden rounded-2xl border bg-card">
+            {Array.from({ length: 4 }, (_, index) => (
+              <div key={index} className="h-[84px] animate-pulse bg-muted/60" />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
     </main>
   );
 }

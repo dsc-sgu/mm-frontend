@@ -1,3 +1,4 @@
+import type { CourseRole } from '@/features/course/features/access/model/types';
 import { useTaskPageQuery } from '@/features/course/features/task/api/queries';
 import type { TaskPageData } from '@/features/course/features/task/model/types';
 import { TaskAttachments } from '@/features/course/features/task/ui/attachments';
@@ -8,19 +9,22 @@ import {
   TaskPageLoading,
   TaskPageNotFound,
 } from '@/features/course/features/task/ui/page-states';
+import { TaskTeacherActions } from '@/features/course/features/task/ui/teacher-actions';
 import { cn } from '@/shadcn/lib/utils';
 
 export function CourseTaskPage({
   courseSlug,
   taskId,
+  role,
 }: {
   courseSlug: string;
   taskId: string;
+  role: CourseRole;
 }) {
   const taskPageQuery = useTaskPageQuery({ courseSlug, taskId });
 
   if (taskPageQuery.isPending) {
-    return <TaskPageLoading />;
+    return <TaskPageLoading role={role} />;
   }
 
   if (taskPageQuery.isError) {
@@ -31,10 +35,16 @@ export function CourseTaskPage({
     return <TaskPageNotFound />;
   }
 
-  return <TaskPageContent data={taskPageQuery.data} />;
+  return <TaskPageContent data={taskPageQuery.data} role={role} />;
 }
 
-function TaskPageContent({ data }: { data: TaskPageData }) {
+function TaskPageContent({
+  data,
+  role,
+}: {
+  data: TaskPageData;
+  role: CourseRole;
+}) {
   const { courseSlug, task } = data;
 
   return (
@@ -56,16 +66,21 @@ function TaskPageContent({ data }: { data: TaskPageData }) {
             attachments={task.attachments}
             courseSlug={courseSlug}
           />
+          {role === 'teacher' ? (
+            <TaskTeacherActions courseSlug={courseSlug} taskId={task.id} />
+          ) : null}
         </div>
       </section>
 
-      <TaskAttemptHistory
-        attempts={task.attempts}
-        courseSlug={courseSlug}
-        deadlineAt={task.deadlineAt}
-        maxScore={task.maxScore}
-        taskId={task.id}
-      />
+      {role === 'student' ? (
+        <TaskAttemptHistory
+          attempts={task.attempts}
+          courseSlug={courseSlug}
+          deadlineAt={task.deadlineAt}
+          maxScore={task.maxScore}
+          taskId={task.id}
+        />
+      ) : null}
     </main>
   );
 }
