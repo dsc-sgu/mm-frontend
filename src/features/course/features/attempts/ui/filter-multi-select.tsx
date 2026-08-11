@@ -5,9 +5,8 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from 'react';
-import { Check, Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
-import { Input } from '@/shadcn/components/ui/input';
 import {
   Popover,
   PopoverAnchor,
@@ -27,6 +26,7 @@ type FilterMultiSelectProps = {
   placeholder: string;
   emptyMessage: string;
   options: FilterMultiSelectOption[];
+  selectedOptions: FilterMultiSelectOption[];
   selectedValues: string[];
   loading: boolean;
   listClassName?: string;
@@ -41,6 +41,7 @@ export function FilterMultiSelect({
   placeholder,
   emptyMessage,
   options,
+  selectedOptions,
   selectedValues,
   loading,
   listClassName,
@@ -50,12 +51,16 @@ export function FilterMultiSelect({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const listId = `${id}-listbox`;
+  const availableOptions = options.filter(
+    (option) => !selectedValues.includes(option.value)
+  );
 
   const selectableActiveIndex =
-    !loading && options.length > 0
-      ? Math.min(Math.max(activeIndex, 0), options.length - 1)
+    !loading && availableOptions.length > 0
+      ? Math.min(Math.max(activeIndex, 0), availableOptions.length - 1)
       : -1;
 
   useEffect(() => {
@@ -68,14 +73,27 @@ export function FilterMultiSelect({
     });
   }, [open, selectableActiveIndex]);
 
-  function toggleValue(value: string) {
-    const nextValues = selectedValues.includes(value)
-      ? selectedValues.filter((selectedValue) => selectedValue !== value)
-      : [...selectedValues, value].sort((first, second) =>
-          first.localeCompare(second)
-        );
+  function selectValue(value: string) {
+    if (selectedValues.includes(value)) {
+      return;
+    }
 
-    onSelectedValuesChange(nextValues);
+    onSelectedValuesChange(
+      [...selectedValues, value].sort((first, second) =>
+        first.localeCompare(second)
+      )
+    );
+    onSearchChange('');
+    setActiveIndex(0);
+  }
+
+  function removeValue(value: string) {
+    onSelectedValuesChange(
+      selectedValues.filter((selectedValue) => selectedValue !== value)
+    );
+    inputRef.current?.focus();
+    setOpen(true);
+    setActiveIndex(0);
   }
 
   function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -88,7 +106,7 @@ export function FilterMultiSelect({
         return;
       }
 
-      if (options.length === 0 || loading) {
+      if (availableOptions.length === 0 || loading) {
         return;
       }
 
@@ -98,17 +116,20 @@ export function FilterMultiSelect({
         }
 
         const direction = event.key === 'ArrowDown' ? 1 : -1;
-        return (currentIndex + direction + options.length) % options.length;
+        return (
+          (currentIndex + direction + availableOptions.length) %
+          availableOptions.length
+        );
       });
       return;
     }
 
     if (event.key === 'Enter' && open && selectableActiveIndex >= 0) {
-      const activeOption = options[selectableActiveIndex];
+      const activeOption = availableOptions[selectableActiveIndex];
 
       if (activeOption) {
         event.preventDefault();
-        toggleValue(activeOption.value);
+        selectValue(activeOption.value);
       }
       return;
     }
@@ -132,47 +153,96 @@ export function FilterMultiSelect({
       }}
     >
       <PopoverAnchor asChild>
-        <div className="relative mt-2">
+        <div
+          ref={anchorRef}
+          className={cn(
+            'relative mt-2 min-h-9 w-full cursor-text rounded-md',
+            'border border-input bg-transparent shadow-xs',
+            'transition-[color,box-shadow] focus-within:border-ring',
+            'focus-within:ring-[3px] focus-within:ring-ring/50 dark:bg-input/30'
+          )}
+          onClick={() => {
+            inputRef.current?.focus();
+            setOpen(true);
+          }}
+        >
           <Search
             className={cn(
-              'pointer-events-none absolute top-1/2 left-3 size-4',
-              '-translate-y-1/2 text-muted-foreground'
+              'pointer-events-none absolute top-2.5 left-2.5 size-4',
+              'text-muted-foreground'
             )}
             aria-hidden="true"
           />
-          <Input
-            ref={inputRef}
-            id={id}
-            role="combobox"
-            aria-autocomplete="list"
-            aria-controls={listId}
-            aria-expanded={open}
-            aria-haspopup="listbox"
-            aria-labelledby={labelId}
-            aria-activedescendant={
-              open && selectableActiveIndex >= 0
-                ? `${id}-option-${selectableActiveIndex}`
-                : undefined
-            }
-            value={search}
-            placeholder={placeholder}
-            className="pl-9"
-            autoComplete="off"
-            onChange={(event) => {
-              onSearchChange(event.target.value);
-              setActiveIndex(0);
-              setOpen(true);
-            }}
-            onClick={() => {
-              setActiveIndex(0);
-              setOpen(true);
-            }}
-            onFocus={() => {
-              setActiveIndex(0);
-              setOpen(true);
-            }}
-            onKeyDown={handleInputKeyDown}
-          />
+          <div className="flex min-w-0 flex-wrap items-center gap-1 py-1 pr-2 pl-8">
+            {selectedOptions.map((option) => (
+              <span
+                key={option.value}
+                className={cn(
+                  'inline-flex max-w-[calc(100%-1.25rem)] items-center gap-1 rounded-md',
+                  'bg-secondary py-0.5 pr-1 pl-2 text-xs font-medium'
+                )}
+              >
+                <span className="min-w-0 truncate">{option.label}</span>
+                <button
+                  type="button"
+                  className={cn(
+                    'flex size-4 shrink-0 cursor-pointer items-center justify-center',
+                    'rounded-sm text-muted-foreground transition-colors',
+                    'hover:bg-background hover:text-foreground focus-visible:outline-none',
+                    'focus-visible:ring-2 focus-visible:ring-ring'
+                  )}
+                  aria-label={`Удалить: ${option.label}`}
+                  onMouseDown={keepInputFocused}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeValue(option.value);
+                  }}
+                >
+                  <X className="size-3" aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+            <input
+              ref={inputRef}
+              id={id}
+              type="text"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls={listId}
+              aria-expanded={open}
+              aria-haspopup="listbox"
+              aria-labelledby={labelId}
+              aria-activedescendant={
+                open && selectableActiveIndex >= 0
+                  ? `${id}-option-${selectableActiveIndex}`
+                  : undefined
+              }
+              value={search}
+              placeholder={
+                selectedOptions.length === 0 ? placeholder : undefined
+              }
+              className={cn(
+                'h-7 border-0 bg-transparent p-0 text-sm shadow-none outline-none',
+                'placeholder:text-muted-foreground',
+                search ? 'min-w-24 flex-[1_0_6rem]' : 'min-w-4 flex-[1_0_1rem]'
+              )}
+              autoComplete="off"
+              onChange={(event) => {
+                onSearchChange(event.target.value);
+                setActiveIndex(0);
+                setOpen(true);
+              }}
+              onClick={() => {
+                setActiveIndex(0);
+                setOpen(true);
+              }}
+              onFocus={() => {
+                setActiveIndex(0);
+                setOpen(true);
+              }}
+              onKeyDown={handleInputKeyDown}
+            />
+          </div>
         </div>
       </PopoverAnchor>
 
@@ -184,7 +254,7 @@ export function FilterMultiSelect({
           'shadow-lg'
         )}
         onInteractOutside={(event) => {
-          if (inputRef.current?.contains(event.target as Node)) {
+          if (anchorRef.current?.contains(event.target as Node)) {
             event.preventDefault();
           }
         }}
@@ -200,14 +270,13 @@ export function FilterMultiSelect({
         >
           {loading ? (
             <FilterOptionsSkeleton />
-          ) : options.length === 0 ? (
+          ) : availableOptions.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-muted-foreground">
               {emptyMessage}
             </p>
           ) : (
             <div className="space-y-1">
-              {options.map((option, index) => {
-                const selected = selectedValues.includes(option.value);
+              {availableOptions.map((option, index) => {
                 const active = index === selectableActiveIndex;
 
                 return (
@@ -220,7 +289,7 @@ export function FilterMultiSelect({
                     type="button"
                     role="option"
                     tabIndex={-1}
-                    aria-selected={selected}
+                    aria-selected={false}
                     className={cn(
                       'flex w-full min-w-0 cursor-pointer items-center gap-2',
                       'rounded-md px-2 py-1.5 text-left text-sm outline-none',
@@ -229,19 +298,8 @@ export function FilterMultiSelect({
                     )}
                     onMouseDown={keepInputFocused}
                     onMouseMove={() => setActiveIndex(index)}
-                    onClick={() => toggleValue(option.value)}
+                    onClick={() => selectValue(option.value)}
                   >
-                    <span
-                      className={cn(
-                        'flex size-4 shrink-0 items-center justify-center',
-                        'rounded-[4px] border border-input shadow-xs',
-                        selected &&
-                          'border-primary bg-primary text-primary-foreground'
-                      )}
-                      aria-hidden="true"
-                    >
-                      {selected ? <Check className="size-3.5" /> : null}
-                    </span>
                     <span className="min-w-0 truncate">{option.label}</span>
                   </button>
                 );
