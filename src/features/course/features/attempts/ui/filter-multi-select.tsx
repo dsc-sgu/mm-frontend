@@ -4,6 +4,7 @@ import {
   useState,
   type KeyboardEvent,
   type MouseEvent,
+  type ReactNode,
 } from 'react';
 import { Search, X } from 'lucide-react';
 
@@ -50,6 +51,7 @@ export function FilterMultiSelect({
 }: FilterMultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [insertionIndex, setInsertionIndex] = useState(selectedOptions.length);
   const inputRef = useRef<HTMLInputElement>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -62,6 +64,11 @@ export function FilterMultiSelect({
     !loading && availableOptions.length > 0
       ? Math.min(Math.max(activeIndex, 0), availableOptions.length - 1)
       : -1;
+  const minimumInsertionIndex = selectedOptions.length > 0 ? 1 : 0;
+  const selectableInsertionIndex = Math.min(
+    Math.max(insertionIndex, minimumInsertionIndex),
+    selectedOptions.length
+  );
 
   useEffect(() => {
     if (!open || selectableActiveIndex < 0) {
@@ -84,13 +91,42 @@ export function FilterMultiSelect({
       )
     );
     onSearchChange('');
+    setInsertionIndex(selectedOptions.length + 1);
     setActiveIndex(0);
   }
 
+  function moveInsertionCursor(nextIndex: number) {
+    setInsertionIndex(
+      Math.min(
+        Math.max(nextIndex, minimumInsertionIndex),
+        selectedOptions.length
+      )
+    );
+    setOpen(true);
+    setActiveIndex(0);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
   function removeValue(value: string) {
+    const removedIndex = selectedOptions.findIndex(
+      (option) => option.value === value
+    );
+
     onSelectedValuesChange(
       selectedValues.filter((selectedValue) => selectedValue !== value)
     );
+    setInsertionIndex((currentIndex) => {
+      const currentSelectableIndex = Math.min(
+        currentIndex,
+        selectedOptions.length
+      );
+
+      if (removedIndex >= 0 && removedIndex < currentSelectableIndex) {
+        return currentSelectableIndex - 1;
+      }
+
+      return Math.min(currentSelectableIndex, selectedOptions.length - 1);
+    });
     inputRef.current?.focus();
     setOpen(true);
     setActiveIndex(0);
@@ -100,10 +136,30 @@ export function FilterMultiSelect({
     if (
       event.key === 'Backspace' &&
       search.length === 0 &&
-      selectedOptions.length > 0
+      selectableInsertionIndex > 0
     ) {
       event.preventDefault();
-      removeValue(selectedOptions[selectedOptions.length - 1].value);
+      removeValue(selectedOptions[selectableInsertionIndex - 1].value);
+      return;
+    }
+
+    if (
+      search.length === 0 &&
+      event.key === 'ArrowLeft' &&
+      selectableInsertionIndex > minimumInsertionIndex
+    ) {
+      event.preventDefault();
+      moveInsertionCursor(selectableInsertionIndex - 1);
+      return;
+    }
+
+    if (
+      search.length === 0 &&
+      event.key === 'ArrowRight' &&
+      selectableInsertionIndex < selectedOptions.length
+    ) {
+      event.preventDefault();
+      moveInsertionCursor(selectableInsertionIndex + 1);
       return;
     }
 
@@ -152,7 +208,135 @@ export function FilterMultiSelect({
 
   function keepInputFocused(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
+    event.stopPropagation();
   }
+
+  const searchInput = (
+    <input
+      key="search-input"
+      ref={inputRef}
+      id={id}
+      type="text"
+      role="combobox"
+      aria-autocomplete="list"
+      aria-controls={listId}
+      aria-expanded={open}
+      aria-haspopup="listbox"
+      aria-labelledby={labelId}
+      aria-activedescendant={
+        open && selectableActiveIndex >= 0
+          ? `${id}-option-${selectableActiveIndex}`
+          : undefined
+      }
+      value={search}
+      placeholder={selectedOptions.length === 0 ? placeholder : undefined}
+      className={cn(
+        'h-7 border-0 bg-transparent p-0 text-sm shadow-none outline-none',
+        'placeholder:text-muted-foreground',
+        search ? 'min-w-24 flex-[1_0_6rem]' : 'min-w-4 flex-[1_0_1rem]'
+      )}
+      autoComplete="off"
+      onChange={(event) => {
+        onSearchChange(event.target.value);
+        setActiveIndex(0);
+        setOpen(true);
+      }}
+      onClick={() => {
+        setActiveIndex(0);
+        setOpen(true);
+      }}
+      onFocus={() => {
+        setActiveIndex(0);
+        setOpen(true);
+      }}
+      onKeyDown={handleInputKeyDown}
+    />
+  );
+  const fieldItems: ReactNode[] = [];
+
+  selectedOptions.forEach((option, index) => {
+    if (index > 0) {
+      fieldItems.push(
+        selectableInsertionIndex === index ? (
+          searchInput
+        ) : (
+          <span
+            key={`insertion-gap-${index}`}
+            className={cn(
+              'h-7 w-1 shrink-0 cursor-text rounded-sm',
+              'hover:bg-ring/30'
+            )}
+            aria-hidden="true"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              moveInsertionCursor(index);
+            }}
+          />
+        )
+      );
+    }
+
+    fieldItems.push(
+      <span
+        key={option.value}
+        className={cn(
+          'inline-flex max-w-[calc(100%-1.25rem)] items-center gap-1 rounded-md',
+          'bg-secondary py-0.5 pr-1 pl-2 text-xs font-medium'
+        )}
+        onMouseDown={(event) => {
+          if ((event.target as HTMLElement).closest('button')) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const nextIndex =
+            event.clientX < bounds.left + bounds.width / 2 ? index : index + 1;
+          moveInsertionCursor(nextIndex);
+        }}
+      >
+        <span className="min-w-0 truncate">{option.label}</span>
+        <button
+          type="button"
+          className={cn(
+            'flex size-4 shrink-0 cursor-pointer items-center justify-center',
+            'rounded-sm text-muted-foreground transition-colors',
+            'hover:bg-background hover:text-foreground focus-visible:outline-none',
+            'focus-visible:ring-2 focus-visible:ring-ring'
+          )}
+          aria-label={`Удалить: ${option.label}`}
+          onMouseDown={keepInputFocused}
+          onClick={(event) => {
+            event.stopPropagation();
+            removeValue(option.value);
+          }}
+        >
+          <X className="size-3" aria-hidden="true" />
+        </button>
+      </span>
+    );
+  });
+  fieldItems.push(
+    selectableInsertionIndex === selectedOptions.length ? (
+      searchInput
+    ) : (
+      <span
+        key={`insertion-gap-${selectedOptions.length}`}
+        className={cn(
+          'h-7 w-1 shrink-0 cursor-text rounded-sm',
+          'hover:bg-ring/30'
+        )}
+        aria-hidden="true"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          moveInsertionCursor(selectedOptions.length);
+        }}
+      />
+    )
+  );
 
   return (
     <Popover
@@ -183,75 +367,18 @@ export function FilterMultiSelect({
             )}
             aria-hidden="true"
           />
-          <div className="flex min-w-0 flex-wrap items-center gap-1 py-1 pr-2 pl-8">
-            {selectedOptions.map((option) => (
-              <span
-                key={option.value}
-                className={cn(
-                  'inline-flex max-w-[calc(100%-1.25rem)] items-center gap-1 rounded-md',
-                  'bg-secondary py-0.5 pr-1 pl-2 text-xs font-medium'
-                )}
-              >
-                <span className="min-w-0 truncate">{option.label}</span>
-                <button
-                  type="button"
-                  className={cn(
-                    'flex size-4 shrink-0 cursor-pointer items-center justify-center',
-                    'rounded-sm text-muted-foreground transition-colors',
-                    'hover:bg-background hover:text-foreground focus-visible:outline-none',
-                    'focus-visible:ring-2 focus-visible:ring-ring'
-                  )}
-                  aria-label={`Удалить: ${option.label}`}
-                  onMouseDown={keepInputFocused}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    removeValue(option.value);
-                  }}
-                >
-                  <X className="size-3" aria-hidden="true" />
-                </button>
-              </span>
-            ))}
-            <input
-              ref={inputRef}
-              id={id}
-              type="text"
-              role="combobox"
-              aria-autocomplete="list"
-              aria-controls={listId}
-              aria-expanded={open}
-              aria-haspopup="listbox"
-              aria-labelledby={labelId}
-              aria-activedescendant={
-                open && selectableActiveIndex >= 0
-                  ? `${id}-option-${selectableActiveIndex}`
-                  : undefined
+          <div
+            className="flex min-w-0 flex-wrap items-center py-1 pr-2 pl-8"
+            onMouseDown={(event) => {
+              if (event.target !== event.currentTarget) {
+                return;
               }
-              value={search}
-              placeholder={
-                selectedOptions.length === 0 ? placeholder : undefined
-              }
-              className={cn(
-                'h-7 border-0 bg-transparent p-0 text-sm shadow-none outline-none',
-                'placeholder:text-muted-foreground',
-                search ? 'min-w-24 flex-[1_0_6rem]' : 'min-w-4 flex-[1_0_1rem]'
-              )}
-              autoComplete="off"
-              onChange={(event) => {
-                onSearchChange(event.target.value);
-                setActiveIndex(0);
-                setOpen(true);
-              }}
-              onClick={() => {
-                setActiveIndex(0);
-                setOpen(true);
-              }}
-              onFocus={() => {
-                setActiveIndex(0);
-                setOpen(true);
-              }}
-              onKeyDown={handleInputKeyDown}
-            />
+
+              event.preventDefault();
+              moveInsertionCursor(selectedOptions.length);
+            }}
+          >
+            {fieldItems}
           </div>
         </div>
       </PopoverAnchor>
