@@ -177,7 +177,10 @@ const ATTEMPTS = [
       graderName: 'Кудяков Артём Александрович',
     },
   },
-] satisfies Array<Omit<TaskAttempt, 'id'>>;
+] satisfies Array<Omit<TaskAttempt, 'id' | 'attention'>>;
+
+const INITIAL_UNSEEN_ATTEMPT_NUMBERS = new Set([7, 9]);
+const seenAttemptUpdates = new Set<string>();
 
 export async function fetchTaskPage({
   courseSlug,
@@ -212,7 +215,58 @@ export async function fetchTaskPage({
         ...attempt,
         id: `${courseSlug}:${taskId}:attempt:${attempt.number}`,
         review: { ...attempt.review },
+        attention: {
+          status:
+            INITIAL_UNSEEN_ATTEMPT_NUMBERS.has(attempt.number) &&
+            !seenAttemptUpdates.has(
+              getAttemptUpdatesKey({
+                courseSlug,
+                taskId,
+                studentUsername: attempt.studentUsername,
+                attemptNumber: attempt.number,
+              })
+            )
+              ? 'unseen'
+              : 'seen',
+        },
       })),
     },
   };
+}
+
+export async function markTaskAttemptUpdatesSeen({
+  courseSlug,
+  taskId,
+  studentUsername,
+  attemptNumber,
+}: {
+  courseSlug: string;
+  taskId: string;
+  studentUsername: string;
+  attemptNumber: number;
+}): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 120));
+
+  seenAttemptUpdates.add(
+    getAttemptUpdatesKey({
+      courseSlug,
+      taskId,
+      studentUsername,
+      attemptNumber,
+    })
+  );
+}
+
+function getAttemptUpdatesKey({
+  courseSlug,
+  taskId,
+  studentUsername,
+  attemptNumber,
+}: {
+  courseSlug: string;
+  taskId: string;
+  studentUsername: string;
+  attemptNumber: number;
+}): string {
+  return `${courseSlug}:${taskId}:${studentUsername}:${attemptNumber}`;
 }

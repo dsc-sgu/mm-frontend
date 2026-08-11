@@ -26,12 +26,17 @@ export type TaskAttemptReview =
       graderName: string;
     };
 
+export type TaskAttemptAttention = {
+  status: 'seen' | 'unseen';
+};
+
 export type TaskAttempt = {
   id: string;
   number: number;
   studentUsername: string;
   submittedAt: string;
   review: TaskAttemptReview;
+  attention: TaskAttemptAttention;
 };
 
 export type Task = {

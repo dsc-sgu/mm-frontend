@@ -10,6 +10,7 @@ import {
   TextAlignStart,
 } from 'lucide-react';
 
+import { useMarkTaskAttemptUpdatesSeenMutation } from '@/features/course/features/task/api/queries';
 import {
   formatTaskDateTime,
   getDeadlineRelation,
@@ -32,6 +33,24 @@ export function TaskAttemptHistory({
   maxScore: number;
   taskId: string;
 }) {
+  const markUpdatesSeenMutation = useMarkTaskAttemptUpdatesSeenMutation();
+  const hasUnseenUpdates = attempts.some(
+    (attempt) => attempt.attention.status === 'unseen'
+  );
+
+  function markAttemptUpdatesSeen(attempt: TaskAttempt) {
+    if (attempt.attention.status === 'seen') {
+      return;
+    }
+
+    markUpdatesSeenMutation.mutate({
+      courseSlug,
+      taskId,
+      studentUsername: attempt.studentUsername,
+      attemptNumber: attempt.number,
+    });
+  }
+
   return (
     <section className="mt-7 sm:mt-9" aria-labelledby="attempts-heading">
       <div className="mb-5 px-1">
@@ -43,7 +62,14 @@ export function TaskAttemptHistory({
             className="size-5 text-muted-foreground sm:size-6"
             aria-hidden="true"
           />
-          История попыток
+          <span className="whitespace-nowrap">
+            История попыток
+            {hasUnseenUpdates ? (
+              <span className="ml-3 inline-block size-2.5 rounded-full bg-sky-500 align-middle">
+                <span className="sr-only">Есть непросмотренные обновления</span>
+              </span>
+            ) : null}
+          </span>
         </h2>
       </div>
 
@@ -62,6 +88,7 @@ export function TaskAttemptHistory({
               deadlineAt={deadlineAt}
               maxScore={maxScore}
               taskId={taskId}
+              onOpenAttempt={markAttemptUpdatesSeen}
             />
           ))}
         </ol>
@@ -78,28 +105,40 @@ function TaskAttemptHistoryItem({
   deadlineAt,
   maxScore,
   taskId,
+  onOpenAttempt,
 }: {
   attempt: TaskAttempt;
   courseSlug: string;
   deadlineAt: string;
   maxScore: number;
   taskId: string;
+  onOpenAttempt: (attempt: TaskAttempt) => void;
 }) {
   const relation = getDeadlineRelation({
     submittedAt: attempt.submittedAt,
     deadlineAt,
   });
   const pending = attempt.review.status === 'pending';
+  const hasUnseenUpdates = attempt.attention.status === 'unseen';
 
   return (
     <li
       className={cn(
-        'grid grid-cols-1 gap-y-3 px-4 py-4',
-        'transition-colors hover:bg-accent/30',
+        'grid grid-cols-1 gap-y-3 px-4 py-4 transition-colors',
         'sm:col-span-4 sm:grid-cols-subgrid sm:items-center',
-        'sm:gap-x-0 sm:gap-y-0 sm:px-5'
+        'sm:gap-x-0 sm:gap-y-0 sm:px-5',
+        hasUnseenUpdates
+          ? cn(
+              'bg-sky-500/[0.08] hover:bg-sky-500/[0.12]',
+              'dark:bg-sky-400/[0.08] dark:hover:bg-sky-400/[0.12]'
+            )
+          : 'hover:bg-accent/30'
       )}
-      aria-label={`Попытка №${attempt.number}`}
+      aria-label={
+        hasUnseenUpdates
+          ? `Попытка №${attempt.number}, есть непросмотренные обновления`
+          : `Попытка №${attempt.number}`
+      }
     >
       <span className="col-start-1 row-start-1 flex items-center text-lg font-bold tracking-tight sm:min-h-12 sm:pr-4">
         №{attempt.number}
@@ -128,6 +167,7 @@ function TaskAttemptHistoryItem({
               studentUsername: attempt.studentUsername,
               attemptId: String(attempt.number),
             }}
+            onClick={() => onOpenAttempt(attempt)}
           >
             {pending ? (
               <TextAlignStart className="size-4" aria-hidden="true" />
