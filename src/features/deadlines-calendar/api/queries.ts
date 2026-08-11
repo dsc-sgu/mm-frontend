@@ -1,6 +1,8 @@
 import { useIsFetching, useQuery } from '@tanstack/react-query';
 import { fetchDeadlines } from './mock';
 
+export const DEADLINES_QUERY_KEY = ['deadlines'] as const;
+
 export function getWeekBounds(date: Date): { start: Date; end: Date } {
   const start = new Date(date);
   const day = start.getDay();
@@ -16,7 +18,7 @@ export function getWeekBounds(date: Date): { start: Date; end: Date } {
 }
 
 export function getWeekQueryKey(weekStart: Date): string[] {
-  return ['deadlines', weekStart.toISOString()];
+  return [...DEADLINES_QUERY_KEY, weekStart.toISOString()];
 }
 
 type UseDeadlinesQueryOptions = {
@@ -35,5 +37,5 @@ export function useDeadlinesQuery({ weekStart }: UseDeadlinesQueryOptions) {
 }
 
 export function useDeadlinesIsFetching(): boolean {
-  return useIsFetching({ queryKey: ['deadlines'] }) > 0;
+  return useIsFetching({ queryKey: DEADLINES_QUERY_KEY }) > 0;
 }
