@@ -97,6 +97,16 @@ export function FilterMultiSelect({
   }
 
   function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (
+      event.key === 'Backspace' &&
+      search.length === 0 &&
+      selectedOptions.length > 0
+    ) {
+      event.preventDefault();
+      removeValue(selectedOptions[selectedOptions.length - 1].value);
+      return;
+    }
+
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
 
