@@ -35,7 +35,7 @@ export function AttemptReviewReviewPanelToggle({
       ) : (
         <ChevronUp className="size-4" />
       )}
-      {expanded ? 'Скрыть отзыв' : 'Показать отзыв'}
+      {expanded ? 'Скрыть панель отзыва' : 'Показать панель отзыва'}
     </Button>
   );
 }
