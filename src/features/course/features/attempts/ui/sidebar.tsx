@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Filter, Search } from 'lucide-react';
+import { Filter } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
-import { Checkbox } from '@/shadcn/components/ui/checkbox';
-import { Input } from '@/shadcn/components/ui/input';
 import {
   Tooltip,
   TooltipContent,
@@ -11,6 +9,7 @@ import {
   TooltipTrigger,
 } from '@/shadcn/components/ui/tooltip';
 import { cn } from '@/shadcn/lib/utils';
+import { FilterMultiSelect } from './filter-multi-select';
 import {
   areCourseAttemptsFiltersEqual,
   EMPTY_COURSE_ATTEMPTS_FILTERS,
@@ -219,12 +218,6 @@ export function AttemptsFilterSidebar(
   );
 }
 
-function toggleToken(tokens: string[], token: string): string[] {
-  return tokens.includes(token)
-    ? tokens.filter((item) => item !== token)
-    : [...tokens, token].sort((a, b) => a.localeCompare(b));
-}
-
 function compareSelectedFirst<T>(
   firstItem: T,
   secondItem: T,
@@ -240,62 +233,6 @@ function compareSelectedFirst<T>(
   }
 
   return getLabel(firstItem).localeCompare(getLabel(secondItem));
-}
-
-function FilterOptionsSkeleton({ rows = 7 }: { rows?: number }) {
-  return (
-    <div className="space-y-1" aria-hidden="true">
-      {Array.from({ length: rows }).map((_, index) => {
-        const width = index % 3 === 0 ? 78 : index % 3 === 1 ? 92 : 64;
-
-        return (
-          <div
-            key={index}
-            className="flex items-center gap-2 rounded-lg px-2 py-1.5"
-          >
-            <div className="size-4 shrink-0 animate-pulse rounded bg-muted" />
-            <div
-              className="h-5 animate-pulse rounded bg-muted"
-              style={{ width: `${width}%` }}
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function FilterOption({
-  id,
-  label,
-  checked,
-  onCheckedChange,
-}: {
-  id: string;
-  label: string;
-  checked: boolean;
-  onCheckedChange: () => void;
-}) {
-  return (
-    <label
-      htmlFor={id}
-      className={cn(
-        'flex min-w-0 cursor-pointer items-center gap-2 rounded-lg px-2',
-        'py-1.5 text-sm transition-colors select-none hover:bg-accent'
-      )}
-    >
-      <Checkbox
-        id={id}
-        checked={checked}
-        onCheckedChange={(value) => {
-          if (value !== 'indeterminate') {
-            onCheckedChange();
-          }
-        }}
-      />
-      <span className="min-w-0 truncate">{label}</span>
-    </label>
-  );
 }
 
 function AttemptsFiltersHeader({
@@ -364,7 +301,12 @@ function TasksFilterSection({
   return (
     <section>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">Задания</h3>
+        <h3
+          id={`${idPrefix}-tasks-filter-heading`}
+          className="text-sm font-semibold"
+        >
+          Задания
+        </h3>
         <Button
           type="button"
           variant="ghost"
@@ -375,44 +317,24 @@ function TasksFilterSection({
           Сбросить
         </Button>
       </div>
-      <div className="relative mt-2">
-        <Search
-          className={cn(
-            'pointer-events-none absolute top-1/2 left-3 size-4',
-            '-translate-y-1/2 text-muted-foreground'
-          )}
-        />
-        <Input
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Найти задание"
-          className="pl-9"
-        />
-      </div>
-      <div
-        className={cn(
-          'mt-2 space-y-1 pr-1',
-          variant === 'drawer'
-            ? 'max-h-[clamp(1rem,11dvh,12rem)] overflow-y-auto'
-            : 'max-h-44 overflow-y-auto'
-        )}
-      >
-        {loading ? (
-          <FilterOptionsSkeleton />
-        ) : (
-          tasks.map((task) => (
-            <FilterOption
-              key={task.id}
-              id={`${idPrefix}-task-filter-${task.id}`}
-              label={`${task.title} · ${task.maxScore} б.`}
-              checked={selectedTaskIds.includes(task.id)}
-              onCheckedChange={() =>
-                onSelectedTaskIdsChange(toggleToken(selectedTaskIds, task.id))
-              }
-            />
-          ))
-        )}
-      </div>
+      <FilterMultiSelect
+        id={`${idPrefix}-task-filter`}
+        labelId={`${idPrefix}-tasks-filter-heading`}
+        search={search}
+        placeholder="Найти задание"
+        emptyMessage="Задания не найдены"
+        options={tasks.map((task) => ({
+          value: task.id,
+          label: `${task.title} · ${task.maxScore} б.`,
+        }))}
+        selectedValues={selectedTaskIds}
+        loading={loading}
+        listClassName={
+          variant === 'drawer' ? 'max-h-[clamp(8rem,24dvh,12rem)]' : 'max-h-56'
+        }
+        onSearchChange={onSearchChange}
+        onSelectedValuesChange={onSelectedTaskIdsChange}
+      />
     </section>
   );
 }
@@ -437,7 +359,12 @@ function StudentsFilterSection({
   return (
     <section>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">Студенты</h3>
+        <h3
+          id={`${idPrefix}-students-filter-heading`}
+          className="text-sm font-semibold"
+        >
+          Студенты
+        </h3>
         <Button
           type="button"
           variant="ghost"
@@ -450,46 +377,24 @@ function StudentsFilterSection({
           Сбросить
         </Button>
       </div>
-      <div className="relative mt-2">
-        <Search
-          className={cn(
-            'pointer-events-none absolute top-1/2 left-3 size-4',
-            '-translate-y-1/2 text-muted-foreground'
-          )}
-        />
-        <Input
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="ФИО или username"
-          className="pl-9"
-        />
-      </div>
-      <div
-        className={cn(
-          'mt-2 space-y-1 pr-1',
-          variant === 'drawer'
-            ? 'max-h-[clamp(1rem,11dvh,12rem)] overflow-y-auto'
-            : 'max-h-48 overflow-y-auto'
-        )}
-      >
-        {loading ? (
-          <FilterOptionsSkeleton />
-        ) : (
-          students.map((student) => (
-            <FilterOption
-              key={student.username}
-              id={`${idPrefix}-student-filter-${student.username}`}
-              label={`${student.fullName} · ${student.group}`}
-              checked={selectedStudentUsernames.includes(student.username)}
-              onCheckedChange={() =>
-                onSelectedStudentUsernamesChange(
-                  toggleToken(selectedStudentUsernames, student.username)
-                )
-              }
-            />
-          ))
-        )}
-      </div>
+      <FilterMultiSelect
+        id={`${idPrefix}-student-filter`}
+        labelId={`${idPrefix}-students-filter-heading`}
+        search={search}
+        placeholder="ФИО или username"
+        emptyMessage="Студенты не найдены"
+        options={students.map((student) => ({
+          value: student.username,
+          label: `${student.fullName} · ${student.group}`,
+        }))}
+        selectedValues={selectedStudentUsernames}
+        loading={loading}
+        listClassName={
+          variant === 'drawer' ? 'max-h-[clamp(8rem,24dvh,12rem)]' : 'max-h-56'
+        }
+        onSearchChange={onSearchChange}
+        onSelectedValuesChange={onSelectedStudentUsernamesChange}
+      />
     </section>
   );
 }
