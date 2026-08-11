@@ -411,6 +411,7 @@ export async function saveCoursePage(
   const nextCourseSummary: CourseSummary = {
     courseId: input.courseId,
     title: input.title,
+    shortTitle: input.shortTitle,
     color: input.color,
     iconName: input.iconName,
     teachers: currentPage.teachers,
