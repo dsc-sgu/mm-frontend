@@ -55,6 +55,8 @@ export function AttemptsFiltersContent({
     loading,
     filterActionsDisabled,
     variant,
+    tasks,
+    students,
   };
   const [taskSearch, setTaskSearch] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
@@ -279,6 +281,8 @@ type FilterSectionContext = {
   loading: boolean;
   filterActionsDisabled: boolean;
   variant: AttemptsFiltersVariant;
+  tasks: CourseAttempt['task'][];
+  students: CourseAttempt['student'][];
 };
 
 function TasksFilterSection({
@@ -327,6 +331,12 @@ function TasksFilterSection({
           value: task.id,
           label: `${task.title} · ${task.maxScore} б.`,
         }))}
+        selectedOptions={context.tasks
+          .filter((task) => selectedTaskIds.includes(task.id))
+          .map((task) => ({
+            value: task.id,
+            label: `${task.title} · ${task.maxScore} б.`,
+          }))}
         selectedValues={selectedTaskIds}
         loading={loading}
         listClassName={
@@ -387,6 +397,14 @@ function StudentsFilterSection({
           value: student.username,
           label: `${student.fullName} · ${student.group}`,
         }))}
+        selectedOptions={context.students
+          .filter((student) =>
+            selectedStudentUsernames.includes(student.username)
+          )
+          .map((student) => ({
+            value: student.username,
+            label: `${student.fullName} · ${student.group}`,
+          }))}
         selectedValues={selectedStudentUsernames}
         loading={loading}
         listClassName={
