@@ -30,9 +30,10 @@ export function HeaderSectionNav({ items }: HeaderSectionNavProps) {
               'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
             )}
             activeProps={{
-              className:
-                'text-foreground after:absolute after:inset-x-2 after:bottom-0' +
-                'after:h-0.5 after:rounded-full after:bg-primary',
+              className: cn(
+                'text-foreground after:absolute after:inset-x-2 after:bottom-0',
+                'after:h-0.5 after:rounded-full after:bg-primary'
+              ),
             }}
           >
             {item.icon}
