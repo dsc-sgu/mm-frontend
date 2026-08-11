@@ -12,20 +12,27 @@ const TASK_PAGE_QUERY_KEY = ['course-task-page'] as const;
 
 export const taskPageKeys = {
   all: TASK_PAGE_QUERY_KEY,
-  detail: (courseSlug: string, taskId: string) =>
-    [...TASK_PAGE_QUERY_KEY, courseSlug, taskId] as const,
+  detail: (courseSlug: string, taskId: string, studentUsername?: string) =>
+    [
+      ...TASK_PAGE_QUERY_KEY,
+      courseSlug,
+      taskId,
+      studentUsername ?? null,
+    ] as const,
 };
 
 export function taskPageQueryOptions({
   courseSlug,
   taskId,
+  studentUsername,
 }: {
   courseSlug: string;
   taskId: string;
+  studentUsername?: string;
 }) {
   return queryOptions({
-    queryKey: taskPageKeys.detail(courseSlug, taskId),
-    queryFn: () => fetchTaskPage({ courseSlug, taskId }),
+    queryKey: taskPageKeys.detail(courseSlug, taskId, studentUsername),
+    queryFn: () => fetchTaskPage({ courseSlug, taskId, studentUsername }),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -34,11 +41,15 @@ export function taskPageQueryOptions({
 export function useTaskPageQuery({
   courseSlug,
   taskId,
+  studentUsername,
 }: {
   courseSlug: string;
   taskId: string;
+  studentUsername?: string;
 }) {
-  return useQuery(taskPageQueryOptions({ courseSlug, taskId }));
+  return useQuery(
+    taskPageQueryOptions({ courseSlug, taskId, studentUsername })
+  );
 }
 
 export function useMarkTaskAttemptUpdatesSeenMutation() {
@@ -49,7 +60,8 @@ export function useMarkTaskAttemptUpdatesSeenMutation() {
     onMutate: async (variables) => {
       const queryKey = taskPageKeys.detail(
         variables.courseSlug,
-        variables.taskId
+        variables.taskId,
+        variables.studentUsername
       );
 
       await queryClient.cancelQueries({ queryKey });
@@ -86,7 +98,11 @@ export function useMarkTaskAttemptUpdatesSeenMutation() {
     },
     onSettled: (_data, _error, variables) =>
       queryClient.invalidateQueries({
-        queryKey: taskPageKeys.detail(variables.courseSlug, variables.taskId),
+        queryKey: taskPageKeys.detail(
+          variables.courseSlug,
+          variables.taskId,
+          variables.studentUsername
+        ),
       }),
   });
 }

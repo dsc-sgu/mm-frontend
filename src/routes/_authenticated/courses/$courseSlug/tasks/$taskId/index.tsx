@@ -17,6 +17,7 @@ function TaskRoute() {
       courseSlug={params.courseSlug}
       taskId={params.taskId}
       role={courseAccess.role}
+      username={courseAccess.username}
     />
   );
 }

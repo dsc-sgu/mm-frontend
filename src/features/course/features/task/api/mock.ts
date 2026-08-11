@@ -185,9 +185,11 @@ const seenAttemptUpdates = new Set<string>();
 export async function fetchTaskPage({
   courseSlug,
   taskId,
+  studentUsername,
 }: {
   courseSlug: string;
   taskId: string;
+  studentUsername?: string;
 }): Promise<TaskPageData | null> {
   await new Promise((resolve) => setTimeout(resolve, 180));
 
@@ -213,6 +215,7 @@ export async function fetchTaskPage({
       })),
       attempts: ATTEMPTS.map((attempt) => ({
         ...attempt,
+        studentUsername: studentUsername ?? attempt.studentUsername,
         id: `${courseSlug}:${taskId}:attempt:${attempt.number}`,
         review: { ...attempt.review },
         attention: {
@@ -222,7 +225,7 @@ export async function fetchTaskPage({
               getAttemptUpdatesKey({
                 courseSlug,
                 taskId,
-                studentUsername: attempt.studentUsername,
+                studentUsername: studentUsername ?? attempt.studentUsername,
                 attemptNumber: attempt.number,
               })
             )

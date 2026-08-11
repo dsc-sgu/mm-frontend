@@ -16,12 +16,18 @@ export function CourseTaskPage({
   courseSlug,
   taskId,
   role,
+  username,
 }: {
   courseSlug: string;
   taskId: string;
   role: CourseRole;
+  username: string;
 }) {
-  const taskPageQuery = useTaskPageQuery({ courseSlug, taskId });
+  const taskPageQuery = useTaskPageQuery({
+    courseSlug,
+    taskId,
+    studentUsername: role === 'student' ? username : undefined,
+  });
 
   if (taskPageQuery.isPending) {
     return <TaskPageLoading role={role} />;
