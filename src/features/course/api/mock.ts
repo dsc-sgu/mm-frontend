@@ -4,6 +4,7 @@ export const MOCK_COURSES: CourseSummary[] = [
   {
     courseId: 'algorithms-and-data-structures',
     title: 'Алгоритмы и структуры данных',
+    shortTitle: 'АиСД',
     color: 'teal',
     iconName: 'code-xml',
     teachers: [
@@ -24,6 +25,7 @@ export const MOCK_COURSES: CourseSummary[] = [
   {
     courseId: 'databases',
     title: 'Базы данных',
+    shortTitle: 'БД',
     color: 'blue',
     iconName: 'database',
     teachers: [
@@ -38,6 +40,7 @@ export const MOCK_COURSES: CourseSummary[] = [
   {
     courseId: 'programming-languages',
     title: 'Языки программирования',
+    shortTitle: 'ЯП',
     color: 'red',
     iconName: 'braces',
     teachers: [
@@ -58,6 +61,7 @@ export const MOCK_COURSES: CourseSummary[] = [
   {
     courseId: 'frontend-engineering',
     title: 'Фронтенд',
+    shortTitle: 'Фронтенд',
     color: 'orange',
     iconName: 'monitor-smartphone',
     teachers: [
@@ -72,6 +76,7 @@ export const MOCK_COURSES: CourseSummary[] = [
   {
     courseId: 'operating-systems',
     title: 'Операционные системы',
+    shortTitle: 'ОС',
     color: 'violet',
     iconName: 'cpu',
     teachers: [
@@ -86,6 +91,7 @@ export const MOCK_COURSES: CourseSummary[] = [
   {
     courseId: 'computer-networks',
     title: 'Компьютерные сети',
+    shortTitle: 'КС',
     color: 'pink',
     iconName: 'network',
     teachers: [
@@ -100,6 +106,7 @@ export const MOCK_COURSES: CourseSummary[] = [
   {
     courseId: 'modern-information-technologies',
     title: 'Современные информационные технологии',
+    shortTitle: 'СИТ',
     color: 'green',
     iconName: 'rocket',
     teachers: [

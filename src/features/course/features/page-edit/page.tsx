@@ -78,6 +78,7 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
       courseSlug,
       courseId: submittedWorkingCopy.courseId,
       title: submittedWorkingCopy.title,
+      shortTitle: submittedWorkingCopy.shortTitle,
       description: submittedWorkingCopy.description,
       color: submittedWorkingCopy.color,
       iconName: submittedWorkingCopy.iconName,

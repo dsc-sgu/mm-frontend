@@ -135,6 +135,7 @@ export type SaveCoursePageInput = {
   courseSlug: string;
   courseId: string;
   title: string;
+  shortTitle: string;
   description: string;
   color: CourseSummary['color'];
   iconName: CourseSummary['iconName'];

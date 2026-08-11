@@ -20,6 +20,7 @@ export type Teacher = {
 
 export type CourseSummary = {
   title: string;
+  shortTitle: string;
   courseId: string;
   teachers: Teacher[];
   iconName: LucideIconName;
