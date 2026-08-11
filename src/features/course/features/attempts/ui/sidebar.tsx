@@ -332,8 +332,14 @@ function TasksFilterSection({
           type="button"
           variant="ghost"
           size="xs"
-          disabled={filterActionsDisabled || selectedTaskIds.length === 0}
-          onClick={() => onSelectedTaskIdsChange([])}
+          disabled={
+            filterActionsDisabled ||
+            (selectedTaskIds.length === 0 && search.length === 0)
+          }
+          onClick={() => {
+            onSelectedTaskIdsChange([]);
+            onSearchChange('');
+          }}
         >
           Сбросить
         </Button>
@@ -397,9 +403,13 @@ function StudentsFilterSection({
           variant="ghost"
           size="xs"
           disabled={
-            filterActionsDisabled || selectedStudentUsernames.length === 0
+            filterActionsDisabled ||
+            (selectedStudentUsernames.length === 0 && search.length === 0)
           }
-          onClick={() => onSelectedStudentUsernamesChange([])}
+          onClick={() => {
+            onSelectedStudentUsernamesChange([]);
+            onSearchChange('');
+          }}
         >
           Сбросить
         </Button>
