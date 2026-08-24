@@ -360,3 +360,17 @@ The project should enforce type aliases over interfaces:
 ```ts
 '@typescript-eslint/consistent-type-definitions': ['error', 'type']
 ```
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in this repository's GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Triage uses the five default canonical label names. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Domain documentation uses a single-context layout. See `docs/agents/domain.md`.
