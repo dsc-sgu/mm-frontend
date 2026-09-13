@@ -281,6 +281,10 @@ function transitionComment(
 
 Do not add FSM libraries such as `xstate` or `robot` by default. Consider them only when local reducers/transition functions are no longer enough, for example with nested states, parallel states, long-running actors, retries, or complex async workflows.
 
+### Remote data
+
+Before adding or modifying code that performs HTTP requests, consumes external response data, defines API DTO schemas, configures TanStack Query queries or mutations, handles request failures or cancellation, implements retry or idempotency behavior, or defines MSW handlers, MUST read [`docs/agents/remote-data.md`](docs/agents/remote-data.md).
+
 ### `types.ts`
 
 Do not create `types.ts` automatically in every feature.
