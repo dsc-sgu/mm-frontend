@@ -22,22 +22,40 @@
         --code-ink: #e0e9e3;
       }
 
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         color: var(--ink);
         background: var(--paper);
-        font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+        font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
         font-size: 16px;
         line-height: 1.6;
       }
-      button { font: inherit; }
-      button, summary { -webkit-tap-highlight-color: transparent; }
-      button:focus-visible, summary:focus-visible, a:focus-visible {
+      button {
+        font: inherit;
+      }
+      button,
+      summary {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button:focus-visible,
+      summary:focus-visible,
+      a:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: 4px;
       }
-      h1, h2, h3, p { margin-top: 0; }
+      a {
+        color: var(--accent);
+        text-underline-offset: 3px;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
       h1 {
         margin: 12px 0;
         font-size: clamp(28px, 3.4vw, 42px);
@@ -45,38 +63,153 @@
         letter-spacing: -0.045em;
         line-height: 1.2;
       }
-      h2 { margin-bottom: 12px; font-size: 24px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.35; }
-      h3 { margin-bottom: 8px; font-size: 16px; font-weight: 600; }
-      .shell { width: min(1240px, calc(100% - 64px)); margin: auto; padding: 40px 0 64px; }
-      .masthead { padding-bottom: 24px; }
-      .eyebrow, .section-label, .status-label, .metric-label {
+      h2 {
+        margin-bottom: 12px;
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        line-height: 1.35;
+      }
+      h3 {
+        margin-bottom: 8px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .shell {
+        width: min(1240px, calc(100% - 64px));
+        margin: auto;
+        padding: 40px 0 64px;
+      }
+      .masthead {
+        padding-bottom: 24px;
+      }
+      .eyebrow,
+      .section-label,
+      .status-label,
+      .metric-label {
         color: var(--muted);
         font-size: 13px;
         font-weight: 600;
         letter-spacing: 0.045em;
       }
-      .eyebrow { color: var(--accent); }
-      .lede { max-width: 660px; margin-bottom: 0; color: var(--muted); }
-      .context { border-bottom: 1px solid var(--line); }
-      summary { cursor: pointer; }
-      .context > summary { padding: 12px 0 16px; color: var(--muted); font-size: 16px; }
-      .question-card { max-width: 820px; padding: 12px 0; }
-      .question-card p:last-child { margin-bottom: 0; }
-      .usage-note { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; padding: 18px 0; border-bottom: 1px solid var(--line); }
-      .usage-note p { margin: 5px 0 0; color: var(--muted); font-size: 15px; }
-      .usage-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 0; padding: 0; list-style: none; counter-reset: usage-step; }
-      .usage-steps li { counter-increment: usage-step; font-size: 15px; }
-      .usage-steps li::before { content: counter(usage-step); display: block; margin-bottom: 4px; color: var(--accent); font-weight: 700; }
-      .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 12px 0 24px; list-style: none; }
-      .facts strong { display: block; margin-bottom: 6px; font-size: 16px; }
-      .facts span { color: var(--muted); font-size: 16px; }
-      .workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 32px; padding-top: 28px; align-items: start; }
-      .control-deck { position: sticky; top: 24px; max-height: calc(100dvh - 48px); overflow-y: auto; }
-      .deck-block { padding: 0 0 22px; }
-      .deck-block:last-child { padding-bottom: 0; }
-      .choice-grid { display: grid; gap: 4px; margin-top: 8px; }
-      .control-hint { margin: 5px 0 8px; color: var(--muted); font-size: 13px; line-height: 1.45; }
-      .choice-button, .scenario-button, .walkthrough-button, .tab-button, .reset-button {
+      .eyebrow {
+        color: var(--accent);
+      }
+      .lede {
+        max-width: 660px;
+        margin-bottom: 0;
+        color: var(--muted);
+      }
+      .context {
+        border-bottom: 1px solid var(--line);
+      }
+      summary {
+        cursor: pointer;
+      }
+      .context > summary {
+        padding: 12px 0 16px;
+        color: var(--muted);
+        font-size: 16px;
+      }
+      .question-card {
+        max-width: 820px;
+        padding: 12px 0;
+      }
+      .question-card p:last-child {
+        margin-bottom: 0;
+      }
+      .usage-note {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 28px;
+        padding: 18px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .usage-note p {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .usage-steps {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: usage-step;
+      }
+      .usage-steps li {
+        counter-increment: usage-step;
+        font-size: 15px;
+      }
+      .usage-steps li::before {
+        content: counter(usage-step);
+        display: block;
+        margin-bottom: 4px;
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .implementation-link {
+        grid-column: 1 / -1;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+      }
+      .implementation-link code {
+        font-size: 13px;
+      }
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+        margin: 0;
+        padding: 12px 0 24px;
+        list-style: none;
+      }
+      .facts strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 16px;
+      }
+      .facts span {
+        color: var(--muted);
+        font-size: 16px;
+      }
+      .workspace {
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        gap: 32px;
+        padding-top: 28px;
+        align-items: start;
+      }
+      .control-deck {
+        position: sticky;
+        top: 24px;
+        max-height: calc(100dvh - 48px);
+        overflow-y: auto;
+      }
+      .deck-block {
+        padding: 0 0 22px;
+      }
+      .deck-block:last-child {
+        padding-bottom: 0;
+      }
+      .choice-grid {
+        display: grid;
+        gap: 4px;
+        margin-top: 8px;
+      }
+      .control-hint {
+        margin: 5px 0 8px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .choice-button,
+      .scenario-button,
+      .walkthrough-button,
+      .tab-button,
+      .reset-button {
         min-height: 40px;
         border: 1px solid transparent;
         border-radius: 6px;
@@ -85,98 +218,384 @@
         cursor: pointer;
         text-align: left;
       }
-      .choice-button, .scenario-button { padding: 9px 12px; font-size: 16px; line-height: 1.5; }
-      .choice-button:hover, .scenario-button:hover, .walkthrough-button:hover, .tab-button:hover { background: #edf0ed; }
-      .choice-button[aria-pressed="true"], .scenario-button[aria-pressed="true"] {
+      .choice-button,
+      .scenario-button {
+        padding: 9px 12px;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      .choice-button:hover,
+      .scenario-button:hover,
+      .walkthrough-button:hover,
+      .tab-button:hover {
+        background: #edf0ed;
+      }
+      .choice-button[aria-pressed='true'],
+      .scenario-button[aria-pressed='true'] {
         color: var(--accent);
         background: #e7efe9;
         font-weight: 600;
       }
-      .choice-button small, .scenario-button small { display: block; margin-top: 5px; color: var(--muted); font-size: 13px; font-weight: 400; }
-      .choice-button[aria-pressed="false"] small, .scenario-button[aria-pressed="false"] small { display: none; }
-      .reset-button { padding: 4px 12px; min-height: 36px; color: var(--muted); font-size: 14px; }
-      .reset-button:hover { color: var(--ink); background: #edf0ed; }
-      .main-stack { display: grid; min-width: 0; gap: 16px; }
-      .panel { min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--paper-strong); overflow: clip; }
-      .panel-head { padding: 22px 24px; }
-      .panel-head h2 { margin: 3px 0 0; }
-      .panel-head p { max-width: 660px; margin: 8px 0 0; color: var(--muted); font-size: 14px; }
-      details.panel > summary { padding: 18px 24px; font-size: 16px; font-weight: 600; }
-      details.panel[open] > summary { border-bottom: 1px solid var(--line); }
-      .status-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; padding: 4px 24px 24px; }
-      .status-value { display: block; margin-top: 5px; font-size: 16px; }
-      .status-value.good { color: var(--good); }
-      .status-value.warn { color: var(--warn); }
-      .status-value.bad { color: var(--bad); }
-      .trace-disclosure { border-top: 1px solid var(--line); }
-      .trace-disclosure > summary { padding: 14px 24px; color: var(--muted); font-size: 14px; }
-      .trace { margin: 0; padding: 0 24px 16px; list-style: none; }
-      .trace li { display: grid; grid-template-columns: 24px 130px minmax(0, 1fr); gap: 12px; padding: 12px 0; }
-      .trace-index { color: var(--muted); font-family: ui-monospace, monospace; font-size: 13px; }
-      .trace-layer { font-size: 14px; font-weight: 600; }
-      .trace-detail { color: var(--muted); font-size: 14px; }
-      .verdict { padding: 20px 24px; border-top: 1px solid var(--line); background: #f8faf8; }
-      .verdict-copy h3 { margin-top: 5px; }
-      .verdict-copy p { margin-bottom: 0; color: var(--muted); font-size: 16px; }
-      .score-details { margin-top: 12px; }
-      .score-details summary { color: var(--muted); font-size: 14px; }
-      .scorecard { display: grid; gap: 10px; max-width: 360px; padding-top: 14px; }
-      .metric { display: grid; grid-template-columns: 116px 1fr 32px; align-items: center; gap: 12px; }
-      .metric-track { height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; }
-      .metric-fill { display: block; height: 100%; background: var(--accent); }
-      .metric-score { font-family: ui-monospace, monospace; font-size: 13px; text-align: right; }
-      .code-layout { display: grid; min-width: 0; }
-      .code-pane { min-width: 0; background: var(--code); }
-      pre { max-height: 580px; margin: 0; padding: 24px; overflow: auto; color: var(--code-ink); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 14px; line-height: 1.7; }
-      .notes-list { margin: 0; padding: 20px 24px 20px 42px; color: var(--muted); font-size: 14px; }
-      .notes-list li + li { margin-top: 8px; }
-      .comparison-wrap { overflow-x: auto; }
-      table { width: 100%; border-collapse: collapse; }
-      th, td { min-width: 170px; padding: 16px 20px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 14px; }
-      th { color: var(--muted); font-weight: 500; }
-      tbody tr:last-child td { border-bottom: 0; }
-      .winner { color: var(--good); }
-      .walkthrough-tabs { display: flex; gap: 4px; padding: 0 20px 16px; overflow-x: auto; }
-      .tab-button { flex: 1 0 140px; padding: 8px 10px; font-size: 14px; text-align: center; }
-      .tab-button[aria-selected="true"] { color: var(--accent); background: var(--good-soft); }
-      .walkthrough-body { padding: 0 24px 24px; }
-      .walkthrough-copy p { color: var(--muted); font-size: 16px; }
-      .walkthrough-steps { display: grid; gap: 6px; }
-      .walkthrough-button { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 10px 12px; border-color: var(--line); font-size: 14px; }
-      .walkthrough-button[disabled] { cursor: default; opacity: 0.45; }
-      .walkthrough-button.current { border-color: var(--accent); }
-      .walkthrough-button.done { background: var(--good-soft); }
-      .step-number { color: var(--muted); font-family: ui-monospace, monospace; font-size: 13px; }
-      .guardrails { display: grid; gap: 24px; padding: 0 24px 24px; }
-      .guardrail p { margin-bottom: 0; color: var(--muted); font-size: 16px; }
-      .guardrail code { overflow-wrap: anywhere; }
-      .tag { display: inline-block; margin-bottom: 8px; color: var(--muted); font-size: 13px; }
-      .decision-box { border-top: 1px solid var(--line); }
-      .decision-copy, .decision-check { padding: 24px; }
-      .decision-copy h2 { margin-top: 6px; }
-      .decision-copy ol { margin-bottom: 0; padding-left: 20px; font-size: 16px; }
-      .decision-copy li + li { margin-top: 8px; }
-      .decision-check { background: var(--good-soft); font-size: 16px; }
-      .decision-check p:last-child { margin-bottom: 0; }
+      .choice-button small,
+      .scenario-button small {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 400;
+      }
+      .choice-button[aria-pressed='false'] small,
+      .scenario-button[aria-pressed='false'] small {
+        display: none;
+      }
+      .reset-button {
+        padding: 4px 12px;
+        min-height: 36px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .reset-button:hover {
+        color: var(--ink);
+        background: #edf0ed;
+      }
+      .main-stack {
+        display: grid;
+        min-width: 0;
+        gap: 16px;
+      }
+      .panel {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--paper-strong);
+        overflow: clip;
+      }
+      .panel-head {
+        padding: 22px 24px;
+      }
+      .panel-head h2 {
+        margin: 3px 0 0;
+      }
+      .panel-head p {
+        max-width: 660px;
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      details.panel > summary {
+        padding: 18px 24px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      details.panel[open] > summary {
+        border-bottom: 1px solid var(--line);
+      }
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 28px;
+        padding: 4px 24px 24px;
+      }
+      .status-value {
+        display: block;
+        margin-top: 5px;
+        font-size: 16px;
+      }
+      .status-value.good {
+        color: var(--good);
+      }
+      .status-value.warn {
+        color: var(--warn);
+      }
+      .status-value.bad {
+        color: var(--bad);
+      }
+      .trace-disclosure {
+        border-top: 1px solid var(--line);
+      }
+      .trace-disclosure > summary {
+        padding: 14px 24px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .trace {
+        margin: 0;
+        padding: 0 24px 16px;
+        list-style: none;
+      }
+      .trace li {
+        display: grid;
+        grid-template-columns: 24px 130px minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px 0;
+      }
+      .trace-index {
+        color: var(--muted);
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+      }
+      .trace-layer {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .trace-detail {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .verdict {
+        padding: 20px 24px;
+        border-top: 1px solid var(--line);
+        background: #f8faf8;
+      }
+      .verdict-copy h3 {
+        margin-top: 5px;
+      }
+      .verdict-copy p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 16px;
+      }
+      .score-details {
+        margin-top: 12px;
+      }
+      .score-details summary {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .scorecard {
+        display: grid;
+        gap: 10px;
+        max-width: 360px;
+        padding-top: 14px;
+      }
+      .metric {
+        display: grid;
+        grid-template-columns: 116px 1fr 32px;
+        align-items: center;
+        gap: 12px;
+      }
+      .metric-track {
+        height: 4px;
+        border-radius: 4px;
+        background: var(--line);
+        overflow: hidden;
+      }
+      .metric-fill {
+        display: block;
+        height: 100%;
+        background: var(--accent);
+      }
+      .metric-score {
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+        text-align: right;
+      }
+      .code-layout {
+        display: grid;
+        min-width: 0;
+      }
+      .code-pane {
+        min-width: 0;
+        background: var(--code);
+      }
+      pre {
+        max-height: 580px;
+        margin: 0;
+        padding: 24px;
+        overflow: auto;
+        color: var(--code-ink);
+        font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+      .notes-list {
+        margin: 0;
+        padding: 20px 24px 20px 42px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .notes-list li + li {
+        margin-top: 8px;
+      }
+      .comparison-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        min-width: 170px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+        font-size: 14px;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 500;
+      }
+      tbody tr:last-child td {
+        border-bottom: 0;
+      }
+      .winner {
+        color: var(--good);
+      }
+      .walkthrough-tabs {
+        display: flex;
+        gap: 4px;
+        padding: 0 20px 16px;
+        overflow-x: auto;
+      }
+      .tab-button {
+        flex: 1 0 140px;
+        padding: 8px 10px;
+        font-size: 14px;
+        text-align: center;
+      }
+      .tab-button[aria-selected='true'] {
+        color: var(--accent);
+        background: var(--good-soft);
+      }
+      .walkthrough-body {
+        padding: 0 24px 24px;
+      }
+      .walkthrough-copy p {
+        color: var(--muted);
+        font-size: 16px;
+      }
+      .walkthrough-steps {
+        display: grid;
+        gap: 6px;
+      }
+      .walkthrough-button {
+        display: grid;
+        grid-template-columns: 24px 1fr;
+        gap: 10px;
+        padding: 10px 12px;
+        border-color: var(--line);
+        font-size: 14px;
+      }
+      .walkthrough-button[disabled] {
+        cursor: default;
+        opacity: 0.45;
+      }
+      .walkthrough-button.current {
+        border-color: var(--accent);
+      }
+      .walkthrough-button.done {
+        background: var(--good-soft);
+      }
+      .step-number {
+        color: var(--muted);
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+      }
+      .guardrails {
+        display: grid;
+        gap: 24px;
+        padding: 0 24px 24px;
+      }
+      .guardrail p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 16px;
+      }
+      .guardrail code {
+        overflow-wrap: anywhere;
+      }
+      .tag {
+        display: inline-block;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .decision-box {
+        border-top: 1px solid var(--line);
+      }
+      .decision-copy,
+      .decision-check {
+        padding: 24px;
+      }
+      .decision-copy h2 {
+        margin-top: 6px;
+      }
+      .decision-copy ol {
+        margin-bottom: 0;
+        padding-left: 20px;
+        font-size: 16px;
+      }
+      .decision-copy li + li {
+        margin-top: 8px;
+      }
+      .decision-check {
+        background: var(--good-soft);
+        font-size: 16px;
+      }
+      .decision-check p:last-child {
+        margin-bottom: 0;
+      }
       @media (max-width: 900px) {
-        .shell { width: calc(100% - 40px); }
-        .workspace { grid-template-columns: 220px minmax(0, 1fr); gap: 20px; }
-        .trace li { grid-template-columns: 24px 1fr; }
-        .trace-detail { grid-column: 2; }
-        .status-grid { grid-template-columns: 1fr; }
+        .shell {
+          width: calc(100% - 40px);
+        }
+        .workspace {
+          grid-template-columns: 220px minmax(0, 1fr);
+          gap: 20px;
+        }
+        .trace li {
+          grid-template-columns: 24px 1fr;
+        }
+        .trace-detail {
+          grid-column: 2;
+        }
+        .status-grid {
+          grid-template-columns: 1fr;
+        }
       }
       @media (max-width: 640px) {
-        .shell { width: calc(100% - 32px); padding-top: 24px; }
-        .workspace { grid-template-columns: 1fr; }
-        .control-deck { position: static; max-height: none; }
-        .usage-note { grid-template-columns: 1fr; gap: 14px; }
-        .usage-steps { grid-template-columns: 1fr; gap: 10px; }
-        .choice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .facts { grid-template-columns: 1fr; gap: 16px; }
-        .panel-head, details.panel > summary { padding: 18px; }
-        .status-grid { padding: 0 18px 20px; }
-        .verdict { padding: 18px; }
-        pre { padding: 18px; font-size: 13px; }
+        .shell {
+          width: calc(100% - 32px);
+          padding-top: 24px;
+        }
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+        .control-deck {
+          position: static;
+          max-height: none;
+        }
+        .usage-note {
+          grid-template-columns: 1fr;
+          gap: 14px;
+        }
+        .usage-steps {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+        .choice-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .facts {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+        .panel-head,
+        details.panel > summary {
+          padding: 18px;
+        }
+        .status-grid {
+          padding: 0 18px 20px;
+        }
+        .verdict {
+          padding: 18px;
+        }
+        pre {
+          padding: 18px;
+          font-size: 13px;
+        }
       }
     </style>
   </head>
@@ -187,72 +606,113 @@
           <span class="eyebrow">Удалённые данные / Прототип · #112</span>
           <h1>Правильный путь — короче</h1>
           <p class="lede">
-            Эта страница помогает выбрать архитектуру будущего HTTP-слоя. Она не выполняет
-            сетевые запросы и не показывает готовую функцию приложения.
+            Эта страница помогает выбрать архитектуру будущего HTTP-слоя. Она не
+            выполняет сетевые запросы и не показывает готовую функцию
+            приложения.
           </p>
         </div>
       </header>
       <section class="usage-note" aria-label="Как пользоваться прототипом">
         <div>
           <span class="section-label">Зачем это нужно</span>
-          <p>Сравнить два варианта устройства кода и выбрать один до начала рефакторинга.</p>
+          <p>
+            Сравнить два варианта устройства кода и выбрать один до начала
+            рефакторинга.
+          </p>
         </div>
         <ol class="usage-steps">
-          <li>Выберите вариант A или B — это два конкурирующих архитектурных решения.</li>
-          <li>Выберите операцию из текущего frontend, на которой хотите увидеть решение.</li>
-          <li>Выберите ответ сервера. Справа появятся результат, код и последствия выбора.</li>
+          <li>
+            Выберите вариант A или B — это два конкурирующих архитектурных
+            решения.
+          </li>
+          <li>
+            Выберите операцию из текущего frontend, на которой хотите увидеть
+            решение.
+          </li>
+          <li>
+            Выберите ответ сервера. Справа появятся результат, код и последствия
+            выбора.
+          </li>
         </ol>
+        <p class="implementation-link">
+          Выбранный вариант уже собран как
+          <a href="./remote-data-kernel.prototype.ts"
+            >исполняемый прототип малого ядра</a
+          >. Запуск:
+          <code>bun docs/prototypes/remote-data-kernel.prototype.ts</code>.
+        </p>
       </section>
       <details class="context">
-        <summary>Контекст и предварительный выбор · транспортное ядро + декодер</summary>
+        <summary>
+          Контекст и предварительный выбор · транспортное ядро + декодер
+        </summary>
         <aside class="question-card">
           <span class="section-label">Вопрос прототипа</span>
           <p>
-            Достаточно ли малого транспортного ядра с декодером внутри операции, чтобы контракт
-            удалённых данных соблюдался по умолчанию, или декларативная таблица HTTP-исходов даёт
-            заметно больше полезности интерфейса (Leverage) и оправдывает собственный язык описания?
+            Достаточно ли малого транспортного ядра с декодером внутри операции,
+            чтобы контракт удалённых данных соблюдался по умолчанию, или
+            декларативная таблица HTTP-исходов даёт заметно больше полезности
+            интерфейса (Leverage) и оправдывает собственный язык описания?
           </p>
           <p>
-            <strong>Предварительный выбор:</strong> малое транспортное ядро. Пройдите сценарии
-            ниже и проверьте, не теряем ли мы важное поведение по умолчанию.
+            <strong>Предварительный выбор:</strong> малое транспортное ядро.
+            Пройдите сценарии ниже и проверьте, не теряем ли мы важное поведение
+            по умолчанию.
           </p>
         </aside>
 
-      <ul class="facts" aria-label="Факты текущего кода">
-        <li>
-          <strong>Проверка сессии</strong>
-          <span>Сейчас Axios и отдельная ветка имитации; ответ 401 уже трактуется как данные.</span>
-        </li>
-        <li>
-          <strong>Сохранение страницы курса</strong>
-          <span>Сейчас внутрипроцессная имитация возвращает CoursePage и слишком широко инвалидирует кеш.</span>
-        </li>
-        <li>
-          <strong>Сохранение проверки попытки</strong>
-          <span>Сейчас внутрипроцессная имитация возвращает агрегат; автоматические повторы не настроены.</span>
-        </li>
-      </ul>
+        <ul class="facts" aria-label="Факты текущего кода">
+          <li>
+            <strong>Проверка сессии</strong>
+            <span
+              >Сейчас Axios и отдельная ветка имитации; ответ 401 уже трактуется
+              как данные.</span
+            >
+          </li>
+          <li>
+            <strong>Сохранение страницы курса</strong>
+            <span
+              >Сейчас внутрипроцессная имитация возвращает CoursePage и слишком
+              широко инвалидирует кеш.</span
+            >
+          </li>
+          <li>
+            <strong>Сохранение проверки попытки</strong>
+            <span
+              >Сейчас внутрипроцессная имитация возвращает агрегат;
+              автоматические повторы не настроены.</span
+            >
+          </li>
+        </ul>
       </details>
 
       <section class="workspace" aria-label="Интерактивное сравнение">
         <aside class="control-deck" aria-label="Параметры сценария">
           <div class="deck-block">
             <span class="section-label">1 · Вариант архитектуры</span>
-            <p class="control-hint">Переключает два проекта общего HTTP-слоя; запросы не выполняются.</p>
+            <p class="control-hint">
+              Переключает два проекта общего HTTP-слоя; запросы не выполняются.
+            </p>
             <div class="choice-grid" id="design-controls"></div>
           </div>
           <div class="deck-block">
             <span class="section-label">2 · Операция-пример</span>
-            <p class="control-hint">Показывает выбранный вариант на конкретной операции.</p>
+            <p class="control-hint">
+              Показывает выбранный вариант на конкретной операции.
+            </p>
             <div class="choice-grid operations" id="operation-controls"></div>
           </div>
           <div class="deck-block">
             <span class="section-label">3 · Ответ сервера</span>
-            <p class="control-hint">Меняет условие, которое должен обработать будущий код.</p>
+            <p class="control-hint">
+              Меняет условие, которое должен обработать будущий код.
+            </p>
             <div class="choice-grid scenarios" id="scenario-controls"></div>
           </div>
           <div class="deck-block">
-            <button class="reset-button" id="reset-button" type="button">Сбросить прототип</button>
+            <button class="reset-button" id="reset-button" type="button">
+              Сбросить прототип
+            </button>
           </div>
         </aside>
 
@@ -287,12 +747,15 @@
                 <h2>Интерфейс операции</h2>
               </div>
               <p>
-                Код намеренно показывает весь интерфейс, который должен знать автор операции.
-                Статусы, проверка данных и преобразование не выходят в UI или доменную модель.
+                Код намеренно показывает весь интерфейс, который должен знать
+                автор операции. Статусы, проверка данных и преобразование не
+                выходят в UI или доменную модель.
               </p>
             </div>
             <div class="code-layout">
-              <div class="code-pane"><pre><code id="code-sample"></code></pre></div>
+              <div class="code-pane">
+                <pre><code id="code-sample"></code></pre>
+              </div>
               <aside>
                 <ol class="notes-list" id="code-notes"></ol>
               </aside>
@@ -303,10 +766,15 @@
             <summary id="comparison-heading">Сравнение двух форм</summary>
             <div class="panel-head">
               <div>
-                <span class="section-label">Depth · Locality · стоимость расширения</span>
+                <span class="section-label"
+                  >Depth · Locality · стоимость расширения</span
+                >
                 <h2>Где выигрывает каждый вариант</h2>
               </div>
-              <p>Оценка 1–5: выше лучше; для нестандартной конечной точки выше означает меньшую стоимость.</p>
+              <p>
+                Оценка 1–5: выше лучше; для нестандартной конечной точки выше
+                означает меньшую стоимость.
+              </p>
             </div>
             <div class="comparison-wrap">
               <table>
@@ -319,34 +787,81 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <td><strong>Depth (глубина)</strong><br />Сколько поведения скрыто за малым интерфейсом.</td>
-                    <td>5/5 для типичного JSON-ответа; интерфейс сам становится языком описания конечной точки.</td>
-                    <td class="winner">4/5: скрывает транспортные отказы и чтение ответа; классификация остаётся видимой.</td>
+                    <td>
+                      <strong>Depth (глубина)</strong><br />Сколько поведения
+                      скрыто за малым интерфейсом.
+                    </td>
+                    <td>
+                      5/5 для типичного JSON-ответа; интерфейс сам становится
+                      языком описания конечной точки.
+                    </td>
+                    <td class="winner">
+                      4/5: скрывает транспортные отказы и чтение ответа;
+                      классификация остаётся видимой.
+                    </td>
                   </tr>
                   <tr>
-                    <td><strong>Locality (локальность)</strong><br />Где меняется контракт операции.</td>
-                    <td>4/5: общие изменения локальны, но декларативная схема связывает транспорт и функциональные модули.</td>
-                    <td class="winner">5/5: HTTP-правила операции целиком находятся в одном функциональном модуле.</td>
+                    <td>
+                      <strong>Locality (локальность)</strong><br />Где меняется
+                      контракт операции.
+                    </td>
+                    <td>
+                      4/5: общие изменения локальны, но декларативная схема
+                      связывает транспорт и функциональные модули.
+                    </td>
+                    <td class="winner">
+                      5/5: HTTP-правила операции целиком находятся в одном
+                      функциональном модуле.
+                    </td>
                   </tr>
                   <tr>
-                    <td><strong>Обычная операция</strong><br />Проверка сессии, чтение или сохранение JSON.</td>
+                    <td>
+                      <strong>Обычная операция</strong><br />Проверка сессии,
+                      чтение или сохранение JSON.
+                    </td>
                     <td class="winner">5/5: очень мало повторов.</td>
-                    <td>4/5: явное ветвление по HTTP-статусу занимает несколько строк.</td>
+                    <td>
+                      4/5: явное ветвление по HTTP-статусу занимает несколько
+                      строк.
+                    </td>
                   </tr>
                   <tr>
-                    <td><strong>Нестандартная конечная точка</strong><br />204, текст, поток, multipart, исход по заголовку.</td>
-                    <td>2/5: нужны новые комбинаторы или аварийный выход, усложняющие второй интерфейс.</td>
-                    <td class="winner">5/5: декодер использует обычный Response без изменения транспортного модуля.</td>
+                    <td>
+                      <strong>Нестандартная конечная точка</strong><br />204,
+                      текст, поток, multipart, исход по заголовку.
+                    </td>
+                    <td>
+                      2/5: нужны новые комбинаторы или аварийный выход,
+                      усложняющие второй интерфейс.
+                    </td>
+                    <td class="winner">
+                      5/5: декодер использует обычный Response без изменения
+                      транспортного модуля.
+                    </td>
                   </tr>
                   <tr>
-                    <td><strong>Статическая доказуемость</strong><br />Что гарантируют TypeScript и линтер.</td>
-                    <td class="winner">4/5: обязательные описатели исходов направляют автора.</td>
-                    <td>3/5: вызов помощника проверки обязателен по соглашению; линтер запрещает обход точки подмены.</td>
+                    <td>
+                      <strong>Статическая доказуемость</strong><br />Что
+                      гарантируют TypeScript и линтер.
+                    </td>
+                    <td class="winner">
+                      4/5: обязательные описатели исходов направляют автора.
+                    </td>
+                    <td>
+                      3/5: вызов помощника проверки обязателен по соглашению;
+                      линтер запрещает обход точки подмены.
+                    </td>
                   </tr>
                   <tr>
                     <td><strong>Итог</strong></td>
-                    <td>20/25. Выигрывает краткостью, проигрывает собственному языку описания.</td>
-                    <td class="winner">21/25. Меньше магии и ниже предельная стоимость необычных операций.</td>
+                    <td>
+                      20/25. Выигрывает краткостью, проигрывает собственному
+                      языку описания.
+                    </td>
+                    <td class="winner">
+                      21/25. Меньше магии и ниже предельная стоимость необычных
+                      операций.
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -354,15 +869,24 @@
           </details>
 
           <details class="panel">
-            <summary id="walkthrough-heading">Пошаговая проверка · неудобные случаи</summary>
+            <summary id="walkthrough-heading">
+              Пошаговая проверка · неудобные случаи
+            </summary>
             <div class="panel-head">
               <div>
                 <span class="section-label">Пошаговые сценарии</span>
                 <h2>Проверьте неудобные случаи</h2>
               </div>
-              <p>Каждый сценарий начинается с известного состояния; нажимайте шаги сверху вниз.</p>
+              <p>
+                Каждый сценарий начинается с известного состояния; нажимайте
+                шаги сверху вниз.
+              </p>
             </div>
-            <div class="walkthrough-tabs" id="walkthrough-tabs" role="tablist"></div>
+            <div
+              class="walkthrough-tabs"
+              id="walkthrough-tabs"
+              role="tablist"
+            ></div>
             <div class="walkthrough-body">
               <div class="walkthrough-copy" id="walkthrough-copy"></div>
               <div class="walkthrough-steps" id="walkthrough-steps"></div>
@@ -370,13 +894,20 @@
           </details>
 
           <details class="panel">
-            <summary id="guardrails-heading">Статический контроль и решение</summary>
+            <summary id="guardrails-heading">
+              Статический контроль и решение
+            </summary>
             <div class="panel-head">
               <div>
-                <span class="section-label">Минимальный статический контроль</span>
+                <span class="section-label"
+                  >Минимальный статический контроль</span
+                >
                 <h2>Что сделать невозможным или заметным</h2>
               </div>
-              <p>Без собственного плагина ESLint и попытки кодировать смысл конечных точек в линтере.</p>
+              <p>
+                Без собственного плагина ESLint и попытки кодировать смысл
+                конечных точек в линтере.
+              </p>
             </div>
             <div class="guardrails">
               <div class="guardrail">
@@ -390,19 +921,24 @@
               </div>
               <div class="guardrail">
                 <span class="tag good">Типы</span>
-                <h3>Response не выходит за пределы операции функционального модуля</h3>
+                <h3>
+                  Response не выходит за пределы операции функционального модуля
+                </h3>
                 <p>
-                  Экспортируемая операция возвращает доменный исход или отклоняет Promise с
-                  <code>OperationFailure</code>. Обобщённый <code>readJson</code> безопасен только
-                  потому, что внутри всегда вызывается Valibot.
+                  Экспортируемая операция возвращает доменный исход или
+                  отклоняет Promise с
+                  <code>OperationFailure</code>. Обобщённый
+                  <code>readJson</code> безопасен только потому, что внутри
+                  всегда вызывается Valibot.
                 </p>
               </div>
               <div class="guardrail">
                 <span class="tag warn">Поведение</span>
                 <h3>Не притворяться, что линтер знает контракт</h3>
                 <p>
-                  Полноту классификации статусов, область кеша и допустимость повторов подтверждают
-                  контрактные сценарии. Ни собственный язык описания, ни особое правило линтера не вводятся.
+                  Полноту классификации статусов, область кеша и допустимость
+                  повторов подтверждают контрактные сценарии. Ни собственный
+                  язык описания, ни особое правило линтера не вводятся.
                 </p>
               </div>
             </div>
@@ -411,23 +947,43 @@
                 <span class="section-label">Рекомендуемая форма</span>
                 <h2>Транспортное ядро + декодер внутри операции</h2>
                 <ol>
-                  <li><code>runHttpOperation</code> владеет единственным вызовом Fetch и нормализацией сетевых отказов.</li>
-                  <li><code>readJson</code> владеет переходом unknown → Valibot → DTO и отказами чтения или проверки тела.</li>
-                  <li>Операция функционального модуля владеет переходом HTTP-статус → объявленный исход и DTO → доменная модель.</li>
-                  <li>TanStack Query отвечает за передачу сигнала, изменения кеша и явное включение повторов.</li>
-                  <li>QueryClient задаёт безопасное умолчание: автоматические повторы запросов и мутаций выключены.</li>
-                  <li>MSW перехватывает те же URL; отдельной ветки между имитацией и реальным сервером нет.</li>
+                  <li>
+                    <code>runHttpOperation</code> владеет единственным вызовом
+                    Fetch и нормализацией сетевых отказов.
+                  </li>
+                  <li>
+                    <code>readJson</code> владеет переходом unknown → Valibot →
+                    DTO и отказами чтения или проверки тела.
+                  </li>
+                  <li>
+                    Операция функционального модуля владеет переходом
+                    HTTP-статус → объявленный исход и DTO → доменная модель.
+                  </li>
+                  <li>
+                    TanStack Query отвечает за передачу сигнала, изменения кеша
+                    и явное включение повторов.
+                  </li>
+                  <li>
+                    QueryClient задаёт безопасное умолчание: автоматические
+                    повторы запросов и мутаций выключены.
+                  </li>
+                  <li>
+                    MSW перехватывает те же URL; отдельной ветки между имитацией
+                    и реальным сервером нет.
+                  </li>
                 </ol>
               </div>
               <aside class="decision-check">
                 <span class="section-label">Проверка владельцем</span>
                 <p>
-                  Принимаем эту форму, если явное ветвление по HTTP-статусу считается полезной
-                  локальной спецификацией операции, а не досадным шаблонным кодом.
+                  Принимаем эту форму, если явное ветвление по HTTP-статусу
+                  считается полезной локальной спецификацией операции, а не
+                  досадным шаблонным кодом.
                 </p>
                 <p>
-                  Выбираем декларативные исходы только тогда, когда краткость обычных JSON-операций
-                  важнее стоимости второго языка описания и его аварийных выходов.
+                  Выбираем декларативные исходы только тогда, когда краткость
+                  обычных JSON-операций важнее стоимости второго языка описания
+                  и его аварийных выходов.
                 </p>
               </aside>
             </div>
@@ -443,7 +999,8 @@
             id: 'declarative',
             label: 'A · Общий конструктор операций',
             shortLabel: 'Конструктор операций',
-            description: 'Запрос, статусы, схема и преобразование задаются декларативно.',
+            description:
+              'Запрос, статусы, схема и преобразование задаются декларативно.',
             verdict:
               'Удобный путь для однотипного JSON, но набор настроек быстро превращается в собственный язык описания конечных точек. Необычный ответ требует нового комбинатора или аварийного выхода.',
             scores: { depth: 5, locality: 4, extensibility: 2, guardrails: 4 },
@@ -452,7 +1009,8 @@
             id: 'kernel',
             label: 'B · Малое транспортное ядро',
             shortLabel: 'Транспортное ядро',
-            description: 'Общий слой вызывает Fetch; конкретная операция разбирает Response.',
+            description:
+              'Общий слой вызывает Fetch; конкретная операция разбирает Response.',
             verdict:
               'Явное ветвление по HTTP-статусу оставляет доменный смысл рядом с операцией. Транспортный модуль мал и стабилен; необычные конечные точки не расширяют его интерфейс.',
             scores: { depth: 4, locality: 5, extensibility: 5, guardrails: 3 },
@@ -469,13 +1027,15 @@
           course: {
             id: 'course',
             label: 'Сохранение страницы курса',
-            description: 'Мутация; авторитетная страница или конфликт устаревшей записи.',
+            description:
+              'Мутация; авторитетная страница или конфликт устаревшей записи.',
             scenarios: ['success', 'expected', 'network', 'invalid', 'abort'],
           },
           review: {
             id: 'review',
             label: 'Сохранение проверки попытки',
-            description: 'Мутация; ответ с агрегатом, автоматические повторы выключены.',
+            description:
+              'Мутация; ответ с агрегатом, автоматические повторы выключены.',
             scenarios: ['success', 'expected', 'network', 'invalid', 'abort'],
           },
           custom: {
@@ -635,13 +1195,13 @@ export async function checkSession(signal?: AbortSignal) {
       credentials: 'include',
       signal,
     },
-    async (response) => {
-      if (response.status === 401) {
+    async (context) => {
+      if (context.response.status === 401) {
         return { status: 'not-authorized' as const };
       }
-      if (!response.ok) throw unexpectedHttp('check-session', response);
+      if (!context.response.ok) throw unexpectedHttp(context);
 
-      const dto = await readJson(response, SessionDtoSchema);
+      const dto = await readJson(context, SessionDtoSchema);
       return { status: 'authorized' as const, session: toSession(dto) };
     }
   );
@@ -662,14 +1222,14 @@ export async function saveCoursePage(input: SaveCoursePageInput) {
       path: '/api/v1/courses/' + input.courseSlug + '/page',
       ...jsonBody(toSaveCoursePageDto(input)),
     },
-    async (response) => {
-      if (response.status === 409) {
-        const conflict = await readJson(response, CoursePageConflictDtoSchema);
+    async (context) => {
+      if (context.response.status === 409) {
+        const conflict = await readJson(context, CoursePageConflictDtoSchema);
         return { status: 'conflict' as const, latest: toCoursePage(conflict.latest) };
       }
-      if (!response.ok) throw unexpectedHttp('save-course-page', response);
+      if (!context.response.ok) throw unexpectedHttp(context);
 
-      const dto = await readJson(response, CoursePageDtoSchema);
+      const dto = await readJson(context, CoursePageDtoSchema);
       return { status: 'saved' as const, page: toCoursePage(dto) };
     }
   );
@@ -686,14 +1246,14 @@ export async function saveAttemptReview(input: SaveAttemptReviewInput) {
       path: reviewPath(input),
       ...jsonBody(toSaveAttemptReviewDto(input)),
     },
-    async (response) => {
-      if (response.status === 409) {
-        const conflict = await readJson(response, ReviewConflictDtoSchema);
+    async (context) => {
+      if (context.response.status === 409) {
+        const conflict = await readJson(context, ReviewConflictDtoSchema);
         return { status: 'conflict' as const, revision: conflict.revision };
       }
-      if (!response.ok) throw unexpectedHttp('save-attempt-review', response);
+      if (!context.response.ok) throw unexpectedHttp(context);
 
-      const dto = await readJson(response, AttemptReviewDtoSchema);
+      const dto = await readJson(context, AttemptReviewDtoSchema);
       return { status: 'saved' as const, review: toAttemptReview(dto) };
     }
   );
@@ -705,16 +1265,16 @@ useMutation({ mutationFn: saveAttemptReview });
 export async function exportReview(signal?: AbortSignal) {
   return runHttpOperation(
     { name: 'export-review', path: '/api/v1/reviews/export', signal },
-    async (response) => {
-      if (response.status === 204) return { status: 'empty' as const };
-      if (!response.ok) throw unexpectedHttp('export-review', response);
-      if (response.headers.get('content-type') !== 'text/csv') {
-        throw invalidResponse('export-review');
+    async (context) => {
+      if (context.response.status === 204) return { status: 'empty' as const };
+      if (!context.response.ok) throw unexpectedHttp(context);
+      if (context.response.headers.get('content-type') !== 'text/csv') {
+        throw invalidResponse(context, 'ожидался text/csv');
       }
       return {
         status: 'ready' as const,
-        etag: response.headers.get('etag'),
-        stream: response.body,
+        etag: context.response.headers.get('etag'),
+        stream: context.response.body,
       };
     }
   );
@@ -743,37 +1303,96 @@ export async function exportReview(signal?: AbortSignal) {
           outcomes: {
             label: '401 и 409 — данные',
             title: 'Доменный смысл не выводится из HTTP-статуса',
-            copy:
-              'Сравните 401 при проверке сессии и конфликт сохранения. В обоих вариантах HTTP-статус становится разрешённым доменным исходом; TanStack Query не видит ошибку и не запускает повтор.',
+            copy: 'Сравните 401 при проверке сессии и конфликт сохранения. В обоих вариантах HTTP-статус становится разрешённым доменным исходом; TanStack Query не видит ошибку и не запускает повтор.',
             steps: [
-              { label: 'Таблица исходов · Проверка сессии', action: { type: 'select-design', design: 'declarative' } },
-              { label: 'Получить 401 как not-authorized', action: { type: 'set-case', operation: 'session', scenario: 'expected' } },
-              { label: 'Ядро · Сохранение страницы курса', action: { type: 'select-design', design: 'kernel' } },
-              { label: 'Получить 409 как conflict', action: { type: 'set-case', operation: 'course', scenario: 'expected' } },
+              {
+                label: 'Таблица исходов · Проверка сессии',
+                action: { type: 'select-design', design: 'declarative' },
+              },
+              {
+                label: 'Получить 401 как not-authorized',
+                action: {
+                  type: 'set-case',
+                  operation: 'session',
+                  scenario: 'expected',
+                },
+              },
+              {
+                label: 'Ядро · Сохранение страницы курса',
+                action: { type: 'select-design', design: 'kernel' },
+              },
+              {
+                label: 'Получить 409 как conflict',
+                action: {
+                  type: 'set-case',
+                  operation: 'course',
+                  scenario: 'expected',
+                },
+              },
             ],
           },
           failures: {
             label: 'Отказ и отмена',
             title: 'Отказ операции отделён от отмены',
-            copy:
-              'Некорректный DTO отклоняет Promise с OperationFailure и не попадает в кеш. AbortError проходит без переклассификации, включая отмену во время чтения тела.',
+            copy: 'Некорректный DTO отклоняет Promise с OperationFailure и не попадает в кеш. AbortError проходит без переклассификации, включая отмену во время чтения тела.',
             steps: [
-              { label: 'Ядро · Сохранение проверки попытки', action: { type: 'set-case', design: 'kernel', operation: 'review', scenario: 'invalid' } },
-              { label: 'Увидеть отказ invalid-response', action: { type: 'noop' } },
-              { label: 'Отменить ту же операцию', action: { type: 'set-case', operation: 'review', scenario: 'abort' } },
-              { label: 'Проверить: автоматический повтор мутации выключен', action: { type: 'noop' } },
+              {
+                label: 'Ядро · Сохранение проверки попытки',
+                action: {
+                  type: 'set-case',
+                  design: 'kernel',
+                  operation: 'review',
+                  scenario: 'invalid',
+                },
+              },
+              {
+                label: 'Увидеть отказ invalid-response',
+                action: { type: 'noop' },
+              },
+              {
+                label: 'Отменить ту же операцию',
+                action: {
+                  type: 'set-case',
+                  operation: 'review',
+                  scenario: 'abort',
+                },
+              },
+              {
+                label: 'Проверить: автоматический повтор мутации выключен',
+                action: { type: 'noop' },
+              },
             ],
           },
           unusual: {
             label: 'Нестандартная конечная точка',
             title: 'Проверка предельной стоимости нового формата HTTP',
-            copy:
-              '204, текстовый поток и исход по заголовку не относятся к текущим трём операциям, но показывают расширяемость точки подмены. Это не проектирование будущей функции, а проверка интерфейса под нагрузкой.',
+            copy: '204, текстовый поток и исход по заголовку не относятся к текущим трём операциям, но показывают расширяемость точки подмены. Это не проектирование будущей функции, а проверка интерфейса под нагрузкой.',
             steps: [
-              { label: 'Таблица исходов · 204', action: { type: 'set-case', design: 'declarative', operation: 'custom', scenario: 'no-content' } },
-              { label: 'Перейти к текстовому потоку', action: { type: 'set-case', operation: 'custom', scenario: 'text-stream' } },
-              { label: 'Ядро · тот же текстовый поток', action: { type: 'select-design', design: 'kernel' } },
-              { label: 'Проверить, что новый транспортный интерфейс не нужен', action: { type: 'noop' } },
+              {
+                label: 'Таблица исходов · 204',
+                action: {
+                  type: 'set-case',
+                  design: 'declarative',
+                  operation: 'custom',
+                  scenario: 'no-content',
+                },
+              },
+              {
+                label: 'Перейти к текстовому потоку',
+                action: {
+                  type: 'set-case',
+                  operation: 'custom',
+                  scenario: 'text-stream',
+                },
+              },
+              {
+                label: 'Ядро · тот же текстовый поток',
+                action: { type: 'select-design', design: 'kernel' },
+              },
+              {
+                label: 'Проверить, что новый транспортный интерфейс не нужен',
+                action: { type: 'noop' },
+              },
             ],
           },
         };
@@ -792,7 +1411,11 @@ export async function exportReview(signal?: AbortSignal) {
         function transition(state, action) {
           if (action.type === 'reset') return initialState();
           if (action.type === 'select-design') {
-            return { ...state, design: action.design, revision: state.revision + 1 };
+            return {
+              ...state,
+              design: action.design,
+              revision: state.revision + 1,
+            };
           }
           if (action.type === 'select-operation') {
             const operation = operations[action.operation];
@@ -804,7 +1427,11 @@ export async function exportReview(signal?: AbortSignal) {
             };
           }
           if (action.type === 'select-scenario') {
-            return { ...state, scenario: action.scenario, revision: state.revision + 1 };
+            return {
+              ...state,
+              scenario: action.scenario,
+              revision: state.revision + 1,
+            };
           }
           if (action.type === 'set-case') {
             const nextOperation = action.operation ?? state.operation;
@@ -812,7 +1439,8 @@ export async function exportReview(signal?: AbortSignal) {
               ...state,
               design: action.design ?? state.design,
               operation: nextOperation,
-              scenario: action.scenario ?? operations[nextOperation].scenarios[0],
+              scenario:
+                action.scenario ?? operations[nextOperation].scenarios[0],
               revision: state.revision + 1,
             };
           }
@@ -830,11 +1458,15 @@ export async function exportReview(signal?: AbortSignal) {
             const afterAction = transition(state, step.action);
             return {
               ...afterAction,
-              walkthroughStep: Math.min(action.index + 1, walkthrough.steps.length),
+              walkthroughStep: Math.min(
+                action.index + 1,
+                walkthrough.steps.length
+              ),
               revision: afterAction.revision + 1,
             };
           }
-          if (action.type === 'noop') return { ...state, revision: state.revision + 1 };
+          if (action.type === 'noop')
+            return { ...state, revision: state.revision + 1 };
           return state;
         }
 
@@ -849,12 +1481,16 @@ export async function exportReview(signal?: AbortSignal) {
 
           let channel = 'Разрешённый объявленный исход';
           let cache = 'Проверенное доменное значение может попасть в кеш';
-          let retry = state.operation === 'session' ? 'Явная политика чтения' : 'Выключены по умолчанию';
+          let retry =
+            state.operation === 'session'
+              ? 'Явная политика чтения'
+              : 'Выключены по умолчанию';
           let tone = scenario.tone;
 
           if (expectedNegative) {
             channel = 'Разрешённый вариант доменного исхода';
-            cache = 'Исход остаётся данными; общая обработка ошибок не включается';
+            cache =
+              'Исход остаётся данными; общая обработка ошибок не включается';
             retry = 'Без повтора: объявленный исход';
           } else if (cancellation) {
             channel = 'AbortError передаётся без изменений';
@@ -863,18 +1499,20 @@ export async function exportReview(signal?: AbortSignal) {
           } else if (failure) {
             channel = 'Promise отклонён с OperationFailure';
             cache = 'Некорректное тело не попадает в кеш';
-            retry = state.operation === 'session' && state.scenario === 'network'
-              ? 'Разрешён только явной политикой проверки сессии'
-              : 'Без автоматического повтора';
+            retry =
+              state.operation === 'session' && state.scenario === 'network'
+                ? 'Разрешён только явной политикой проверки сессии'
+                : 'Без автоматического повтора';
           } else if (custom) {
             channel = 'Разрешённый специфичный для операции исход';
             cache = 'Зависит от операции; транспорт нейтрален';
             retry = 'Определяется контрактом операции';
           }
 
-          const classificationOwner = state.design === 'kernel'
-            ? 'Операция функционального модуля: явное ветвление по статусу'
-            : 'Общий язык описания: описатель исхода и преобразование функционального модуля';
+          const classificationOwner =
+            state.design === 'kernel'
+              ? 'Операция функционального модуля: явное ветвление по статусу'
+              : 'Общий язык описания: описатель исхода и преобразование функционального модуля';
           const extensionCost = custom
             ? state.design === 'kernel'
               ? 'Низкая: обычный Response уже доступен декодеру.'
@@ -913,10 +1551,11 @@ export async function exportReview(signal?: AbortSignal) {
               },
               {
                 layer: 'Точка доверия',
-                detail:
-                  ['success', 'expected', 'invalid'].includes(state.scenario)
-                    ? 'Структурированное тело входит как unknown и проходит Valibot до преобразования.'
-                    : 'Для байтов и текста схема JSON не применяется; проверяется фактический контракт.',
+                detail: ['success', 'expected', 'invalid'].includes(
+                  state.scenario
+                )
+                  ? 'Структурированное тело входит как unknown и проходит Valibot до преобразования.'
+                  : 'Для байтов и текста схема JSON не применяется; проверяется фактический контракт.',
               },
               {
                 layer: 'Результат',
@@ -965,7 +1604,13 @@ export async function exportReview(signal?: AbortSignal) {
         render();
       }
 
-      function makeChoiceButton({ label, description, selected, action, className = 'choice-button' }) {
+      function makeChoiceButton({
+        label,
+        description,
+        selected,
+        action,
+        className = 'choice-button',
+      }) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = className;
@@ -1020,12 +1665,17 @@ export async function exportReview(signal?: AbortSignal) {
 
       function renderStatus(view) {
         const statuses = [
-          { label: 'Как завершилась операция', value: view.channel, tone: view.tone },
+          {
+            label: 'Как завершилась операция',
+            value: view.channel,
+            tone: view.tone,
+          },
           { label: 'Что попадёт в кеш', value: view.cache, tone: view.tone },
           { label: 'Повтор', value: view.retry, tone: view.tone },
           {
             label: 'Путь MSW',
-            value: 'Та же Fetch-операция; без отдельной ветки функционального модуля',
+            value:
+              'Та же Fetch-операция; без отдельной ветки функционального модуля',
             tone: 'good',
           },
         ];
@@ -1121,7 +1771,10 @@ export async function exportReview(signal?: AbortSignal) {
             button.type = 'button';
             button.className = 'tab-button';
             button.role = 'tab';
-            button.setAttribute('aria-selected', String(state.walkthrough === id));
+            button.setAttribute(
+              'aria-selected',
+              String(state.walkthrough === id)
+            );
             button.textContent = walkthrough.label;
             button.addEventListener('click', () =>
               dispatch({ type: 'select-walkthrough', walkthrough: id })
@@ -1143,7 +1796,8 @@ export async function exportReview(signal?: AbortSignal) {
             button.type = 'button';
             button.className = 'walkthrough-button';
             if (index < state.walkthroughStep) button.classList.add('done');
-            if (index === state.walkthroughStep) button.classList.add('current');
+            if (index === state.walkthroughStep)
+              button.classList.add('current');
             button.disabled = index > state.walkthroughStep;
             const number = document.createElement('span');
             number.className = 'step-number';
@@ -1170,7 +1824,9 @@ export async function exportReview(signal?: AbortSignal) {
         renderWalkthrough();
       }
 
-      elements.resetButton.addEventListener('click', () => dispatch({ type: 'reset' }));
+      elements.resetButton.addEventListener('click', () =>
+        dispatch({ type: 'reset' })
+      );
       render();
     </script>
   </body>
