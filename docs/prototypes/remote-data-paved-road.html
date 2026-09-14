@@ -62,6 +62,11 @@
       .context > summary { padding: 12px 0 16px; color: var(--muted); font-size: 16px; }
       .question-card { max-width: 820px; padding: 12px 0; }
       .question-card p:last-child { margin-bottom: 0; }
+      .usage-note { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+      .usage-note p { margin: 5px 0 0; color: var(--muted); font-size: 15px; }
+      .usage-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 0; padding: 0; list-style: none; counter-reset: usage-step; }
+      .usage-steps li { counter-increment: usage-step; font-size: 15px; }
+      .usage-steps li::before { content: counter(usage-step); display: block; margin-bottom: 4px; color: var(--accent); font-weight: 700; }
       .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 12px 0 24px; list-style: none; }
       .facts strong { display: block; margin-bottom: 6px; font-size: 16px; }
       .facts span { color: var(--muted); font-size: 16px; }
@@ -70,6 +75,7 @@
       .deck-block { padding: 0 0 22px; }
       .deck-block:last-child { padding-bottom: 0; }
       .choice-grid { display: grid; gap: 4px; margin-top: 8px; }
+      .control-hint { margin: 5px 0 8px; color: var(--muted); font-size: 13px; line-height: 1.45; }
       .choice-button, .scenario-button, .walkthrough-button, .tab-button, .reset-button {
         min-height: 40px;
         border: 1px solid transparent;
@@ -163,6 +169,8 @@
         .shell { width: calc(100% - 32px); padding-top: 24px; }
         .workspace { grid-template-columns: 1fr; }
         .control-deck { position: static; max-height: none; }
+        .usage-note { grid-template-columns: 1fr; gap: 14px; }
+        .usage-steps { grid-template-columns: 1fr; gap: 10px; }
         .choice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .facts { grid-template-columns: 1fr; gap: 16px; }
         .panel-head, details.panel > summary { padding: 18px; }
@@ -179,11 +187,22 @@
           <span class="eyebrow">Удалённые данные / Прототип · #112</span>
           <h1>Правильный путь — короче</h1>
           <p class="lede">
-            Сравните два интерфейса на одном сценарии. Выберите операцию и ответ,
-            чтобы увидеть результат, поведение кеша и правила повторов.
+            Эта страница помогает выбрать архитектуру будущего HTTP-слоя. Она не выполняет
+            сетевые запросы и не показывает готовую функцию приложения.
           </p>
         </div>
       </header>
+      <section class="usage-note" aria-label="Как пользоваться прототипом">
+        <div>
+          <span class="section-label">Зачем это нужно</span>
+          <p>Сравнить два варианта устройства кода и выбрать один до начала рефакторинга.</p>
+        </div>
+        <ol class="usage-steps">
+          <li>Выберите вариант A или B — это два конкурирующих архитектурных решения.</li>
+          <li>Выберите операцию из текущего frontend, на которой хотите увидеть решение.</li>
+          <li>Выберите ответ сервера. Справа появятся результат, код и последствия выбора.</li>
+        </ol>
+      </section>
       <details class="context">
         <summary>Контекст и предварительный выбор · транспортное ядро + декодер</summary>
         <aside class="question-card">
@@ -218,15 +237,18 @@
       <section class="workspace" aria-label="Интерактивное сравнение">
         <aside class="control-deck" aria-label="Параметры сценария">
           <div class="deck-block">
-            <span class="section-label">1 · Форма интерфейса</span>
+            <span class="section-label">1 · Вариант архитектуры</span>
+            <p class="control-hint">Переключает два проекта общего HTTP-слоя; запросы не выполняются.</p>
             <div class="choice-grid" id="design-controls"></div>
           </div>
           <div class="deck-block">
-            <span class="section-label">2 · Операция</span>
+            <span class="section-label">2 · Операция-пример</span>
+            <p class="control-hint">Показывает выбранный вариант на конкретной операции.</p>
             <div class="choice-grid operations" id="operation-controls"></div>
           </div>
           <div class="deck-block">
-            <span class="section-label">3 · Сценарий ответа</span>
+            <span class="section-label">3 · Ответ сервера</span>
+            <p class="control-hint">Меняет условие, которое должен обработать будущий код.</p>
             <div class="choice-grid scenarios" id="scenario-controls"></div>
           </div>
           <div class="deck-block">
@@ -419,9 +441,9 @@
         const designs = {
           declarative: {
             id: 'declarative',
-            label: 'A · Декларативные исходы',
-            shortLabel: 'Таблица исходов',
-            description: 'Настройки описывают запрос, статус, схему и преобразование.',
+            label: 'A · Общий конструктор операций',
+            shortLabel: 'Конструктор операций',
+            description: 'Запрос, статусы, схема и преобразование задаются декларативно.',
             verdict:
               'Удобный путь для однотипного JSON, но набор настроек быстро превращается в собственный язык описания конечных точек. Необычный ответ требует нового комбинатора или аварийного выхода.',
             scores: { depth: 5, locality: 4, extensibility: 2, guardrails: 4 },
@@ -429,8 +451,8 @@
           kernel: {
             id: 'kernel',
             label: 'B · Малое транспортное ядро',
-            shortLabel: 'Ядро + декодер',
-            description: 'Fetch общий; операция явно классифицирует Response.',
+            shortLabel: 'Транспортное ядро',
+            description: 'Общий слой вызывает Fetch; конкретная операция разбирает Response.',
             verdict:
               'Явное ветвление по HTTP-статусу оставляет доменный смысл рядом с операцией. Транспортный модуль мал и стабилен; необычные конечные точки не расширяют его интерфейс.',
             scores: { depth: 4, locality: 5, extensibility: 5, guardrails: 3 },
