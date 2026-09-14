@@ -7,688 +7,168 @@
     <style>
       :root {
         color-scheme: light;
-        --paper: #f3efe4;
-        --paper-strong: #fffdf7;
-        --ink: #17231f;
-        --muted: #667069;
-        --line: #b9c0b5;
-        --accent: #b84420;
-        --accent-soft: #f1d4c6;
-        --good: #276247;
-        --good-soft: #d9eadf;
-        --warn: #8a5a10;
-        --warn-soft: #f4e5bd;
-        --bad: #922f2f;
-        --bad-soft: #f0d1cf;
-        --code: #111915;
-        --code-ink: #dfe9dc;
-        --shadow: 0 16px 40px rgb(23 35 31 / 9%);
+        --paper: #f7f8f7;
+        --paper-strong: #fff;
+        --ink: #172b22;
+        --muted: #46584e;
+        --line: #e1e6e2;
+        --accent: #28664d;
+        --good: #28664d;
+        --good-soft: #edf5ef;
+        --warn: #725016;
+        --warn-soft: #faf4e7;
+        --bad: #a34040;
+        --code: #202a26;
+        --code-ink: #e0e9e3;
       }
 
-      * {
-        box-sizing: border-box;
-      }
-
-      html {
-        background: var(--paper);
-      }
-
+      * { box-sizing: border-box; }
       body {
         margin: 0;
         color: var(--ink);
-        background:
-          linear-gradient(rgb(23 35 31 / 4%) 1px, transparent 1px),
-          var(--paper);
-        background-size: 100% 32px;
-        font-family: Avenir, "Avenir Next", "Segoe UI", sans-serif;
-        line-height: 1.5;
+        background: var(--paper);
+        font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
       }
-
-      button {
-        font: inherit;
+      button { font: inherit; }
+      button, summary { -webkit-tap-highlight-color: transparent; }
+      button:focus-visible, summary:focus-visible, a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
       }
-
-      .shell {
-        width: min(1480px, calc(100% - 32px));
-        margin: 0 auto;
-        padding: 34px 0 64px;
-      }
-
-      .masthead {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
-        gap: 48px;
-        padding: 26px 0 34px;
-        border-top: 6px solid var(--ink);
-        border-bottom: 1px solid var(--ink);
-      }
-
-      .eyebrow,
-      .section-label,
-      .status-label,
-      .metric-label {
-        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-        font-size: 0.73rem;
-        font-weight: 700;
-        letter-spacing: 0.09em;
-        text-transform: uppercase;
-      }
-
-      .eyebrow {
-        color: var(--accent);
-      }
-
-      h1,
-      h2,
-      h3,
-      p {
-        margin-top: 0;
-      }
-
+      h1, h2, h3, p { margin-top: 0; }
       h1 {
-        max-width: 900px;
-        margin: 12px 0 14px;
-        font-family: Iowan Old Style, Palatino, "Palatino Linotype", serif;
-        font-size: clamp(2.7rem, 6vw, 6.1rem);
-        font-weight: 500;
-        letter-spacing: -0.055em;
-        line-height: 0.91;
-      }
-
-      h2 {
-        margin-bottom: 18px;
-        font-family: Iowan Old Style, Palatino, "Palatino Linotype", serif;
-        font-size: clamp(1.8rem, 3vw, 3rem);
-        font-weight: 500;
-        letter-spacing: -0.035em;
-        line-height: 1;
-      }
-
-      h3 {
-        margin-bottom: 8px;
-        font-size: 1rem;
-      }
-
-      .lede {
-        max-width: 760px;
-        margin-bottom: 0;
-        color: var(--muted);
-        font-size: 1.05rem;
-      }
-
-      .question-card {
-        align-self: end;
-        padding: 18px;
-        border: 1px solid var(--ink);
-        background: var(--paper-strong);
-        box-shadow: 7px 7px 0 var(--ink);
-      }
-
-      .question-card p:last-child {
-        margin-bottom: 0;
-      }
-
-      .facts {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        margin: 0;
-        padding: 0;
-        border-bottom: 1px solid var(--ink);
-        list-style: none;
-      }
-
-      .facts li {
-        min-height: 120px;
-        padding: 22px 20px;
-        border-right: 1px solid var(--ink);
-      }
-
-      .facts li:last-child {
-        border-right: 0;
-      }
-
-      .facts strong {
-        display: block;
-        margin-bottom: 7px;
-        font-family: Iowan Old Style, Palatino, "Palatino Linotype", serif;
-        font-size: 1.35rem;
+        margin: 12px 0;
+        font-size: clamp(28px, 3.4vw, 42px);
         font-weight: 600;
+        letter-spacing: -0.045em;
+        line-height: 1.2;
       }
-
-      .facts span {
+      h2 { margin-bottom: 12px; font-size: 24px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.35; }
+      h3 { margin-bottom: 8px; font-size: 16px; font-weight: 600; }
+      .shell { width: min(1240px, calc(100% - 64px)); margin: auto; padding: 40px 0 64px; }
+      .masthead { padding-bottom: 24px; }
+      .eyebrow, .section-label, .status-label, .metric-label {
         color: var(--muted);
-        font-size: 0.9rem;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.045em;
       }
-
-      .workspace {
-        display: grid;
-        grid-template-columns: 340px minmax(0, 1fr);
-        gap: 28px;
-        padding-top: 36px;
-      }
-
-      .control-deck {
-        position: sticky;
-        top: 18px;
-        align-self: start;
-        overflow: hidden;
-        border: 1px solid var(--ink);
-        background: var(--paper-strong);
-        box-shadow: var(--shadow);
-      }
-
-      .deck-block {
-        padding: 18px;
-        border-bottom: 1px solid var(--line);
-      }
-
-      .deck-block:last-child {
-        border-bottom: 0;
-      }
-
-      .choice-grid {
-        display: grid;
-        gap: 7px;
-        margin-top: 10px;
-      }
-
-      .choice-button,
-      .scenario-button,
-      .walkthrough-button,
-      .tab-button,
-      .reset-button {
-        min-height: 42px;
-        cursor: pointer;
-        border: 1px solid var(--line);
-        border-radius: 0;
+      .eyebrow { color: var(--accent); }
+      .lede { max-width: 660px; margin-bottom: 0; color: var(--muted); }
+      .context { border-bottom: 1px solid var(--line); }
+      summary { cursor: pointer; }
+      .context > summary { padding: 12px 0 16px; color: var(--muted); font-size: 16px; }
+      .question-card { max-width: 820px; padding: 12px 0; }
+      .question-card p:last-child { margin-bottom: 0; }
+      .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 12px 0 24px; list-style: none; }
+      .facts strong { display: block; margin-bottom: 6px; font-size: 16px; }
+      .facts span { color: var(--muted); font-size: 16px; }
+      .workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 32px; padding-top: 28px; align-items: start; }
+      .control-deck { position: sticky; top: 24px; max-height: calc(100dvh - 48px); overflow-y: auto; }
+      .deck-block { padding: 0 0 22px; }
+      .deck-block:last-child { padding-bottom: 0; }
+      .choice-grid { display: grid; gap: 4px; margin-top: 8px; }
+      .choice-button, .scenario-button, .walkthrough-button, .tab-button, .reset-button {
+        min-height: 40px;
+        border: 1px solid transparent;
+        border-radius: 6px;
         color: var(--ink);
         background: transparent;
+        cursor: pointer;
         text-align: left;
       }
-
-      .choice-button,
-      .scenario-button {
-        padding: 9px 11px;
-      }
-
-      .choice-button:hover,
-      .scenario-button:hover,
-      .walkthrough-button:hover,
-      .tab-button:hover {
-        border-color: var(--ink);
-      }
-
-      .choice-button[aria-pressed="true"],
-      .scenario-button[aria-pressed="true"] {
-        border-color: var(--ink);
-        color: var(--paper-strong);
-        background: var(--ink);
-      }
-
-      .choice-button small,
-      .scenario-button small {
-        display: block;
-        margin-top: 3px;
-        color: var(--muted);
-        font-size: 0.76rem;
-      }
-
-      .choice-button[aria-pressed="true"] small,
-      .scenario-button[aria-pressed="true"] small {
-        color: #bfc9c1;
-      }
-
-      .reset-button {
-        width: 100%;
-        padding: 9px 11px;
-        border-color: var(--accent);
+      .choice-button, .scenario-button { padding: 9px 12px; font-size: 16px; line-height: 1.5; }
+      .choice-button:hover, .scenario-button:hover, .walkthrough-button:hover, .tab-button:hover { background: #edf0ed; }
+      .choice-button[aria-pressed="true"], .scenario-button[aria-pressed="true"] {
         color: var(--accent);
-        text-align: center;
-      }
-
-      .main-stack {
-        display: grid;
-        min-width: 0;
-        gap: 28px;
-      }
-
-      .panel {
-        border: 1px solid var(--ink);
-        background: var(--paper-strong);
-        box-shadow: var(--shadow);
-      }
-
-      .panel-head {
-        display: flex;
-        align-items: end;
-        justify-content: space-between;
-        gap: 24px;
-        padding: 22px 24px 18px;
-        border-bottom: 1px solid var(--ink);
-      }
-
-      .panel-head h2,
-      .panel-head p {
-        margin-bottom: 0;
-      }
-
-      .panel-head p {
-        max-width: 560px;
-        color: var(--muted);
-        font-size: 0.9rem;
-      }
-
-      .status-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        border-bottom: 1px solid var(--line);
-      }
-
-      .status-cell {
-        min-height: 104px;
-        padding: 17px;
-        border-right: 1px solid var(--line);
-      }
-
-      .status-cell:last-child {
-        border-right: 0;
-      }
-
-      .status-value {
-        display: block;
-        margin-top: 10px;
-        font-family: Iowan Old Style, Palatino, "Palatino Linotype", serif;
-        font-size: 1.2rem;
+        background: #e7efe9;
         font-weight: 600;
       }
-
-      .status-value.good {
-        color: var(--good);
+      .choice-button small, .scenario-button small { display: block; margin-top: 5px; color: var(--muted); font-size: 13px; font-weight: 400; }
+      .choice-button[aria-pressed="false"] small, .scenario-button[aria-pressed="false"] small { display: none; }
+      .reset-button { padding: 4px 12px; min-height: 36px; color: var(--muted); font-size: 14px; }
+      .reset-button:hover { color: var(--ink); background: #edf0ed; }
+      .main-stack { display: grid; min-width: 0; gap: 16px; }
+      .panel { min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--paper-strong); overflow: clip; }
+      .panel-head { padding: 22px 24px; }
+      .panel-head h2 { margin: 3px 0 0; }
+      .panel-head p { max-width: 660px; margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+      details.panel > summary { padding: 18px 24px; font-size: 16px; font-weight: 600; }
+      details.panel[open] > summary { border-bottom: 1px solid var(--line); }
+      .status-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; padding: 4px 24px 24px; }
+      .status-value { display: block; margin-top: 5px; font-size: 16px; }
+      .status-value.good { color: var(--good); }
+      .status-value.warn { color: var(--warn); }
+      .status-value.bad { color: var(--bad); }
+      .trace-disclosure { border-top: 1px solid var(--line); }
+      .trace-disclosure > summary { padding: 14px 24px; color: var(--muted); font-size: 14px; }
+      .trace { margin: 0; padding: 0 24px 16px; list-style: none; }
+      .trace li { display: grid; grid-template-columns: 24px 130px minmax(0, 1fr); gap: 12px; padding: 12px 0; }
+      .trace-index { color: var(--muted); font-family: ui-monospace, monospace; font-size: 13px; }
+      .trace-layer { font-size: 14px; font-weight: 600; }
+      .trace-detail { color: var(--muted); font-size: 14px; }
+      .verdict { padding: 20px 24px; border-top: 1px solid var(--line); background: #f8faf8; }
+      .verdict-copy h3 { margin-top: 5px; }
+      .verdict-copy p { margin-bottom: 0; color: var(--muted); font-size: 16px; }
+      .score-details { margin-top: 12px; }
+      .score-details summary { color: var(--muted); font-size: 14px; }
+      .scorecard { display: grid; gap: 10px; max-width: 360px; padding-top: 14px; }
+      .metric { display: grid; grid-template-columns: 116px 1fr 32px; align-items: center; gap: 12px; }
+      .metric-track { height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; }
+      .metric-fill { display: block; height: 100%; background: var(--accent); }
+      .metric-score { font-family: ui-monospace, monospace; font-size: 13px; text-align: right; }
+      .code-layout { display: grid; min-width: 0; }
+      .code-pane { min-width: 0; background: var(--code); }
+      pre { max-height: 580px; margin: 0; padding: 24px; overflow: auto; color: var(--code-ink); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 14px; line-height: 1.7; }
+      .notes-list { margin: 0; padding: 20px 24px 20px 42px; color: var(--muted); font-size: 14px; }
+      .notes-list li + li { margin-top: 8px; }
+      .comparison-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { min-width: 170px; padding: 16px 20px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 14px; }
+      th { color: var(--muted); font-weight: 500; }
+      tbody tr:last-child td { border-bottom: 0; }
+      .winner { color: var(--good); }
+      .walkthrough-tabs { display: flex; gap: 4px; padding: 0 20px 16px; overflow-x: auto; }
+      .tab-button { flex: 1 0 140px; padding: 8px 10px; font-size: 14px; text-align: center; }
+      .tab-button[aria-selected="true"] { color: var(--accent); background: var(--good-soft); }
+      .walkthrough-body { padding: 0 24px 24px; }
+      .walkthrough-copy p { color: var(--muted); font-size: 16px; }
+      .walkthrough-steps { display: grid; gap: 6px; }
+      .walkthrough-button { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 10px 12px; border-color: var(--line); font-size: 14px; }
+      .walkthrough-button[disabled] { cursor: default; opacity: 0.45; }
+      .walkthrough-button.current { border-color: var(--accent); }
+      .walkthrough-button.done { background: var(--good-soft); }
+      .step-number { color: var(--muted); font-family: ui-monospace, monospace; font-size: 13px; }
+      .guardrails { display: grid; gap: 24px; padding: 0 24px 24px; }
+      .guardrail p { margin-bottom: 0; color: var(--muted); font-size: 16px; }
+      .guardrail code { overflow-wrap: anywhere; }
+      .tag { display: inline-block; margin-bottom: 8px; color: var(--muted); font-size: 13px; }
+      .decision-box { border-top: 1px solid var(--line); }
+      .decision-copy, .decision-check { padding: 24px; }
+      .decision-copy h2 { margin-top: 6px; }
+      .decision-copy ol { margin-bottom: 0; padding-left: 20px; font-size: 16px; }
+      .decision-copy li + li { margin-top: 8px; }
+      .decision-check { background: var(--good-soft); font-size: 16px; }
+      .decision-check p:last-child { margin-bottom: 0; }
+      @media (max-width: 900px) {
+        .shell { width: calc(100% - 40px); }
+        .workspace { grid-template-columns: 220px minmax(0, 1fr); gap: 20px; }
+        .trace li { grid-template-columns: 24px 1fr; }
+        .trace-detail { grid-column: 2; }
+        .status-grid { grid-template-columns: 1fr; }
       }
-
-      .status-value.warn {
-        color: var(--warn);
-      }
-
-      .status-value.bad {
-        color: var(--bad);
-      }
-
-      .trace {
-        display: grid;
-        gap: 0;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .trace li {
-        display: grid;
-        grid-template-columns: 42px 156px minmax(0, 1fr);
-        gap: 14px;
-        padding: 15px 20px;
-        border-bottom: 1px solid var(--line);
-      }
-
-      .trace li:last-child {
-        border-bottom: 0;
-      }
-
-      .trace-index {
-        display: grid;
-        width: 30px;
-        height: 30px;
-        place-items: center;
-        border: 1px solid var(--ink);
-        border-radius: 50%;
-        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-        font-size: 0.75rem;
-      }
-
-      .trace-layer {
-        padding-top: 4px;
-        font-weight: 700;
-      }
-
-      .trace-detail {
-        padding-top: 4px;
-        color: var(--muted);
-      }
-
-      .verdict {
-        display: grid;
-        grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
-        gap: 0;
-        border-top: 1px solid var(--ink);
-      }
-
-      .verdict-copy,
-      .scorecard {
-        padding: 22px;
-      }
-
-      .verdict-copy {
-        border-right: 1px solid var(--ink);
-      }
-
-      .verdict-copy p:last-child {
-        margin-bottom: 0;
-      }
-
-      .scorecard {
-        display: grid;
-        gap: 12px;
-      }
-
-      .metric {
-        display: grid;
-        grid-template-columns: 112px 1fr 34px;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .metric-track {
-        height: 8px;
-        border: 1px solid var(--ink);
-        background: var(--paper);
-      }
-
-      .metric-fill {
-        display: block;
-        height: 100%;
-        background: var(--accent);
-      }
-
-      .metric-score {
-        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-        font-size: 0.78rem;
-        text-align: right;
-      }
-
-      .code-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 300px;
-      }
-
-      .code-pane {
-        min-width: 0;
-        background: var(--code);
-      }
-
-      pre {
-        min-height: 500px;
-        max-height: 760px;
-        margin: 0;
-        padding: 24px;
-        overflow: auto;
-        color: var(--code-ink);
-        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-        font-size: 0.78rem;
-        line-height: 1.65;
-        white-space: pre;
-      }
-
-      .notes-list {
-        margin: 0;
-        padding: 20px 20px 20px 38px;
-      }
-
-      .notes-list li {
-        margin-bottom: 13px;
-      }
-
-      .notes-list li:last-child {
-        margin-bottom: 0;
-      }
-
-      .comparison-wrap {
-        overflow-x: auto;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-
-      th,
-      td {
-        padding: 14px 16px;
-        border-right: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-        text-align: left;
-        vertical-align: top;
-      }
-
-      th:last-child,
-      td:last-child {
-        border-right: 0;
-      }
-
-      tbody tr:last-child td {
-        border-bottom: 0;
-      }
-
-      th {
-        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-        font-size: 0.72rem;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-      }
-
-      td {
-        font-size: 0.9rem;
-      }
-
-      .winner {
-        color: var(--good);
-        font-weight: 800;
-      }
-
-      .walkthrough-tabs {
-        display: flex;
-        gap: 0;
-        overflow-x: auto;
-        border-bottom: 1px solid var(--ink);
-      }
-
-      .tab-button {
-        flex: 1 0 180px;
-        padding: 13px 16px;
-        border-width: 0 1px 0 0;
-        font-size: 0.82rem;
-        text-align: center;
-      }
-
-      .tab-button[aria-selected="true"] {
-        color: var(--paper-strong);
-        background: var(--accent);
-      }
-
-      .walkthrough-body {
-        display: grid;
-        grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
-      }
-
-      .walkthrough-copy,
-      .walkthrough-steps {
-        padding: 22px;
-      }
-
-      .walkthrough-copy {
-        border-right: 1px solid var(--line);
-      }
-
-      .walkthrough-copy p:last-child {
-        margin-bottom: 0;
-      }
-
-      .walkthrough-steps {
-        display: grid;
-        gap: 9px;
-      }
-
-      .walkthrough-button {
-        display: grid;
-        grid-template-columns: 28px 1fr;
-        gap: 10px;
-        padding: 11px 13px;
-      }
-
-      .walkthrough-button[disabled] {
-        cursor: default;
-        opacity: 0.45;
-      }
-
-      .walkthrough-button.current {
-        border-color: var(--accent);
-        box-shadow: inset 4px 0 0 var(--accent);
-      }
-
-      .walkthrough-button.done {
-        border-color: var(--good);
-        background: var(--good-soft);
-      }
-
-      .step-number {
-        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-        font-size: 0.76rem;
-      }
-
-      .guardrails {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .guardrail {
-        padding: 20px;
-        border-right: 1px solid var(--line);
-      }
-
-      .guardrail:last-child {
-        border-right: 0;
-      }
-
-      .guardrail code {
-        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-        color: var(--accent);
-      }
-
-      .tag {
-        display: inline-block;
-        padding: 3px 7px;
-        border: 1px solid currentColor;
-        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-      }
-
-      .tag.good {
-        color: var(--good);
-        background: var(--good-soft);
-      }
-
-      .tag.warn {
-        color: var(--warn);
-        background: var(--warn-soft);
-      }
-
-      .decision-box {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 300px;
-        border-top: 1px solid var(--ink);
-      }
-
-      .decision-copy,
-      .decision-check {
-        padding: 24px;
-      }
-
-      .decision-copy {
-        border-right: 1px solid var(--ink);
-      }
-
-      .decision-copy ol {
-        margin-bottom: 0;
-      }
-
-      .decision-check {
-        color: var(--paper-strong);
-        background: var(--ink);
-      }
-
-      .decision-check p:last-child {
-        margin-bottom: 0;
-      }
-
-      @media (max-width: 1040px) {
-        .masthead,
-        .workspace,
-        .code-layout,
-        .walkthrough-body,
-        .decision-box {
-          grid-template-columns: 1fr;
-        }
-
-        .control-deck {
-          position: static;
-        }
-
-        .choice-grid.operations,
-        .choice-grid.scenarios {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .code-layout > aside,
-        .walkthrough-copy,
-        .decision-copy {
-          border-right: 0;
-          border-bottom: 1px solid var(--ink);
-        }
-      }
-
-      @media (max-width: 720px) {
-        .shell {
-          width: min(100% - 18px, 1480px);
-          padding-top: 12px;
-        }
-
-        .masthead {
-          gap: 26px;
-        }
-
-        h1 {
-          font-size: 3rem;
-        }
-
-        .facts,
-        .status-grid,
-        .guardrails,
-        .verdict {
-          grid-template-columns: 1fr;
-        }
-
-        .facts li,
-        .status-cell,
-        .guardrail,
-        .verdict-copy {
-          border-right: 0;
-          border-bottom: 1px solid var(--line);
-        }
-
-        .trace li {
-          grid-template-columns: 36px 1fr;
-        }
-
-        .trace-detail {
-          grid-column: 2;
-        }
-
-        .choice-grid.operations,
-        .choice-grid.scenarios {
-          grid-template-columns: 1fr;
-        }
+      @media (max-width: 640px) {
+        .shell { width: calc(100% - 32px); padding-top: 24px; }
+        .workspace { grid-template-columns: 1fr; }
+        .control-deck { position: static; max-height: none; }
+        .choice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .facts { grid-template-columns: 1fr; gap: 16px; }
+        .panel-head, details.panel > summary { padding: 18px; }
+        .status-grid { padding: 0 18px 20px; }
+        .verdict { padding: 18px; }
+        pre { padding: 18px; font-size: 13px; }
       }
     </style>
   </head>
@@ -696,14 +176,16 @@
     <main class="shell">
       <header class="masthead">
         <div>
-          <span class="eyebrow">Одноразовый прототип · удалённые данные</span>
-          <h1>Сделать правильный путь коротким</h1>
+          <span class="eyebrow">Удалённые данные / Прототип · #112</span>
+          <h1>Правильный путь — короче</h1>
           <p class="lede">
-            Интерактивное сравнение двух конкретных вариантов на TypeScript для проверки
-            сессии, сохранения страницы курса и проверки попытки. Производственный код не
-            меняется: этот файл помогает выбрать интерфейс и границы статического контроля.
+            Сравните два интерфейса на одном сценарии. Выберите операцию и ответ,
+            чтобы увидеть результат, поведение кеша и правила повторов.
           </p>
         </div>
+      </header>
+      <details class="context">
+        <summary>Контекст и предварительный выбор · транспортное ядро + декодер</summary>
         <aside class="question-card">
           <span class="section-label">Вопрос прототипа</span>
           <p>
@@ -716,7 +198,6 @@
             ниже и проверьте, не теряем ли мы важное поведение по умолчанию.
           </p>
         </aside>
-      </header>
 
       <ul class="facts" aria-label="Факты текущего кода">
         <li>
@@ -732,6 +213,7 @@
           <span>Сейчас внутрипроцессная имитация возвращает агрегат; автоматические повторы не настроены.</span>
         </li>
       </ul>
+      </details>
 
       <section class="workspace" aria-label="Интерактивное сравнение">
         <aside class="control-deck" aria-label="Параметры сценария">
@@ -756,24 +238,31 @@
           <article class="panel" aria-labelledby="state-heading">
             <div class="panel-head">
               <div>
-                <span class="section-label">Полное состояние после действия</span>
-                <h2 id="state-heading">Что происходит в seam (точке подмены)</h2>
+                <span class="section-label">Результат сценария</span>
+                <h2 id="state-heading">Что получит вызывающий код</h2>
               </div>
               <p id="state-summary"></p>
             </div>
             <div class="status-grid" id="status-grid"></div>
-            <ol class="trace" id="trace"></ol>
+            <details class="trace-disclosure">
+              <summary>Путь запроса · 5 этапов</summary>
+              <ol class="trace" id="trace"></ol>
+            </details>
             <div class="verdict">
               <div class="verdict-copy" id="verdict-copy"></div>
-              <div class="scorecard" id="scorecard"></div>
+              <details class="score-details">
+                <summary>Оценки интерфейса</summary>
+                <div class="scorecard" id="scorecard"></div>
+              </details>
             </div>
           </article>
 
-          <article class="panel" aria-labelledby="code-heading">
+          <details class="panel">
+            <summary id="code-heading">TypeScript · вызывающий код</summary>
             <div class="panel-head">
               <div>
                 <span class="section-label">Конкретная TypeScript-форма</span>
-                <h2 id="code-heading">Как выглядит вызывающий код</h2>
+                <h2>Интерфейс операции</h2>
               </div>
               <p>
                 Код намеренно показывает весь интерфейс, который должен знать автор операции.
@@ -786,13 +275,14 @@
                 <ol class="notes-list" id="code-notes"></ol>
               </aside>
             </div>
-          </article>
+          </details>
 
-          <article class="panel" aria-labelledby="comparison-heading">
+          <details class="panel">
+            <summary id="comparison-heading">Сравнение двух форм</summary>
             <div class="panel-head">
               <div>
                 <span class="section-label">Depth · Locality · стоимость расширения</span>
-                <h2 id="comparison-heading">Сравнение форм</h2>
+                <h2>Где выигрывает каждый вариант</h2>
               </div>
               <p>Оценка 1–5: выше лучше; для нестандартной конечной точки выше означает меньшую стоимость.</p>
             </div>
@@ -839,13 +329,14 @@
                 </tbody>
               </table>
             </div>
-          </article>
+          </details>
 
-          <article class="panel" aria-labelledby="walkthrough-heading">
+          <details class="panel">
+            <summary id="walkthrough-heading">Пошаговая проверка · неудобные случаи</summary>
             <div class="panel-head">
               <div>
                 <span class="section-label">Пошаговые сценарии</span>
-                <h2 id="walkthrough-heading">Проверьте неудобные случаи</h2>
+                <h2>Проверьте неудобные случаи</h2>
               </div>
               <p>Каждый сценарий начинается с известного состояния; нажимайте шаги сверху вниз.</p>
             </div>
@@ -854,13 +345,14 @@
               <div class="walkthrough-copy" id="walkthrough-copy"></div>
               <div class="walkthrough-steps" id="walkthrough-steps"></div>
             </div>
-          </article>
+          </details>
 
-          <article class="panel" aria-labelledby="guardrails-heading">
+          <details class="panel">
+            <summary id="guardrails-heading">Статический контроль и решение</summary>
             <div class="panel-head">
               <div>
                 <span class="section-label">Минимальный статический контроль</span>
-                <h2 id="guardrails-heading">Что сделать невозможным или заметным</h2>
+                <h2>Что сделать невозможным или заметным</h2>
               </div>
               <p>Без собственного плагина ESLint и попытки кодировать смысл конечных точек в линтере.</p>
             </div>
@@ -917,7 +409,7 @@
                 </p>
               </aside>
             </div>
-          </article>
+          </details>
         </div>
       </section>
     </main>
@@ -1506,8 +998,8 @@ export async function exportReview(signal?: AbortSignal) {
 
       function renderStatus(view) {
         const statuses = [
-          { label: 'Канал Promise', value: view.channel, tone: view.tone },
-          { label: 'Допуск в кеш', value: view.cache, tone: view.tone },
+          { label: 'Как завершилась операция', value: view.channel, tone: view.tone },
+          { label: 'Что попадёт в кеш', value: view.cache, tone: view.tone },
           { label: 'Повтор', value: view.retry, tone: view.tone },
           {
             label: 'Путь MSW',
