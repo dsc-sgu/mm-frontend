@@ -1,0 +1,1663 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Remote-data paved road — prototype</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f3efe4;
+        --paper-strong: #fffdf7;
+        --ink: #17231f;
+        --muted: #667069;
+        --line: #b9c0b5;
+        --accent: #b84420;
+        --accent-soft: #f1d4c6;
+        --good: #276247;
+        --good-soft: #d9eadf;
+        --warn: #8a5a10;
+        --warn-soft: #f4e5bd;
+        --bad: #922f2f;
+        --bad-soft: #f0d1cf;
+        --code: #111915;
+        --code-ink: #dfe9dc;
+        --shadow: 0 16px 40px rgb(23 35 31 / 9%);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: var(--paper);
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(rgb(23 35 31 / 4%) 1px, transparent 1px),
+          var(--paper);
+        background-size: 100% 32px;
+        font-family: Avenir, "Avenir Next", "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      .shell {
+        width: min(1480px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 34px 0 64px;
+      }
+
+      .masthead {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+        gap: 48px;
+        padding: 26px 0 34px;
+        border-top: 6px solid var(--ink);
+        border-bottom: 1px solid var(--ink);
+      }
+
+      .eyebrow,
+      .section-label,
+      .status-label,
+      .metric-label {
+        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+        font-size: 0.73rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        color: var(--accent);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 900px;
+        margin: 12px 0 14px;
+        font-family: Iowan Old Style, Palatino, "Palatino Linotype", serif;
+        font-size: clamp(2.7rem, 6vw, 6.1rem);
+        font-weight: 500;
+        letter-spacing: -0.055em;
+        line-height: 0.91;
+      }
+
+      h2 {
+        margin-bottom: 18px;
+        font-family: Iowan Old Style, Palatino, "Palatino Linotype", serif;
+        font-size: clamp(1.8rem, 3vw, 3rem);
+        font-weight: 500;
+        letter-spacing: -0.035em;
+        line-height: 1;
+      }
+
+      h3 {
+        margin-bottom: 8px;
+        font-size: 1rem;
+      }
+
+      .lede {
+        max-width: 760px;
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .question-card {
+        align-self: end;
+        padding: 18px;
+        border: 1px solid var(--ink);
+        background: var(--paper-strong);
+        box-shadow: 7px 7px 0 var(--ink);
+      }
+
+      .question-card p:last-child {
+        margin-bottom: 0;
+      }
+
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: 0;
+        padding: 0;
+        border-bottom: 1px solid var(--ink);
+        list-style: none;
+      }
+
+      .facts li {
+        min-height: 120px;
+        padding: 22px 20px;
+        border-right: 1px solid var(--ink);
+      }
+
+      .facts li:last-child {
+        border-right: 0;
+      }
+
+      .facts strong {
+        display: block;
+        margin-bottom: 7px;
+        font-family: Iowan Old Style, Palatino, "Palatino Linotype", serif;
+        font-size: 1.35rem;
+        font-weight: 600;
+      }
+
+      .facts span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 340px minmax(0, 1fr);
+        gap: 28px;
+        padding-top: 36px;
+      }
+
+      .control-deck {
+        position: sticky;
+        top: 18px;
+        align-self: start;
+        overflow: hidden;
+        border: 1px solid var(--ink);
+        background: var(--paper-strong);
+        box-shadow: var(--shadow);
+      }
+
+      .deck-block {
+        padding: 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .deck-block:last-child {
+        border-bottom: 0;
+      }
+
+      .choice-grid {
+        display: grid;
+        gap: 7px;
+        margin-top: 10px;
+      }
+
+      .choice-button,
+      .scenario-button,
+      .walkthrough-button,
+      .tab-button,
+      .reset-button {
+        min-height: 42px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        color: var(--ink);
+        background: transparent;
+        text-align: left;
+      }
+
+      .choice-button,
+      .scenario-button {
+        padding: 9px 11px;
+      }
+
+      .choice-button:hover,
+      .scenario-button:hover,
+      .walkthrough-button:hover,
+      .tab-button:hover {
+        border-color: var(--ink);
+      }
+
+      .choice-button[aria-pressed="true"],
+      .scenario-button[aria-pressed="true"] {
+        border-color: var(--ink);
+        color: var(--paper-strong);
+        background: var(--ink);
+      }
+
+      .choice-button small,
+      .scenario-button small {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 0.76rem;
+      }
+
+      .choice-button[aria-pressed="true"] small,
+      .scenario-button[aria-pressed="true"] small {
+        color: #bfc9c1;
+      }
+
+      .reset-button {
+        width: 100%;
+        padding: 9px 11px;
+        border-color: var(--accent);
+        color: var(--accent);
+        text-align: center;
+      }
+
+      .main-stack {
+        display: grid;
+        min-width: 0;
+        gap: 28px;
+      }
+
+      .panel {
+        border: 1px solid var(--ink);
+        background: var(--paper-strong);
+        box-shadow: var(--shadow);
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 22px 24px 18px;
+        border-bottom: 1px solid var(--ink);
+      }
+
+      .panel-head h2,
+      .panel-head p {
+        margin-bottom: 0;
+      }
+
+      .panel-head p {
+        max-width: 560px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-bottom: 1px solid var(--line);
+      }
+
+      .status-cell {
+        min-height: 104px;
+        padding: 17px;
+        border-right: 1px solid var(--line);
+      }
+
+      .status-cell:last-child {
+        border-right: 0;
+      }
+
+      .status-value {
+        display: block;
+        margin-top: 10px;
+        font-family: Iowan Old Style, Palatino, "Palatino Linotype", serif;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .status-value.good {
+        color: var(--good);
+      }
+
+      .status-value.warn {
+        color: var(--warn);
+      }
+
+      .status-value.bad {
+        color: var(--bad);
+      }
+
+      .trace {
+        display: grid;
+        gap: 0;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .trace li {
+        display: grid;
+        grid-template-columns: 42px 156px minmax(0, 1fr);
+        gap: 14px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .trace li:last-child {
+        border-bottom: 0;
+      }
+
+      .trace-index {
+        display: grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        border: 1px solid var(--ink);
+        border-radius: 50%;
+        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+        font-size: 0.75rem;
+      }
+
+      .trace-layer {
+        padding-top: 4px;
+        font-weight: 700;
+      }
+
+      .trace-detail {
+        padding-top: 4px;
+        color: var(--muted);
+      }
+
+      .verdict {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+        gap: 0;
+        border-top: 1px solid var(--ink);
+      }
+
+      .verdict-copy,
+      .scorecard {
+        padding: 22px;
+      }
+
+      .verdict-copy {
+        border-right: 1px solid var(--ink);
+      }
+
+      .verdict-copy p:last-child {
+        margin-bottom: 0;
+      }
+
+      .scorecard {
+        display: grid;
+        gap: 12px;
+      }
+
+      .metric {
+        display: grid;
+        grid-template-columns: 112px 1fr 34px;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .metric-track {
+        height: 8px;
+        border: 1px solid var(--ink);
+        background: var(--paper);
+      }
+
+      .metric-fill {
+        display: block;
+        height: 100%;
+        background: var(--accent);
+      }
+
+      .metric-score {
+        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+        font-size: 0.78rem;
+        text-align: right;
+      }
+
+      .code-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+      }
+
+      .code-pane {
+        min-width: 0;
+        background: var(--code);
+      }
+
+      pre {
+        min-height: 500px;
+        max-height: 760px;
+        margin: 0;
+        padding: 24px;
+        overflow: auto;
+        color: var(--code-ink);
+        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+        font-size: 0.78rem;
+        line-height: 1.65;
+        white-space: pre;
+      }
+
+      .notes-list {
+        margin: 0;
+        padding: 20px 20px 20px 38px;
+      }
+
+      .notes-list li {
+        margin-bottom: 13px;
+      }
+
+      .notes-list li:last-child {
+        margin-bottom: 0;
+      }
+
+      .comparison-wrap {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 14px 16px;
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th:last-child,
+      td:last-child {
+        border-right: 0;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      th {
+        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+        font-size: 0.72rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      td {
+        font-size: 0.9rem;
+      }
+
+      .winner {
+        color: var(--good);
+        font-weight: 800;
+      }
+
+      .walkthrough-tabs {
+        display: flex;
+        gap: 0;
+        overflow-x: auto;
+        border-bottom: 1px solid var(--ink);
+      }
+
+      .tab-button {
+        flex: 1 0 180px;
+        padding: 13px 16px;
+        border-width: 0 1px 0 0;
+        font-size: 0.82rem;
+        text-align: center;
+      }
+
+      .tab-button[aria-selected="true"] {
+        color: var(--paper-strong);
+        background: var(--accent);
+      }
+
+      .walkthrough-body {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
+      }
+
+      .walkthrough-copy,
+      .walkthrough-steps {
+        padding: 22px;
+      }
+
+      .walkthrough-copy {
+        border-right: 1px solid var(--line);
+      }
+
+      .walkthrough-copy p:last-child {
+        margin-bottom: 0;
+      }
+
+      .walkthrough-steps {
+        display: grid;
+        gap: 9px;
+      }
+
+      .walkthrough-button {
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: 10px;
+        padding: 11px 13px;
+      }
+
+      .walkthrough-button[disabled] {
+        cursor: default;
+        opacity: 0.45;
+      }
+
+      .walkthrough-button.current {
+        border-color: var(--accent);
+        box-shadow: inset 4px 0 0 var(--accent);
+      }
+
+      .walkthrough-button.done {
+        border-color: var(--good);
+        background: var(--good-soft);
+      }
+
+      .step-number {
+        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+        font-size: 0.76rem;
+      }
+
+      .guardrails {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .guardrail {
+        padding: 20px;
+        border-right: 1px solid var(--line);
+      }
+
+      .guardrail:last-child {
+        border-right: 0;
+      }
+
+      .guardrail code {
+        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+        color: var(--accent);
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 3px 7px;
+        border: 1px solid currentColor;
+        font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .tag.good {
+        color: var(--good);
+        background: var(--good-soft);
+      }
+
+      .tag.warn {
+        color: var(--warn);
+        background: var(--warn-soft);
+      }
+
+      .decision-box {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        border-top: 1px solid var(--ink);
+      }
+
+      .decision-copy,
+      .decision-check {
+        padding: 24px;
+      }
+
+      .decision-copy {
+        border-right: 1px solid var(--ink);
+      }
+
+      .decision-copy ol {
+        margin-bottom: 0;
+      }
+
+      .decision-check {
+        color: var(--paper-strong);
+        background: var(--ink);
+      }
+
+      .decision-check p:last-child {
+        margin-bottom: 0;
+      }
+
+      @media (max-width: 1040px) {
+        .masthead,
+        .workspace,
+        .code-layout,
+        .walkthrough-body,
+        .decision-box {
+          grid-template-columns: 1fr;
+        }
+
+        .control-deck {
+          position: static;
+        }
+
+        .choice-grid.operations,
+        .choice-grid.scenarios {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .code-layout > aside,
+        .walkthrough-copy,
+        .decision-copy {
+          border-right: 0;
+          border-bottom: 1px solid var(--ink);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .shell {
+          width: min(100% - 18px, 1480px);
+          padding-top: 12px;
+        }
+
+        .masthead {
+          gap: 26px;
+        }
+
+        h1 {
+          font-size: 3rem;
+        }
+
+        .facts,
+        .status-grid,
+        .guardrails,
+        .verdict {
+          grid-template-columns: 1fr;
+        }
+
+        .facts li,
+        .status-cell,
+        .guardrail,
+        .verdict-copy {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .trace li {
+          grid-template-columns: 36px 1fr;
+        }
+
+        .trace-detail {
+          grid-column: 2;
+        }
+
+        .choice-grid.operations,
+        .choice-grid.scenarios {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <div>
+          <span class="eyebrow">Throwaway prototype · remote-data paved road</span>
+          <h1>Сделать правильный путь коротким</h1>
+          <p class="lede">
+            Интерактивное сравнение двух конкретных TypeScript-форм для session check,
+            сохранения Course Page и сохранения Attempt Review. Никаких production-изменений:
+            этот файл нужен, чтобы выбрать interface и границы enforcement.
+          </p>
+        </div>
+        <aside class="question-card">
+          <span class="section-label">Вопрос прототипа</span>
+          <p>
+            Достаточен ли малый transport kernel с operation-owned decoder, чтобы соблюдение
+            remote-data contract стало default, или декларативная таблица HTTP outcomes даёт
+            заметно больше leverage, оправдывающее endpoint DSL?
+          </p>
+          <p>
+            <strong>Предварительный выбор:</strong> малый transport kernel. Пройдите сценарии
+            ниже и проверьте, не теряем ли мы важный default.
+          </p>
+        </aside>
+      </header>
+
+      <ul class="facts" aria-label="Факты текущего кода">
+        <li>
+          <strong>Session check</strong>
+          <span>Сейчас Axios + feature-level mock branch; 401 уже моделируется как data.</span>
+        </li>
+        <li>
+          <strong>Course Page save</strong>
+          <span>Сейчас in-process mock возвращает полный CoursePage и запускает broad invalidation.</span>
+        </li>
+        <li>
+          <strong>Attempt Review save</strong>
+          <span>Сейчас in-process mock возвращает aggregate; mutation retries явно не заданы.</span>
+        </li>
+      </ul>
+
+      <section class="workspace" aria-label="Интерактивное сравнение">
+        <aside class="control-deck" aria-label="Параметры сценария">
+          <div class="deck-block">
+            <span class="section-label">1 · Форма interface</span>
+            <div class="choice-grid" id="design-controls"></div>
+          </div>
+          <div class="deck-block">
+            <span class="section-label">2 · Операция</span>
+            <div class="choice-grid operations" id="operation-controls"></div>
+          </div>
+          <div class="deck-block">
+            <span class="section-label">3 · Сценарий ответа</span>
+            <div class="choice-grid scenarios" id="scenario-controls"></div>
+          </div>
+          <div class="deck-block">
+            <button class="reset-button" id="reset-button" type="button">Сбросить прототип</button>
+          </div>
+        </aside>
+
+        <div class="main-stack">
+          <article class="panel" aria-labelledby="state-heading">
+            <div class="panel-head">
+              <div>
+                <span class="section-label">Полное состояние после действия</span>
+                <h2 id="state-heading">Что происходит на seam</h2>
+              </div>
+              <p id="state-summary"></p>
+            </div>
+            <div class="status-grid" id="status-grid"></div>
+            <ol class="trace" id="trace"></ol>
+            <div class="verdict">
+              <div class="verdict-copy" id="verdict-copy"></div>
+              <div class="scorecard" id="scorecard"></div>
+            </div>
+          </article>
+
+          <article class="panel" aria-labelledby="code-heading">
+            <div class="panel-head">
+              <div>
+                <span class="section-label">Конкретная TypeScript-форма</span>
+                <h2 id="code-heading">Как выглядит caller</h2>
+              </div>
+              <p>
+                Код намеренно показывает весь interface, который должен знать автор операции.
+                URL, statuses, validation и mapping не выходят в UI/domain.
+              </p>
+            </div>
+            <div class="code-layout">
+              <div class="code-pane"><pre><code id="code-sample"></code></pre></div>
+              <aside>
+                <ol class="notes-list" id="code-notes"></ol>
+              </aside>
+            </div>
+          </article>
+
+          <article class="panel" aria-labelledby="comparison-heading">
+            <div class="panel-head">
+              <div>
+                <span class="section-label">Depth · locality · extension cost</span>
+                <h2 id="comparison-heading">Сравнение форм</h2>
+              </div>
+              <p>Оценка 1–5: выше лучше; для нестандартного endpoint выше означает меньшую стоимость.</p>
+            </div>
+            <div class="comparison-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Критерий</th>
+                    <th>Декларативные outcomes</th>
+                    <th>Transport kernel + decoder</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Depth</strong><br />Сколько корректного поведения скрыто за малым interface.</td>
+                    <td>5/5 на JSON/status happy path; interface сам становится языком описания endpoint.</td>
+                    <td class="winner">4/5: скрывает transport failures и parsing; classification остаётся видимой.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Locality</strong><br />Где меняется operation contract.</td>
+                    <td>4/5: общие изменения локальны, но schema DSL связывает transport и features.</td>
+                    <td class="winner">5/5: HTTP policy операции целиком в одном feature operation.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Обычная операция</strong><br />Session/read/save JSON.</td>
+                    <td class="winner">5/5: очень мало повторов.</td>
+                    <td>4/5: явный status switch занимает несколько строк.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Нестандартный endpoint</strong><br />204, text, stream, multipart, header-driven outcome.</td>
+                    <td>2/5: нужны новые combinators или escape hatch, углубляющие второй interface.</td>
+                    <td class="winner">5/5: decoder использует обычный Response без изменения transport module.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Статическая доказуемость</strong><br />Что гарантирует TypeScript/lint.</td>
+                    <td class="winner">4/5: обязательные outcome descriptors направляют автора.</td>
+                    <td>3/5: validation helper обязателен по convention; lint запрещает обход seam.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Итог</strong></td>
+                    <td>20/25. Выигрывает краткостью, проигрывает собственному DSL.</td>
+                    <td class="winner">21/25. Меньше магии и ниже marginal cost необычных операций.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel" aria-labelledby="walkthrough-heading">
+            <div class="panel-head">
+              <div>
+                <span class="section-label">Guided walkthroughs</span>
+                <h2 id="walkthrough-heading">Проверьте неудобные случаи</h2>
+              </div>
+              <p>Каждый walkthrough начинает с известного состояния; нажимайте шаги сверху вниз.</p>
+            </div>
+            <div class="walkthrough-tabs" id="walkthrough-tabs" role="tablist"></div>
+            <div class="walkthrough-body">
+              <div class="walkthrough-copy" id="walkthrough-copy"></div>
+              <div class="walkthrough-steps" id="walkthrough-steps"></div>
+            </div>
+          </article>
+
+          <article class="panel" aria-labelledby="guardrails-heading">
+            <div class="panel-head">
+              <div>
+                <span class="section-label">Минимальный static enforcement</span>
+                <h2 id="guardrails-heading">Что сделать невозможным или заметным</h2>
+              </div>
+              <p>Без custom ESLint plugin и без попытки кодировать endpoint semantics в lint.</p>
+            </div>
+            <div class="guardrails">
+              <div class="guardrail">
+                <span class="tag good">Lint</span>
+                <h3>Один transport path</h3>
+                <p>
+                  Запретить <code>axios</code>, прямой <code>fetch</code> вне
+                  <code>src/app/remote-data/http.ts</code> и production-imports из
+                  <code>api/mock</code>.
+                </p>
+              </div>
+              <div class="guardrail">
+                <span class="tag good">Types</span>
+                <h3>Response не пересекает feature operation</h3>
+                <p>
+                  Экспортируемая операция возвращает domain outcome или reject-ит
+                  <code>OperationFailure</code>. Generic в <code>readJson</code> безопасен только потому,
+                  что внутри всегда вызывается Valibot.
+                </p>
+              </div>
+              <div class="guardrail">
+                <span class="tag warn">Behavior</span>
+                <h3>Не притворяться, что lint знает контракт</h3>
+                <p>
+                  Полноту status classification, cache scope и retryability подтверждают contract
+                  scenarios. DSL/custom rule ради их статической проверки не вводится.
+                </p>
+              </div>
+            </div>
+            <div class="decision-box">
+              <div class="decision-copy">
+                <span class="section-label">Рекомендуемая форма</span>
+                <h2>Transport kernel + operation-owned decoder</h2>
+                <ol>
+                  <li><code>runHttpOperation</code> владеет единственным вызовом Fetch и network normalization.</li>
+                  <li><code>readJson</code> владеет unknown → Valibot → DTO и body/validation failures.</li>
+                  <li>Feature operation владеет status → declared outcome, DTO → domain и operation name.</li>
+                  <li>TanStack Query владеет signal forwarding, cache effects и явным opt-in retry.</li>
+                  <li>QueryClient задаёт безопасный default: automatic retries выключены и для queries, и для mutations.</li>
+                  <li>MSW перехватывает те же URL; никакой mock/real ветки в feature-коде нет.</li>
+                </ol>
+              </div>
+              <aside class="decision-check">
+                <span class="section-label">HITL check</span>
+                <p>
+                  Принимаем эту форму, если явный status switch считается полезной локальной
+                  спецификацией операции, а не досадным boilerplate.
+                </p>
+                <p>
+                  Выбираем декларативные outcomes только если краткость обычных JSON endpoints
+                  важнее стоимости второго endpoint-language и его escape hatches.
+                </p>
+              </aside>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const Prototype = (() => {
+        const designs = {
+          declarative: {
+            id: 'declarative',
+            label: 'A · Declarative outcomes',
+            shortLabel: 'Outcome table',
+            description: 'Config описывает request, status, schema и mapping.',
+            verdict:
+              'Сильный paved road для однотипного JSON, но config быстро превращается в endpoint DSL. Необычный response требует нового combinator или escape hatch.',
+            scores: { depth: 5, locality: 4, extensibility: 2, guardrails: 4 },
+          },
+          kernel: {
+            id: 'kernel',
+            label: 'B · Small transport kernel',
+            shortLabel: 'Kernel + decoder',
+            description: 'Fetch общий; operation явно классифицирует Response.',
+            verdict:
+              'Явный status switch оставляет domain meaning рядом с операцией. Transport module мал и стабилен; необычные endpoints не расширяют его interface.',
+            scores: { depth: 4, locality: 5, extensibility: 5, guardrails: 3 },
+          },
+        };
+
+        const operations = {
+          session: {
+            id: 'session',
+            label: 'Session check',
+            description: 'GET; 401 — declared outcome, не failure.',
+            scenarios: ['success', 'expected', 'network', 'invalid', 'abort'],
+          },
+          course: {
+            id: 'course',
+            label: 'Save Course Page',
+            description: 'Mutation; authoritative detail или stale-write conflict.',
+            scenarios: ['success', 'expected', 'network', 'invalid', 'abort'],
+          },
+          review: {
+            id: 'review',
+            label: 'Save Attempt Review',
+            description: 'Mutation; aggregate response, automatic retry off.',
+            scenarios: ['success', 'expected', 'network', 'invalid', 'abort'],
+          },
+          custom: {
+            id: 'custom',
+            label: 'Custom endpoint stress',
+            description: '204/text/stream/header-driven response.',
+            scenarios: ['no-content', 'text-stream', 'multipart'],
+          },
+        };
+
+        const scenarios = {
+          success: {
+            label: 'Успех + valid DTO',
+            description: '2xx с валидным авторитетным payload.',
+            tone: 'good',
+          },
+          expected: {
+            label: 'Ожидаемый negative',
+            description: '401 session или документированный 409 conflict.',
+            tone: 'warn',
+          },
+          network: {
+            label: 'Network/CORS failure',
+            description: 'Fetch не получил Response.',
+            tone: 'bad',
+          },
+          invalid: {
+            label: 'Invalid response',
+            description: 'Malformed JSON или DTO не проходит Valibot.',
+            tone: 'bad',
+          },
+          abort: {
+            label: 'AbortSignal',
+            description: 'Отмена во время fetch или body read.',
+            tone: 'warn',
+          },
+          'no-content': {
+            label: '204 No Content',
+            description: 'Успех без JSON body.',
+            tone: 'good',
+          },
+          'text-stream': {
+            label: 'Text / stream',
+            description: 'Response нельзя описать JSON schema.',
+            tone: 'warn',
+          },
+          multipart: {
+            label: 'Multipart upload',
+            description: 'Body и headers отличаются от JSON default.',
+            tone: 'warn',
+          },
+        };
+
+        const code = {
+          declarative: {
+            session: `// src/features/auth/api/check-session.ts
+export function checkSession(signal?: AbortSignal) {
+  return requestOperation({
+    name: 'check-session',
+    request: {
+      method: 'GET',
+      path: '/api/v1/auth/session',
+      credentials: 'include',
+      signal,
+    },
+    outcomes: {
+      200: json(SessionDtoSchema, (dto) => ({
+        status: 'authorized' as const,
+        session: toSession(dto),
+      })),
+      401: empty(() => ({ status: 'not-authorized' as const })),
+    },
+  });
+}
+
+export const sessionOptions = queryOptions({
+  queryKey: sessionKeys.all,
+  queryFn: ({ signal }) => checkSession(signal),
+  // Explicit opt-in only for this idempotent operation.
+  retry: canRetrySessionCheck,
+  retryDelay: 500,
+});`,
+            course: `// src/features/course/features/page/api/save-page.ts
+export function saveCoursePage(input: SaveCoursePageInput) {
+  return requestOperation({
+    name: 'save-course-page',
+    request: jsonRequest({
+      method: 'PUT',
+      path: '/api/v1/courses/' + input.courseSlug + '/page',
+      body: toSaveCoursePageDto(input),
+    }),
+    outcomes: {
+      200: json(CoursePageDtoSchema, (dto) => ({
+        status: 'saved' as const,
+        page: toCoursePage(dto),
+      })),
+      409: json(CoursePageConflictDtoSchema, (dto) => ({
+        status: 'conflict' as const,
+        latest: toCoursePage(dto.latest),
+      })),
+    },
+  });
+}
+
+// New status/body shape means a new descriptor form.
+// Header-based outcome? stream? 204? Extend the DSL first.`,
+            review: `// src/features/course/features/attempt-review/api/save-review.ts
+export function saveAttemptReview(input: SaveAttemptReviewInput) {
+  return requestOperation({
+    name: 'save-attempt-review',
+    request: jsonRequest({
+      method: 'PUT',
+      path: reviewPath(input),
+      body: toSaveAttemptReviewDto(input),
+    }),
+    outcomes: {
+      200: json(AttemptReviewDtoSchema, (dto) => ({
+        status: 'saved' as const,
+        review: toAttemptReview(dto),
+      })),
+      409: json(ReviewConflictDtoSchema, (dto) => ({
+        status: 'conflict' as const,
+        revision: dto.revision,
+      })),
+    },
+  });
+}
+
+useMutation({
+  mutationFn: saveAttemptReview,
+  retry: false,
+});`,
+            custom: `// The endpoint DSL needs vocabulary for every new protocol shape.
+return requestOperation({
+  name: 'export-review',
+  request: { method: 'GET', path, signal },
+  outcomes: {
+    204: empty(() => ({ status: 'empty' as const })),
+    200: textStream({
+      contentType: 'text/csv',
+      mapHeaders: (headers) => headers.get('etag'),
+      map: (stream, etag) => ({ status: 'ready' as const, stream, etag }),
+    }),
+  },
+});
+
+// Each new descriptor increases the shared interface.
+// An escape hatch creates a second way to understand the same module.`,
+          },
+          kernel: {
+            session: `// src/features/auth/api/check-session.ts
+export async function checkSession(signal?: AbortSignal) {
+  return runHttpOperation(
+    {
+      name: 'check-session',
+      path: '/api/v1/auth/session',
+      credentials: 'include',
+      signal,
+    },
+    async (response) => {
+      if (response.status === 401) {
+        return { status: 'not-authorized' as const };
+      }
+      if (!response.ok) throw unexpectedHttp('check-session', response);
+
+      const dto = await readJson(response, SessionDtoSchema);
+      return { status: 'authorized' as const, session: toSession(dto) };
+    }
+  );
+}
+
+export const sessionOptions = queryOptions({
+  queryKey: sessionKeys.all,
+  queryFn: ({ signal }) => checkSession(signal),
+  retry: canRetrySessionCheck,
+  retryDelay: 500,
+});`,
+            course: `// src/features/course/features/page/api/save-page.ts
+export async function saveCoursePage(input: SaveCoursePageInput) {
+  return runHttpOperation(
+    {
+      name: 'save-course-page',
+      method: 'PUT',
+      path: '/api/v1/courses/' + input.courseSlug + '/page',
+      ...jsonBody(toSaveCoursePageDto(input)),
+    },
+    async (response) => {
+      if (response.status === 409) {
+        const conflict = await readJson(response, CoursePageConflictDtoSchema);
+        return { status: 'conflict' as const, latest: toCoursePage(conflict.latest) };
+      }
+      if (!response.ok) throw unexpectedHttp('save-course-page', response);
+
+      const dto = await readJson(response, CoursePageDtoSchema);
+      return { status: 'saved' as const, page: toCoursePage(dto) };
+    }
+  );
+}
+
+// Query orchestration applies exact setQueryData + targeted invalidation.
+// retry: false is inherited from QueryClient defaults.`,
+            review: `// src/features/course/features/attempt-review/api/save-review.ts
+export async function saveAttemptReview(input: SaveAttemptReviewInput) {
+  return runHttpOperation(
+    {
+      name: 'save-attempt-review',
+      method: 'PUT',
+      path: reviewPath(input),
+      ...jsonBody(toSaveAttemptReviewDto(input)),
+    },
+    async (response) => {
+      if (response.status === 409) {
+        const conflict = await readJson(response, ReviewConflictDtoSchema);
+        return { status: 'conflict' as const, revision: conflict.revision };
+      }
+      if (!response.ok) throw unexpectedHttp('save-attempt-review', response);
+
+      const dto = await readJson(response, AttemptReviewDtoSchema);
+      return { status: 'saved' as const, review: toAttemptReview(dto) };
+    }
+  );
+}
+
+useMutation({ mutationFn: saveAttemptReview });
+// Global mutation retry default is false; no local ceremony.`,
+            custom: `// No transport-interface change for an unusual endpoint.
+export async function exportReview(signal?: AbortSignal) {
+  return runHttpOperation(
+    { name: 'export-review', path: '/api/v1/reviews/export', signal },
+    async (response) => {
+      if (response.status === 204) return { status: 'empty' as const };
+      if (!response.ok) throw unexpectedHttp('export-review', response);
+      if (response.headers.get('content-type') !== 'text/csv') {
+        throw invalidResponse('export-review');
+      }
+      return {
+        status: 'ready' as const,
+        etag: response.headers.get('etag'),
+        stream: response.body,
+      };
+    }
+  );
+}
+
+// The operation stays explicit; the transport kernel stays unchanged.`,
+          },
+        };
+
+        const codeNotes = {
+          declarative: [
+            'Обычный JSON endpoint очень краток: config направляет автора по happy path.',
+            'Status mapping и validation описываются данными, но type-level DSL становится вторым языком HTTP.',
+            'Новый body/header/stream contract требует менять общий module или вводить escape hatch.',
+            'Deletion test слабее: при удалении DSL часть сложности возвращается в operations, но часть исчезает вместе с искусственной vocabulary.',
+          ],
+          kernel: [
+            'Transport interface состоит из runner, validated JSON reader и failure constructors.',
+            'Callback видит Response только внутри feature operation; UI/domain его никогда не получает.',
+            'Явный status switch — локальная спецификация declared outcomes, а не transport boilerplate.',
+            'Необычная операция использует стандартный Response без нового общего abstraction.',
+          ],
+        };
+
+        const walkthroughs = {
+          outcomes: {
+            label: '401 и 409 — data',
+            title: 'Domain meaning не выводится из HTTP status',
+            copy:
+              'Сравните session 401 и save conflict. В обоих designs status становится resolved discriminated union; TanStack Query не видит isError и не запускает retry.',
+            steps: [
+              { label: 'Outcome table · Session check', action: { type: 'select-design', design: 'declarative' } },
+              { label: 'Получить 401 как not-authorized', action: { type: 'set-case', operation: 'session', scenario: 'expected' } },
+              { label: 'Kernel · Save Course Page', action: { type: 'select-design', design: 'kernel' } },
+              { label: 'Получить 409 как conflict', action: { type: 'set-case', operation: 'course', scenario: 'expected' } },
+            ],
+          },
+          failures: {
+            label: 'Failure и abort',
+            title: 'Отказ операции отделён от отмены',
+            copy:
+              'Invalid DTO reject-ит OperationFailure и не попадает в cache. AbortError проходит без переклассификации, включая отмену во время body read.',
+            steps: [
+              { label: 'Kernel · Save Attempt Review', action: { type: 'set-case', design: 'kernel', operation: 'review', scenario: 'invalid' } },
+              { label: 'Увидеть invalid-response rejection', action: { type: 'noop' } },
+              { label: 'Отменить ту же операцию', action: { type: 'set-case', operation: 'review', scenario: 'abort' } },
+              { label: 'Проверить: mutation retry выключен', action: { type: 'noop' } },
+            ],
+          },
+          unusual: {
+            label: 'Необычный endpoint',
+            title: 'Проверка marginal cost нового protocol shape',
+            copy:
+              '204, text stream и header-driven outcome не относятся к текущим трём операциям, но показывают расширяемость seam. Важно: это не проектирование backlog, а pressure test interface.',
+            steps: [
+              { label: 'Outcome table · 204', action: { type: 'set-case', design: 'declarative', operation: 'custom', scenario: 'no-content' } },
+              { label: 'Перейти к text stream', action: { type: 'set-case', operation: 'custom', scenario: 'text-stream' } },
+              { label: 'Kernel · тот же text stream', action: { type: 'select-design', design: 'kernel' } },
+              { label: 'Проверить отсутствие нового transport API', action: { type: 'noop' } },
+            ],
+          },
+        };
+
+        function initialState() {
+          return {
+            design: 'kernel',
+            operation: 'session',
+            scenario: 'expected',
+            walkthrough: 'outcomes',
+            walkthroughStep: 0,
+            revision: 0,
+          };
+        }
+
+        function transition(state, action) {
+          if (action.type === 'reset') return initialState();
+          if (action.type === 'select-design') {
+            return { ...state, design: action.design, revision: state.revision + 1 };
+          }
+          if (action.type === 'select-operation') {
+            const operation = operations[action.operation];
+            return {
+              ...state,
+              operation: action.operation,
+              scenario: operation.scenarios[0],
+              revision: state.revision + 1,
+            };
+          }
+          if (action.type === 'select-scenario') {
+            return { ...state, scenario: action.scenario, revision: state.revision + 1 };
+          }
+          if (action.type === 'set-case') {
+            const nextOperation = action.operation ?? state.operation;
+            return {
+              ...state,
+              design: action.design ?? state.design,
+              operation: nextOperation,
+              scenario: action.scenario ?? operations[nextOperation].scenarios[0],
+              revision: state.revision + 1,
+            };
+          }
+          if (action.type === 'select-walkthrough') {
+            return {
+              ...initialState(),
+              walkthrough: action.walkthrough,
+              revision: state.revision + 1,
+            };
+          }
+          if (action.type === 'walkthrough-step') {
+            const walkthrough = walkthroughs[state.walkthrough];
+            if (action.index !== state.walkthroughStep) return state;
+            const step = walkthrough.steps[action.index];
+            const afterAction = transition(state, step.action);
+            return {
+              ...afterAction,
+              walkthroughStep: Math.min(action.index + 1, walkthrough.steps.length),
+              revision: afterAction.revision + 1,
+            };
+          }
+          if (action.type === 'noop') return { ...state, revision: state.revision + 1 };
+          return state;
+        }
+
+        function evaluate(state) {
+          const design = designs[state.design];
+          const operation = operations[state.operation];
+          const scenario = scenarios[state.scenario];
+          const expectedNegative = state.scenario === 'expected';
+          const cancellation = state.scenario === 'abort';
+          const failure = ['network', 'invalid'].includes(state.scenario);
+          const custom = state.operation === 'custom';
+
+          let channel = 'Resolved declared outcome';
+          let cache = 'Validated domain value may enter cache';
+          let retry = state.operation === 'session' ? 'Explicit read policy' : 'Off by default';
+          let tone = scenario.tone;
+
+          if (expectedNegative) {
+            channel = 'Resolved discriminated union';
+            cache = 'Outcome stays data; no error boundary';
+            retry = 'No retry: declared outcome';
+          } else if (cancellation) {
+            channel = 'AbortError propagates';
+            cache = 'No cache write; not user-visible failure';
+            retry = 'No retry: cancellation';
+          } else if (failure) {
+            channel = 'Rejected OperationFailure';
+            cache = 'No invalid payload reaches cache';
+            retry = state.operation === 'session' && state.scenario === 'network'
+              ? 'Allowed only by explicit session policy'
+              : 'No automatic retry';
+          } else if (custom) {
+            channel = 'Resolved endpoint-specific outcome';
+            cache = 'Depends on operation; transport is neutral';
+            retry = 'Must be chosen by operation contract';
+          }
+
+          const classificationOwner = state.design === 'kernel'
+            ? 'Feature operation: visible status switch'
+            : 'Shared DSL: outcome descriptor + feature mapping';
+          const extensionCost = custom
+            ? state.design === 'kernel'
+              ? 'Низкая: обычный Response уже доступен decoder-у.'
+              : 'Высокая: нужен descriptor/combinator или escape hatch.'
+            : state.design === 'kernel'
+              ? 'Умеренная: несколько явных строк на status classification.'
+              : 'Низкая на стандартном JSON/status path.';
+
+          return {
+            design,
+            operation,
+            scenario,
+            tone,
+            channel,
+            cache,
+            retry,
+            summary: `${design.shortLabel} · ${operation.label} · ${scenario.label}`,
+            trace: [
+              {
+                layer: 'Caller / Query',
+                detail:
+                  state.operation === 'session'
+                    ? 'Query передаёт AbortSignal; retry включается только explicit operation policy.'
+                    : 'Mutation вызывает operation; global default не делает automatic retry.',
+              },
+              {
+                layer: 'Transport',
+                detail:
+                  state.design === 'kernel'
+                    ? 'runHttpOperation единолично вызывает Fetch; network failure нормализуется, abort сохраняется.'
+                    : 'requestOperation исполняет request descriptor и выбирает outcome descriptor.',
+              },
+              {
+                layer: 'Operation',
+                detail: classificationOwner,
+              },
+              {
+                layer: 'Trust seam',
+                detail:
+                  ['success', 'expected', 'invalid'].includes(state.scenario)
+                    ? 'Structured payload входит как unknown и проходит Valibot до mapping.'
+                    : 'JSON validation не применяется к raw bytes/text; проверяется фактический contract.',
+              },
+              {
+                layer: 'Result',
+                detail: `${channel}. ${cache}.`,
+              },
+            ],
+            verdict: `${design.verdict} ${extensionCost}`,
+            scores: design.scores,
+            code: code[state.design][state.operation],
+            notes: codeNotes[state.design],
+          };
+        }
+
+        return {
+          designs,
+          operations,
+          scenarios,
+          walkthroughs,
+          initialState,
+          transition,
+          evaluate,
+        };
+      })();
+
+      let state = Prototype.initialState();
+
+      const elements = {
+        designControls: document.querySelector('#design-controls'),
+        operationControls: document.querySelector('#operation-controls'),
+        scenarioControls: document.querySelector('#scenario-controls'),
+        resetButton: document.querySelector('#reset-button'),
+        stateSummary: document.querySelector('#state-summary'),
+        statusGrid: document.querySelector('#status-grid'),
+        trace: document.querySelector('#trace'),
+        verdictCopy: document.querySelector('#verdict-copy'),
+        scorecard: document.querySelector('#scorecard'),
+        codeSample: document.querySelector('#code-sample'),
+        codeNotes: document.querySelector('#code-notes'),
+        walkthroughTabs: document.querySelector('#walkthrough-tabs'),
+        walkthroughCopy: document.querySelector('#walkthrough-copy'),
+        walkthroughSteps: document.querySelector('#walkthrough-steps'),
+      };
+
+      function dispatch(action) {
+        state = Prototype.transition(state, action);
+        render();
+      }
+
+      function makeChoiceButton({ label, description, selected, action, className = 'choice-button' }) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = className;
+        button.setAttribute('aria-pressed', String(selected));
+        button.textContent = label;
+        if (description) {
+          const small = document.createElement('small');
+          small.textContent = description;
+          button.append(small);
+        }
+        button.addEventListener('click', () => dispatch(action));
+        return button;
+      }
+
+      function renderChoices() {
+        elements.designControls.replaceChildren(
+          ...Object.values(Prototype.designs).map((design) =>
+            makeChoiceButton({
+              label: design.label,
+              description: design.description,
+              selected: state.design === design.id,
+              action: { type: 'select-design', design: design.id },
+            })
+          )
+        );
+
+        elements.operationControls.replaceChildren(
+          ...Object.values(Prototype.operations).map((operation) =>
+            makeChoiceButton({
+              label: operation.label,
+              description: operation.description,
+              selected: state.operation === operation.id,
+              action: { type: 'select-operation', operation: operation.id },
+            })
+          )
+        );
+
+        const operation = Prototype.operations[state.operation];
+        elements.scenarioControls.replaceChildren(
+          ...operation.scenarios.map((scenarioId) => {
+            const scenario = Prototype.scenarios[scenarioId];
+            return makeChoiceButton({
+              label: scenario.label,
+              description: scenario.description,
+              selected: state.scenario === scenarioId,
+              action: { type: 'select-scenario', scenario: scenarioId },
+              className: 'scenario-button',
+            });
+          })
+        );
+      }
+
+      function renderStatus(view) {
+        const statuses = [
+          { label: 'Promise channel', value: view.channel, tone: view.tone },
+          { label: 'Cache admission', value: view.cache, tone: view.tone },
+          { label: 'Retry', value: view.retry, tone: view.tone },
+          {
+            label: 'MSW path',
+            value: 'Same Fetch operation; no feature branch',
+            tone: 'good',
+          },
+        ];
+
+        elements.statusGrid.replaceChildren(
+          ...statuses.map((status) => {
+            const cell = document.createElement('div');
+            cell.className = 'status-cell';
+            const label = document.createElement('span');
+            label.className = 'status-label';
+            label.textContent = status.label;
+            const value = document.createElement('span');
+            value.className = `status-value ${status.tone}`;
+            value.textContent = status.value;
+            cell.append(label, value);
+            return cell;
+          })
+        );
+      }
+
+      function renderTrace(view) {
+        elements.trace.replaceChildren(
+          ...view.trace.map((step, index) => {
+            const item = document.createElement('li');
+            const number = document.createElement('span');
+            number.className = 'trace-index';
+            number.textContent = String(index + 1).padStart(2, '0');
+            const layer = document.createElement('span');
+            layer.className = 'trace-layer';
+            layer.textContent = step.layer;
+            const detail = document.createElement('span');
+            detail.className = 'trace-detail';
+            detail.textContent = step.detail;
+            item.append(number, layer, detail);
+            return item;
+          })
+        );
+      }
+
+      function renderVerdict(view) {
+        const label = document.createElement('span');
+        label.className = 'section-label';
+        label.textContent = 'Verdict для выбранного сценария';
+        const heading = document.createElement('h3');
+        heading.textContent = view.design.label;
+        const paragraph = document.createElement('p');
+        paragraph.textContent = view.verdict;
+        elements.verdictCopy.replaceChildren(label, heading, paragraph);
+
+        const metricNames = {
+          depth: 'Depth',
+          locality: 'Locality',
+          extensibility: 'Extension',
+          guardrails: 'Guardrails',
+        };
+        elements.scorecard.replaceChildren(
+          ...Object.entries(view.scores).map(([key, score]) => {
+            const metric = document.createElement('div');
+            metric.className = 'metric';
+            const metricLabel = document.createElement('span');
+            metricLabel.className = 'metric-label';
+            metricLabel.textContent = metricNames[key];
+            const track = document.createElement('span');
+            track.className = 'metric-track';
+            const fill = document.createElement('span');
+            fill.className = 'metric-fill';
+            fill.style.width = `${score * 20}%`;
+            track.append(fill);
+            const scoreText = document.createElement('span');
+            scoreText.className = 'metric-score';
+            scoreText.textContent = `${score}/5`;
+            metric.append(metricLabel, track, scoreText);
+            return metric;
+          })
+        );
+      }
+
+      function renderCode(view) {
+        elements.codeSample.textContent = view.code;
+        elements.codeNotes.replaceChildren(
+          ...view.notes.map((note) => {
+            const item = document.createElement('li');
+            item.textContent = note;
+            return item;
+          })
+        );
+      }
+
+      function renderWalkthrough() {
+        elements.walkthroughTabs.replaceChildren(
+          ...Object.entries(Prototype.walkthroughs).map(([id, walkthrough]) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'tab-button';
+            button.role = 'tab';
+            button.setAttribute('aria-selected', String(state.walkthrough === id));
+            button.textContent = walkthrough.label;
+            button.addEventListener('click', () =>
+              dispatch({ type: 'select-walkthrough', walkthrough: id })
+            );
+            return button;
+          })
+        );
+
+        const walkthrough = Prototype.walkthroughs[state.walkthrough];
+        const heading = document.createElement('h3');
+        heading.textContent = walkthrough.title;
+        const paragraph = document.createElement('p');
+        paragraph.textContent = walkthrough.copy;
+        elements.walkthroughCopy.replaceChildren(heading, paragraph);
+
+        elements.walkthroughSteps.replaceChildren(
+          ...walkthrough.steps.map((step, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'walkthrough-button';
+            if (index < state.walkthroughStep) button.classList.add('done');
+            if (index === state.walkthroughStep) button.classList.add('current');
+            button.disabled = index > state.walkthroughStep;
+            const number = document.createElement('span');
+            number.className = 'step-number';
+            number.textContent = String(index + 1).padStart(2, '0');
+            const label = document.createElement('span');
+            label.textContent = step.label;
+            button.append(number, label);
+            button.addEventListener('click', () =>
+              dispatch({ type: 'walkthrough-step', index })
+            );
+            return button;
+          })
+        );
+      }
+
+      function render() {
+        const view = Prototype.evaluate(state);
+        renderChoices();
+        elements.stateSummary.textContent = view.summary;
+        renderStatus(view);
+        renderTrace(view);
+        renderVerdict(view);
+        renderCode(view);
+        renderWalkthrough();
+      }
+
+      elements.resetButton.addEventListener('click', () => dispatch({ type: 'reset' }));
+      render();
+    </script>
+  </body>
+</html>
