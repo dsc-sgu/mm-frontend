@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Remote-data paved road — prototype</title>
+    <title>Удобный путь для удалённых данных — прототип</title>
     <style>
       :root {
         color-scheme: light;
@@ -696,47 +696,47 @@
     <main class="shell">
       <header class="masthead">
         <div>
-          <span class="eyebrow">Throwaway prototype · remote-data paved road</span>
+          <span class="eyebrow">Одноразовый прототип · удалённые данные</span>
           <h1>Сделать правильный путь коротким</h1>
           <p class="lede">
-            Интерактивное сравнение двух конкретных TypeScript-форм для session check,
-            сохранения Course Page и сохранения Attempt Review. Никаких production-изменений:
-            этот файл нужен, чтобы выбрать interface и границы enforcement.
+            Интерактивное сравнение двух конкретных вариантов на TypeScript для проверки
+            сессии, сохранения страницы курса и проверки попытки. Производственный код не
+            меняется: этот файл помогает выбрать интерфейс и границы статического контроля.
           </p>
         </div>
         <aside class="question-card">
           <span class="section-label">Вопрос прототипа</span>
           <p>
-            Достаточен ли малый transport kernel с operation-owned decoder, чтобы соблюдение
-            remote-data contract стало default, или декларативная таблица HTTP outcomes даёт
-            заметно больше leverage, оправдывающее endpoint DSL?
+            Достаточно ли малого транспортного ядра с декодером внутри операции, чтобы контракт
+            удалённых данных соблюдался по умолчанию, или декларативная таблица HTTP-исходов даёт
+            заметно больше полезности интерфейса (Leverage) и оправдывает собственный язык описания?
           </p>
           <p>
-            <strong>Предварительный выбор:</strong> малый transport kernel. Пройдите сценарии
-            ниже и проверьте, не теряем ли мы важный default.
+            <strong>Предварительный выбор:</strong> малое транспортное ядро. Пройдите сценарии
+            ниже и проверьте, не теряем ли мы важное поведение по умолчанию.
           </p>
         </aside>
       </header>
 
       <ul class="facts" aria-label="Факты текущего кода">
         <li>
-          <strong>Session check</strong>
-          <span>Сейчас Axios + feature-level mock branch; 401 уже моделируется как data.</span>
+          <strong>Проверка сессии</strong>
+          <span>Сейчас Axios и отдельная ветка имитации; ответ 401 уже трактуется как данные.</span>
         </li>
         <li>
-          <strong>Course Page save</strong>
-          <span>Сейчас in-process mock возвращает полный CoursePage и запускает broad invalidation.</span>
+          <strong>Сохранение страницы курса</strong>
+          <span>Сейчас внутрипроцессная имитация возвращает CoursePage и слишком широко инвалидирует кеш.</span>
         </li>
         <li>
-          <strong>Attempt Review save</strong>
-          <span>Сейчас in-process mock возвращает aggregate; mutation retries явно не заданы.</span>
+          <strong>Сохранение проверки попытки</strong>
+          <span>Сейчас внутрипроцессная имитация возвращает агрегат; автоматические повторы не настроены.</span>
         </li>
       </ul>
 
       <section class="workspace" aria-label="Интерактивное сравнение">
         <aside class="control-deck" aria-label="Параметры сценария">
           <div class="deck-block">
-            <span class="section-label">1 · Форма interface</span>
+            <span class="section-label">1 · Форма интерфейса</span>
             <div class="choice-grid" id="design-controls"></div>
           </div>
           <div class="deck-block">
@@ -757,7 +757,7 @@
             <div class="panel-head">
               <div>
                 <span class="section-label">Полное состояние после действия</span>
-                <h2 id="state-heading">Что происходит на seam</h2>
+                <h2 id="state-heading">Что происходит в seam (точке подмены)</h2>
               </div>
               <p id="state-summary"></p>
             </div>
@@ -773,11 +773,11 @@
             <div class="panel-head">
               <div>
                 <span class="section-label">Конкретная TypeScript-форма</span>
-                <h2 id="code-heading">Как выглядит caller</h2>
+                <h2 id="code-heading">Как выглядит вызывающий код</h2>
               </div>
               <p>
-                Код намеренно показывает весь interface, который должен знать автор операции.
-                URL, statuses, validation и mapping не выходят в UI/domain.
+                Код намеренно показывает весь интерфейс, который должен знать автор операции.
+                Статусы, проверка данных и преобразование не выходят в UI или доменную модель.
               </p>
             </div>
             <div class="code-layout">
@@ -791,50 +791,50 @@
           <article class="panel" aria-labelledby="comparison-heading">
             <div class="panel-head">
               <div>
-                <span class="section-label">Depth · locality · extension cost</span>
+                <span class="section-label">Depth · Locality · стоимость расширения</span>
                 <h2 id="comparison-heading">Сравнение форм</h2>
               </div>
-              <p>Оценка 1–5: выше лучше; для нестандартного endpoint выше означает меньшую стоимость.</p>
+              <p>Оценка 1–5: выше лучше; для нестандартной конечной точки выше означает меньшую стоимость.</p>
             </div>
             <div class="comparison-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>Критерий</th>
-                    <th>Декларативные outcomes</th>
-                    <th>Transport kernel + decoder</th>
+                    <th>Декларативные исходы</th>
+                    <th>Транспортное ядро + декодер</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td><strong>Depth</strong><br />Сколько корректного поведения скрыто за малым interface.</td>
-                    <td>5/5 на JSON/status happy path; interface сам становится языком описания endpoint.</td>
-                    <td class="winner">4/5: скрывает transport failures и parsing; classification остаётся видимой.</td>
+                    <td><strong>Depth (глубина)</strong><br />Сколько поведения скрыто за малым интерфейсом.</td>
+                    <td>5/5 для типичного JSON-ответа; интерфейс сам становится языком описания конечной точки.</td>
+                    <td class="winner">4/5: скрывает транспортные отказы и чтение ответа; классификация остаётся видимой.</td>
                   </tr>
                   <tr>
-                    <td><strong>Locality</strong><br />Где меняется operation contract.</td>
-                    <td>4/5: общие изменения локальны, но schema DSL связывает transport и features.</td>
-                    <td class="winner">5/5: HTTP policy операции целиком в одном feature operation.</td>
+                    <td><strong>Locality (локальность)</strong><br />Где меняется контракт операции.</td>
+                    <td>4/5: общие изменения локальны, но декларативная схема связывает транспорт и функциональные модули.</td>
+                    <td class="winner">5/5: HTTP-правила операции целиком находятся в одном функциональном модуле.</td>
                   </tr>
                   <tr>
-                    <td><strong>Обычная операция</strong><br />Session/read/save JSON.</td>
+                    <td><strong>Обычная операция</strong><br />Проверка сессии, чтение или сохранение JSON.</td>
                     <td class="winner">5/5: очень мало повторов.</td>
-                    <td>4/5: явный status switch занимает несколько строк.</td>
+                    <td>4/5: явное ветвление по HTTP-статусу занимает несколько строк.</td>
                   </tr>
                   <tr>
-                    <td><strong>Нестандартный endpoint</strong><br />204, text, stream, multipart, header-driven outcome.</td>
-                    <td>2/5: нужны новые combinators или escape hatch, углубляющие второй interface.</td>
-                    <td class="winner">5/5: decoder использует обычный Response без изменения transport module.</td>
+                    <td><strong>Нестандартная конечная точка</strong><br />204, текст, поток, multipart, исход по заголовку.</td>
+                    <td>2/5: нужны новые комбинаторы или аварийный выход, усложняющие второй интерфейс.</td>
+                    <td class="winner">5/5: декодер использует обычный Response без изменения транспортного модуля.</td>
                   </tr>
                   <tr>
-                    <td><strong>Статическая доказуемость</strong><br />Что гарантирует TypeScript/lint.</td>
-                    <td class="winner">4/5: обязательные outcome descriptors направляют автора.</td>
-                    <td>3/5: validation helper обязателен по convention; lint запрещает обход seam.</td>
+                    <td><strong>Статическая доказуемость</strong><br />Что гарантируют TypeScript и линтер.</td>
+                    <td class="winner">4/5: обязательные описатели исходов направляют автора.</td>
+                    <td>3/5: вызов помощника проверки обязателен по соглашению; линтер запрещает обход точки подмены.</td>
                   </tr>
                   <tr>
                     <td><strong>Итог</strong></td>
-                    <td>20/25. Выигрывает краткостью, проигрывает собственному DSL.</td>
-                    <td class="winner">21/25. Меньше магии и ниже marginal cost необычных операций.</td>
+                    <td>20/25. Выигрывает краткостью, проигрывает собственному языку описания.</td>
+                    <td class="winner">21/25. Меньше магии и ниже предельная стоимость необычных операций.</td>
                   </tr>
                 </tbody>
               </table>
@@ -844,10 +844,10 @@
           <article class="panel" aria-labelledby="walkthrough-heading">
             <div class="panel-head">
               <div>
-                <span class="section-label">Guided walkthroughs</span>
+                <span class="section-label">Пошаговые сценарии</span>
                 <h2 id="walkthrough-heading">Проверьте неудобные случаи</h2>
               </div>
-              <p>Каждый walkthrough начинает с известного состояния; нажимайте шаги сверху вниз.</p>
+              <p>Каждый сценарий начинается с известного состояния; нажимайте шаги сверху вниз.</p>
             </div>
             <div class="walkthrough-tabs" id="walkthrough-tabs" role="tablist"></div>
             <div class="walkthrough-body">
@@ -859,61 +859,61 @@
           <article class="panel" aria-labelledby="guardrails-heading">
             <div class="panel-head">
               <div>
-                <span class="section-label">Минимальный static enforcement</span>
+                <span class="section-label">Минимальный статический контроль</span>
                 <h2 id="guardrails-heading">Что сделать невозможным или заметным</h2>
               </div>
-              <p>Без custom ESLint plugin и без попытки кодировать endpoint semantics в lint.</p>
+              <p>Без собственного плагина ESLint и попытки кодировать смысл конечных точек в линтере.</p>
             </div>
             <div class="guardrails">
               <div class="guardrail">
-                <span class="tag good">Lint</span>
-                <h3>Один transport path</h3>
+                <span class="tag good">Линтер</span>
+                <h3>Единый транспортный путь</h3>
                 <p>
                   Запретить <code>axios</code>, прямой <code>fetch</code> вне
-                  <code>src/app/remote-data/http.ts</code> и production-imports из
-                  <code>api/mock</code>.
+                  <code>src/app/remote-data/http.ts</code> и импорты имитаций из
+                  <code>api/mock</code> в рабочем коде.
                 </p>
               </div>
               <div class="guardrail">
-                <span class="tag good">Types</span>
-                <h3>Response не пересекает feature operation</h3>
+                <span class="tag good">Типы</span>
+                <h3>Response не выходит за пределы операции функционального модуля</h3>
                 <p>
-                  Экспортируемая операция возвращает domain outcome или reject-ит
-                  <code>OperationFailure</code>. Generic в <code>readJson</code> безопасен только потому,
-                  что внутри всегда вызывается Valibot.
+                  Экспортируемая операция возвращает доменный исход или отклоняет Promise с
+                  <code>OperationFailure</code>. Обобщённый <code>readJson</code> безопасен только
+                  потому, что внутри всегда вызывается Valibot.
                 </p>
               </div>
               <div class="guardrail">
-                <span class="tag warn">Behavior</span>
-                <h3>Не притворяться, что lint знает контракт</h3>
+                <span class="tag warn">Поведение</span>
+                <h3>Не притворяться, что линтер знает контракт</h3>
                 <p>
-                  Полноту status classification, cache scope и retryability подтверждают contract
-                  scenarios. DSL/custom rule ради их статической проверки не вводится.
+                  Полноту классификации статусов, область кеша и допустимость повторов подтверждают
+                  контрактные сценарии. Ни собственный язык описания, ни особое правило линтера не вводятся.
                 </p>
               </div>
             </div>
             <div class="decision-box">
               <div class="decision-copy">
                 <span class="section-label">Рекомендуемая форма</span>
-                <h2>Transport kernel + operation-owned decoder</h2>
+                <h2>Транспортное ядро + декодер внутри операции</h2>
                 <ol>
-                  <li><code>runHttpOperation</code> владеет единственным вызовом Fetch и network normalization.</li>
-                  <li><code>readJson</code> владеет unknown → Valibot → DTO и body/validation failures.</li>
-                  <li>Feature operation владеет status → declared outcome, DTO → domain и operation name.</li>
-                  <li>TanStack Query владеет signal forwarding, cache effects и явным opt-in retry.</li>
-                  <li>QueryClient задаёт безопасный default: automatic retries выключены и для queries, и для mutations.</li>
-                  <li>MSW перехватывает те же URL; никакой mock/real ветки в feature-коде нет.</li>
+                  <li><code>runHttpOperation</code> владеет единственным вызовом Fetch и нормализацией сетевых отказов.</li>
+                  <li><code>readJson</code> владеет переходом unknown → Valibot → DTO и отказами чтения или проверки тела.</li>
+                  <li>Операция функционального модуля владеет переходом HTTP-статус → объявленный исход и DTO → доменная модель.</li>
+                  <li>TanStack Query отвечает за передачу сигнала, изменения кеша и явное включение повторов.</li>
+                  <li>QueryClient задаёт безопасное умолчание: автоматические повторы запросов и мутаций выключены.</li>
+                  <li>MSW перехватывает те же URL; отдельной ветки между имитацией и реальным сервером нет.</li>
                 </ol>
               </div>
               <aside class="decision-check">
-                <span class="section-label">HITL check</span>
+                <span class="section-label">Проверка владельцем</span>
                 <p>
-                  Принимаем эту форму, если явный status switch считается полезной локальной
-                  спецификацией операции, а не досадным boilerplate.
+                  Принимаем эту форму, если явное ветвление по HTTP-статусу считается полезной
+                  локальной спецификацией операции, а не досадным шаблонным кодом.
                 </p>
                 <p>
-                  Выбираем декларативные outcomes только если краткость обычных JSON endpoints
-                  важнее стоимости второго endpoint-language и его escape hatches.
+                  Выбираем декларативные исходы только тогда, когда краткость обычных JSON-операций
+                  важнее стоимости второго языка описания и его аварийных выходов.
                 </p>
               </aside>
             </div>
@@ -927,20 +927,20 @@
         const designs = {
           declarative: {
             id: 'declarative',
-            label: 'A · Declarative outcomes',
-            shortLabel: 'Outcome table',
-            description: 'Config описывает request, status, schema и mapping.',
+            label: 'A · Декларативные исходы',
+            shortLabel: 'Таблица исходов',
+            description: 'Настройки описывают запрос, статус, схему и преобразование.',
             verdict:
-              'Сильный paved road для однотипного JSON, но config быстро превращается в endpoint DSL. Необычный response требует нового combinator или escape hatch.',
+              'Удобный путь для однотипного JSON, но набор настроек быстро превращается в собственный язык описания конечных точек. Необычный ответ требует нового комбинатора или аварийного выхода.',
             scores: { depth: 5, locality: 4, extensibility: 2, guardrails: 4 },
           },
           kernel: {
             id: 'kernel',
-            label: 'B · Small transport kernel',
-            shortLabel: 'Kernel + decoder',
-            description: 'Fetch общий; operation явно классифицирует Response.',
+            label: 'B · Малое транспортное ядро',
+            shortLabel: 'Ядро + декодер',
+            description: 'Fetch общий; операция явно классифицирует Response.',
             verdict:
-              'Явный status switch оставляет domain meaning рядом с операцией. Transport module мал и стабилен; необычные endpoints не расширяют его interface.',
+              'Явное ветвление по HTTP-статусу оставляет доменный смысл рядом с операцией. Транспортный модуль мал и стабилен; необычные конечные точки не расширяют его интерфейс.',
             scores: { depth: 4, locality: 5, extensibility: 5, guardrails: 3 },
           },
         };
@@ -948,69 +948,69 @@
         const operations = {
           session: {
             id: 'session',
-            label: 'Session check',
-            description: 'GET; 401 — declared outcome, не failure.',
+            label: 'Проверка сессии',
+            description: 'GET; 401 — объявленный исход, а не отказ.',
             scenarios: ['success', 'expected', 'network', 'invalid', 'abort'],
           },
           course: {
             id: 'course',
-            label: 'Save Course Page',
-            description: 'Mutation; authoritative detail или stale-write conflict.',
+            label: 'Сохранение страницы курса',
+            description: 'Мутация; авторитетная страница или конфликт устаревшей записи.',
             scenarios: ['success', 'expected', 'network', 'invalid', 'abort'],
           },
           review: {
             id: 'review',
-            label: 'Save Attempt Review',
-            description: 'Mutation; aggregate response, automatic retry off.',
+            label: 'Сохранение проверки попытки',
+            description: 'Мутация; ответ с агрегатом, автоматические повторы выключены.',
             scenarios: ['success', 'expected', 'network', 'invalid', 'abort'],
           },
           custom: {
             id: 'custom',
-            label: 'Custom endpoint stress',
-            description: '204/text/stream/header-driven response.',
+            label: 'Проверка нестандартной точки',
+            description: '204, текст, поток или исход по заголовку.',
             scenarios: ['no-content', 'text-stream', 'multipart'],
           },
         };
 
         const scenarios = {
           success: {
-            label: 'Успех + valid DTO',
-            description: '2xx с валидным авторитетным payload.',
+            label: 'Успех + корректный DTO',
+            description: 'Ответ 2xx с корректным авторитетным телом.',
             tone: 'good',
           },
           expected: {
-            label: 'Ожидаемый negative',
-            description: '401 session или документированный 409 conflict.',
+            label: 'Ожидаемый отрицательный исход',
+            description: '401 для сессии или документированный конфликт 409.',
             tone: 'warn',
           },
           network: {
-            label: 'Network/CORS failure',
+            label: 'Сетевой или CORS-отказ',
             description: 'Fetch не получил Response.',
             tone: 'bad',
           },
           invalid: {
-            label: 'Invalid response',
-            description: 'Malformed JSON или DTO не проходит Valibot.',
+            label: 'Некорректный ответ',
+            description: 'Некорректный JSON или DTO не проходит Valibot.',
             tone: 'bad',
           },
           abort: {
             label: 'AbortSignal',
-            description: 'Отмена во время fetch или body read.',
+            description: 'Отмена во время Fetch или чтения тела ответа.',
             tone: 'warn',
           },
           'no-content': {
-            label: '204 No Content',
-            description: 'Успех без JSON body.',
+            label: '204 без содержимого',
+            description: 'Успех без тела JSON.',
             tone: 'good',
           },
           'text-stream': {
-            label: 'Text / stream',
-            description: 'Response нельзя описать JSON schema.',
+            label: 'Текст или поток',
+            description: 'Response нельзя описать схемой JSON.',
             tone: 'warn',
           },
           multipart: {
-            label: 'Multipart upload',
-            description: 'Body и headers отличаются от JSON default.',
+            label: 'Отправка multipart-данных',
+            description: 'Тело и заголовки отличаются от JSON по умолчанию.',
             tone: 'warn',
           },
         };
@@ -1040,7 +1040,7 @@ export function checkSession(signal?: AbortSignal) {
 export const sessionOptions = queryOptions({
   queryKey: sessionKeys.all,
   queryFn: ({ signal }) => checkSession(signal),
-  // Explicit opt-in only for this idempotent operation.
+  // Явное включение только для этой идемпотентной операции.
   retry: canRetrySessionCheck,
   retryDelay: 500,
 });`,
@@ -1066,8 +1066,8 @@ export function saveCoursePage(input: SaveCoursePageInput) {
   });
 }
 
-// New status/body shape means a new descriptor form.
-// Header-based outcome? stream? 204? Extend the DSL first.`,
+// Новый формат статуса или тела требует нового описателя.
+// Исход по заголовку, поток или 204? Сначала расширьте общий язык описания.`,
             review: `// src/features/course/features/attempt-review/api/save-review.ts
 export function saveAttemptReview(input: SaveAttemptReviewInput) {
   return requestOperation({
@@ -1094,7 +1094,7 @@ useMutation({
   mutationFn: saveAttemptReview,
   retry: false,
 });`,
-            custom: `// The endpoint DSL needs vocabulary for every new protocol shape.
+            custom: `// Для каждого нового формата протокола языку описания нужна новая конструкция.
 return requestOperation({
   name: 'export-review',
   request: { method: 'GET', path, signal },
@@ -1108,8 +1108,8 @@ return requestOperation({
   },
 });
 
-// Each new descriptor increases the shared interface.
-// An escape hatch creates a second way to understand the same module.`,
+// Каждый новый описатель расширяет общий интерфейс.
+// Аварийный выход создаёт второй способ понимать тот же модуль.`,
           },
           kernel: {
             session: `// src/features/auth/api/check-session.ts
@@ -1161,8 +1161,8 @@ export async function saveCoursePage(input: SaveCoursePageInput) {
   );
 }
 
-// Query orchestration applies exact setQueryData + targeted invalidation.
-// retry: false is inherited from QueryClient defaults.`,
+// Оркестрация запроса точно обновляет кеш записи и адресно инвалидирует остальные данные.
+// Значение retry: false наследуется из настроек QueryClient.`,
             review: `// src/features/course/features/attempt-review/api/save-review.ts
 export async function saveAttemptReview(input: SaveAttemptReviewInput) {
   return runHttpOperation(
@@ -1186,8 +1186,8 @@ export async function saveAttemptReview(input: SaveAttemptReviewInput) {
 }
 
 useMutation({ mutationFn: saveAttemptReview });
-// Global mutation retry default is false; no local ceremony.`,
-            custom: `// No transport-interface change for an unusual endpoint.
+// Глобальное значение для повторов мутаций — false; локальная настройка не нужна.`,
+            custom: `// Необычная конечная точка не меняет транспортный интерфейс.
 export async function exportReview(signal?: AbortSignal) {
   return runHttpOperation(
     { name: 'export-review', path: '/api/v1/reviews/export', signal },
@@ -1206,60 +1206,60 @@ export async function exportReview(signal?: AbortSignal) {
   );
 }
 
-// The operation stays explicit; the transport kernel stays unchanged.`,
+// Операция остаётся явной; транспортное ядро не меняется.`,
           },
         };
 
         const codeNotes = {
           declarative: [
-            'Обычный JSON endpoint очень краток: config направляет автора по happy path.',
-            'Status mapping и validation описываются данными, но type-level DSL становится вторым языком HTTP.',
-            'Новый body/header/stream contract требует менять общий module или вводить escape hatch.',
-            'Deletion test слабее: при удалении DSL часть сложности возвращается в operations, но часть исчезает вместе с искусственной vocabulary.',
+            'Обычная JSON-операция очень кратка: настройки направляют автора по типичному пути.',
+            'Сопоставление статусов и проверка данных описываются декларативно, но появляется второй язык для HTTP.',
+            'Новый контракт тела, заголовков или потока требует менять общий модуль либо вводить аварийный выход.',
+            'Проверка удалением (Deletion test) слабее: после удаления языка описания часть сложности вернётся в операции, а искусственная терминология исчезнет.',
           ],
           kernel: [
-            'Transport interface состоит из runner, validated JSON reader и failure constructors.',
-            'Callback видит Response только внутри feature operation; UI/domain его никогда не получает.',
-            'Явный status switch — локальная спецификация declared outcomes, а не transport boilerplate.',
-            'Необычная операция использует стандартный Response без нового общего abstraction.',
+            'Транспортный интерфейс состоит из исполнителя, проверяющего JSON чтения и конструкторов отказов.',
+            'Функция обратного вызова видит Response только внутри операции функционального модуля; UI и доменная модель его не получают.',
+            'Явное ветвление по HTTP-статусу — локальная спецификация объявленных исходов, а не транспортный шаблонный код.',
+            'Необычная операция использует стандартный Response без нового общего слоя абстракции.',
           ],
         };
 
         const walkthroughs = {
           outcomes: {
-            label: '401 и 409 — data',
-            title: 'Domain meaning не выводится из HTTP status',
+            label: '401 и 409 — данные',
+            title: 'Доменный смысл не выводится из HTTP-статуса',
             copy:
-              'Сравните session 401 и save conflict. В обоих designs status становится resolved discriminated union; TanStack Query не видит isError и не запускает retry.',
+              'Сравните 401 при проверке сессии и конфликт сохранения. В обоих вариантах HTTP-статус становится разрешённым доменным исходом; TanStack Query не видит ошибку и не запускает повтор.',
             steps: [
-              { label: 'Outcome table · Session check', action: { type: 'select-design', design: 'declarative' } },
+              { label: 'Таблица исходов · Проверка сессии', action: { type: 'select-design', design: 'declarative' } },
               { label: 'Получить 401 как not-authorized', action: { type: 'set-case', operation: 'session', scenario: 'expected' } },
-              { label: 'Kernel · Save Course Page', action: { type: 'select-design', design: 'kernel' } },
+              { label: 'Ядро · Сохранение страницы курса', action: { type: 'select-design', design: 'kernel' } },
               { label: 'Получить 409 как conflict', action: { type: 'set-case', operation: 'course', scenario: 'expected' } },
             ],
           },
           failures: {
-            label: 'Failure и abort',
+            label: 'Отказ и отмена',
             title: 'Отказ операции отделён от отмены',
             copy:
-              'Invalid DTO reject-ит OperationFailure и не попадает в cache. AbortError проходит без переклассификации, включая отмену во время body read.',
+              'Некорректный DTO отклоняет Promise с OperationFailure и не попадает в кеш. AbortError проходит без переклассификации, включая отмену во время чтения тела.',
             steps: [
-              { label: 'Kernel · Save Attempt Review', action: { type: 'set-case', design: 'kernel', operation: 'review', scenario: 'invalid' } },
-              { label: 'Увидеть invalid-response rejection', action: { type: 'noop' } },
+              { label: 'Ядро · Сохранение проверки попытки', action: { type: 'set-case', design: 'kernel', operation: 'review', scenario: 'invalid' } },
+              { label: 'Увидеть отказ invalid-response', action: { type: 'noop' } },
               { label: 'Отменить ту же операцию', action: { type: 'set-case', operation: 'review', scenario: 'abort' } },
-              { label: 'Проверить: mutation retry выключен', action: { type: 'noop' } },
+              { label: 'Проверить: автоматический повтор мутации выключен', action: { type: 'noop' } },
             ],
           },
           unusual: {
-            label: 'Необычный endpoint',
-            title: 'Проверка marginal cost нового protocol shape',
+            label: 'Нестандартная конечная точка',
+            title: 'Проверка предельной стоимости нового формата HTTP',
             copy:
-              '204, text stream и header-driven outcome не относятся к текущим трём операциям, но показывают расширяемость seam. Важно: это не проектирование backlog, а pressure test interface.',
+              '204, текстовый поток и исход по заголовку не относятся к текущим трём операциям, но показывают расширяемость точки подмены. Это не проектирование будущей функции, а проверка интерфейса под нагрузкой.',
             steps: [
-              { label: 'Outcome table · 204', action: { type: 'set-case', design: 'declarative', operation: 'custom', scenario: 'no-content' } },
-              { label: 'Перейти к text stream', action: { type: 'set-case', operation: 'custom', scenario: 'text-stream' } },
-              { label: 'Kernel · тот же text stream', action: { type: 'select-design', design: 'kernel' } },
-              { label: 'Проверить отсутствие нового transport API', action: { type: 'noop' } },
+              { label: 'Таблица исходов · 204', action: { type: 'set-case', design: 'declarative', operation: 'custom', scenario: 'no-content' } },
+              { label: 'Перейти к текстовому потоку', action: { type: 'set-case', operation: 'custom', scenario: 'text-stream' } },
+              { label: 'Ядро · тот же текстовый поток', action: { type: 'select-design', design: 'kernel' } },
+              { label: 'Проверить, что новый транспортный интерфейс не нужен', action: { type: 'noop' } },
             ],
           },
         };
@@ -1333,41 +1333,41 @@ export async function exportReview(signal?: AbortSignal) {
           const failure = ['network', 'invalid'].includes(state.scenario);
           const custom = state.operation === 'custom';
 
-          let channel = 'Resolved declared outcome';
-          let cache = 'Validated domain value may enter cache';
-          let retry = state.operation === 'session' ? 'Explicit read policy' : 'Off by default';
+          let channel = 'Разрешённый объявленный исход';
+          let cache = 'Проверенное доменное значение может попасть в кеш';
+          let retry = state.operation === 'session' ? 'Явная политика чтения' : 'Выключены по умолчанию';
           let tone = scenario.tone;
 
           if (expectedNegative) {
-            channel = 'Resolved discriminated union';
-            cache = 'Outcome stays data; no error boundary';
-            retry = 'No retry: declared outcome';
+            channel = 'Разрешённый вариант доменного исхода';
+            cache = 'Исход остаётся данными; общая обработка ошибок не включается';
+            retry = 'Без повтора: объявленный исход';
           } else if (cancellation) {
-            channel = 'AbortError propagates';
-            cache = 'No cache write; not user-visible failure';
-            retry = 'No retry: cancellation';
+            channel = 'AbortError передаётся без изменений';
+            cache = 'Кеш не меняется; это не видимый пользователю отказ';
+            retry = 'Без повтора: отмена';
           } else if (failure) {
-            channel = 'Rejected OperationFailure';
-            cache = 'No invalid payload reaches cache';
+            channel = 'Promise отклонён с OperationFailure';
+            cache = 'Некорректное тело не попадает в кеш';
             retry = state.operation === 'session' && state.scenario === 'network'
-              ? 'Allowed only by explicit session policy'
-              : 'No automatic retry';
+              ? 'Разрешён только явной политикой проверки сессии'
+              : 'Без автоматического повтора';
           } else if (custom) {
-            channel = 'Resolved endpoint-specific outcome';
-            cache = 'Depends on operation; transport is neutral';
-            retry = 'Must be chosen by operation contract';
+            channel = 'Разрешённый специфичный для операции исход';
+            cache = 'Зависит от операции; транспорт нейтрален';
+            retry = 'Определяется контрактом операции';
           }
 
           const classificationOwner = state.design === 'kernel'
-            ? 'Feature operation: visible status switch'
-            : 'Shared DSL: outcome descriptor + feature mapping';
+            ? 'Операция функционального модуля: явное ветвление по статусу'
+            : 'Общий язык описания: описатель исхода и преобразование функционального модуля';
           const extensionCost = custom
             ? state.design === 'kernel'
-              ? 'Низкая: обычный Response уже доступен decoder-у.'
-              : 'Высокая: нужен descriptor/combinator или escape hatch.'
+              ? 'Низкая: обычный Response уже доступен декодеру.'
+              : 'Высокая: нужен описатель, комбинатор или аварийный выход.'
             : state.design === 'kernel'
-              ? 'Умеренная: несколько явных строк на status classification.'
-              : 'Низкая на стандартном JSON/status path.';
+              ? 'Умеренная: несколько явных строк на ветвление по HTTP-статусу.'
+              : 'Низкая для типичного JSON-ответа.';
 
           return {
             design,
@@ -1380,32 +1380,32 @@ export async function exportReview(signal?: AbortSignal) {
             summary: `${design.shortLabel} · ${operation.label} · ${scenario.label}`,
             trace: [
               {
-                layer: 'Caller / Query',
+                layer: 'Вызывающий код / запрос',
                 detail:
                   state.operation === 'session'
-                    ? 'Query передаёт AbortSignal; retry включается только explicit operation policy.'
-                    : 'Mutation вызывает operation; global default не делает automatic retry.',
+                    ? 'Запрос TanStack Query передаёт AbortSignal; повторы включаются только явной политикой операции.'
+                    : 'Мутация вызывает операцию; глобальное умолчание не включает автоматический повтор.',
               },
               {
-                layer: 'Transport',
+                layer: 'Транспорт',
                 detail:
                   state.design === 'kernel'
-                    ? 'runHttpOperation единолично вызывает Fetch; network failure нормализуется, abort сохраняется.'
-                    : 'requestOperation исполняет request descriptor и выбирает outcome descriptor.',
+                    ? 'runHttpOperation единолично вызывает Fetch; сетевой отказ нормализуется, отмена сохраняется.'
+                    : 'requestOperation выполняет описанный запрос и выбирает описатель исхода.',
               },
               {
-                layer: 'Operation',
+                layer: 'Операция',
                 detail: classificationOwner,
               },
               {
-                layer: 'Trust seam',
+                layer: 'Точка доверия',
                 detail:
                   ['success', 'expected', 'invalid'].includes(state.scenario)
-                    ? 'Structured payload входит как unknown и проходит Valibot до mapping.'
-                    : 'JSON validation не применяется к raw bytes/text; проверяется фактический contract.',
+                    ? 'Структурированное тело входит как unknown и проходит Valibot до преобразования.'
+                    : 'Для байтов и текста схема JSON не применяется; проверяется фактический контракт.',
               },
               {
-                layer: 'Result',
+                layer: 'Результат',
                 detail: `${channel}. ${cache}.`,
               },
             ],
@@ -1506,12 +1506,12 @@ export async function exportReview(signal?: AbortSignal) {
 
       function renderStatus(view) {
         const statuses = [
-          { label: 'Promise channel', value: view.channel, tone: view.tone },
-          { label: 'Cache admission', value: view.cache, tone: view.tone },
-          { label: 'Retry', value: view.retry, tone: view.tone },
+          { label: 'Канал Promise', value: view.channel, tone: view.tone },
+          { label: 'Допуск в кеш', value: view.cache, tone: view.tone },
+          { label: 'Повтор', value: view.retry, tone: view.tone },
           {
-            label: 'MSW path',
-            value: 'Same Fetch operation; no feature branch',
+            label: 'Путь MSW',
+            value: 'Та же Fetch-операция; без отдельной ветки функционального модуля',
             tone: 'good',
           },
         ];
@@ -1554,7 +1554,7 @@ export async function exportReview(signal?: AbortSignal) {
       function renderVerdict(view) {
         const label = document.createElement('span');
         label.className = 'section-label';
-        label.textContent = 'Verdict для выбранного сценария';
+        label.textContent = 'Вывод для выбранного сценария';
         const heading = document.createElement('h3');
         heading.textContent = view.design.label;
         const paragraph = document.createElement('p');
@@ -1562,10 +1562,10 @@ export async function exportReview(signal?: AbortSignal) {
         elements.verdictCopy.replaceChildren(label, heading, paragraph);
 
         const metricNames = {
-          depth: 'Depth',
-          locality: 'Locality',
-          extensibility: 'Extension',
-          guardrails: 'Guardrails',
+          depth: 'Глубина',
+          locality: 'Локальность',
+          extensibility: 'Расширение',
+          guardrails: 'Ограничения',
         };
         elements.scorecard.replaceChildren(
           ...Object.entries(view.scores).map(([key, score]) => {
