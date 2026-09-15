@@ -48,10 +48,9 @@ function buildDiagnosticMessage(reason: OperationFailureReason) {
   }
 }
 
-type HttpOperationRequest = Omit<RequestInit, 'signal'> & {
+type HttpOperationRequest = RequestInit & {
   name: string;
   url: string | URL;
-  signal?: AbortSignal;
 };
 
 export type HttpResponseContext = {
@@ -136,7 +135,10 @@ export function jsonBody(value: unknown) {
   } satisfies Pick<RequestInit, 'body' | 'headers'>;
 }
 
-function throwIfCancellation(cause: unknown, signal?: AbortSignal): void {
+function throwIfCancellation(
+  cause: unknown,
+  signal?: AbortSignal | null
+): void {
   const isAbortError =
     cause instanceof DOMException && cause.name === 'AbortError';
   const isSignalReason = signal?.aborted && cause === signal.reason;
