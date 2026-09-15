@@ -96,12 +96,7 @@ export async function readJson<TSchema extends v.GenericSchema>(
   if (!result.success) {
     throw new OperationFailure(context.operation, {
       kind: 'invalid-response',
-      explanation: result.issues
-        .map(
-          (issue) =>
-            issue.path?.map((item) => item.key).join('.') || issue.message
-        )
-        .join(', '),
+      explanation: valibotIssuesToString(result.issues),
     });
   }
 
@@ -146,6 +141,16 @@ function throwIfCancellation(
   if (isAbortError || isSignalReason) {
     throw cause;
   }
+}
+
+function valibotIssuesToString<TSchema extends v.GenericSchema>(
+  issues: NonNullable<v.SafeParseResult<TSchema>['issues']>
+): string {
+  return issues
+    .map(
+      (issue) => issue.path?.map((item) => item.key).join('.') || issue.message
+    )
+    .join(', ');
 }
 
 // TanStack Query: безопасное общее умолчание, затем явный opt-in операции.
