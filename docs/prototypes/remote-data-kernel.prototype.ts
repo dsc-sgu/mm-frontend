@@ -179,27 +179,27 @@ export const sessionRetryDelay = 500;
 const SessionDtoSchema = v.object({
   username: v.string(),
   role: v.picklist(['teacher', 'student']),
-  session_expires_at: v.string(),
+  sessionExpiresAt: v.string(),
 });
 
 const CoursePageDtoSchema = v.object({
-  course_id: v.string(),
+  courseId: v.string(),
   title: v.string(),
   revision: v.number(),
 });
 
 const CoursePageConflictDtoSchema = v.object({
-  latest_revision: v.number(),
+  latestRevision: v.number(),
 });
 
 const AttemptReviewDtoSchema = v.object({
-  attempt_id: v.string(),
+  attemptId: v.string(),
   score: v.nullable(v.number()),
   revision: v.number(),
 });
 
 const AttemptReviewConflictDtoSchema = v.object({
-  latest_revision: v.number(),
+  latestRevision: v.number(),
 });
 
 type SessionOutcome =
@@ -208,7 +208,7 @@ type SessionOutcome =
       session: {
         username: string;
         role: 'teacher' | 'student';
-        expiresAt: string;
+        sessionExpiresAt: string;
       };
     }
   | { status: 'not-authorized' };
@@ -247,14 +247,7 @@ export async function checkSession(
       }
 
       const dto = await readJson(context, SessionDtoSchema);
-      return {
-        status: 'authorized',
-        session: {
-          username: dto.username,
-          role: dto.role,
-          expiresAt: dto.session_expires_at,
-        },
-      };
+      return { status: 'authorized', session: dto };
     }
   );
 }
@@ -275,7 +268,7 @@ export async function saveCoursePage(
         const conflict = await readJson(context, CoursePageConflictDtoSchema);
         return {
           status: 'conflict',
-          latestRevision: conflict.latest_revision,
+          latestRevision: conflict.latestRevision,
         };
       }
       if (!context.response.ok) {
@@ -283,14 +276,7 @@ export async function saveCoursePage(
       }
 
       const dto = await readJson(context, CoursePageDtoSchema);
-      return {
-        status: 'saved',
-        page: {
-          courseId: dto.course_id,
-          title: dto.title,
-          revision: dto.revision,
-        },
-      };
+      return { status: 'saved', page: dto };
     }
   );
 }
@@ -314,7 +300,7 @@ export async function saveAttemptReview(
         );
         return {
           status: 'conflict',
-          latestRevision: conflict.latest_revision,
+          latestRevision: conflict.latestRevision,
         };
       }
       if (!context.response.ok) {
@@ -322,14 +308,7 @@ export async function saveAttemptReview(
       }
 
       const dto = await readJson(context, AttemptReviewDtoSchema);
-      return {
-        status: 'saved',
-        review: {
-          attemptId: dto.attempt_id,
-          score: dto.score,
-          revision: dto.revision,
-        },
-      };
+      return { status: 'saved', review: dto };
     }
   );
 }
@@ -354,7 +333,7 @@ async function runPrototype() {
           writeJson(response, 200, {
             username: 'teacher',
             role: 'teacher',
-            session_expires_at: '2099-01-01T00:00:00.000Z',
+            sessionExpiresAt: '2099-01-01T00:00:00.000Z',
           }),
         150
       );
@@ -369,24 +348,24 @@ async function runPrototype() {
         writeJson(response, 200, {
           username: 'teacher',
           role: 'teacher',
-          session_expires_at: '2099-01-01T00:00:00.000Z',
+          sessionExpiresAt: '2099-01-01T00:00:00.000Z',
         }),
       'session-not-authorized': () => writeJson(response, 401, null),
       'session-invalid': () => writeJson(response, 200, { username: 42 }),
       'course-saved': () =>
         writeJson(response, 200, {
-          course_id: 'typescript',
+          courseId: 'typescript',
           title: 'TypeScript',
           revision: 4,
         }),
-      'course-conflict': () => writeJson(response, 409, { latest_revision: 5 }),
+      'course-conflict': () => writeJson(response, 409, { latestRevision: 5 }),
       'review-saved': () =>
         writeJson(response, 200, {
-          attempt_id: 'attempt-17',
+          attemptId: 'attempt-17',
           score: 9,
           revision: 3,
         }),
-      'review-conflict': () => writeJson(response, 409, { latest_revision: 4 }),
+      'review-conflict': () => writeJson(response, 409, { latestRevision: 4 }),
     };
 
     replies[scenario]();
