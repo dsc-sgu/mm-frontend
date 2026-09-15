@@ -58,6 +58,61 @@ export type HttpResponseContext = {
   response: Response;
 };
 
+/**
+ * Executes one Fetch attempt through the shared transport boundary.
+ *
+ * Accepts standard RequestInit options plus a URL and a stable diagnostic name.
+ * Preserves cancellation and wraps other Fetch rejections as network failures.
+ * Does not retry, interpret HTTP statuses, or validate response bodies itself.
+ *
+ * The decoder owns the operation's response contract: return declared outcomes,
+ * validate consumed data, and throw for unexpected responses. Decoder exceptions
+ * propagate unchanged rather than being misclassified as network failures.
+ *
+ * @param request - Fetch options, target URL, and diagnostic operation name.
+ * @param decode - Interprets the response and produces the operation's result.
+ * @returns The decoder's result after Fetch returns a Response.
+ *
+ * @example Read and validate JSON while forwarding cancellation.
+ * ```ts
+ * const schema = v.object({ title: v.string() });
+ * const controller = new AbortController();
+ * const page = await runHttpOperation(
+ *   {
+ *     name: 'read-page',
+ *     url: 'https://example.com/api/page',
+ *     signal: controller.signal,
+ *   },
+ *   async (context) => {
+ *     if (context.response.status !== 200) throw unexpectedHttp(context);
+ *     return readJson(context, schema);
+ *   }
+ * );
+ * ```
+ *
+ * @example Send JSON and return a conflict as data rather than an exception.
+ * ```ts
+ * const savedSchema = v.object({ title: v.string(), revision: v.number() });
+ * const conflictSchema = v.object({ latestRevision: v.number() });
+ * const outcome = await runHttpOperation(
+ *   {
+ *     name: 'save-page',
+ *     url: 'https://example.com/api/page',
+ *     method: 'PUT',
+ *     ...jsonBody({ title: 'Updated title' }),
+ *   },
+ *   async (context) => {
+ *     if (context.response.status === 409) {
+ *       const conflict = await readJson(context, conflictSchema);
+ *       return { status: 'conflict' as const, ...conflict };
+ *     }
+ *     if (context.response.status !== 200) throw unexpectedHttp(context);
+ *     const page = await readJson(context, savedSchema);
+ *     return { status: 'saved' as const, page };
+ *   }
+ * );
+ * ```
+ */
 export async function runHttpOperation<T>(
   request: HttpOperationRequest,
   decode: (context: HttpResponseContext) => Promise<T>
@@ -76,6 +131,15 @@ export async function runHttpOperation<T>(
   return decode({ operation: name, response });
 }
 
+/**
+ * Consumes a response body as unknown JSON and validates it before returning data.
+ *
+ * Use after classifying the HTTP status, for both success and declared negative
+ * payloads. Returns the schema's validated output, including any transformations.
+ * Body reading or JSON parsing failures become unreadable-body failures;
+ * schema violations become invalid-response failures. AbortError is rethrown.
+ * Consumes the body once; it does not check the status or Content-Type header.
+ */
 export async function readJson<TSchema extends v.GenericSchema>(
   context: HttpResponseContext,
   schema: TSchema
@@ -103,6 +167,13 @@ export async function readJson<TSchema extends v.GenericSchema>(
   return result.output;
 }
 
+/**
+ * Creates an unexpected-http failure carrying the operation name and HTTP status.
+ *
+ * Use `throw unexpectedHttp(context)` after handling the statuses declared by
+ * the operation's contract. This helper returns an Error; it does not throw,
+ * read the response body, or decide whether the operation can be retried.
+ */
 export function unexpectedHttp(context: HttpResponseContext) {
   return new OperationFailure(context.operation, {
     kind: 'unexpected-http',
@@ -110,6 +181,13 @@ export function unexpectedHttp(context: HttpResponseContext) {
   });
 }
 
+/**
+ * Creates an invalid-response failure for a contract check outside a JSON schema.
+ *
+ * Use `throw invalidResponse(context, explanation)` for checks such as an
+ * unexpected media type in a text response. The explanation is an internal
+ * English diagnostic, not a user-facing message. This helper does not throw.
+ */
 export function invalidResponse(
   context: HttpResponseContext,
   explanation: string
@@ -120,6 +198,14 @@ export function invalidResponse(
   });
 }
 
+/**
+ * Serializes a value into Fetch body and JSON Accept/Content-Type headers.
+ *
+ * Spread the result into RequestInit to send JSON without adding JSON-specific
+ * behavior to the transport core. Serialization errors propagate to the caller.
+ * Headers are a complete property, not a merge: another headers property in the
+ * surrounding object replaces them, or is replaced by them, according to order.
+ */
 export function jsonBody(value: unknown) {
   return {
     body: JSON.stringify(value),
@@ -159,6 +245,20 @@ export const remoteQueryDefaults = {
   mutations: { retry: false },
 } as const;
 
+/**
+ * Allows one TanStack Query retry for a potentially transient session-check failure.
+ *
+ * This prototype policy assumes checking the session is safe to repeat. It accepts
+ * only network failures and unexpected HTTP 502, 503, or 504 responses; unknown
+ * errors, cancellation, and invalid or unreadable payloads are not retried.
+ * Do not reuse it as a general mutation retry policy.
+ *
+ * @param failureCount - TanStack Query's retry counter, zero on the first failure.
+ * @param error - The query's rejection reason.
+ * @returns Whether to make one more attempt; false once the counter reaches one.
+ *
+ * Use as the query's `retry` callback with `retryDelay: sessionRetryDelay`.
+ */
 export function canRetrySessionCheck(
   failureCount: number,
   error: unknown
