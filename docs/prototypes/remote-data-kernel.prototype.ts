@@ -38,13 +38,13 @@ export class OperationFailure extends Error {
 function buildDiagnosticMessage(reason: OperationFailureReason) {
   switch (reason.kind) {
     case 'network':
-      return 'Fetch не вернул Response';
+      return 'Fetch did not return a Response';
     case 'unexpected-http':
-      return `неожиданный HTTP-статус ${reason.status}`;
+      return `unexpected HTTP status ${reason.status}`;
     case 'unreadable-body':
-      return 'тело ответа невозможно прочитать или декодировать';
+      return 'response body could not be read or decoded';
     case 'invalid-response':
-      return `ответ нарушает контракт: ${reason.explanation}`;
+      return `response failed validation: ${reason.explanation}`;
   }
 }
 
