@@ -27,14 +27,15 @@ export class OperationFailure extends Error {
     readonly reason: OperationFailureReason
   ) {
     super(
-      `[${operation}] ${failureMessage(reason)}`,
+      `[${operation}] ${buildDiagnosticMessage(reason)}`,
       'cause' in reason ? { cause: reason.cause } : undefined
     );
     this.kind = reason.kind;
   }
 }
 
-function failureMessage(reason: OperationFailureReason) {
+// Только для диагностики. UI не должен показывать Error.message пользователю напрямую.
+function buildDiagnosticMessage(reason: OperationFailureReason) {
   switch (reason.kind) {
     case 'network':
       return 'Fetch не вернул Response';
