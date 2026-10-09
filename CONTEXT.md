@@ -68,21 +68,29 @@ The published result of checking one Attempt. An Attempt has at most one Review;
 _Avoid_: using Review to mean only feedback text, the review page, or an unsaved working copy
 
 **Grade**:
-The numeric value awarded by a Review, from zero through the Task's maximum grade. The maximum becomes immutable when the Course is opened to Students, and an existing Grade cannot be cleared back to an unreviewed state.
+The numeric value awarded by a Review, from zero through the Task's maximum grade, with at most three decimal places. The maximum becomes immutable when the Course is opened to Students, and an existing Grade cannot be cleared back to an unreviewed state.
 _Avoid_: Score
+
+**Review Revision**:
+One published state of a Review: its Grade, Overall Feedback, and the Teachers' root comments of its Line Comment Threads, made visible to the Student together. Replies are not part of a Review Revision.
+_Avoid_: showing a Student parts of an unpublished revision
+
+**Review Working Copy**:
+A Teacher's unpublished changes to the next Review Revision. Nothing in it is visible to the Student until it is published as a whole.
+_Avoid_: Review draft, treating the Working Copy as authoritative server state
 
 **Overall Feedback**:
 Optional Review text addressing the Attempt as a whole.
 _Avoid_: Review, when only the text is meant
 
 **Line Comment Thread**:
-A Review discussion anchored to a line or line range in the Attempt diff. A Teacher creates the root comment; eligible participants can reply, and each author manages only their own messages.
+A Review discussion anchored to a line or line range in the Attempt diff. A Teacher creates the root comment as part of a Review Revision; eligible participants post replies individually, outside any revision and regardless of the Review Lease, and each author manages only their own messages. Deleting a root comment leaves its replies in place.
 _Avoid_: Comment, when the whole thread is meant
 
 **Review Lease**:
-Exclusive, expiring permission for one Teacher to edit a Review. Other Teachers can read the Review while the lease is held.
+Exclusive, expiring permission for one Teacher, in one editing session, to edit the Review of an Attempt, including publishing its first Review. The holder can change the Grade, Overall Feedback, and their own root comments, but not other Teachers' root comments. Other Teachers can read the Review while the lease is held.
 _Avoid_: permanent reviewer assignment
 
 **Review Read State**:
-Whether the Student has seen the latest visible revision of a Review. A visible change to the Grade, Overall Feedback, or a Teacher's line comment makes the Review unread again.
+Whether the Student has seen the latest Teacher-visible change to a Review. A new Review Revision or a Teacher's reply makes the Review unread again; the Student's own replies do not.
 _Avoid_: Attempt lifecycle state
