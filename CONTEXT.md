@@ -33,11 +33,15 @@ The visually ordered document shown at the Course route. A Task can be reference
 _Avoid_: Assignment as the name of a referenced Task
 
 **Course Snapshot**:
-An immutable version of Course configuration visible after publication. Attempts and student progress are not part of it, though they can refer to it.
+An immutable version of Course configuration visible after publication. Attempts and student progress are not part of it, though they can refer to it. The Course slug is not part of it either.
 
 **Course Draft Snapshot**:
-The unpublished Course Snapshot that teachers are preparing. Publication creates an immutable Course Snapshot rather than mutating an already published one.
-_Avoid_: Course Draft, when the Course access state is meant
+A Teacher's personal unpublished Course Snapshot, based on one published Course Snapshot. A Teacher has at most one per Course; it becomes stale when another Course Snapshot is published first, and publishing it creates an immutable Course Snapshot rather than mutating an already published one.
+_Avoid_: Course Draft, when the Course access state is meant; a draft shared by all Teachers
+
+**Course Editing Lease**:
+Exclusive, expiring permission for one Teacher, in one editing session, to change and publish their Course Draft Snapshot. Only one Teacher edits a Course at a time; giving up the lease keeps the draft.
+_Avoid_: course lock
 
 **Course Page Working Copy**:
 A teacher's local editable representation of the Course Draft Snapshot. It is either synchronized or has unsynchronized local changes.
