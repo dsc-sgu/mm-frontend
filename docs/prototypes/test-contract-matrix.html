@@ -704,16 +704,16 @@ const QUESTIONS = [
     rec: "Решено владельцем: закэшированный Course context того же User. Содержимое видно сразу, context перепроверяется в фоне; нейтральная загрузка — только без подтверждённого context для `(UserId, CourseSlug)`; shell предыдущего Course не показывается (ACC-E5).",
   },
   {
+    q: "Q9. Название результата загрузки Course Attempts.",
+    rec: "Решено владельцем: `CourseAttemptsSnapshot` → `CourseAttemptsList`, `CourseAttemptsSnapshotState` → `CourseAttemptsListState`, чтобы не путать с Course Snapshot; статусы прежние, `stale` означает «не подтверждён последней перепроверкой».",
+  },
+  {
     q: "Q10. Dirty entry у Attempt, которую оценили в обход batch.",
     rec: "Решено владельцем: превращается в recovery entry с причиной «Review уже появилась» (автор и Grade), как конфликт из ответа batch (QG-09).",
   },
   {
     q: "Q11. Набор строк во время quick grading.",
     rec: "Решено владельцем (Q11.1): сохраняется текущая заморозка — список не перепроверяется автоматически до явного выхода из режима, строки меняют только per-Attempt исходы batch и события lease; после выхода один refetch (QG-10, QG-11).",
-  },
-  {
-    q: "Q9. Название результата загрузки Course Attempts.",
-    rec: "Решено владельцем: `CourseAttemptsSnapshot` → `CourseAttemptsList`, `CourseAttemptsSnapshotState` → `CourseAttemptsListState`, чтобы не путать с Course Snapshot; статусы прежние, `stale` означает «не подтверждён последней перепроверкой».",
   },
 ];
 
