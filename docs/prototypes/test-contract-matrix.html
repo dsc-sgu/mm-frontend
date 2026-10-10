@@ -483,15 +483,15 @@ const ROWS = [
   { id: "ATT-07", v: "att", slice: "#117·2", risk: "corr", layer: "component", fx: ["world:attempts-list"], src: [117],
     text: "Пустой Course (`totalAttemptsCount = 0`) и «по применённым фильтрам ничего не найдено» различаются." },
   { id: "ATT-08", v: "att", slice: "#117·3", risk: "corr", layer: "model", fx: [], src: [117],
-    text: "ADT снимка `loading | ready | refreshing | stale | failed`: переходы; отмена не даёт `failed` или `stale`." },
+    text: "`CourseAttemptsListState` `loading | ready | refreshing | stale | failed`: переходы; отмена не даёт `failed` или `stale`." },
   { id: "ATT-09", v: "att", slice: "#117·3", risk: "integrity", layer: "component", fx: ["world:attempts-list", "fail:network"], src: [117],
-    text: "Начальный отказ → ошибка + Retry, никогда не empty state; отказ revalidation → последний полный снимок + «Данные могут быть устаревшими» + Retry." },
+    text: "Начальный отказ → ошибка + Retry, никогда не empty state; отказ revalidation → последний полный список + «Данные могут быть устаревшими» + Retry." },
   { id: "ATT-10", v: "att", slice: "#117·3", risk: "corr", layer: "boundary", fx: ["world:attempts-list", "clock"], src: [117],
     text: "Revalidation при входе, focus, reconnect и после известных mutations; polling нет (10 мин fake clock → 0 запросов)." },
   { id: "ATT-11", v: "att", slice: "#117·4", risk: "id", layer: "component", fx: ["world:attempts-list"], src: [117], inv: ["I1"],
     text: "Каждая строка ведёт в Review editor ровно своей Attempt; link строится из identity строки; параметризовано по строкам с одинаковыми Student, Task и submittedAt." },
   { id: "ATT-12", v: "att", slice: "#117·3", risk: "integrity", layer: "component", fx: ["world:attempts-list", "fail:network"], src: [117],
-    text: "Из stale-снимка individual переход разрешён; quick grading заблокирован до успешной revalidation." },
+    text: "Список в `stale` (не подтверждён последней перепроверкой): individual переход разрешён; quick grading заблокирован до успешной revalidation." },
   { id: "ATT-13", v: "att", slice: "#117·5", risk: "integrity", layer: "boundary", fx: ["world:review"], src: [117, 116], inv: ["I7"],
     text: "После авторитетного исхода Review точный Review cache записан, family Course Attempts инвалидирована, а не патчится вручную." },
   { id: "ATT-E1", v: "att", slice: "#117·4", risk: "id", layer: "e2e", fx: ["world:attempts-list"], src: [117], inv: ["I1"],
@@ -696,6 +696,10 @@ const QUESTIONS = [
   {
     q: "Q8. Что считается подтверждением Membership при повторном входе в Course (ACC-10)?",
     rec: "Решено владельцем: закэшированный Course context того же User. Содержимое видно сразу, context перепроверяется в фоне; нейтральная загрузка — только без подтверждённого context для `(UserId, CourseSlug)`; shell предыдущего Course не показывается (ACC-E5).",
+  },
+  {
+    q: "Q9. Название результата загрузки Course Attempts.",
+    rec: "Решено владельцем: `CourseAttemptsSnapshot` → `CourseAttemptsList`, `CourseAttemptsSnapshotState` → `CourseAttemptsListState`, чтобы не путать с Course Snapshot; статусы прежние, `stale` означает «не подтверждён последней перепроверкой».",
   },
 ];
 
