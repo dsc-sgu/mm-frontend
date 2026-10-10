@@ -29,7 +29,7 @@ _Avoid_: Group, when Task Group could also be meant
 ## Course structure and editing
 
 **Course Page**:
-The visually ordered document shown at the Course route. A Task can be referenced from this document, but its visual placement does not define its execution order.
+The visually ordered document shown at the Course route. A Task can be referenced from this document through a Task Reference, but its visual placement does not define its execution order.
 _Avoid_: Assignment as the name of a referenced Task
 
 **Course Snapshot**:
@@ -58,8 +58,16 @@ _Avoid_: Group
 A course activity with a stable identity and a position within one Task Group. Its execution position is independent of where references to it appear on the Course Page.
 _Avoid_: Assignment
 
+**Task Reference**:
+A place on the Course Page that refers to one Task. Its position on the page is presentational and does not define the Task's execution order; the Task's properties belong to the Task, not to the reference.
+_Avoid_: Assignment, assignment block
+
+**Task Summary**:
+The part of a Task that can be shown without access to its content: its title, deadline, maximum Grade, and an optional annotation written by a Teacher.
+_Avoid_: using the Task statement as its summary
+
 **Student Task Access**:
-The monotonic fact that a Task has been opened to a particular Student. A locked Task can expose its summary and prerequisite without exposing its content or accepting an Attempt.
+The monotonic fact that a Task has been opened to a particular Student. A locked Task can expose its Task Summary and prerequisite without exposing its content or accepting an Attempt.
 
 ## Attempts and review
 
