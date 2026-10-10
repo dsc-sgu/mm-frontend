@@ -216,7 +216,7 @@ const FIXTURES = [
     key: "world:review",
     kind: "Мир",
     name: "Attempts и Reviews одной Task",
-    body: "Расширяет world:access. Task «Сортировки» (maxGrade 10). Саша: Attempt #1 с Review (revision 2: Grade 7,5, Overall Feedback, root comments Анны и Бориса, reply Саши); Attempt #2 без Review, manifest: 3 текстовые записи + binary + too-large, baseline — Attempt #1. Петя: Attempt #1 без Review. Backend-допущения #113 (idempotency key, lease 423 с holder, revision в проекциях) воплощены в handlers и помечены.",
+    body: "Расширяет world:access. Task «Сортировки» (maxGrade 10). Саша: Attempt #1 с Review (revision 2: Grade 7,5, Overall Feedback, root comments Анны и Бориса, reply Саши); Attempt #2 без Review, manifest: 3 текстовые записи + binary + too-large, baseline — Attempt #1. Петя: Attempt #1 без Review. Backend-допущения #113 (idempotency key, lease 423 с holder, revision в проекциях) воплощены в handlers и помечены. Ответы handlers не содержат данных сверх разрешённых текущему User: отказ не несёт имени, файлов или Grade чужого Student'а (требование в #113).",
   },
   {
     key: "world:attempts-list",
@@ -270,7 +270,7 @@ const FIXTURES = [
     key: "fail:network",
     kind: "Отказ",
     name: "Сеть до сервера",
-    body: "Fetch отклоняется; сервер ничего не применил.",
+    body: "Fetch отклоняется, запрос не дошёл до сервера; сервер ничего не применил. Для клиента выглядит так же, как fail:lost-response.",
   },
   {
     key: "fail:lost-response",
@@ -355,7 +355,7 @@ const ROWS = [
   { id: "ACC-09", v: "acc", slice: "#115·3", risk: "access", layer: "boundary", fx: ["world:access"], src: [115],
     text: "Course context перепроверяется при входе в Course, focus, reconnect и после access-отказа защищённой операции." },
   { id: "ACC-10", v: "acc", slice: "#115·3", risk: "access", layer: "component", fx: ["world:access", "fail:held"], src: [111], inv: ["I2"],
-    text: "До подтверждения Membership — нейтральная загрузка без metadata, breadcrumbs, navigation и cached protected content, даже при тёплом cache." },
+    text: "Пока для `(UserId, CourseSlug)` нет подтверждённого Course context — нейтральная загрузка без metadata, breadcrumbs, navigation и без shell или содержимого предыдущего Course. При повторном входе с подтверждённым context содержимое видно сразу, context перепроверяется в фоне (подтверждённая потеря Membership — ACC-15)." },
   { id: "ACC-11", v: "acc", slice: "#115·3", risk: "access", layer: "component", fx: ["world:access"], src: [111], inv: ["I2"],
     text: "Неизвестный slug, Гость и синтаксически неверный locator → «Страница не найдена» + «К моим курсам»; URL не меняется; тексты для не-member и неизвестного slug идентичны." },
   { id: "ACC-12", v: "acc", slice: "#115·4", risk: "access", layer: "component", fx: ["world:access"], src: [111, 115], inv: ["I2"],
@@ -371,13 +371,15 @@ const ROWS = [
   { id: "ACC-17", v: "acc", slice: "#115·3", risk: "access", layer: "component", fx: ["world:access"], src: [111],
     text: "Unauthenticated → login — единственный автоматический redirect цепочки. Сам login UI не закрепляется (OpenID)." },
   { id: "ACC-E1", v: "acc", slice: "#115·5", risk: "access", layer: "e2e", fx: ["world:review"], src: [111, 115], inv: ["I2"],
-    text: "Саша по прямой ссылке на Attempt Пети → generic `404`; ни имени, ни файлов Пети в DOM." },
+    text: "Саша по прямой ссылке на Attempt Пети → generic `404`; ни имени, ни файлов Пети в DOM. Handler отказа сам не отдаёт данных Пети (требование к backend записано в #113), поэтому frontend не может случайно на них опереться." },
   { id: "ACC-E2", v: "acc", slice: "#115·4", risk: "access", layer: "e2e", fx: ["world:access"], src: [111], inv: ["I2"],
     text: "Саша по прямой ссылке на Course Attempts → `403` в Course shell; teacher-пунктов навигации нет." },
   { id: "ACC-E3", v: "acc", slice: "#115·3", risk: "access", layer: "e2e", fx: ["world:access"], src: [111], inv: ["I2"],
     text: "Гость открывает «Алгоритмы» и несуществующий slug → одинаковые `404` (сравнение видимого текста)." },
   { id: "ACC-E4", v: "acc", slice: "#115·2", risk: "id", layer: "e2e", fx: ["world:access"], src: [115], inv: ["I1", "I2"],
     text: "Вера выходит, в той же вкладке входит Саша → ни в один момент не видны Course, роль или навигация Веры." },
+  { id: "ACC-E5", v: "acc", slice: "#115·3", risk: "id", layer: "e2e", fx: ["world:access", "fail:held"], src: [111, 115], inv: ["I1"],
+    text: "Вера переходит из «Баз данных» (Teacher) в «Алгоритмы» (Student), lookup удержан → ни в один момент под URL «Алгоритмов» не видны название, навигация или роль «Баз данных»." },
 
   // ── Review → Grade → Student result ──
   { id: "REV-01", v: "rev", slice: "#116·1", risk: "integrity", layer: "model", fx: [], src: [116],
@@ -428,10 +430,8 @@ const ROWS = [
     text: "`getPublishGate`: каждая причина отдельно и в комбинациях; UI-модель получает все текущие причины, а не первую." },
   { id: "REV-24", v: "rev", slice: "#116·6", risk: "integrity", layer: "stateful", fx: ["clock"], src: [116], inv: ["I4"],
     text: "`publication-unconfirmed`: Working Copy заморожена; auto-retry и «Повторить» несут тот же `idempotencyKey`; новый ключ — только после авторитетного исхода." },
-  { id: "REV-25", v: "rev", slice: "#116·6", risk: "integrity", layer: "boundary", fx: ["world:review", "fail:lost-response"], src: [116], inv: ["I4"],
-    text: "Потерянный ответ публикации → повтор с тем же ключом → `published`; в MSW ровно одна Review; до подтверждения успех не показан." },
-  { id: "REV-26", v: "rev", slice: "#116·6", risk: "integrity", layer: "boundary", fx: ["world:review", "fail:network"], src: [116], inv: ["I4"],
-    text: "Сбой до сервера → повтор публикует ровно один раз." },
+  { id: "REV-25", v: "rev", slice: "#116·6", risk: "integrity", layer: "boundary", fx: ["world:review", "fail:lost-response", "fail:network"], src: [116], inv: ["I4"],
+    text: "Неизвестный исход публикации, параметризовано по двум мирам: ответ потерян после применения (`fail:lost-response`) и запрос не дошёл (`fail:network`). Клиент их не различает и в обоих делает одно: повтор с тем же `idempotencyKey`. Итог в обоих: `published`, в MSW ровно одна Review, до подтверждения успех не показан." },
   { id: "REV-27", v: "rev", slice: "#116·6", risk: "integrity", layer: "boundary", fx: ["world:review", "fail:held"], src: [116], inv: ["I7", "I8"],
     text: "`observeReviewRevision`: запоздавшая revision 2 после 3 не заменяет 3; идущий запрос отменён; чужие проекции инвалидированы по prefix через их key factories, их данные не читаются." },
   { id: "REV-28", v: "rev", slice: "#116·6", risk: "data", layer: "component", fx: ["world:review"], src: [116], inv: ["I5"],
@@ -693,6 +693,10 @@ const QUESTIONS = [
     q: "Q7. E2E-harness. E2E идёт против приложения с MSW в браузере (backend нет), мир и профили отказов задаются тестом через test-only канал, доступный только в test build. Fixtures воплощают рабочие допущения #113 (idempotency, lease 423 с holder, revision в проекциях) и помечены ими. Приемлемо называть это E2E?",
     rec: "Да: E2E доказывает соединение route, UI, transport, cache и domain rules, как требует стратегия; соответствие реальному backend — вне карты. Канал управления: test-only handler MSW, а не глобал на `window`.",
   },
+  {
+    q: "Q8. Что считается подтверждением Membership при повторном входе в Course (ACC-10)?",
+    rec: "Решено владельцем: закэшированный Course context того же User. Содержимое видно сразу, context перепроверяется в фоне; нейтральная загрузка — только без подтверждённого context для `(UserId, CourseSlug)`; shell предыдущего Course не показывается (ACC-E5).",
+  },
 ];
 
 // Pure helpers.
@@ -933,7 +937,7 @@ function renderQuestions() {
   return `
     <p class="lead">Решения, которые нужны от владельца, прежде чем матрица станет резолюцией тикета.</p>
     <ol class="q" style="list-style:none;padding-left:0">
-      ${QUESTIONS.map((q) => `<li><strong>${fmt(q.q)}</strong><br><span class="rec">Рекомендация: ${fmt(q.rec)}</span></li>`).join("")}
+      ${QUESTIONS.map((q) => `<li><strong>${fmt(q.q)}</strong><br><span class="rec">${q.rec.startsWith("Решено") ? "" : "Рекомендация: "}${fmt(q.rec)}</span></li>`).join("")}
     </ol>
   `;
 }
