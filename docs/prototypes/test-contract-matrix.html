@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Матрица тестовых контрактов</title>
+<style>
+  :root {
+    --bg: #fbfbfa;
+    --surface: #ffffff;
+    --text: #1d1d1f;
+    --muted: #6b6b70;
+    --border: #e3e3e6;
+    --accent: #3b5bdb;
+    --accent-soft: #edf1ff;
+    --crit: #b42318;
+    --crit-soft: #fdecea;
+    --mid: #8a5a00;
+    --mid-soft: #fff4dc;
+    --low: #4b5563;
+    --low-soft: #f1f2f4;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141416;
+      --surface: #1c1c1f;
+      --text: #ececee;
+      --muted: #9a9aa2;
+      --border: #2e2e33;
+      --accent: #8da2ff;
+      --accent-soft: #232a45;
+      --crit: #ff8a80;
+      --crit-soft: #3a1f1d;
+      --mid: #f5c46b;
+      --mid-soft: #362b14;
+      --low: #b5b9c2;
+      --low-soft: #26272b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  h2 { font-size: 18px; margin: 28px 0 10px; }
+  h3 { font-size: 15px; margin: 18px 0 6px; }
+  p { margin: 6px 0; }
+  .lead { color: var(--muted); max-width: 900px; }
+  .banner {
+    margin: 14px 0 18px;
+    padding: 10px 14px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--low-soft);
+    padding: 1px 4px;
+    border-radius: 4px;
+  }
+  a { color: var(--accent); }
+  nav.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+  }
+  nav.tabs button {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 12px;
+    font: inherit;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  nav.tabs button[aria-selected="true"] {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .controls label { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+  select, input[type="search"] {
+    font: inherit;
+    font-size: 14px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+  }
+  input[type="search"] { min-width: 220px; }
+  .count { font-size: 13px; color: var(--muted); }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); background: var(--surface); position: sticky; top: 0; }
+  tr:last-child td { border-bottom: none; }
+  td.id { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+  td.slice { white-space: nowrap; font-size: 12px; color: var(--muted); }
+  .pill {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .risk-crit { background: var(--crit-soft); color: var(--crit); }
+  .risk-mid { background: var(--mid-soft); color: var(--mid); }
+  .risk-low { background: var(--low-soft); color: var(--low); }
+  .layer { background: var(--accent-soft); color: var(--accent); }
+  .flag { background: var(--low-soft); color: var(--muted); border: 1px dashed var(--border); }
+  .fx { font-family: var(--mono); font-size: 12px; color: var(--muted); display: block; }
+  .muted { color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .card h3 { margin-top: 0; }
+  .pivot td, .pivot th { text-align: center; }
+  .pivot td:first-child, .pivot th:first-child { text-align: left; }
+  .pivot td.zero { color: var(--border); }
+  .pivot td.hot { font-weight: 700; }
+  ol.q > li { margin-bottom: 14px; }
+  ol.q .rec { color: var(--muted); }
+  ul.tight { margin: 4px 0; padding-left: 20px; }
+  .inv-row { display: grid; grid-template-columns: 220px repeat(7, 1fr); gap: 0; }
+  @media (max-width: 720px) {
+    .inv-scroll { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Матрица тестовых контрактов критических вертикалей</h1>
+  <p class="lead">
+    Черновик для обсуждения тикета
+    <a href="https://github.com/dsc-sgu/mm-frontend/issues/120">«Спроектировать матрицу тестовых контрактов критических вертикалей»</a>.
+    Каждая строка: наблюдаемый исход или отказ пути → один слой-владелец → именованные fixtures.
+    Fail-closed инварианты дополнительно доказываются независимо на нескольких слоях, включая браузер.
+  </p>
+  <div class="banner">
+    ПРОТОТИП, throwaway. Это не test plan в коде и не production. Слои и политика — из
+    <a href="https://github.com/dsc-sgu/mm-frontend/issues/68">«Выбрать слоистую стратегию тестирования»</a>;
+    поведение — из резолюций вертикалей (ссылки в колонке «Источник»). Пометка
+    <span class="pill flag">вопрос</span> означает, что строка зависит от открытого вопроса на вкладке «Вопросы».
+  </div>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="view"></main>
+</div>
+
+<script>
+// ─── Data module: pure, no DOM. ─────────────────────────────────────────────
+
+const ISSUE = "https://github.com/dsc-sgu/mm-frontend/issues/";
+
+const LAYERS = [
+  { key: "static", name: "Static", what: "tsc, ESLint, type tests" },
+  { key: "model", name: "Model", what: "Vitest в Node: чистые функции, таблицы решений, FSM, headless Plate" },
+  { key: "stateful", name: "Stateful", what: "Vitest в Node: store/сессия + fake clock" },
+  { key: "boundary", name: "Boundary", what: "Vitest в Node: Fetch + MSW + Valibot + Query keys/cache, без DOM" },
+  { key: "component", name: "Component", what: "RTL + user-event в jsdom, свежие Router/QueryClient/MSW" },
+  { key: "browser", name: "Real browser", what: "Playwright: contenteditable, clipboard, focus, DnD, Worker, beforeunload" },
+  { key: "e2e", name: "E2E", what: "Playwright: приложение целиком, MSW в браузере, 3 движка" },
+];
+
+const RISKS = [
+  { key: "id", name: "Identity", tier: "crit" },
+  { key: "access", name: "Доступ", tier: "crit" },
+  { key: "integrity", name: "Целостность", tier: "crit" },
+  { key: "data", name: "Сохранность данных", tier: "crit" },
+  { key: "corr", name: "Корректность", tier: "mid" },
+  { key: "ux", name: "Допустимая деградация", tier: "low" },
+];
+
+const VERTICALS = [
+  { key: "tr", name: "Transport kernel", src: [112, 108] },
+  { key: "acc", name: "Course access", src: [115, 111] },
+  { key: "rev", name: "Review → Grade → Student result", src: [116, 109] },
+  { key: "att", name: "Course Attempts", src: [117] },
+  { key: "qg", name: "Quick grading", src: [114, 117] },
+  { key: "drf", name: "Course editing: lifecycle", src: [118] },
+  { key: "doc", name: "Course Page: документ", src: [119, 74, 72] },
+  { key: "a11y", name: "Accessibility", src: [68] },
+];
+
+// Fixtures: worlds (relationship-safe MSW seeds), documents, failure profiles, clock.
+const FIXTURES = [
+  {
+    key: "world:access",
+    kind: "Мир",
+    name: "Курсы, роли и посторонние",
+    body: "Courses «Алгоритмы» (open) и «Базы данных». Анна и Борис — Teachers «Алгоритмов»; Саша и Петя — Students «Алгоритмов»; Вера — Student «Алгоритмов» и Teacher «Баз данных» (cross-role); Гость — authenticated без Course Membership. Плюс несуществующий slug.",
+  },
+  {
+    key: "world:review",
+    kind: "Мир",
+    name: "Attempts и Reviews одной Task",
+    body: "Расширяет world:access. Task «Сортировки» (maxGrade 10). Саша: Attempt #1 с Review (revision 2: Grade 7,5, Overall Feedback, root comments Анны и Бориса, reply Саши); Attempt #2 без Review, manifest: 3 текстовые записи + binary + too-large, baseline — Attempt #1. Петя: Attempt #1 без Review. Backend-допущения #113 (idempotency key, lease 423 с holder, revision в проекциях) воплощены в handlers и помечены.",
+  },
+  {
+    key: "world:attempts-list",
+    kind: "Мир",
+    name: "Список Course Attempts",
+    body: "3 Tasks × 3 Students, submitted и graded, исторические Attempts после повторной сдачи, две Attempts с одинаковым submittedAt (tie-breaker). Вариант empty-course: ни одной Attempt.",
+  },
+  {
+    key: "world:quick-grading",
+    kind: "Мир",
+    name: "Три unreviewed Attempts",
+    body: "Три Attempts без Review; хук теста позволяет «Борису» опубликовать Review одной из них или взять её Review Lease между вводом и «Сохранить».",
+  },
+  {
+    key: "world:course-draft",
+    kind: "Мир",
+    name: "Опубликованный snapshot и черновики",
+    body: "Опубликованный Course Snapshot S1 с doc:all-blocks. Варианты: no-draft, restored-draft (черновик Анны с правками), stale-draft (после основы черновика опубликован S2), lease-held-by-boris.",
+  },
+  {
+    key: "doc:all-blocks",
+    kind: "Документ",
+    name: "Все виды блоков",
+    body: "Course Page документ v1 со всеми видами блоков, marks bold/italic/code, ссылками обоих классов, Spoiler со списком внутри, Image с caption/alt, файлами и Task Reference. Основа parity-теста.",
+  },
+  {
+    key: "doc:lists-74",
+    kind: "Документ",
+    name: "Последовательности списков #74",
+    body: "Входные последовательности list-item для правил 1–7 #74: плотная серия, вложенность, смена variant, разрыв paragraph, повреждённые indent.",
+  },
+  {
+    key: "doc:invalid-blocks",
+    kind: "Документ",
+    name: "Невалидные блоки среди валидных",
+    body: "Неизвестный тип, неизвестная version, невалидный data — между валидными блоками.",
+  },
+  {
+    key: "doc:task-references",
+    kind: "Документ",
+    name: "Task References по состояниям",
+    body: "Ссылки на Task open, locked { prerequisite } и отсутствующую/недоступную Task.",
+  },
+  {
+    key: "text:paste-html",
+    kind: "Документ",
+    name: "Грязный HTML для paste",
+    body: "script, style, img, headings, вложенные списки, ссылки со схемами javascript/data/mailto, разметка из текстовых редакторов.",
+  },
+  {
+    key: "fail:network",
+    kind: "Отказ",
+    name: "Сеть до сервера",
+    body: "Fetch отклоняется; сервер ничего не применил.",
+  },
+  {
+    key: "fail:lost-response",
+    kind: "Отказ",
+    name: "Потерянный ответ",
+    body: "Handler применяет изменение к состоянию MSW и возвращает сетевую ошибку. Каноническая симуляция неизвестного исхода.",
+  },
+  {
+    key: "fail:http-500",
+    kind: "Отказ",
+    name: "Необъявленный status",
+    body: "Ответ со status, которого операция не объявляет.",
+  },
+  {
+    key: "fail:invalid",
+    kind: "Отказ",
+    name: "Невалидный или нечитаемый ответ",
+    body: "Тело не читается либо не проходит Valibot schema.",
+  },
+  {
+    key: "fail:held",
+    kind: "Отказ",
+    name: "Удержанный ответ",
+    body: "Ответ ждёт, пока тест его не отпустит: loading-состояния, отмена и доставка ответов в обратном порядке.",
+  },
+  {
+    key: "fail:entry",
+    kind: "Отказ",
+    name: "Запись manifest падает",
+    body: "Содержимое конкретной записи падает N раз либо всегда.",
+  },
+  {
+    key: "fail:worker",
+    kind: "Отказ",
+    name: "Worker/WASM недоступен",
+    body: "Только Playwright: скрипт Worker или WASM блокируется через route.",
+  },
+  {
+    key: "clock",
+    kind: "Время",
+    name: "Управляемые часы",
+    body: "Fake timers только там, где время — часть контракта: heartbeat ~20 с, синхронизация 1 с / 5 с, блокировка диалога публикации, retry delays, отсутствие polling.",
+  },
+];
+
+// Rows. risk: id | access | integrity | data | corr | ux. layer: owner layer.
+// inv: invariants this row proves (see INVARIANTS). flag: "q<N>" ties a row to an open question.
+const ROWS = [
+  // ── Transport kernel ──
+  { id: "TR-01", v: "tr", slice: "ядро", risk: "integrity", layer: "boundary", fx: ["fail:network"], src: [112],
+    text: "Сбой Fetch → отклонение `OperationFailure { kind: network }`; ничего не выглядит успехом." },
+  { id: "TR-02", v: "tr", slice: "ядро", risk: "integrity", layer: "boundary", fx: ["fail:invalid"], src: [112, 108],
+    text: "Нечитаемое тело → `unreadable-body`, нарушение Valibot schema → `invalid-response`; данные не попадают в cache." },
+  { id: "TR-03", v: "tr", slice: "ядро", risk: "corr", layer: "boundary", fx: ["fail:held"], src: [112],
+    text: "Отмена через `AbortSignal`, в том числе во время чтения тела, остаётся `AbortError` и не становится network failure." },
+  { id: "TR-04", v: "tr", slice: "ядро", risk: "integrity", layer: "boundary", fx: ["fail:http-500"], src: [112],
+    text: "QueryClient по умолчанию не повторяет queries и mutations; query с явной retry policy повторяет ровно свой limit (счётчик запросов MSW)." },
+  { id: "TR-05", v: "tr", slice: "каждая операция", risk: "corr", layer: "boundary", fx: ["fail:http-500", "fail:invalid"], src: [112],
+    text: "Шаблон на каждую операцию: каждый объявленный status → свой исход union; необъявленный → `unexpected-http`; невалидный DTO → `invalid-response`." },
+  { id: "TR-06", v: "tr", slice: "ядро", risk: "corr", layer: "static", fx: [], src: [112],
+    text: "ESLint запрещает Axios, прямой `fetch` вне transport module и production-import из mock API." },
+  { id: "TR-07", v: "tr", slice: "ядро", risk: "corr", layer: "component", fx: ["fail:network", "fail:held"], src: [112],
+    text: "UI не показывает `OperationFailure.message`; текст выбирается по `kind` и операции; уход со страницы во время запроса не показывает ошибку." },
+
+  // ── Course access ──
+  { id: "ACC-01", v: "acc", slice: "#115·4", risk: "access", layer: "model", fx: [], src: [115], inv: ["I2"],
+    text: "Таблица `courseSectionAccess` × роль: 7 разделов × Student/Teacher → разрешено или `403`, исчерпывающе." },
+  { id: "ACC-02", v: "acc", slice: "#115·3", risk: "access", layer: "model", fx: [], src: [111, 115], inv: ["I2"],
+    text: "Внутренний исход → внешняя категория: course-not-found и not-member → course `404`; role mismatch → `403` в Course shell; resource not-found и forbidden → resource `404` в shell; технический отказ → «Не удалось проверить доступ»." },
+  { id: "ACC-03", v: "acc", slice: "#115·1", risk: "id", layer: "static", fx: [], src: [115], inv: ["I1"],
+    text: "`UserId`, `CourseId`, `CourseSlug`, `Username`, `AttemptId`, `AttemptNumber` не взаимозаменяемы (type tests с `@ts-expect-error`)." },
+  { id: "ACC-04", v: "acc", slice: "#115·2", risk: "access", layer: "boundary", fx: ["world:access", "fail:network", "fail:invalid"], src: [115], inv: ["I2"],
+    text: "`loadCourseBySlug` → found { course, role } / course-not-found / not-member; сеть, `5xx` и невалидный DTO отклоняются как failure, а не как denial." },
+  { id: "ACC-05", v: "acc", slice: "#115·2", risk: "id", layer: "boundary", fx: ["world:access"], src: [115], inv: ["I1", "I2"],
+    text: "Key Course context содержит `UserId`: после смены User тот же slug ищется заново, роль прежнего User из cache не отдаётся." },
+  { id: "ACC-06", v: "acc", slice: "#115·2", risk: "id", layer: "boundary", fx: ["world:access"], src: [115], inv: ["I1", "I2"],
+    text: "Login, logout и замена session очищают все session-bound семейства cache (Course context и prefix `['course', courseId]`)." },
+  { id: "ACC-07", v: "acc", slice: "#115·6", risk: "id", layer: "boundary", fx: ["world:access"], src: [115, 111], inv: ["I1"],
+    text: "Дочерние operations и keys адресуют `CourseId`; после смены slug старый slug → not-found (aliases нет), Course Page cache по `CourseId` цел." },
+  { id: "ACC-08", v: "acc", slice: "#115·5", risk: "access", layer: "boundary", fx: ["world:access", "world:review"], src: [115], inv: ["I2"],
+    text: "Participant-bound ресурсы (Attempt, Repository): locators → стабильные ids; found / not-found / forbidden решает MSW-backend; Саша → Attempt Пети = forbidden; клиентских сравнений username и roster нет." },
+  { id: "ACC-09", v: "acc", slice: "#115·3", risk: "access", layer: "boundary", fx: ["world:access"], src: [115],
+    text: "Course context перепроверяется при входе в Course, focus, reconnect и после access-отказа защищённой операции." },
+  { id: "ACC-10", v: "acc", slice: "#115·3", risk: "access", layer: "component", fx: ["world:access", "fail:held"], src: [111], inv: ["I2"],
+    text: "До подтверждения Membership — нейтральная загрузка без metadata, breadcrumbs, navigation и cached protected content, даже при тёплом cache." },
+  { id: "ACC-11", v: "acc", slice: "#115·3", risk: "access", layer: "component", fx: ["world:access"], src: [111], inv: ["I2"],
+    text: "Неизвестный slug, Гость и синтаксически неверный locator → «Страница не найдена» + «К моим курсам»; URL не меняется; тексты для не-member и неизвестного slug идентичны." },
+  { id: "ACC-12", v: "acc", slice: "#115·4", risk: "access", layer: "component", fx: ["world:access"], src: [111, 115], inv: ["I2"],
+    text: "Student на каждом teacher-only разделе (attempts, repositories, files, analytics, edit, Task edit, Review editor) → `403` «Нет доступа» в Course shell + «На страницу курса». Параметризовано." },
+  { id: "ACC-13", v: "acc", slice: "#115·4", risk: "access", layer: "component", fx: ["world:access"], src: [115],
+    text: "Навигация показывает только разрешённые разделы; Вера видит teacher-навигацию в «Базах данных» и student-навигацию в «Алгоритмах»." },
+  { id: "ACC-14", v: "acc", slice: "#115·3", risk: "access", layer: "component", fx: ["world:access", "fail:network"], src: [111],
+    text: "Технический отказ lookup → «Не удалось проверить доступ», «Повторить» перезапускает lookup, «К моим курсам»; не `403` и не `404`." },
+  { id: "ACC-15", v: "acc", slice: "#115·3", risk: "access", layer: "component", fx: ["world:access"], src: [111, 115], inv: ["I2"],
+    text: "Revalidation подтвердила потерю Membership → содержимое сразу заменяется course `404`, действия заблокированы; понижение роли на teacher-only разделе → `403`." },
+  { id: "ACC-16", v: "acc", slice: "#115·5", risk: "access", layer: "component", fx: ["world:review"], src: [111], inv: ["I2"],
+    text: "Resource not-found и forbidden дают одинаковый resource `404` внутри Course shell." },
+  { id: "ACC-17", v: "acc", slice: "#115·3", risk: "access", layer: "component", fx: ["world:access"], src: [111],
+    text: "Unauthenticated → login — единственный автоматический redirect цепочки. Сам login UI не закрепляется (OpenID)." },
+  { id: "ACC-E1", v: "acc", slice: "#115·5", risk: "access", layer: "e2e", fx: ["world:review"], src: [111, 115], inv: ["I2"],
+    text: "Саша по прямой ссылке на Attempt Пети → generic `404`; ни имени, ни файлов Пети в DOM." },
+  { id: "ACC-E2", v: "acc", slice: "#115·4", risk: "access", layer: "e2e", fx: ["world:access"], src: [111], inv: ["I2"],
+    text: "Саша по прямой ссылке на Course Attempts → `403` в Course shell; teacher-пунктов навигации нет." },
+  { id: "ACC-E3", v: "acc", slice: "#115·3", risk: "access", layer: "e2e", fx: ["world:access"], src: [111], inv: ["I2"],
+    text: "Гость открывает «Алгоритмы» и несуществующий slug → одинаковые `404` (сравнение видимого текста)." },
+  { id: "ACC-E4", v: "acc", slice: "#115·2", risk: "id", layer: "e2e", fx: ["world:access"], src: [115], inv: ["I1", "I2"],
+    text: "Вера выходит, в той же вкладке входит Саша → ни в один момент не видны Course, роль или навигация Веры." },
+
+  // ── Review → Grade → Student result ──
+  { id: "REV-01", v: "rev", slice: "#116·1", risk: "integrity", layer: "model", fx: [], src: [116],
+    text: "Разбор Grade: `7`, `7,5`, `7.5`, `7,125`, `0`, `10` (max) → valid; `7,1255` → ошибка, а не округление; пусто, пробел, `-1`, `abc`, `1e1`, `10,001` → ошибка." },
+  { id: "REV-02", v: "rev", slice: "#116·1", risk: "integrity", layer: "model", fx: [], src: [116],
+    text: "Сравнение и сложение в целых тысячных (`0,1 + 0,2 = 0,3`); `maxGrade` подчиняется той же точности." },
+  { id: "REV-03", v: "rev", slice: "#116·1", risk: "integrity", layer: "component", fx: ["world:review"], src: [116],
+    text: "Пустое поле Grade делает Working Copy невалидной и для первой, и для существующей Review; команды «снять Grade» нет; ошибка лишних знаков видна у поля." },
+  { id: "REV-04", v: "rev", slice: "#116·2", risk: "integrity", layer: "boundary", fx: ["world:review", "fail:invalid"], src: [116], inv: ["I7", "I8"],
+    text: "Review грузится по `AttemptId`; каждая проекция с Grade (Review, selector, Course Attempts, история Task) несёт номер Review Revision; невалидный DTO отклоняется." },
+  { id: "REV-05", v: "rev", slice: "#116·2", risk: "id", layer: "boundary", fx: ["world:review"], src: [116], inv: ["I1", "I7"],
+    text: "Selector и история попыток читают одно MSW-состояние; Attempts с одинаковым `AttemptNumber` у разных Students не делят cache entry." },
+  { id: "REV-06", v: "rev", slice: "#116·3", risk: "integrity", layer: "model", fx: [], src: [116, 64], inv: ["I3"],
+    text: "Полнота — чистая функция (manifest, статусы записей): все загружены → complete; любая упала → incomplete { count }; `binary`/`too-large`/`unsupported` с пометкой не блокируют." },
+  { id: "REV-07", v: "rev", slice: "#116·3", risk: "integrity", layer: "boundary", fx: ["world:review", "fail:entry"], src: [116], inv: ["I3"],
+    text: "Manifest атомарен, содержимое по записям; ограниченный auto-retry на запись; ручной «Повторить» перезапрашивает только упавшие." },
+  { id: "REV-08", v: "rev", slice: "#116·3", risk: "integrity", layer: "component", fx: ["world:review", "fail:entry"], src: [116, 64], inv: ["I3"],
+    text: "Упавшие записи перечислены по именам, terminal error, «Повторить»; поля Working Copy редактируемы; publish gate «материал неполон (N)»." },
+  { id: "REV-09", v: "rev", slice: "#116·3", risk: "corr", layer: "component", fx: ["world:review"], src: [116],
+    text: "«Сравнение с …» показывает baseline из manifest: Attempt, шаблон или пустое дерево." },
+  { id: "REV-10", v: "rev", slice: "#116·3", risk: "integrity", layer: "browser", fx: ["world:review", "fail:worker"], src: [72, 116], inv: ["I3"],
+    text: "Diff Worker: `loading → ready`; недоступный Worker/WASM → `failed` с Retry, а не бесконечный loader; публикация заблокирована, поля редактируемы." },
+  { id: "REV-11", v: "rev", slice: "#116·3", risk: "corr", layer: "browser", fx: ["world:review"], src: [72],
+    text: "Worker pool создаётся только на Attempt page и в Review editor; на Course Page и в Course Attempts Workers нет." },
+  { id: "REV-12", v: "rev", slice: "#116·6", risk: "integrity", layer: "browser", fx: ["world:review"], src: [116], flag: "q5",
+    text: "Выделение строки или диапазона в diff выбранного файла и стороны → root comment привязан к этому диапазону; после публикации Student видит thread на тех же строках." },
+  { id: "REV-13", v: "rev", slice: "#116·4", risk: "integrity", layer: "model", fx: [], src: [109],
+    text: "`ReviewTextDocument` schema строга к version, nodes, marks, fields; неизвестное → invalid response, содержимое не урезается молча." },
+  { id: "REV-14", v: "rev", slice: "#116·4", risk: "integrity", layer: "model", fx: [], src: [109, 119],
+    text: "Общая политика ссылок `model/links.ts`: `http`, `https`, root-relative → допустимы; protocol-relative, `#frag`, `mailto`, `tel`, `javascript`, `data`, неизвестные схемы → отклонены." },
+  { id: "REV-15", v: "rev", slice: "#116·4", risk: "corr", layer: "model", fx: [], src: [109],
+    text: "Очищенный Overall Feedback → `null`; root comment и reply только непустые после нормализации whitespace." },
+  { id: "REV-16", v: "rev", slice: "#116·4", risk: "integrity", layer: "browser", fx: ["text:paste-html"], src: [109],
+    text: "Paste HTML → DOMPurify → converter → normalizer: script, style, images, headings удалены, текст сохранён; plain-text paste остаётся plain." },
+  { id: "REV-17", v: "rev", slice: "#116·4", risk: "corr", layer: "component", fx: [], src: [109],
+    text: "Readonly рендерит узлы без HTML; root-relative ссылка — router в текущей вкладке; внешняя — новая вкладка с `rel=\"noopener noreferrer\"`." },
+  { id: "REV-18", v: "rev", slice: "#116·4", risk: "corr", layer: "browser", fx: [], src: [72, 116],
+    text: "Dialog ссылки вместо `window.prompt`: валидация, ошибка, возврат фокуса в review-text editor." },
+  { id: "REV-19", v: "rev", slice: "#116·5", risk: "data", layer: "boundary", fx: ["world:review"], src: [116],
+    text: "Reply — мгновенная операция вне lease и Working Copy; reply Саши, отправленный пока Анна правит Working Copy, переживает публикацию revision." },
+  { id: "REV-20", v: "rev", slice: "#116·5", risk: "integrity", layer: "model", fx: [], src: [116],
+    text: "Удалённый root comment → «Комментарий удалён», replies других авторов сохранены; каждый автор управляет только своими сообщениями." },
+  { id: "REV-21", v: "rev", slice: "#116·8", risk: "corr", layer: "model", fx: [], src: [116],
+    text: "Review Read State: новая revision или reply Teacher'а → непрочитано; собственный reply Student'а — нет." },
+  { id: "REV-22", v: "rev", slice: "#116·6", risk: "integrity", layer: "model", fx: [], src: [116], inv: ["I4"],
+    text: "`transitionReviewSession`: полная таблица состояний × событий; запрещённые переходы — явные no-op." },
+  { id: "REV-23", v: "rev", slice: "#116·6", risk: "integrity", layer: "model", fx: [], src: [116], inv: ["I3", "I4"],
+    text: "`getPublishGate`: каждая причина отдельно и в комбинациях; UI-модель получает все текущие причины, а не первую." },
+  { id: "REV-24", v: "rev", slice: "#116·6", risk: "integrity", layer: "stateful", fx: ["clock"], src: [116], inv: ["I4"],
+    text: "`publication-unconfirmed`: Working Copy заморожена; auto-retry и «Повторить» несут тот же `idempotencyKey`; новый ключ — только после авторитетного исхода." },
+  { id: "REV-25", v: "rev", slice: "#116·6", risk: "integrity", layer: "boundary", fx: ["world:review", "fail:lost-response"], src: [116], inv: ["I4"],
+    text: "Потерянный ответ публикации → повтор с тем же ключом → `published`; в MSW ровно одна Review; до подтверждения успех не показан." },
+  { id: "REV-26", v: "rev", slice: "#116·6", risk: "integrity", layer: "boundary", fx: ["world:review", "fail:network"], src: [116], inv: ["I4"],
+    text: "Сбой до сервера → повтор публикует ровно один раз." },
+  { id: "REV-27", v: "rev", slice: "#116·6", risk: "integrity", layer: "boundary", fx: ["world:review", "fail:held"], src: [116], inv: ["I7", "I8"],
+    text: "`observeReviewRevision`: запоздавшая revision 2 после 3 не заменяет 3; идущий запрос отменён; чужие проекции инвалидированы по prefix через их key factories, их данные не читаются." },
+  { id: "REV-28", v: "rev", slice: "#116·6", risk: "data", layer: "component", fx: ["world:review"], src: [116], inv: ["I5"],
+    text: "`revision-conflict` или потеря lease → `interrupted`: авторитетная revision + панель «Неопубликованные изменения» (Grade, Overall Feedback, каждый свой root comment с привязкой), копирование, «Применить» после повторного взятия lease; автоматического слияния нет." },
+  { id: "REV-29", v: "rev", slice: "#116·6", risk: "data", layer: "component", fx: ["world:review"], src: [116, 87], inv: ["I5"],
+    text: "Несохранённая Working Copy: подтверждение при навигации и переключении Attempt; в `publication-unconfirmed` — «Публикация не подтверждена»; lease снимается только после подтверждённого ухода." },
+  { id: "REV-30", v: "rev", slice: "#116·6", risk: "data", layer: "browser", fx: ["world:review"], src: [116, 87], inv: ["I5"],
+    text: "`beforeunload` при reload и закрытии вкладки с несохранённой Working Copy." },
+  { id: "REV-31", v: "rev", slice: "#116·6", risk: "integrity", layer: "component", fx: ["world:review"], src: [116],
+    text: "Держатель lease меняет Grade, Overall Feedback и свои root comments; root comments другого Teacher'а только для чтения." },
+  { id: "REV-32", v: "rev", slice: "#116·7", risk: "integrity", layer: "stateful", fx: ["clock"], src: [116],
+    text: "Lease на fake clock: `leaseId` на сессию; heartbeat ~20 с и сразу при возврате на вкладку; незаметно истёкший свой lease берётся снова; взятый другим → `interrupted`." },
+  { id: "REV-33", v: "rev", slice: "#116·7", risk: "integrity", layer: "component", fx: ["world:review"], src: [116],
+    text: "Lease занят при входе: только чтение, «Проверяет X», «Попробовать взять на проверку»; автоматического захвата нет; holder обновляется при focus." },
+  { id: "REV-34", v: "rev", slice: "#116·7", risk: "integrity", layer: "boundary", fx: ["world:review"], src: [116],
+    text: "Attempt page lease не берёт; Review editor снимает lease при уходе и при переключении Attempt; публикация lease не снимает." },
+  { id: "REV-35", v: "rev", slice: "#116·8", risk: "corr", layer: "component", fx: ["world:review", "fail:worker"], src: [116],
+    text: "Attempt page Student'а показывает Grade и Overall Feedback при упавшем diff; без Review — diff и «Ещё не проверено» без отметки прочитанности." },
+  { id: "REV-36", v: "rev", slice: "#116·8", risk: "corr", layer: "boundary", fx: ["world:review"], src: [116],
+    text: "`markReviewSeen` передаёт номер revision и последний показанный reply Teacher'а; optimistic `seen`; более новая revision снова делает Review непрочитанной." },
+  { id: "REV-37", v: "rev", slice: "#116·8", risk: "integrity", layer: "component", fx: ["world:review"], src: [116, 64], inv: ["I8"],
+    text: "«Идёт синхронизация» показывается только по явному сигналу backend; frontend не выводит его сам." },
+  { id: "REV-38", v: "rev", slice: "#116·2", risk: "id", layer: "component", fx: ["world:review", "fail:held"], src: [116, 117], inv: ["I1"],
+    text: "Переключение Attempt в selector: diff и Review только выбранной Attempt; содержимое предыдущей не показывается под заголовком новой." },
+  { id: "REV-E1", v: "rev", slice: "#116·6", risk: "integrity", layer: "e2e", fx: ["world:review"], src: [116, 64], inv: ["I7", "I8"],
+    text: "Анна открывает Attempt #2 Саши из Course Attempts, ставит Grade, Overall Feedback и line comment, публикует → Саша в другом контексте видит всё вместе; Course Attempts и история Task показывают ту же Grade." },
+  { id: "REV-E2", v: "rev", slice: "#116·6", risk: "integrity", layer: "e2e", fx: ["world:review", "fail:lost-response"], src: [116], inv: ["I4", "I8"],
+    text: "Потерянный ответ публикации → «Публикация не подтверждена», Working Copy заморожена → «Повторить» → опубликовано; Саша видит ровно одну целостную Review." },
+  { id: "REV-E3", v: "rev", slice: "#116·3", risk: "integrity", layer: "e2e", fx: ["world:review", "fail:entry"], src: [116], inv: ["I3"],
+    text: "Запись manifest падает → публикация заблокирована с именем файла; после восстановления «Повторить» → публикация доступна." },
+  { id: "REV-E4", v: "rev", slice: "#116·7", risk: "integrity", layer: "e2e", fx: ["world:review"], src: [116],
+    text: "Борис держит Review Lease → Анна видит «Проверяет Борис», публикация недоступна." },
+  { id: "REV-E5", v: "rev", slice: "#116·7", risk: "data", layer: "e2e", fx: ["world:review"], src: [116], inv: ["I5"],
+    text: "Вторая вкладка Анны → только чтение с «Продолжить здесь»; после перехвата первая вкладка `interrupted`, её Working Copy в панели восстановления." },
+
+  // ── Course Attempts ──
+  { id: "ATT-01", v: "att", slice: "#117·1", risk: "corr", layer: "model", fx: [], src: [117],
+    text: "`normalizeFilters`: порядок и дубликаты ids не меняют key; статус `any | submitted | graded`." },
+  { id: "ATT-02", v: "att", slice: "#117·1", risk: "integrity", layer: "boundary", fx: ["world:attempts-list", "fail:invalid"], src: [117],
+    text: "`loadCourseAttempts` атомарна: один невалидный item отклоняет всю операцию; частичного списка нет." },
+  { id: "ATT-03", v: "att", slice: "#117·1", risk: "id", layer: "boundary", fx: ["world:attempts-list"], src: [117], inv: ["I1"],
+    text: "Operation и keys используют `CourseId`, `TaskId`, `UserId`; slug и username в identity не входят." },
+  { id: "ATT-04", v: "att", slice: "#117·1", risk: "corr", layer: "component", fx: ["world:attempts-list"], src: [117],
+    text: "UI сохраняет порядок операции (`submittedAt DESC` + `AttemptId`), не пересортировывает; одна строка — одна Attempt, исторические включены." },
+  { id: "ATT-05", v: "att", slice: "#117·2", risk: "corr", layer: "component", fx: ["world:attempts-list"], src: [117],
+    text: "Draft не меняет список и не шлёт запросов до «Применить»; «Применить» пишет нормализованные фильтры в URL; back/forward и shared link воспроизводят запрос; внешняя смена URL сбрасывает draft; «Сбросить» очищает оба." },
+  { id: "ATT-06", v: "att", slice: "#117·2", risk: "corr", layer: "component", fx: ["world:attempts-list"], src: [117],
+    text: "Каталоги фильтров — весь Course, не сужаются текущим результатом." },
+  { id: "ATT-07", v: "att", slice: "#117·2", risk: "corr", layer: "component", fx: ["world:attempts-list"], src: [117],
+    text: "Пустой Course (`totalAttemptsCount = 0`) и «по применённым фильтрам ничего не найдено» различаются." },
+  { id: "ATT-08", v: "att", slice: "#117·3", risk: "corr", layer: "model", fx: [], src: [117],
+    text: "ADT снимка `loading | ready | refreshing | stale | failed`: переходы; отмена не даёт `failed` или `stale`." },
+  { id: "ATT-09", v: "att", slice: "#117·3", risk: "integrity", layer: "component", fx: ["world:attempts-list", "fail:network"], src: [117],
+    text: "Начальный отказ → ошибка + Retry, никогда не empty state; отказ revalidation → последний полный снимок + «Данные могут быть устаревшими» + Retry." },
+  { id: "ATT-10", v: "att", slice: "#117·3", risk: "corr", layer: "boundary", fx: ["world:attempts-list", "clock"], src: [117],
+    text: "Revalidation при входе, focus, reconnect и после известных mutations; polling нет (10 мин fake clock → 0 запросов)." },
+  { id: "ATT-11", v: "att", slice: "#117·4", risk: "id", layer: "component", fx: ["world:attempts-list"], src: [117], inv: ["I1"],
+    text: "Каждая строка ведёт в Review editor ровно своей Attempt; link строится из identity строки; параметризовано по строкам с одинаковыми Student, Task и submittedAt." },
+  { id: "ATT-12", v: "att", slice: "#117·3", risk: "integrity", layer: "component", fx: ["world:attempts-list", "fail:network"], src: [117],
+    text: "Из stale-снимка individual переход разрешён; quick grading заблокирован до успешной revalidation." },
+  { id: "ATT-13", v: "att", slice: "#117·5", risk: "integrity", layer: "boundary", fx: ["world:review"], src: [117, 116], inv: ["I7"],
+    text: "После авторитетного исхода Review точный Review cache записан, family Course Attempts инвалидирована, а не патчится вручную." },
+  { id: "ATT-E1", v: "att", slice: "#117·4", risk: "id", layer: "e2e", fx: ["world:attempts-list"], src: [117], inv: ["I1"],
+    text: "Из отфильтрованного списка открыть Attempt #1 Саши при существующей #2 → Review editor показывает diff #1, selector отмечает #1; Back возвращает тот же отфильтрованный список." },
+
+  // ── Quick grading ──
+  { id: "QG-01", v: "qg", slice: "#117·6", risk: "corr", layer: "model", fx: [], src: [114],
+    text: "Сессия: поле только у unreviewed; повторное «Сохранить» шлёт только dirty; успешные строки становятся saved; режим остаётся открытым." },
+  { id: "QG-02", v: "qg", slice: "#117·6", risk: "integrity", layer: "model", fx: [], src: [114],
+    text: "Свёртка per-Attempt исходов: saved / конфликт lease / Review уже есть / иной отказ → состояние строки и recovery entries; успешные не откатываются." },
+  { id: "QG-03", v: "qg", slice: "#117·6", risk: "integrity", layer: "boundary", fx: ["world:quick-grading", "fail:lost-response"], src: [114, 116], flag: "q2", inv: ["I4"],
+    text: "Неизвестный исход batch → entries pending → сверка → saved / конфликт / unreviewed; не объявляется провалом и не публикуется второй Review." },
+  { id: "QG-04", v: "qg", slice: "#117·6", risk: "integrity", layer: "boundary", fx: ["world:quick-grading"], src: [114],
+    text: "Смешанный batch: saved сохранена в MSW, конфликт → recovery entry; Course Attempts инвалидирована." },
+  { id: "QG-05", v: "qg", slice: "#117·6", risk: "corr", layer: "component", fx: ["world:quick-grading"], src: [114],
+    text: "Фильтры заблокированы во время quick grading; однострочный Overall Feedback сохраняется одноабзацным `ReviewTextDocument`." },
+  { id: "QG-06", v: "qg", slice: "#117·6", risk: "data", layer: "component", fx: ["world:quick-grading"], src: [114],
+    text: "Конфликт → итоговое окно; recovery panel доступна после закрытия; запись: ФИО, Task, номер Attempt, Grade/maxGrade, ссылка, причина, holder или автор и Grade опубликованной Review; копировать одну/все, TXT, удалить." },
+  { id: "QG-07", v: "qg", slice: "#117·6", risk: "data", layer: "component", fx: ["world:quick-grading"], src: [114],
+    text: "Выход, смена route или reload при dirty entries или оставшихся recovery entries → подтверждение с предложением скопировать или скачать." },
+  { id: "QG-08", v: "qg", slice: "после #121", risk: "ux", layer: "browser", fx: ["world:quick-grading"], src: [114, 121], flag: "q6",
+    text: "Высота строки не меняется при открытии поля Overall Feedback и появлении recovery." },
+  { id: "QG-E1", v: "qg", slice: "#117·6", risk: "integrity", layer: "e2e", fx: ["world:quick-grading"], src: [114],
+    text: "Анна оценивает три Attempts, одну параллельно оценил Борис → частичный исход виден явно; две Reviews видны Students; третья в recovery." },
+
+  // ── Course editing: lifecycle ──
+  { id: "DRF-01", v: "drf", slice: "#118·1", risk: "id", layer: "component", fx: ["world:course-draft"], src: [118],
+    text: "Смена slug — мгновенная операция; route заменяется; сессия редактора по `CourseId` не перемонтируется (несинхронизированный текст цел); сбой оставляет старый slug с ошибкой." },
+  { id: "DRF-02", v: "drf", slice: "#118·2", risk: "data", layer: "model", fx: [], src: [118], inv: ["I6"],
+    text: "`transitionCourseDraftSession`: полная таблица; `sync` только в `editing`; запрещённые переходы — no-op." },
+  { id: "DRF-03", v: "drf", slice: "#118·2", risk: "data", layer: "model", fx: [], src: [118], flag: "q4", inv: ["I6"],
+    text: "`planDraftSync(base, workingCopy)`: равенство → пустой план; property: план, применённый к симулятору сервера, даёт Working Copy с точностью до server ids; `afterBlockId: null` — начало." },
+  { id: "DRF-04", v: "drf", slice: "#118·2", risk: "integrity", layer: "model", fx: [], src: [118],
+    text: "`getPublishGate`: lease не мой, ошибки валидации, нет отличий от опубликованной, `sync-rejected`, публикация идёт или не подтверждена; несинхронизированные правки не блокируют." },
+  { id: "DRF-05", v: "drf", slice: "#118·2", risk: "data", layer: "boundary", fx: ["world:course-draft"], src: [118], inv: ["I6"],
+    text: "Открытие: `new` / `restored` / `stale_conflict` / `423` с holder / not-found / forbidden / сбой → `editing` / `stale` / `lease-unavailable` / `unavailable`; `restored` → плашка «Открыт ваш неопубликованный черновик»." },
+  { id: "DRF-06", v: "drf", slice: "#118·2", risk: "integrity", layer: "boundary", fx: ["world:course-draft", "fail:lost-response", "fail:network"], src: [118], inv: ["I6"],
+    text: "Неизвестный исход публикации → сверка по активному snapshot: равен `draftSnapshotId` → опубликовано; черновик жив и lease мой → «Публикация не прошла · Повторить»; иначе `interrupted`. Working Copy заморожена." },
+  { id: "DRF-07", v: "drf", slice: "#118·2", risk: "data", layer: "boundary", fx: ["world:course-draft"], src: [118], inv: ["I6"],
+    text: "`409` при публикации → `stale`; Working Copy видна для копирования; «Удалить черновик и начать заново» только после подтверждения." },
+  { id: "DRF-08", v: "drf", slice: "#118·2", risk: "integrity", layer: "boundary", fx: ["world:course-draft"], src: [118],
+    text: "После публикации — дождаться инвалидации Course Page, списка курсов и дедлайнов; Course Page сразу показывает новую версию." },
+  { id: "DRF-09", v: "drf", slice: "#118·2", risk: "data", layer: "boundary", fx: ["world:course-draft", "fail:lost-response"], src: [118, 113],
+    text: "«Удалить черновик»: подтверждение, если отличается от опубликованной; повтор при неизвестном исходе безопасен (рабочее допущение до ответа backend, #113)." },
+  { id: "DRF-10", v: "drf", slice: "#118·2", risk: "integrity", layer: "browser", fx: ["world:course-draft"], src: [118, 72],
+    text: "Кнопка и `Mod+S` открывают один диалог; повторный `Mod+S` подтверждает; подтверждение заблокировано ~0,5–1 с; `event.repeat` игнорируется; `Esc` закрывает." },
+  { id: "DRF-11", v: "drf", slice: "#118·2", risk: "corr", layer: "component", fx: ["world:course-draft"], src: [118],
+    text: "Заблокированная публикация: диалог не открывается, toast с причинами, фокус на первом невалидном поле." },
+  { id: "DRF-12", v: "drf", slice: "#118·2", risk: "data", layer: "component", fx: ["world:course-draft", "fail:network", "clock"], src: [118, 86], inv: ["I6"],
+    text: "Уход внутри приложения: немедленная синхронизация «Сохраняем…» до ~5 с; при неудаче «Изменения не сохранены. Уйти и потерять их?»; lease снимается после подтверждённого ухода." },
+  { id: "DRF-13", v: "drf", slice: "#118·2", risk: "data", layer: "browser", fx: ["world:course-draft"], src: [118, 86], inv: ["I6"],
+    text: "`beforeunload` при несинхронизированных правках, `unconfirmed` и `interrupted`." },
+  { id: "DRF-14", v: "drf", slice: "#118·3", risk: "data", layer: "stateful", fx: ["clock"], src: [118], inv: ["I6"],
+    text: "Планировщик: ~1 с бездействия; не реже 5 с при непрерывном наборе; сразу при уходе и публикации; один batch в полёте; правки копятся; `base` по каждому ack." },
+  { id: "DRF-15", v: "drf", slice: "#118·3", risk: "data", layer: "boundary", fx: ["world:course-draft", "fail:lost-response"], src: [118], inv: ["I6"],
+    text: "Потерянный ответ на create блока → перечитывание черновика → новая `base` → новый план; блок не создан дважды." },
+  { id: "DRF-16", v: "drf", slice: "#118·3", risk: "data", layer: "boundary", fx: ["world:course-draft"], src: [118], inv: ["I6"],
+    text: "Ожидаемый отказ операции черновика → batch остановлен, `sync-rejected { reason }`, Working Copy цела, следующая правка строит новый план." },
+  { id: "DRF-17", v: "drf", slice: "#118·3", risk: "integrity", layer: "boundary", fx: ["world:course-draft"], src: [118],
+    text: "Сопоставление локальных и серверных id: после ack create следующий patch адресует серверный id." },
+  { id: "DRF-18", v: "drf", slice: "#118·3", risk: "corr", layer: "component", fx: ["world:course-draft", "fail:network"], src: [118],
+    text: "Индикатор «Сохранено» / «Сохранение…» / «Не сохранено · Повторить»." },
+  { id: "DRF-19", v: "drf", slice: "#118·4", risk: "data", layer: "stateful", fx: ["clock"], src: [118],
+    text: "Lease: heartbeat ~20 с и при возврате; тихое повторное взятие; сбой heartbeat → `sync-failed`, не `interrupted`; правки продолжаются; lease берётся снова после восстановления связи." },
+  { id: "DRF-20", v: "drf", slice: "#118·4", risk: "data", layer: "boundary", fx: ["world:course-draft"], src: [118],
+    text: "`interrupted` только при явном ответе «lease не мой»." },
+  { id: "DRF-21", v: "drf", slice: "#118·4", risk: "data", layer: "component", fx: ["world:course-draft"], src: [118], inv: ["I6"],
+    text: "Из `interrupted`: `restored` = base → `editing`; ≠ base → «Взять версию с сервера» (подтверждение) / «Перезаписать черновик моей версией»; `stale_conflict` → `stale`; `423` → `lease-unavailable`, Working Copy только для чтения + предупреждение при уходе." },
+  { id: "DRF-E1", v: "drf", slice: "#118·2", risk: "integrity", layer: "e2e", fx: ["world:course-draft"], src: [118],
+    text: "Анна правит текст и список, добавляет блок, публикует через диалог → Саша видит новую Course Page с теми же номерами списков." },
+  { id: "DRF-E2", v: "drf", slice: "#118·3", risk: "data", layer: "e2e", fx: ["world:course-draft", "fail:network"], src: [118], inv: ["I6"],
+    text: "Сеть пропала во время правки → «Не сохранено · Повторить», правки на месте; сеть вернулась → «Сохранено»; reload → `restored` со всей работой." },
+  { id: "DRF-E3", v: "drf", slice: "#118·4", risk: "data", layer: "e2e", fx: ["world:course-draft"], src: [118], inv: ["I6"],
+    text: "Вторая вкладка Анны → «Открыт в другой вкладке · Продолжить здесь»; после перехвата первая вкладка `interrupted`, правки не теряются молча." },
+  { id: "DRF-E4", v: "drf", slice: "#118·2", risk: "integrity", layer: "e2e", fx: ["world:course-draft"], src: [118],
+    text: "Борис держит Course Editing Lease → Анна видит опубликованную версию только для чтения и «Редактирует Борис · Попробовать снова»." },
+
+  // ── Course Page: документ ──
+  { id: "DOC-01", v: "doc", slice: "#119·3", risk: "data", layer: "model", fx: [], src: [119], flag: "q4",
+    text: "Закон round-trip `fromPlate(toPlate(doc)) = doc` — property на генераторе нормализованных документов." },
+  { id: "DOC-02", v: "doc", slice: "#119·1", risk: "data", layer: "model", fx: [], src: [119], flag: "q4",
+    text: "Канонизация идемпотентна: слияние фрагментов с одинаковыми marks, удаление пустых, marks как упорядоченное множество, перенос `\\n`." },
+  { id: "DOC-03", v: "doc", slice: "#119·1", risk: "integrity", layer: "model", fx: ["doc:invalid-blocks"], src: [119],
+    text: "Schema: неизвестный тип, неизвестная version, невалидный `data` → блок-заглушка в reader и `unsupported-content` в editor; молчаливых конверсий нет." },
+  { id: "DOC-04", v: "doc", slice: "#119·1", risk: "corr", layer: "model", fx: ["doc:lists-74"], src: [74, 119],
+    text: "Правила 1–7 #74 на функции группировки: последовательность list-item → дерево `ol/ul` и номера." },
+  { id: "DOC-05", v: "doc", slice: "#119·1", risk: "corr", layer: "model", fx: ["doc:lists-74"], src: [74, 119],
+    text: "Нормализация indent: missing, non-numeric, non-finite, < 1 → 1; дробные округляются; первый item уровня 1; шаг максимум +1. Одна функция для загрузки, `normalizeNode` и renderer." },
+  { id: "DOC-06", v: "doc", slice: "#119·1", risk: "corr", layer: "model", fx: ["doc:all-blocks"], src: [119],
+    text: "Render tree: списки в теле Spoiler нумеруются независимо; Spoiler в Spoiler и Task Reference в Spoiler отклоняются schema." },
+  { id: "DOC-07", v: "doc", slice: "#119·1", risk: "access", layer: "model", fx: ["doc:task-references"], src: [119],
+    text: "Task Summary: `open`, `locked { prerequisite }`, `unavailable`, вид Teacher'а без состояния доступа." },
+  { id: "DOC-08", v: "doc", slice: "#119·4", risk: "data", layer: "model", fx: ["doc:all-blocks"], src: [119],
+    text: "Headless `createSlateEditor`: каждая команда `BlockCommands` — один шаг undo; undo восстанавливает документ точно и возвращает `FocusIntent` затронутого блока." },
+  { id: "DOC-09", v: "doc", slice: "#119·4", risk: "integrity", layer: "model", fx: [], src: [119],
+    text: "Split оставляет id у части с исходным началом; duplicate и paste выдают новые уникальные id (проверяются свойства, не значения)." },
+  { id: "DOC-10", v: "doc", slice: "#119·1", risk: "integrity", layer: "component", fx: ["doc:invalid-blocks"], src: [119], flag: "q3",
+    text: "Read-only показывает «Блок не удалось показать» на месте невалидного блока, остальная страница видна." },
+  { id: "DOC-11", v: "doc", slice: "#119·3", risk: "data", layer: "component", fx: ["doc:invalid-blocks"], src: [119], flag: "q3",
+    text: "Редактор с неподдерживаемым содержимым не открывается: `unsupported-content` с предложением обновить приложение." },
+  { id: "DOC-12", v: "doc", slice: "#119·1", risk: "corr", layer: "component", fx: ["doc:lists-74"], src: [74], flag: "q3",
+    text: "Семантический read-only DOM: сгруппированные `<ol>/<ul>`, sibling `<li>`, вложенный список внутри родительского `<li>`." },
+  { id: "DOC-13", v: "doc", slice: "#119·1", risk: "access", layer: "component", fx: ["doc:task-references", "world:access"], src: [119],
+    text: "Карточка Task Reference: Student видит `open`, `locked` или заглушку, содержимое locked Task не раскрыто; Teacher — карточка без состояния доступа." },
+  { id: "DOC-14", v: "doc", slice: "до #119·1", risk: "corr", layer: "browser", fx: ["doc:lists-74"], src: [74], flag: "q1",
+    text: "Сценарии #74: три ordered items → `1, 2, 3` (регрессия `1, 1, 1`); создание через `1.` и команду; Enter, пустой Enter, Backspace, Tab/Shift+Tab; смена variant; drag/delete; multi-selection drag; сохранить → открыть снова; номера совпадают с read-only." },
+  { id: "DOC-15", v: "doc", slice: "#119·2", risk: "corr", layer: "browser", fx: ["doc:all-blocks"], src: [119],
+    text: "Parity computed styles editor ↔ read-only на `doc:all-blocks`: типографика, ритм отступов, вид блоков; chrome редактора исключён; без screenshots." },
+  { id: "DOC-16", v: "doc", slice: "#119·3", risk: "data", layer: "browser", fx: ["text:paste-html"], src: [119],
+    text: "Paste в Course Page: внешний HTML → DOMPurify → converter → normalizer; текст сохранён; профиль не создаёт того, что документ не сохранит." },
+  { id: "DOC-17", v: "doc", slice: "#119·3", risk: "corr", layer: "browser", fx: [], src: [119],
+    text: "Ограничения профиля: Tab вне списка ничего не делает; в цитате Shift+Enter — перенос, Enter на пустой строке — выход в paragraph." },
+  { id: "DOC-18", v: "doc", slice: "до #119·4", risk: "corr", layer: "browser", fx: ["doc:all-blocks"], src: [119, 72], flag: "q1",
+    text: "Фокус после insert, move, moveUp/Down, remove, duplicate, transform и после undo/redo; keyboard drag возвращает фокус." },
+  { id: "DOC-19", v: "doc", slice: "#119·5", risk: "corr", layer: "browser", fx: ["doc:lists-74"], src: [74, 119],
+    text: "Multi-drag переносит явно выделенные блоки (включая разрозненный Shift-selection) группой в исходном порядке; невыделенные потомки не захватываются; handle вне выделения — только свой блок." },
+  { id: "DOC-20", v: "doc", slice: "#119·5", risk: "corr", layer: "browser", fx: [], src: [119, 72],
+    text: "Область выделения ограничена корнем редактора." },
+  { id: "DOC-21", v: "doc", slice: "#119·4", risk: "corr", layer: "browser", fx: [], src: [72],
+    text: "Clipboard auto-read ссылок только в Chromium; в Firefox и WebKit ручной ввод и paste работают. Ожидаемый исход зависит от движка." },
+  { id: "DOC-22", v: "doc", slice: "#119·4", risk: "corr", layer: "browser", fx: [], src: [72],
+    text: "Shortcuts определяются по `KeyboardEvent` (Mod = Meta или Ctrl); platform detection только для подписей." },
+
+  // ── Accessibility ──
+  { id: "A11Y-01", v: "a11y", slice: "по вертикалям", risk: "corr", layer: "browser", fx: ["world:review", "world:course-draft"], src: [68],
+    text: "axe на устойчивых состояниях: Course Page, `403`, `404`, Course Attempts (ready, stale), Attempt page Student'а, Review editor (editing, interrupted), Course Page editor." },
+  { id: "A11Y-02", v: "a11y", slice: "по вертикалям", risk: "corr", layer: "component", fx: [], src: [68],
+    text: "Доступные role/name/state: поле Grade (`aria-invalid` и описание ошибки), причины publish gate, «Повторить», фильтры." },
+];
+
+// Fail-closed invariants from «Выбрать критические пользовательские пути и гарантии».
+const INVARIANTS = [
+  { key: "I1", name: "Точная identity Course + Task + Student + Attempt" },
+  { key: "I2", name: "Нет доступа к чужому Course, Attempt или teacher-only действию" },
+  { key: "I3", name: "Публикация только при полностью загруженном материале Attempt" },
+  { key: "I4", name: "Атомарная первая публикация Review с Grade, без второй Review" },
+  { key: "I5", name: "Нет скрытой потери Review Working Copy" },
+  { key: "I6", name: "Нет скрытой потери Course Page Working Copy" },
+  { key: "I7", name: "Одна authoritative Grade на всех экранах" },
+  { key: "I8", name: "Grade, Overall Feedback и root comments — одна Review Revision" },
+];
+
+const CHARACTERIZATION = {
+  principle: [
+    "Characterization пишется только для поведения, которое следующий slice обязан сохранить, и только там, где тест переживёт смену внутренностей: через UI в настоящем браузере. После slice такой тест не удаляется — он и есть целевой контракт.",
+    "Если slice N переводит путь на MSW-harness, контракты поведения, которое сохраняет slice N+1, пишутся в конце slice N уже как целевые. Отдельной characterization для них не нужно.",
+    "Временную characterization заведомо неверного поведения не заводим: все такие места (молчаливые redirects, bulk selection, aggregate `fetchAttemptReview`, очистка Grade) удаляются clean cutover в первом же slice своей вертикали.",
+  ],
+  items: [
+    { id: "DOC-14", when: "до #119·1, на текущем редакторе", why: "Slice 1 меняет persisted-модель списков и adapter; видимая нумерация и клавиатурное поведение обязаны сохраниться. Тест создаёт содержимое через редактор, поэтому не зависит от mock-данных." },
+    { id: "DOC-18", when: "до #119·1, на текущем редакторе", why: "Фокус после команд держится на `queueMicrotask` и `_forceFocus`; slices 1 и 4 их убирают. Фиксируется исход (какой блок в фокусе), не механизм." },
+  ],
+  rejected: [
+    { what: "`dirty-compare`", why: "Заменяется структурным равенством канонического документа (#119·1)." },
+    { what: "comment lifecycle и `comment-save`", why: "Модель переписывается: Working Copy, replies вне revision, атомарная публикация (#116·5–6)." },
+    { what: "attempts grading и selection", why: "Bulk selection удаляется, quick grading меняет scope (#114)." },
+    { what: "route access matrix с redirects", why: "Redirects заменяются явными `403`/`404` одним cutover (#115)." },
+    { what: "Draft/applied фильтры Course Attempts на RAM-моках", why: "Поведение сохраняется, но после #117·1 путь уже на MSW: ATT-05 пишется в конце #117·1 как целевой контракт." },
+  ],
+};
+
+const OUT_OF_MATRIX = [
+  { what: "Login/register UI", why: "Mock-авторизация, целевой flow сменится с OpenID. Защищается только redirect unauthenticated → login (ACC-17)." },
+  { what: "Персональный журнал Student'а", why: "Решение есть в #99, но route — заглушка. Матрица проверяет только доступ к разделу (ACC-01)." },
+  { what: "Calendar дедлайнов, тема, diff layout, viewed-индикаторы", why: "Допустимые деградации по #64." },
+  { what: "Browser-local восстановление Working Copy", why: "Вне карты: #123 и #125." },
+  { what: "Снятие Review Lease при долгой неактивности", why: "Ещё в «Not yet specified» карты." },
+  { what: "Размещение Overall Feedback в quick grading", why: "Открыт #121; QG-08 ждёт его." },
+  { what: "Контракт реального backend", why: "MSW воплощает рабочие допущения #113; contract tests против backend — вне карты." },
+  { what: "Pixel screenshots", why: "Запрещены #68; screenshots и traces — только диагностика." },
+];
+
+const QUESTIONS = [
+  {
+    q: "Q1. Characterization. Достаточно ли двух characterization-тестов (DOC-14, DOC-18 на текущем редакторе) и отказа от остальных кандидатов из research-артефакта?",
+    rec: "Да. Остальные кандидаты закрыты решениями вертикалей (см. вкладку «Characterization»), а поведение, сохраняемое внутри вертикали, проверяется целевыми контрактами, написанными в конце предыдущего slice.",
+  },
+  {
+    q: "Q2. Неизвестный исход quick grading. «Определить роль bulk selection и quick grading» велит читать авторитетные Reviews и сверять; позже «Review → Grade → Student result» для публикации Review выбрал повтор той же команды с тем же idempotency key. Что применяется к batch quick grading?",
+    rec: "Повтор batch с теми же per-Attempt idempotency keys: тот же механизм, что у одиночной публикации, и он отличает «моя публикация прошла» от «Борис успел первым». Чтение остаётся для обновления проекций. QG-03 зависит от ответа; batch idempotency дописывается в #113.",
+  },
+  {
+    q: "Q3. Слой для трёх сценариев из входа «Спроектировать structured-document seam Course Page». Там заглушка невалидного блока, `unsupported-content` и семантический DOM списков указаны как real-browser; в прототипе они в Component (jsdom). Согласны?",
+    rec: "Да: layout, selection и contenteditable в них не участвуют, jsdom доказывает их полностью и дешевле. Real browser остаётся там, где без него контракт не проверить (DOC-14…DOC-22).",
+  },
+  {
+    q: "Q4. Property-based тесты. DOC-01, DOC-02 и DRF-03 требуют генератора документов. Добавить `fast-check` в стек (только Node, seed в отчёте об ошибке, фиксированное число прогонов в CI) или писать генераторы вручную?",
+    rec: "`fast-check`: shrinking минимизирует контрпример, ручной генератор этого не даст. «Выбрать слоистую стратегию тестирования» его не называет, поэтому решение фиксируется здесь.",
+  },
+  {
+    q: "Q5. Новый контракт REV-12: привязка root comment к выделенной строке/диапазону и показ thread Student'у на тех же строках. В решениях вертикали его нет явно, он следует из glossary (Line Comment Thread anchored to a line). Включаем в матрицу?",
+    rec: "Да, как Целостность: comment не на той строке вводит Student'а в заблуждение так же, как неверная Grade.",
+  },
+  {
+    q: "Q6. QG-08 (высота строки quick grading) — оставить в матрице с низким риском и ждать #121 или убрать?",
+    rec: "Оставить, но не включать в обязательный набор до решения #121.",
+  },
+  {
+    q: "Q7. E2E-harness. E2E идёт против приложения с MSW в браузере (backend нет), мир и профили отказов задаются тестом через test-only канал, доступный только в test build. Fixtures воплощают рабочие допущения #113 (idempotency, lease 423 с holder, revision в проекциях) и помечены ими. Приемлемо называть это E2E?",
+    rec: "Да: E2E доказывает соединение route, UI, transport, cache и domain rules, как требует стратегия; соответствие реальному backend — вне карты. Канал управления: test-only handler MSW, а не глобал на `window`.",
+  },
+];
+
+// Pure helpers.
+function filterRows(rows, f) {
+  const needle = f.search.trim().toLowerCase();
+  return rows.filter((r) => {
+    if (f.vertical !== "all" && r.v !== f.vertical) return false;
+    if (f.layer !== "all" && r.layer !== f.layer) return false;
+    if (f.risk !== "all" && r.risk !== f.risk) return false;
+    if (f.critOnly && tierOf(r.risk) !== "crit") return false;
+    if (needle && !(r.id + " " + r.text + " " + r.fx.join(" ") + " " + r.slice).toLowerCase().includes(needle)) return false;
+    return true;
+  });
+}
+function tierOf(riskKey) {
+  return RISKS.find((r) => r.key === riskKey).tier;
+}
+function pivot(rows) {
+  return VERTICALS.map((v) => ({
+    vertical: v,
+    cells: LAYERS.map((l) => ({
+      total: rows.filter((r) => r.v === v.key && r.layer === l.key).length,
+      crit: rows.filter((r) => r.v === v.key && r.layer === l.key && tierOf(r.risk) === "crit").length,
+    })),
+  }));
+}
+function proofsByInvariant(rows) {
+  return INVARIANTS.map((inv) => ({
+    inv,
+    byLayer: LAYERS.map((l) => rows.filter((r) => (r.inv || []).includes(inv.key) && r.layer === l.key).map((r) => r.id)),
+  }));
+}
+function fixtureUsage(rows) {
+  const usage = {};
+  for (const r of rows) for (const fx of r.fx) (usage[fx] ||= []).push(r.id);
+  return usage;
+}
+</script>
+
+<script>
+// ─── Page shell. ────────────────────────────────────────────────────────────
+
+const TABS = [
+  { key: "matrix", name: "Матрица" },
+  { key: "proofs", name: "Инварианты и cross-browser proofs" },
+  { key: "fixtures", name: "Fixtures" },
+  { key: "char", name: "Characterization" },
+  { key: "out", name: "Вне матрицы" },
+  { key: "questions", name: "Вопросы" },
+];
+const state = {
+  tab: "matrix",
+  filters: { vertical: "all", layer: "all", risk: "all", critOnly: false, search: "" },
+};
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+function fmt(s) {
+  return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+function issueLinks(nums) {
+  return nums.map((n) => `<a href="${ISSUE}${n}">#${n}</a>`).join(" ");
+}
+function riskPill(key) {
+  const r = RISKS.find((x) => x.key === key);
+  return `<span class="pill risk-${r.tier}">${esc(r.name)}</span>`;
+}
+function layerPill(key) {
+  return `<span class="pill layer">${esc(LAYERS.find((l) => l.key === key).name)}</span>`;
+}
+function verticalName(key) {
+  return VERTICALS.find((v) => v.key === key).name;
+}
+
+function renderTabs() {
+  const nav = document.getElementById("tabs");
+  nav.innerHTML = TABS.map((t) => `<button role="tab" data-tab="${t.key}" aria-selected="${state.tab === t.key}">${esc(t.name)}</button>`).join("");
+  nav.querySelectorAll("button").forEach((b) =>
+    b.addEventListener("click", () => {
+      state.tab = b.dataset.tab;
+      render();
+    })
+  );
+}
+
+function option(value, label, current) {
+  return `<option value="${value}" ${value === current ? "selected" : ""}>${esc(label)}</option>`;
+}
+
+function renderMatrix() {
+  const f = state.filters;
+  const rows = filterRows(ROWS, f);
+  const crit = rows.filter((r) => tierOf(r.risk) === "crit").length;
+  const piv = pivot(ROWS);
+  return `
+    <div class="controls">
+      <label>Вертикаль
+        <select data-f="vertical">${option("all", "Все", f.vertical)}${VERTICALS.map((v) => option(v.key, v.name, f.vertical)).join("")}</select>
+      </label>
+      <label>Слой-владелец
+        <select data-f="layer">${option("all", "Все", f.layer)}${LAYERS.map((l) => option(l.key, l.name, f.layer)).join("")}</select>
+      </label>
+      <label>Риск
+        <select data-f="risk">${option("all", "Все", f.risk)}${RISKS.map((r) => option(r.key, r.name, f.risk)).join("")}</select>
+      </label>
+      <label><input type="checkbox" data-f="critOnly" ${f.critOnly ? "checked" : ""}> только fail-closed</label>
+      <input type="search" data-f="search" placeholder="Поиск: id, текст, fixture, slice" value="${esc(f.search)}">
+      <span class="count">${rows.length} из ${ROWS.length} строк, fail-closed: ${crit}</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>ID</th><th>Slice</th><th>Наблюдаемый исход или отказ</th><th>Риск</th><th>Слой-владелец</th><th>Fixtures</th><th>Источник</th></tr></thead>
+        <tbody>
+          ${rows.map((r) => `
+            <tr>
+              <td class="id">${r.id}</td>
+              <td class="slice">${esc(r.slice)}<br><span class="muted">${esc(verticalName(r.v))}</span></td>
+              <td>${fmt(r.text)}${r.flag ? ` <span class="pill flag">вопрос ${r.flag.slice(1)}</span>` : ""}${r.inv ? `<br><span class="muted">доказывает ${r.inv.join(", ")}</span>` : ""}</td>
+              <td>${riskPill(r.risk)}</td>
+              <td>${layerPill(r.layer)}</td>
+              <td>${r.fx.map((x) => `<span class="fx">${esc(x)}</span>`).join("") || `<span class="muted">${r.layer === "static" ? "—" : "builders"}</span>`}</td>
+              <td>${issueLinks(r.src)}</td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Распределение по слоям</h2>
+    <p class="muted">Число строк вертикали на слое; в скобках — fail-closed. Комбинации живут на Model и Boundary, E2E — тонкий слой соединения.</p>
+    <div class="table-scroll">
+      <table class="pivot">
+        <thead><tr><th>Вертикаль</th>${LAYERS.map((l) => `<th title="${esc(l.what)}">${esc(l.name)}</th>`).join("")}</tr></thead>
+        <tbody>
+          ${piv.map((p) => `<tr><td>${esc(p.vertical.name)}</td>${p.cells.map((c) => c.total === 0 ? '<td class="zero">·</td>' : `<td class="${c.crit > 0 ? "hot" : ""}">${c.total}${c.crit ? ` (${c.crit})` : ""}</td>`).join("")}</tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+    <h3>Слои</h3>
+    <ul class="tight">${LAYERS.map((l) => `<li><strong>${esc(l.name)}</strong> — ${esc(l.what)}</li>`).join("")}</ul>
+  `;
+}
+
+function renderProofs() {
+  const data = proofsByInvariant(ROWS);
+  const e2e = ROWS.filter((r) => r.layer === "e2e");
+  const browser = ROWS.filter((r) => r.layer === "browser" && tierOf(r.risk) === "crit");
+  return `
+    <p class="lead">
+      Каждый fail-closed инвариант из «Выбрать критические пользовательские пути и гарантии» доказан независимо минимум на двух слоях,
+      один из которых — настоящий браузер. Вся Playwright-поверхность идёт в Chromium, Firefox и WebKit перед каждым merge,
+      поэтому «минимальный cross-browser набор» — это список E2E и real-browser строк ниже, а не отдельный прогон.
+    </p>
+    <div class="table-scroll inv-scroll">
+      <table>
+        <thead><tr><th>Инвариант</th>${LAYERS.map((l) => `<th>${esc(l.name)}</th>`).join("")}</tr></thead>
+        <tbody>
+          ${data.map((d) => `<tr><td><strong>${d.inv.key}</strong> ${esc(d.inv.name)}</td>${d.byLayer.map((ids) => `<td class="id">${ids.join("<br>") || '<span class="muted">·</span>'}</td>`).join("")}</tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Минимальный E2E-набор (${e2e.length})</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>ID</th><th>Сценарий</th><th>Риск</th><th>Инварианты</th></tr></thead>
+        <tbody>${e2e.map((r) => `<tr><td class="id">${r.id}</td><td>${fmt(r.text)}</td><td>${riskPill(r.risk)}</td><td class="id">${(r.inv || []).join(", ") || '<span class="muted">соединение пути</span>'}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+
+    <h2>Fail-closed real-browser строки (${browser.length})</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>ID</th><th>Сценарий</th><th>Риск</th></tr></thead>
+        <tbody>${browser.map((r) => `<tr><td class="id">${r.id}</td><td>${fmt(r.text)}</td><td>${riskPill(r.risk)}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <p class="muted">Browser-specific исходы (DOC-21 clipboard) проверяются по своему ожидаемому результату в каждом движке, а не исключаются из матрицы.</p>
+  `;
+}
+
+function renderFixtures() {
+  const usage = fixtureUsage(ROWS);
+  const kinds = [...new Set(FIXTURES.map((f) => f.kind))];
+  return `
+    <p class="lead">
+      Миры — небольшие relationship-safe seeds stateful MSW-backend для Boundary, Component и E2E. Model-тесты используют feature-owned builders
+      с явными overrides (<code>buildGrade</code>, <code>buildManifest</code>, <code>buildReviewRevision</code>, блоки документа и т. п.), а не миры.
+      Каждый тест получает свежие Router, QueryClient, store сессии и сброшенное состояние MSW. Generated ids проверяются по свойствам и связям.
+    </p>
+    ${kinds.map((k) => `
+      <h2>${esc(k)}</h2>
+      <div class="grid">
+        ${FIXTURES.filter((f) => f.kind === k).map((f) => `
+          <div class="card">
+            <h3><code>${esc(f.key)}</code> · ${esc(f.name)}</h3>
+            <p>${fmt(f.body)}</p>
+            <p class="muted">Используют: ${(usage[f.key] || []).join(", ") || "—"}</p>
+          </div>`).join("")}
+      </div>`).join("")}
+  `;
+}
+
+function renderChar() {
+  const c = CHARACTERIZATION;
+  return `
+    <h2>Принцип</h2>
+    <ul class="tight">${c.principle.map((p) => `<li>${fmt(p)}</li>`).join("")}</ul>
+    <h2>Characterization на текущем коде</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>ID</th><th>Когда</th><th>Почему</th></tr></thead>
+        <tbody>${c.items.map((i) => `<tr><td class="id">${i.id}</td><td>${esc(i.when)}</td><td>${fmt(i.why)}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <h2>Кандидаты research-артефакта, которые не нужны</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Кандидат</th><th>Почему не нужен</th></tr></thead>
+        <tbody>${c.rejected.map((i) => `<tr><td>${fmt(i.what)}</td><td>${fmt(i.why)}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderOut() {
+  return `
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Что</th><th>Почему не в матрице</th></tr></thead>
+        <tbody>${OUT_OF_MATRIX.map((o) => `<tr><td>${fmt(o.what)}</td><td>${fmt(o.why)}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderQuestions() {
+  return `
+    <p class="lead">Решения, которые нужны от владельца, прежде чем матрица станет резолюцией тикета.</p>
+    <ol class="q" style="list-style:none;padding-left:0">
+      ${QUESTIONS.map((q) => `<li><strong>${fmt(q.q)}</strong><br><span class="rec">Рекомендация: ${fmt(q.rec)}</span></li>`).join("")}
+    </ol>
+  `;
+}
+
+function render() {
+  renderTabs();
+  const view = document.getElementById("view");
+  const map = { matrix: renderMatrix, proofs: renderProofs, fixtures: renderFixtures, char: renderChar, out: renderOut, questions: renderQuestions };
+  view.innerHTML = map[state.tab]();
+  view.querySelectorAll("[data-f]").forEach((el) => {
+    const key = el.dataset.f;
+    const evt = el.type === "search" ? "input" : "change";
+    el.addEventListener(evt, () => {
+      state.filters[key] = el.type === "checkbox" ? el.checked : el.value;
+      const pos = el.type === "search" ? el.selectionStart : null;
+      render();
+      if (pos !== null) {
+        const again = document.querySelector('[data-f="search"]');
+        again.focus();
+        again.setSelectionRange(pos, pos);
+      }
+    });
+  });
+}
+
+render();
+</script>
+</body>
+</html>
