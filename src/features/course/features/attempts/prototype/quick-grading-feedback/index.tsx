@@ -14,6 +14,7 @@ import { PrototypeSwitcher } from '@/app/prototype-switcher';
 import { BottomActionBar } from '@/features/course/features/attempts/ui/bottom-bar';
 import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
 import {
+  FeedbackIndicator,
   FeedbackPreview,
   InlineFeedbackCell,
   KeyHints,
@@ -24,7 +25,7 @@ import { FixedRowsList } from './list';
 import { useFixedRowsVirtualizer } from './use-fixed-rows';
 import { PresaveSheet } from './presave';
 import { RecoveryDialog } from './recovery';
-import { desktopColumns, type FeedbackColumn } from './columns';
+import { columnsKey, desktopColumns, type FeedbackColumn } from './columns';
 import { QuickRow } from './row';
 import {
   INITIAL_QUICK_SESSION,
@@ -47,11 +48,11 @@ type VariantKey = (typeof VARIANTS)[number]['key'];
 const feedbackColumnByVariant: Record<VariantKey, FeedbackColumn> = {
   A: 'button',
   B: 'field',
-  C: 'preview',
-  D: 'preview',
+  C: 'icon',
+  D: 'icon',
 };
 
-const ROW_HEIGHT = { desktop: 64, mobile: 104 } as const;
+const ROW_HEIGHT = { desktop: 64, mobile: 120 } as const;
 
 function toVariantKey(value: string | undefined): VariantKey {
   return VARIANTS.find((variant) => variant.key === value)?.key ?? 'A';
@@ -83,6 +84,7 @@ export function QuickGradingFeedbackPrototype({
   );
   const [simulateConflict, setSimulateConflict] = useState(true);
   const [showState, setShowState] = useState(false);
+  const [showAction, setShowAction] = useState(false);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
   const [presaveOpen, setPresaveOpen] = useState(false);
 
@@ -350,23 +352,30 @@ export function QuickGradingFeedbackPrototype({
             onFocus={() => activate(attempt.id)}
           />
         );
-      case 'C':
-        return (
+      case 'C': {
+        const openInspector = editable
+          ? () => {
+              activate(attempt.id);
+              focusField(attempt.id, 'inspector');
+            }
+          : undefined;
+
+        return layout === 'desktop' ? (
+          <FeedbackIndicator feedback={feedback} onClick={openInspector} />
+        ) : (
           <FeedbackPreview
             feedback={feedback}
             emptyLabel={editable ? 'отзыв' : undefined}
-            onClick={
-              editable
-                ? () => {
-                    activate(attempt.id);
-                    focusField(attempt.id, 'inspector');
-                  }
-                : undefined
-            }
+            onClick={openInspector}
           />
         );
+      }
       case 'D':
-        return <FeedbackPreview feedback={feedback} />;
+        return layout === 'desktop' ? (
+          <FeedbackIndicator feedback={feedback} />
+        ) : (
+          <FeedbackPreview feedback={feedback} />
+        );
     }
   };
 
@@ -395,7 +404,10 @@ export function QuickGradingFeedbackPrototype({
           className={cn('min-w-0', inspectorInBar ? 'pb-72' : 'pb-44 sm:pb-36')}
         >
           {desktop ? (
-            <ListHeader feedbackColumn={feedbackColumnByVariant[variant]} />
+            <ListHeader
+              feedbackColumn={feedbackColumnByVariant[variant]}
+              showAction={showAction}
+            />
           ) : null}
           <FixedRowsList
             attempts={attempts}
@@ -411,6 +423,7 @@ export function QuickGradingFeedbackPrototype({
                 <QuickRow
                   layout={layout}
                   feedbackColumn={feedbackColumnByVariant[variant]}
+                  showAction={showAction}
                   attempt={attempt}
                   entry={entry}
                   outcome={session.outcomes.get(attempt.id)}
@@ -532,6 +545,14 @@ export function QuickGradingFeedbackPrototype({
           />
           конфликт
         </label>
+        <label className="flex cursor-pointer items-center gap-1 px-1 text-xs">
+          <input
+            type="checkbox"
+            checked={showAction}
+            onChange={(event) => setShowAction(event.target.checked)}
+          />
+          действие
+        </label>
         <button
           type="button"
           className="rounded-full px-2 py-1 text-xs underline"
@@ -568,19 +589,36 @@ export function QuickGradingFeedbackPrototype({
   );
 }
 
-function ListHeader({ feedbackColumn }: { feedbackColumn: FeedbackColumn }) {
+function ListHeader({
+  feedbackColumn,
+  showAction,
+}: {
+  feedbackColumn: FeedbackColumn;
+  showAction: boolean;
+}) {
+  const zones = [
+    'Задание',
+    'Отправлено',
+    'Состояние',
+    'Diff',
+    'Балл',
+    ...(feedbackColumn === 'field' ? ['Общий отзыв'] : []),
+    ...(showAction ? ['Действие'] : []),
+  ];
+
   return (
     <div
       className={cn(
-        'mb-2 grid gap-4 px-4 text-xs font-medium text-muted-foreground',
-        desktopColumns[feedbackColumn]
+        'mb-1.5 grid px-4 text-xs font-medium text-muted-foreground',
+        desktopColumns[columnsKey(feedbackColumn, showAction)]
       )}
     >
       <span>Студент</span>
-      <span>Задание</span>
-      <span>Балл</span>
-      <span>{feedbackColumn === 'button' ? '' : 'Общий отзыв'}</span>
-      <span>Статус</span>
+      {zones.map((zone) => (
+        <span key={zone} className="truncate px-3">
+          {zone}
+        </span>
+      ))}
     </div>
   );
 }

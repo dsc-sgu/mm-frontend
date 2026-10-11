@@ -5,7 +5,7 @@ import {
   type Virtualizer,
 } from '@tanstack/react-virtual';
 
-export const ROW_GAP = 8;
+export const ROW_GAP = 0;
 
 export type RowsVirtualizer = Virtualizer<Window, Element>;
 

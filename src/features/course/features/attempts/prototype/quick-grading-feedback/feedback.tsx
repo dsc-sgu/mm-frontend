@@ -178,7 +178,7 @@ export function InlineFeedbackCell({
           onCommitNext();
         }
       }}
-      className="h-10"
+      className="h-9"
     />
   );
 }
@@ -239,6 +239,58 @@ export function FeedbackPreview({
       )}
     >
       {content}
+    </button>
+  );
+}
+
+export function FeedbackIndicator({
+  feedback,
+  onClick,
+}: {
+  feedback: string;
+  onClick?: () => void;
+}) {
+  const filled = feedback.trim() !== '';
+
+  if (!filled && !onClick) {
+    return null;
+  }
+
+  const icon = filled ? (
+    <MessageSquareText className="size-4 text-primary" />
+  ) : (
+    <MessageSquarePlus className="size-4" />
+  );
+  const label = filled ? `Общий отзыв: ${feedback}` : 'Добавить общий отзыв';
+
+  if (!onClick) {
+    return (
+      <span
+        title={feedback}
+        aria-label={label}
+        className="grid size-7 shrink-0 place-items-center"
+      >
+        {icon}
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      tabIndex={-1}
+      title={filled ? feedback : label}
+      aria-label={label}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+      className={cn(
+        'grid size-7 shrink-0 place-items-center rounded-md',
+        'text-muted-foreground hover:bg-accent hover:text-foreground'
+      )}
+    >
+      {icon}
     </button>
   );
 }
