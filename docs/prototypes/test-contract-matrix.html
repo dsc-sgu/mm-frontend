@@ -635,6 +635,8 @@ const ROWS = [
     text: "Parity computed styles editor ↔ read-only на `doc:all-blocks`: типографика, ритм отступов, вид блоков; chrome редактора исключён; без screenshots." },
   { id: "DOC-16", v: "doc", slice: "#119·3", risk: "data", layer: "browser", fx: ["text:paste-html"], src: [119],
     text: "Paste в Course Page: внешний HTML → DOMPurify → converter → normalizer; текст сохранён; профиль не создаёт того, что документ не сохранит." },
+  { id: "DOC-23", v: "doc", slice: "#119·3", risk: "integrity", layer: "model", fx: [], src: [119, 74, 109],
+    text: "Markdown при наборе создаёт только узлы профиля: `#`/`##`/`###` → heading, `>` → quote, `- ` → bulleted, `1. ` → ordered (`3. ` остаётся текстом, #74), три backtick → code block, `**`, `*`, `` ` `` → bold, italic, code; `[t](url)` и вставка URL дают ссылку только с разрешённой схемой; внутри code block ничего не преобразуется." },
   { id: "DOC-17", v: "doc", slice: "#119·3", risk: "corr", layer: "browser", fx: [], src: [119],
     text: "Ограничения профиля: Tab вне списка ничего не делает; в цитате Shift+Enter — перенос, Enter на пустой строке — выход в paragraph." },
   { id: "DOC-18", v: "doc", slice: "до #119·4", risk: "corr", layer: "browser", fx: ["doc:all-blocks"], src: [119, 72], flag: "q1",
@@ -765,6 +767,10 @@ const QUESTIONS = [
   {
     q: "Q14.3. Lease привязан к браузеру.",
     rec: "Решено владельцем: lease по auth session, без клиентского `leaseId`. Единственность пишущей вкладки — Web Lock и счётчик смен в localStorage: каждая смена его увеличивает, пишущая вкладка синхронно сверяет свой номер перед каждой записью. У backend запрошена проверка revision черновика при записи (#113, TAB-07); если backend откажет, принимается узкое окно запоздавшего запроса на силовом пути.",
+  },
+  {
+    q: "Q15. Paste Markdown в Course Page. Сейчас Markdown преобразуется только при наборе (DOC-23); вставленный text/plain с разметкой остаётся текстом.",
+    rec: "Решено владельцем: в рамках карты не тестировать и не менять; преобразование вставленного Markdown — backlog вне карты «Преобразовывать вставленный Markdown в редакторе Course Page» (#133).",
   },
 ];
 
