@@ -4,16 +4,18 @@ import {
   applyChanges,
   blockWithText,
   dragBlockOnto,
+  expectBlocks,
   openEmptyEditor,
   openReadOnlyPage,
   placeCaret,
-  readBlockTexts,
   readListOutline,
   reopenEditor,
   runBlockCommand,
+  selectBlocksWithArea,
   transformBlock,
   typeBlocks,
 } from './editor';
+import { PENDING_DOC1, PENDING_DOC5 } from './slices';
 
 // DOC-14: list numbering scenarios from #74, fixture `doc:lists-74`. The
 // tests type every list themselves and assert only what the reader sees.
@@ -22,19 +24,23 @@ function expectOutline(scope: Locator, outline: string[]) {
   return expect.poll(() => readListOutline(scope)).toEqual(outline);
 }
 
+// Items that separate commands turned into list items, one by one.
+async function typeCommandList(page: Page, editable: Locator) {
+  await typeBlocks(page, ['Alpha', 'Beta', 'Gamma']);
+
+  for (const text of ['Alpha', 'Beta', 'Gamma']) {
+    await transformBlock(blockWithText(editable, text), 'Нумерованный список');
+  }
+}
+
 type SavedListDocument = {
   name: string;
   outline: string[];
-  // The slice that brings the behaviour, while the current editor lacks it.
+  // Set while the current editor lacks the behaviour: the reason for
+  // `test.fail()`.
   pendingSlice?: string;
-  type: (page: Page, editable: Locator) => Promise<void>;
+  typeContent: (page: Page, editable: Locator) => Promise<void>;
 };
-
-// Slice 1 of #119 «Документ v1 и read-only renderer»: #74 rules as one
-// grouping function for the editor and the renderer, no hidden list id.
-const DOC1 = 'DOC1, https://github.com/dsc-sgu/mm-frontend/issues/119';
-// Slice 5 of #119 «DnD и выделение»: multi-drag of selected blocks.
-const DOC5 = 'DOC5, https://github.com/dsc-sgu/mm-frontend/issues/119';
 
 // Documents for the save and read-only checks. Each one isolates a #74 rule,
 // so a rule the current editor breaks fails only its own tests.
@@ -49,7 +55,7 @@ const SAVED_LIST_DOCUMENTS: SavedListDocument[] = [
       '• Bullet one',
       '• Bullet two',
     ],
-    async type(page) {
+    async typeContent(page) {
       await typeBlocks(page, ['1. Alpha']);
       await page.keyboard.press('Enter');
       await page.keyboard.press('Tab');
@@ -70,17 +76,8 @@ const SAVED_LIST_DOCUMENTS: SavedListDocument[] = [
     outline: ['1. Alpha', '2. Beta', '3. Gamma'],
     // Each command gives its item its own hidden list id, and saving splits
     // the run into three lists: 1, 1, 1.
-    pendingSlice: DOC1,
-    async type(page, editable) {
-      await typeBlocks(page, ['Alpha', 'Beta', 'Gamma']);
-
-      for (const text of ['Alpha', 'Beta', 'Gamma']) {
-        await transformBlock(
-          blockWithText(editable, text),
-          'Нумерованный список'
-        );
-      }
-    },
+    pendingSlice: PENDING_DOC1,
+    typeContent: typeCommandList,
   },
 ];
 
@@ -110,14 +107,7 @@ test.describe('DOC-14: нумерация списков', () => {
   }) => {
     const editable = await openEmptyEditor(page);
 
-    await typeBlocks(page, ['Alpha', 'Beta', 'Gamma']);
-
-    for (const text of ['Alpha', 'Beta', 'Gamma']) {
-      await transformBlock(
-        blockWithText(editable, text),
-        'Нумерованный список'
-      );
-    }
+    await typeCommandList(page, editable);
 
     await expectOutline(editable, ['1. Alpha', '2. Beta', '3. Gamma']);
   });
@@ -152,9 +142,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await page.keyboard.type('After');
 
     await expectOutline(editable, ['1. Alpha', '  1. Nested', '2. Beta']);
-    await expect
-      .poll(() => readBlockTexts(editable))
-      .toEqual(['Alpha', 'Nested', 'Beta', 'After']);
+    await expectBlocks(editable, ['Alpha', 'Nested', 'Beta', 'After']);
   });
 
   test('Backspace в начале поднимает вложенный item, затем выводит из списка', async ({
@@ -178,9 +166,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await page.keyboard.press('Backspace');
 
     await expectOutline(editable, ['1. Alpha', '1. Beta']);
-    await expect
-      .poll(() => readBlockTexts(editable))
-      .toEqual(['Alpha', 'Nested', 'Beta']);
+    await expectBlocks(editable, ['Alpha', 'Nested', 'Beta']);
   });
 
   test('Tab вкладывает item без разрыва серии родителя, Shift+Tab поднимает', async ({
@@ -200,11 +186,11 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Alpha', '2. Beta', '3. Gamma']);
   });
 
-  test('смена ordered → unordered → ordered даёт 1 / • / 1', async ({
+  test('смена ordered → unordered завершает серию: 1 / • / 1', async ({
     page,
   }) => {
     // The editor continues the ordered run across the bullet: 1 / • / 2.
-    test.fail(true, DOC1);
+    test.fail(true, PENDING_DOC1);
 
     const editable = await openEmptyEditor(page);
 
@@ -216,6 +202,16 @@ test.describe('DOC-14: нумерация списков', () => {
     );
 
     await expectOutline(editable, ['1. Alpha', '• Beta', '1. Gamma']);
+  });
+
+  test('смена unordered → ordered снова объединяет серию', async ({ page }) => {
+    const editable = await openEmptyEditor(page);
+
+    await typeBlocks(page, ['1. Alpha', 'Beta', 'Gamma']);
+    await transformBlock(
+      blockWithText(editable, 'Beta'),
+      'Маркированный список'
+    );
 
     await transformBlock(
       blockWithText(editable, 'Beta'),
@@ -270,14 +266,15 @@ test.describe('DOC-14: нумерация списков', () => {
     page,
   }) => {
     // The editor drags only the block under the handle.
-    test.fail(true, DOC5);
+    test.fail(true, PENDING_DOC5);
 
     const editable = await openEmptyEditor(page);
 
     await typeBlocks(page, ['1. Alpha', 'Beta', 'Gamma', 'Delta']);
-    await blockWithText(editable, 'Alpha').getByText('Alpha').click();
-    await page.keyboard.press('Escape');
-    await page.keyboard.press('Shift+ArrowDown');
+    await selectBlocksWithArea(
+      blockWithText(editable, 'Alpha'),
+      blockWithText(editable, 'Beta')
+    );
     await expect(
       page.getByRole('toolbar', { name: 'Действия с выбранными блоками' })
     ).toContainText('2 блока');
@@ -306,7 +303,7 @@ test.describe('DOC-14: нумерация списков', () => {
 
       const editable = await openEmptyEditor(page);
 
-      await listDocument.type(page, editable);
+      await listDocument.typeContent(page, editable);
       await expectOutline(editable, listDocument.outline);
 
       await applyChanges(page);
@@ -324,7 +321,7 @@ test.describe('DOC-14: нумерация списков', () => {
 
       const editable = await openEmptyEditor(page);
 
-      await listDocument.type(page, editable);
+      await listDocument.typeContent(page, editable);
       await expectOutline(editable, listDocument.outline);
 
       await applyChanges(page);

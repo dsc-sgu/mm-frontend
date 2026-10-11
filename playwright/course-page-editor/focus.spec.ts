@@ -5,43 +5,69 @@ import {
   blockWithText,
   dragBlockOnto,
   dragBlockWithKeyboard,
+  expectBlocks,
   openEmptyEditor,
-  readBlockTexts,
-  readCaretBlock,
+  readCaretPosition,
   runBlockCommand,
   transformBlock,
   typeBlocks,
+  type CaretPosition,
 } from './editor';
+import { PENDING_DOC4, PENDING_DOC5 } from './slices';
 
 // DOC-18: focus after structural commands. The outcome is the block that
 // holds the caret, not how the editor gets it there.
 
-// Slices of #119: 4 «Структурные команды и фокус» brings one undo step per
-// command with focus on the affected block and shortcuts read from
-// `KeyboardEvent` (DOC-22); 5 «DnD и выделение» turns drag into commands.
-const DOC4 = 'DOC4, https://github.com/dsc-sgu/mm-frontend/issues/119';
-const DOC5 = 'DOC5, https://github.com/dsc-sgu/mm-frontend/issues/119';
+// Heading, paragraph, list item, quote, code block, spoiler and the empty
+// paragraph the editor keeps after a spoiler.
+const BLOCKS = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', ''];
+const BETA_BELOW_GAMMA = [
+  'Alpha',
+  'Gamma',
+  'Beta',
+  'Delta',
+  'Epsilon',
+  'Zeta',
+  '',
+];
 
-const BLOCKS = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
-const BETA_BELOW_GAMMA = ['Alpha', 'Gamma', 'Beta', 'Delta', 'Epsilon'];
-
-// Fixture `doc:all-blocks`, limited to the kinds typing can create: heading,
-// paragraph, list item, quote, paragraph.
+// Fixture `doc:all-blocks`, limited to the kinds the editor creates without
+// course resources: images, files and tasks need them.
 async function typeAllBlocks(page: Page, editable: Locator) {
-  await typeBlocks(page, ['## Alpha', 'Beta', '- Gamma', '']);
-  await page.keyboard.press('Enter');
-  await page.keyboard.type('> Delta');
+  await typeBlocks(page, ['## Alpha', 'Beta', '- Gamma', '', '> Delta']);
   await page.keyboard.press('ControlOrMeta+Enter');
-  await page.keyboard.type('Epsilon');
+  await page.keyboard.type('```Epsilon');
+  await page.keyboard.press('ControlOrMeta+Enter');
+  await page.keyboard.type('/спойлер');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Zeta');
   await expectBlocks(editable, BLOCKS);
 }
 
-function expectBlocks(editable: Locator, texts: string[]) {
-  return expect.poll(() => readBlockTexts(editable)).toEqual(texts);
+function inBlock(index: number, text: string): CaretPosition {
+  return { status: 'in-block', index, text };
 }
 
 function expectCaretIn(editable: Locator, index: number, text: string) {
-  return expect.poll(() => readCaretBlock(editable)).toEqual({ index, text });
+  return expect
+    .poll(() => readCaretPosition(editable))
+    .toEqual(inBlock(index, text));
+}
+
+// Passes when the caret is in one of `blocks`; a failure shows where it is.
+function expectCaretInOneOf(editable: Locator, blocks: [number, string][]) {
+  return expect
+    .poll(async () => {
+      const caret = await readCaretPosition(editable);
+      const isInOne =
+        caret.status === 'in-block' &&
+        blocks.some(
+          ([index, text]) => caret.index === index && caret.text === text
+        );
+
+      return isInOne ? 'in one of the blocks' : caret;
+    })
+    .toBe('in one of the blocks');
 }
 
 test.describe('DOC-18: фокус после команд', () => {
@@ -55,14 +81,7 @@ test.describe('DOC-18: фокус после команд', () => {
   test('«Добавить ниже» ставит каретку в новый блок', async () => {
     await runBlockCommand(blockWithText(editable, 'Alpha'), 'Добавить ниже');
 
-    await expectBlocks(editable, [
-      'Alpha',
-      '',
-      'Beta',
-      'Gamma',
-      'Delta',
-      'Epsilon',
-    ]);
+    await expectBlocks(editable, ['Alpha', '', ...BLOCKS.slice(1)]);
     await expectCaretIn(editable, 1, '');
   });
 
@@ -70,38 +89,34 @@ test.describe('DOC-18: фокус после команд', () => {
     await runBlockCommand(blockWithText(editable, 'Delta'), 'Добавить выше');
 
     await expectBlocks(editable, [
-      'Alpha',
-      'Beta',
-      'Gamma',
+      ...BLOCKS.slice(0, 3),
       '',
-      'Delta',
-      'Epsilon',
+      ...BLOCKS.slice(3),
     ]);
     await expectCaretIn(editable, 3, '');
   });
 
   test('«Дублировать» ставит каретку в копию', async () => {
-    await runBlockCommand(blockWithText(editable, 'Delta'), 'Дублировать');
+    await runBlockCommand(blockWithText(editable, 'Epsilon'), 'Дублировать');
 
     await expectBlocks(editable, [
-      'Alpha',
-      'Beta',
-      'Gamma',
-      'Delta',
-      'Delta',
+      ...BLOCKS.slice(0, 5),
       'Epsilon',
+      ...BLOCKS.slice(5),
     ]);
-    await expectCaretIn(editable, 4, 'Delta');
+    await expectCaretIn(editable, 5, 'Epsilon');
   });
 
   test('«Переместить вверх» оставляет каретку в блоке', async () => {
-    await runBlockCommand(
-      blockWithText(editable, 'Gamma'),
-      'Переместить вверх'
-    );
+    await runBlockCommand(blockWithText(editable, 'Zeta'), 'Переместить вверх');
 
-    await expectBlocks(editable, BETA_BELOW_GAMMA);
-    await expectCaretIn(editable, 1, 'Gamma');
+    await expectBlocks(editable, [
+      ...BLOCKS.slice(0, 4),
+      'Zeta',
+      'Epsilon',
+      '',
+    ]);
+    await expectCaretIn(editable, 4, 'Zeta');
   });
 
   test('«Переместить вниз» оставляет каретку в блоке', async () => {
@@ -111,11 +126,15 @@ test.describe('DOC-18: фокус после команд', () => {
     await expectCaretIn(editable, 2, 'Beta');
   });
 
-  test('«Удалить» ставит каретку в блок на месте удалённого', async () => {
+  test('«Удалить» ставит каретку в соседний блок', async () => {
     await runBlockCommand(blockWithText(editable, 'Beta'), 'Удалить');
 
-    await expectBlocks(editable, ['Alpha', 'Gamma', 'Delta', 'Epsilon']);
-    await expectCaretIn(editable, 1, 'Gamma');
+    await expectBlocks(editable, ['Alpha', ...BLOCKS.slice(2)]);
+    // No contract picks the previous or the next block.
+    await expectCaretInOneOf(editable, [
+      [0, 'Alpha'],
+      [1, 'Gamma'],
+    ]);
   });
 
   test('«Превратить в» оставляет каретку в блоке', async () => {
@@ -127,7 +146,7 @@ test.describe('DOC-18: фокус после команд', () => {
 
   test('перетаскивание оставляет каретку в перемещённом блоке', async () => {
     // The editor drops the block without focusing it.
-    test.fail(true, DOC5);
+    test.fail(true, PENDING_DOC5);
 
     await dragBlockOnto(
       blockWithText(editable, 'Gamma'),
@@ -138,15 +157,14 @@ test.describe('DOC-18: фокус после команд', () => {
       'Gamma',
       'Alpha',
       'Beta',
-      'Delta',
-      'Epsilon',
+      ...BLOCKS.slice(3),
     ]);
     await expectCaretIn(editable, 0, 'Gamma');
   });
 
   test('undo возвращает каретку в затронутый блок', async ({ page }) => {
     // Undo restores the order but puts the caret back where typing ended.
-    test.fail(true, DOC4);
+    test.fail(true, PENDING_DOC4);
 
     await runBlockCommand(blockWithText(editable, 'Beta'), 'Переместить вниз');
     await expectCaretIn(editable, 2, 'Beta');
@@ -157,14 +175,7 @@ test.describe('DOC-18: фокус после команд', () => {
     await expectCaretIn(editable, 1, 'Beta');
   });
 
-  test('redo возвращает каретку в затронутый блок', async ({
-    page,
-    browserName,
-  }) => {
-    // WebKit reports macOS in its user agent, so Slate expects Cmd+Shift+Z,
-    // while the Linux keyboard sends Ctrl+Shift+Z and nothing is redone.
-    test.fail(browserName === 'webkit', DOC4);
-
+  test('redo возвращает каретку в затронутый блок', async ({ page }) => {
     await runBlockCommand(blockWithText(editable, 'Beta'), 'Переместить вниз');
     await expectCaretIn(editable, 2, 'Beta');
     await page.keyboard.press('ControlOrMeta+z');

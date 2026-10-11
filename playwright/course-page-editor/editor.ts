@@ -9,10 +9,31 @@ import {
 // The mock teacher can edit only this course.
 const COURSE_SLUG = 'modern-information-technologies';
 
-type CaretBlock = {
-  index: number;
-  text: string;
-};
+// Labels of the block menu commands and of its «Превратить в» submenu.
+type BlockCommand =
+  | 'Добавить выше'
+  | 'Добавить ниже'
+  | 'Дублировать'
+  | 'Переместить вверх'
+  | 'Переместить вниз'
+  | 'Удалить';
+
+type BlockKind =
+  | 'Текст'
+  | 'Заголовок 1'
+  | 'Заголовок 2'
+  | 'Заголовок 3'
+  | 'Цитата'
+  | 'Маркированный список'
+  | 'Нумерованный список'
+  | 'Код'
+  | 'Спойлер';
+
+export type CaretPosition =
+  | { status: 'no-focus' }
+  // The DOM caret and the Plate selection point at different blocks.
+  | { status: 'out-of-sync'; domIndex: number; plateIndex: number | null }
+  | { status: 'in-block'; index: number; text: string };
 
 // Opens the Course Page editor and removes the mock content, so each test
 // types its own document and does not depend on mock data.
@@ -26,9 +47,13 @@ export async function openEmptyEditor(page: Page) {
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.press('Backspace');
-  await expect.poll(() => readBlockTexts(editable)).toEqual(['']);
+  await expectBlocks(editable, ['']);
 
   return editable;
+}
+
+export function expectBlocks(editable: Locator, texts: string[]) {
+  return expect.poll(() => readBlockTexts(editable)).toEqual(texts);
 }
 
 export async function typeBlocks(page: Page, lines: string[]) {
@@ -77,8 +102,7 @@ export async function openReadOnlyPage(page: Page) {
 }
 
 export async function reopenEditor(page: Page) {
-  await sectionLink(page, 'Курс').click();
-  await expect(getEditable(page)).toHaveCount(0);
+  await openReadOnlyPage(page);
   await sectionLink(page, 'Редактирование').click();
 
   const editable = getEditable(page);
@@ -115,14 +139,14 @@ async function openBlockMenu(block: Locator) {
   await block.page().keyboard.press('Enter');
 }
 
-export async function runBlockCommand(block: Locator, command: string) {
+export async function runBlockCommand(block: Locator, command: BlockCommand) {
   const page = block.page();
 
   await openBlockMenu(block);
   await page.getByRole('menuitem', { name: command, exact: true }).click();
 }
 
-export async function transformBlock(block: Locator, kind: string) {
+export async function transformBlock(block: Locator, kind: BlockKind) {
   const page = block.page();
 
   await openBlockMenu(block);
@@ -158,6 +182,25 @@ export async function dragBlockOnto(block: Locator, target: Locator) {
     steps: 4,
   });
   await page.mouse.move(startX, startY + deltaY, { steps: 12 });
+  await page.mouse.up();
+}
+
+// Selects the blocks from `first` to `last` with a selection area dragged
+// from the page margin, where the editor starts block selection.
+export async function selectBlocksWithArea(first: Locator, last: Locator) {
+  const page = first.page();
+  const firstBox = await first.boundingBox();
+  const lastBox = await last.boundingBox();
+
+  if (!firstBox || !lastBox) {
+    throw new Error('selectBlocksWithArea: a block is not visible');
+  }
+
+  await page.mouse.move(16, firstBox.y - 4);
+  await page.mouse.down();
+  await page.mouse.move(firstBox.x + 48, lastBox.y + lastBox.height / 2, {
+    steps: 12,
+  });
   await page.mouse.up();
 }
 
@@ -284,13 +327,13 @@ export function readListOutline(scope: Locator) {
   });
 }
 
-// Where typing would go: the top-level block holding the caret, by DOM
-// selection and by the Plate selection. `null` if the editor has no focus.
-export async function readCaretBlock(
+// Where typing would go: the top-level block that holds the caret by both
+// the DOM selection and the Plate selection.
+export async function readCaretPosition(
   editable: Locator
-): Promise<CaretBlock | null> {
+): Promise<CaretPosition> {
   const page = editable.page();
-  const domCaret = await editable.evaluate((root) => {
+  const domIndex = await editable.evaluate((root) => {
     const selection = window.getSelection();
 
     if (
@@ -308,20 +351,21 @@ export async function readCaretBlock(
     return blocks.findIndex((block) => block.contains(selection.anchorNode));
   });
 
-  if (domCaret === null || domCaret < 0) {
-    return null;
+  if (domIndex === null) {
+    return { status: 'no-focus' };
   }
 
   const plateSelection = await getSelection(
     page,
     await getEditorHandle(page, editable)
   );
+  const plateIndex = plateSelection?.anchor.path[0] ?? null;
 
-  if (plateSelection?.anchor.path[0] !== domCaret) {
-    return null;
+  if (domIndex < 0 || plateIndex !== domIndex) {
+    return { status: 'out-of-sync', domIndex, plateIndex };
   }
 
   const texts = await readBlockTexts(editable);
 
-  return { index: domCaret, text: texts[domCaret] };
+  return { status: 'in-block', index: domIndex, text: texts[domIndex] };
 }

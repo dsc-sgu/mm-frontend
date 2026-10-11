@@ -4,6 +4,21 @@ const PORT = Number(process.env.PLAYWRIGHT_PORT ?? 5180);
 const BASE_URL = `http://localhost:${PORT}`;
 const IS_CI = Boolean(process.env.CI);
 
+// WebKit always reports macOS in its user agent. Off macOS that contradicts
+// `navigator.platform` and the keys Playwright sends (Ctrl, not Cmd), so
+// there the WebKit project presents itself as WebKit on Linux.
+const SAFARI = devices['Desktop Safari'];
+const WEBKIT =
+  process.platform === 'darwin'
+    ? SAFARI
+    : {
+        ...SAFARI,
+        userAgent: SAFARI.userAgent.replace(
+          /\(Macintosh;[^)]*\)/,
+          '(X11; Linux x86_64)'
+        ),
+      };
+
 export default defineConfig({
   testDir: './playwright',
   fullyParallel: true,
@@ -23,7 +38,7 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'webkit', use: WEBKIT },
   ],
   webServer: {
     command: `bun run dev --port ${PORT} --strictPort`,
