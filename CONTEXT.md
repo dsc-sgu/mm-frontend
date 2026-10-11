@@ -40,8 +40,8 @@ A Teacher's personal unpublished Course Snapshot, based on one published Course 
 _Avoid_: Course Draft, when the Course access state is meant; a draft shared by all Teachers
 
 **Course Editing Lease**:
-Exclusive, expiring permission for one Teacher, in one editing session, to change and publish their Course Draft Snapshot. Only one Teacher edits a Course at a time; giving up the lease keeps the draft.
-_Avoid_: course lock
+Exclusive, expiring permission for one Teacher, in one sign-in session, to change and publish their Course Draft Snapshot. Only one Teacher edits a Course at a time; giving up the lease keeps the draft. All browser tabs of that sign-in session share the lease.
+_Avoid_: course lock, a lease per browser tab
 
 **Course Page Working Copy**:
 A teacher's local editable representation of the Course Draft Snapshot. It is either synchronized or has unsynchronized local changes.
@@ -100,8 +100,8 @@ A Review discussion anchored to a line or line range in the Attempt diff. A Teac
 _Avoid_: Comment, when the whole thread is meant
 
 **Review Lease**:
-Exclusive, expiring permission for one Teacher, in one editing session, to edit the Review of an Attempt, including publishing its first Review. The holder can change the Grade, Overall Feedback, and their own root comments, but not other Teachers' root comments. Other Teachers can read the Review while the lease is held.
-_Avoid_: permanent reviewer assignment
+Exclusive, expiring permission for one Teacher, in one sign-in session, to edit the Review of an Attempt, including publishing its first Review. The holder can change the Grade, Overall Feedback, and their own root comments, but not other Teachers' root comments. Other Teachers can read the Review while the lease is held. All browser tabs of that sign-in session share the lease.
+_Avoid_: permanent reviewer assignment, a lease per browser tab
 
 **Review Read State**:
 Whether the Student has seen the latest Teacher-visible change to a Review. A new Review Revision or a Teacher's reply makes the Review unread again; the Student's own replies do not.
