@@ -12,6 +12,10 @@ Code-block highlighting uses direct dependencies on `shiki` and `@shikijs/themes
 
 Header route metadata augments `StaticDataRouteOption` through the direct `@tanstack/react-router` dependency, not its transitive `@tanstack/router-core` package.
 
+## Course grading
+
+Attempts and attempt review import grading helpers and score fields directly from `@/features/course/features/grading`.
+
 ## Mock authorization
 
 To run the frontend with mock authorization, add this to `.env.local` and restart the Vite dev server:
