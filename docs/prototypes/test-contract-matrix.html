@@ -161,8 +161,9 @@
   <div class="banner">
     ПРОТОТИП, throwaway. Это не test plan в коде и не production. Слои и политика — из
     <a href="https://github.com/dsc-sgu/mm-frontend/issues/68">«Выбрать слоистую стратегию тестирования»</a>;
-    поведение — из резолюций вертикалей (ссылки в колонке «Источник»). Пометка
-    <span class="pill flag">вопрос</span> означает, что строка зависит от открытого вопроса на вкладке «Вопросы».
+    поведение — из резолюций вертикалей (ссылки в колонке «Источник»). Все вопросы решены владельцем:
+    ответы — на вкладке «Решения» и в резолюции
+    <a href="https://github.com/dsc-sgu/mm-frontend/issues/120">«Спроектировать матрицу тестовых контрактов критических вертикалей»</a>.
   </div>
 
   <nav class="tabs" role="tablist" id="tabs"></nav>
@@ -535,7 +536,7 @@ const ROWS = [
     text: "Смена slug — мгновенная операция; route заменяется; сессия редактора по `CourseId` не перемонтируется (несинхронизированный текст цел); сбой оставляет старый slug с ошибкой." },
   { id: "DRF-02", v: "drf", slice: "#118·2", risk: "data", layer: "model", fx: [], src: [118], inv: ["I6"],
     text: "`transitionCourseDraftSession`: полная таблица; `sync` только в `editing`; запрещённые переходы — no-op." },
-  { id: "DRF-03", v: "drf", slice: "#118·2", risk: "data", layer: "model", fx: [], src: [118], flag: "q4", inv: ["I6"],
+  { id: "DRF-03", v: "drf", slice: "#118·2", risk: "data", layer: "model", fx: [], src: [118], inv: ["I6"],
     text: "`planDraftSync(base, workingCopy)`: равенство → пустой план; property: план, применённый к симулятору сервера, даёт Working Copy с точностью до server ids; `afterBlockId: null` — начало." },
   { id: "DRF-04", v: "drf", slice: "#118·2", risk: "integrity", layer: "model", fx: [], src: [118],
     text: "`getPublishGate`: lease не мой, ошибки валидации, нет отличий от опубликованной, `sync-rejected`, публикация идёт или не подтверждена; несинхронизированные правки не блокируют." },
@@ -603,9 +604,9 @@ const ROWS = [
     text: "Lease у другой сессии того же User (`423`, holder — сам User) показывается иначе, чем «Редактирует X»." },
 
   // ── Course Page: документ ──
-  { id: "DOC-01", v: "doc", slice: "#119·3", risk: "data", layer: "model", fx: [], src: [119], flag: "q4",
+  { id: "DOC-01", v: "doc", slice: "#119·3", risk: "data", layer: "model", fx: [], src: [119],
     text: "Закон round-trip `fromPlate(toPlate(doc)) = doc` — property на генераторе нормализованных документов." },
-  { id: "DOC-02", v: "doc", slice: "#119·1", risk: "data", layer: "model", fx: [], src: [119], flag: "q4",
+  { id: "DOC-02", v: "doc", slice: "#119·1", risk: "data", layer: "model", fx: [], src: [119],
     text: "Канонизация идемпотентна: слияние фрагментов с одинаковыми marks, удаление пустых, marks как упорядоченное множество, перенос `\\n`." },
   { id: "DOC-03", v: "doc", slice: "#119·1", risk: "integrity", layer: "model", fx: ["doc:invalid-blocks"], src: [119],
     text: "Schema: неизвестный тип, неизвестная version, невалидный `data` → блок-заглушка в reader и `unsupported-content` в editor; молчаливых конверсий нет." },
@@ -714,7 +715,7 @@ const QUESTIONS = [
   },
   {
     q: "Q4. Property-based тесты. DOC-01, DOC-02 и DRF-03 требуют генератора документов. Добавить `fast-check` в стек (только Node, seed в отчёте об ошибке, фиксированное число прогонов в CI) или писать генераторы вручную?",
-    rec: "`fast-check`: shrinking минимизирует контрпример, ручной генератор этого не даст. «Выбрать слоистую стратегию тестирования» его не называет, поэтому решение фиксируется здесь.",
+    rec: "Решено владельцем: `fast-check` (devDependency, только Node-тесты слоя Model, через `@fast-check/vitest`): shrinking сводит падение к минимальному документу, seed в отчёте воспроизводит его, число прогонов в CI фиксировано. Генераторы нужны DOC-01, DOC-02 и DRF-03.",
   },
   {
     q: "Q5. Новый контракт REV-12: привязка root comment к выделенной строке/диапазону и показ thread Student'у на тех же строках. В решениях вертикали его нет явно, он следует из glossary (Line Comment Thread anchored to a line). Включаем в матрицу?",
@@ -820,7 +821,7 @@ const TABS = [
   { key: "fixtures", name: "Fixtures" },
   { key: "char", name: "Characterization" },
   { key: "out", name: "Вне матрицы" },
-  { key: "questions", name: "Вопросы" },
+  { key: "questions", name: "Решения" },
 ];
 const state = {
   tab: "matrix",
