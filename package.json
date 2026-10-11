@@ -38,9 +38,9 @@
     "axios": "^1.13.4",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",
-    "dompurify": "^3.4.8",
+    "dompurify": "^3.4.16",
     "immutable": "^5.1.6",
-    "libphonenumber-js": "^1.13.9",
+    "libphonenumber-js": "^1.13.15",
     "linkifyjs": "^4.3.3",
     "lucide-react": "^0.563.0",
     "platejs": "^53.0.7",
@@ -49,13 +49,13 @@
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.1",
     "shiki": "^4.0.2",
-    "sonner": "^2.0.7",
+    "sonner": "^2.0.8",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
     "use-debounce": "^10.1.1",
     "valibot": "^1.2.0",
     "vaul": "^1.1.2",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

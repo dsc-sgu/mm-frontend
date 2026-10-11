@@ -38,6 +38,15 @@ After changing Radix imports or versions, run `bun run lint` and `bun run build`
 2. Open the avatar menu by clicking it. Close it with Escape, focus the trigger, and reopen it with ArrowDown. Check ArrowDown/ArrowUp navigation between “Настройки” and “Выход”, then Escape closes the menu and returns focus to the trigger.
 3. Confirm “Посмотреть попытки студентов” and “Редактировать задание” render as links, not nested buttons, and that the first link navigates to the course attempts.
 
+## Runtime dependency smoke checks
+
+Keep DOMPurify, Sonner, Zustand, and libphonenumber-js updates within their current major versions. After updating them, run `bun install --frozen-lockfile`, `bun run lint`, and `bun run build`, then smoke-check with mock authorization enabled:
+
+1. Open `/courses/modern-information-technologies/tasks/1/attempts/student/1` and confirm the saved review preserves rich-text formatting. Exercise `sanitizeRichTextHtml` in `src/features/course/features/attempt-review/ui/rich-text/sanitize.ts` with scripts, inline event handlers, and unsafe link schemes; these must be removed while HTTPS, email, phone, course-relative, and fragment links remain.
+2. Open `/courses/modern-information-technologies/edit`. Change the title and reset it; confirm the original title returns and the unsaved-changes bar disappears. Clear the title and confirm Apply is disabled and Ctrl/Cmd+S shows the validation-error toast. Restore a valid title and apply; confirm the success toast and clean editor state. Ctrl/Cmd+S without changes should show the informational toast.
+3. Select text in the course editor, open “Добавить ссылку”, and paste `Позвоните +7 (912) 345-67-89 доб. 42` into “Адрес ссылки”. Confirm it becomes `tel:+79123456789;ext=42`, then apply the link to the selected text.
+4. Open `/courses/modern-information-technologies/attempts` and click “Выбрать всё”. Wait for a mock review-lock update; confirm the “Выбор обновлён” warning toast names the attempt taken for review and the selection count decreases.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
