@@ -1,0 +1,1728 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Смена пишущей вкладки — прототип</title>
+<style>
+  :root {
+    --bg: #f6f6f8;
+    --card: #ffffff;
+    --text: #1c1c22;
+    --muted: #6b6b78;
+    --border: #e2e2e8;
+    --accent: #4f46e5;
+    --accent-soft: #eef0ff;
+    --warn: #9a5b00;
+    --warn-soft: #fff6e3;
+    --loss: #b42318;
+    --loss-soft: #fdeceb;
+    --ok: #157f3c;
+    --ok-soft: #e9f7ee;
+    --frozen: #3b82c4;
+    --frozen-soft: #e8f2fb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1440px; margin: 0 auto; padding: 24px 24px 64px; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  h2 { font-size: 15px; margin: 0 0 10px; text-transform: none; }
+  h3 { font-size: 14px; margin: 0 0 6px; }
+  p { margin: 0 0 8px; }
+  .muted { color: var(--muted); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .intro { max-width: 980px; }
+  .note {
+    display: inline-block;
+    margin: 4px 0 12px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--warn-soft);
+    color: var(--warn);
+    font-size: 12px;
+  }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  button {
+    font: inherit;
+    font-size: 13px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.seg-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  label.check { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
+
+  .settings { margin: 8px 0 18px; }
+
+  /* walkthroughs */
+  .scenario-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .scenario-tabs button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .steps button.done { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+  .steps button.next { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* simulation layout */
+  .sim { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; margin-top: 16px; }
+  @media (max-width: 1100px) { .sim { grid-template-columns: 1fr; } }
+  .tabs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .tab-card { display: flex; flex-direction: column; gap: 10px; }
+  .tab-card.closed { opacity: .5; }
+  .tab-card.frozen { border-color: var(--frozen); box-shadow: inset 0 0 0 1px var(--frozen); }
+  .tab-head { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .tab-head strong { font-size: 15px; margin-right: 4px; }
+  .badge {
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .badge.writer { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .badge.copy { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+  .badge.frozen { background: var(--frozen-soft); border-color: transparent; color: var(--frozen); }
+  .badge.warn { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+  .screen { border-radius: 8px; padding: 10px 12px; background: var(--bg); }
+  .screen.tone-ok { background: var(--ok-soft); }
+  .screen.tone-accent { background: var(--accent-soft); }
+  .screen.tone-warn { background: var(--warn-soft); }
+  .screen.tone-loss { background: var(--loss-soft); }
+  .screen .title { font-weight: 600; margin-bottom: 2px; }
+  .notice { font-size: 12px; color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .chip {
+    font-size: 12px;
+    padding: 1px 7px;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid var(--border);
+  }
+  .chip.unsaved { border-style: dashed; border-color: var(--warn); }
+  .chip.lost { border-color: var(--loss); color: var(--loss); text-decoration: line-through; }
+  .internals { font-size: 12px; color: var(--muted); }
+  .kv { display: grid; grid-template-columns: 120px 1fr; gap: 3px 10px; font-size: 13px; }
+  .kv .k { color: var(--muted); }
+  .req { display: flex; flex-direction: column; gap: 4px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
+  .alert { padding: 8px 10px; border-radius: 8px; background: var(--loss-soft); color: var(--loss); font-weight: 600; }
+
+  /* log */
+  .log { max-height: 340px; overflow: auto; display: flex; flex-direction: column; gap: 2px; }
+  .log-row { display: grid; grid-template-columns: 64px 1fr; gap: 8px; padding: 3px 6px; border-radius: 6px; font-size: 13px; }
+  .log-row.fresh { background: var(--accent-soft); }
+  .log-row .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .log-row.warn .m { color: var(--warn); }
+  .log-row.loss .m { color: var(--loss); font-weight: 600; }
+  .log-row.ok .m { color: var(--ok); }
+  .log-row.time .m { color: var(--muted); }
+
+  .decisions ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; }
+  .decisions li { max-width: 1100px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; background: var(--bg); padding: 0 4px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="intro">
+    <h1>Смена пишущей вкладки редактора</h1>
+    <p>
+      <strong>Вопрос.</strong> Как вкладки одного браузера делят Review editor и редактор Course Page,
+      чтобы смена пишущей вкладки не теряла и молча не перезаписывала Working Copy (I5, I6)?
+    </p>
+    <p class="muted">
+      Прототип проигрывает предлагаемый протокол. Пишет одна вкладка, остальные — живые копии только для чтения.
+      «Продолжить здесь» меняет пишущую вкладку добровольно или силой, если та молчит.
+      Lease один на браузер (auth session). Браузер (localStorage, Web Lock, BroadcastChannel, заморозка вкладок)
+      и сервер смоделированы в памяти. Нажимайте кнопки в любом порядке или пройдите сценарии.
+    </p>
+    <span class="note">Прототип для #132, выбросить после решения. Переносимая логика — в первом блоке &lt;script&gt;.</span>
+  </header>
+
+  <div class="settings row" id="settings"></div>
+
+  <section class="panel" id="walkthroughs"></section>
+
+  <div class="sim">
+    <div class="stack">
+      <section class="panel">
+        <div class="row" style="justify-content: space-between; margin-bottom: 10px;">
+          <h2 style="margin: 0;">Вкладки браузера</h2>
+          <div class="row" id="tab-actions"></div>
+        </div>
+        <div class="tabs-grid" id="tabs"></div>
+      </section>
+      <section class="panel">
+        <h2>Что произошло</h2>
+        <div class="log" id="log"></div>
+      </section>
+    </div>
+    <div class="stack">
+      <section class="panel" id="browser"></section>
+      <section class="panel" id="server"></section>
+    </div>
+  </div>
+
+  <section class="panel decisions" style="margin-top: 16px;" id="decisions">
+    <h2>Что предлагает прототип</h2>
+    <ol>
+      <li><strong>Спокойное состояние.</strong> Пишущая вкладка отвечает на «Продолжить здесь» сразу и перестаёт принимать правки.
+        Ждёт она только запросы, чей исход меняет Working Copy: пакет синхронизации Course Page, публикацию или удаление черновика, публикацию Review.
+        Отложенная синхронизация и «Не сохранено» передаются как есть. Неподтверждённая публикация Review передаётся вместе с
+        <code>idempotencyKey</code> и замороженной Working Copy, повторы продолжает новая вкладка.
+        Загрузки картинок в реализованном редакторе нет. На будущее: смена ждёт загрузку, во второй вкладке виден прогресс и «Отменить загрузку и продолжить здесь».</li>
+      <li><strong>Силовая смена.</strong> Если пишущая вкладка молчит 3 с, вкладка с живой копией продолжает сама, без второго нажатия.
+        Если вкладка ответила и ждёт запрос, срок — таймаут запроса плюс 3 с.
+        Вкладка без живой копии силой не продолжает: «Та вкладка не отвечает — перейдите в неё».
+        Порядок силовой смены: сначала счётчик в localStorage, потом <code>steal</code> lock'а.</li>
+      <li><strong>Закрытие пишущей вкладки.</strong> Lock переходит к первой копии в очереди, она продолжает сама и показывает уведомление.
+        Предупреждение об уходе нужно, только если совместимой живой копии нет. Lease снимается, когда закрывается последняя вкладка редактора.</li>
+      <li><strong>Версии.</strong> Одно целое <code>TAB_PROTOCOL_VERSION</code> на формат сообщений и Working Copy; конверт
+        <code>{kind, from, version, epoch}</code> не меняется. При несовпадении нет ни живой копии, ни смены.
+        Когда вкладка другой версии закроется, эта продолжит с сервера.</li>
+      <li><strong>User и ресурс.</strong> Канал, lock и запись в localStorage называются <code>mm:editor:{UserId}:{review|course}:{AttemptId|CourseId}</code>.
+        Перед каждой записью синхронно сверяются User сессии и счётчик смен. Выход из аккаунта в любой вкладке останавливает запись во всех.
+        Содержимое скрыто, Working Copy держится в памяти до закрытия вкладки. Вход тем же User продолжает работу, вход другим User удаляет Working Copy.</li>
+      <li><strong>Живая копия.</strong> Полная Working Copy со статусами (синхронизация, публикация, holder lease) уходит после каждого изменения, в той же задаче.
+        Диффов нет, обнаруживать пропуски не нужно: новая копия заменяет старую по <code>(epoch, seq)</code>.
+        Вкладка, которая открылась, спрашивает состояние сообщением <code>hello</code>. Поэтому силовая смена не теряет правок, сделанных в браузере.</li>
+      <li><strong>Своя вкладка, своя сессия, чужой Teacher.</strong> Свою вкладку этого браузера видно локально, без сервера.
+        <code>423</code> с holder — самим User: «Открыт в другой сессии — на другом устройстве или в другом окне · Вернуть сюда».
+        Чужой holder: «Редактирует Борис · Попробовать снова». <code>interrupted</code> общий для всех вкладок браузера, потому что lease один.</li>
+      <li><strong>Что теряется при смене:</strong> история undo, выделение и курсор, scroll, открытые меню. Working Copy переходит целиком.</li>
+      <li><strong>Движки.</strong> Протокол не опирается на bfcache: <code>pagehide</code> — уход. При <code>pageshow</code> с <code>persisted</code>
+        вкладка подключается заново и продолжает со своей Working Copy, только если запись о пишущей вкладке не менялась.
+        Синхронная видимость счётчика после разморозки — допущение о движках, его проверяет TAB-08; страховка — проверка revision на backend.</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+// ===================================================================
+// Переносимая часть: правила протокола вкладок (чистые функции)
+// ===================================================================
+
+const PROTOCOL_VERSION = 2;
+const FORCE_AFTER_MS = 3000;      // молчание пишущей вкладки до силовой смены
+const REQUEST_TIMEOUT_MS = 15000; // столько пишущая вкладка может ждать свой запрос
+const RECLAIM_MS = 1000;          // получатель не забрал lock — вернуть роль себе
+const SYNC_IDLE_MS = 1000;        // автосохранение Course Page после бездействия
+const HEARTBEAT_MS = 20000;
+
+/** Синхронная проверка перед каждой записью: тот же User и тот же номер смены. */
+function writeGuard(record, auth, tab) {
+  if (!auth || auth.userId !== tab.userId) return { ok: false, reason: 'session-changed' };
+  if (record.writer !== tab.id || record.epoch !== tab.epoch) return { ok: false, reason: 'role-moved', record };
+  return { ok: true };
+}
+
+/** Чего пишущая вкладка дожидается перед добровольной сменой. */
+function quietBlockers(resource, wc) {
+  const reasons = [];
+  if (resource === 'course' && wc.inFlight != null) reasons.push('пакет синхронизации в полёте');
+  if (resource === 'review' && wc.publication?.status === 'in-flight') reasons.push('публикация Review в полёте');
+  return reasons;
+}
+
+/** Есть ли в Working Copy то, что потеряется вместе со вкладкой. */
+function hasUnsavedWork(resource, wc) {
+  if (!wc) return false;
+  if (wc.session === 'interrupted') return true;
+  if (resource === 'course') {
+    if (wc.edits == null) return false;
+    return wc.base == null || wc.inFlight != null || !sameList(wc.edits, wc.base);
+  }
+  return wc.edits.length > 0 || wc.publication != null;
+}
+
+/** Применять ли пришедшее состояние пишущей вкладки к живой копии. */
+function isNewerState(seen, wc, msg) {
+  if (!seen || msg.epoch > seen.epoch) return true;
+  if (msg.epoch < seen.epoch) return false;
+  return !wc || msg.wc.seq >= wc.seq;
+}
+
+/**
+ * Живая копия, унаследованная без участия пишущей вкладки (силовая смена или закрытие).
+ * Исход запроса, который та успела отправить, неизвестен.
+ */
+function adoptOrphanedWorkingCopy(resource, wc) {
+  const next = structuredClone(wc);
+  if (resource === 'course' && next.inFlight != null) {
+    next.inFlight = null;
+    next.base = null; // перечитать черновик и построить план заново (#118)
+  }
+  if (resource === 'review' && next.publication?.status === 'in-flight') {
+    next.publication = { ...next.publication, status: 'unconfirmed', reqId: null };
+  }
+  return next;
+}
+
+function sameList(a, b) {
+  return a.length === b.length && a.every((x, i) => x === b[i]);
+}
+
+// ===================================================================
+// Модель браузера и сервера (обвязка прототипа, аналог fixture `tabs`)
+// ===================================================================
+
+const NAMES = { anna: 'Анна', boris: 'Борис' };
+const clone = (x) => structuredClone(x);
+const tn = (id) => `вкладка ${id}`;
+const Tn = (id) => `Вкладка ${id}`;
+const tGen = (id) => `вкладки ${id}`;
+const tAcc = (id) => `вкладку ${id}`;
+const tLoc = (id) => `вкладке ${id}`;
+const NAMES_GEN = { anna: 'Анны', boris: 'Бориса' };
+
+function createWorld({ resource = 'course', revisionCheck = true } = {}) {
+  return {
+    now: 0,
+    resource,
+    revisionCheck,
+    nextTab: 1,
+    nextReq: 1,
+    nextKey: 1,
+    nextEdit: 1,
+    pending: [],
+    mark: 0,
+    browser: {
+      auth: { userId: 'anna', session: 'S1' },
+      nextSession: 2,
+      network: 'online',
+      records: {},
+      locks: {},
+    },
+    tabs: [],
+    server: {
+      lease: null,
+      draft: { edits: [], revision: 0 },
+      review: { edits: [], revision: 0, keys: {} },
+      requests: [],
+      lost: [],
+    },
+    log: [],
+  };
+}
+
+function dispatch(w0, action) {
+  const w = clone(w0);
+  w.mark = w.log.length;
+  const tab = action.tab != null ? w.tabs.find((t) => t.id === action.tab) : null;
+  if (action.tab != null && (!tab || (tab.status !== 'open' && action.type !== 'bf-forward'))) return w;
+  switch (action.type) {
+    case 'open-tab': openTab(w, action.version ?? PROTOCOL_VERSION); break;
+    case 'type': typeEdit(w, tab); break;
+    case 'publish': publish(w, tab); break;
+    case 'retry-publication': retryPublication(w, tab); break;
+    case 'continue-here': continueHere(w, tab); break;
+    case 'retake': retakeLease(w, tab); break;
+    case 'freeze': freeze(w, tab); break;
+    case 'thaw': thaw(w, tab); break;
+    case 'close': closeTab(w, tab); break;
+    case 'leave': answerLeave(w, tab, action.leave); break;
+    case 'bf-back': bfBack(w, tab); break;
+    case 'bf-forward': bfForward(w, tab); break;
+    case 'tick': tick(w, action.ms); break;
+    case 'network': setNetwork(w, action.online); break;
+    case 'respond': respond(w, action.req, action.mode); break;
+    case 'logout': logout(w); break;
+    case 'login': login(w, action.userId); break;
+    case 'server-lease': serverLease(w, action.who); break;
+  }
+  drain(w);
+  return w;
+}
+
+// --- журнал и мелочи ---
+
+function log(w, text, kind = 'info') { w.log.push({ at: w.now, text, kind }); }
+function tabById(w, id) { return w.tabs.find((t) => t.id === id); }
+function online(w) { return w.browser.network === 'online'; }
+function readRecord(w, ns) { return w.browser.records[ns] ?? { epoch: 0, writer: null }; }
+function writeRecord(w, ns, record) { w.browser.records[ns] = record; }
+function guardFor(w, tab) { return writeGuard(readRecord(w, tab.ns), w.browser.auth, tab); }
+function holderName(holder) {
+  if (holder === 'self') return 'вы, в другой сессии';
+  return NAMES[holder] ?? 'неизвестно';
+}
+
+// --- BroadcastChannel: доставка асинхронная, замороженная вкладка копит события ---
+
+function deliver(w, tab, event) { w.pending.push({ to: tab.id, event }); }
+
+function post(w, from, msg) {
+  for (const t of w.tabs) {
+    if (t.id === from.id || t.status !== 'open' || t.ns !== from.ns || t.role === 'other-user') continue;
+    deliver(w, t, { type: 'message', msg: clone(msg) });
+  }
+}
+
+function broadcastState(w, tab) {
+  post(w, tab, { kind: 'writer-state', from: tab.id, version: tab.version, epoch: tab.epoch, wc: tab.wc });
+}
+
+function drain(w) {
+  for (let i = 0; i < 1000 && w.pending.length; i++) {
+    const { to, event } = w.pending.shift();
+    const t = tabById(w, to);
+    if (!t || t.status !== 'open') continue;
+    if (t.frozen) { t.inbox.push(event); continue; }
+    handleEvent(w, t, event);
+  }
+}
+
+// --- Web Locks: одна очередь на имя, FIFO, ifAvailable, steal ---
+
+function lockOf(w, ns) { return (w.browser.locks[ns] ??= { holder: null, queue: [] }); }
+
+function requestLock(w, tab, ifAvailable) {
+  const lock = lockOf(w, tab.ns);
+  if (lock.holder === tab.id) return 'granted';
+  if (lock.holder == null && lock.queue.length === 0) {
+    lock.holder = tab.id;
+    tab.lock = 'held';
+    if (!ifAvailable) deliver(w, tab, { type: 'lock-granted' });
+    return 'granted';
+  }
+  if (ifAvailable) return 'unavailable';
+  if (!lock.queue.includes(tab.id)) lock.queue.push(tab.id);
+  tab.lock = 'queued';
+  return 'queued';
+}
+
+function releaseLock(w, tab) {
+  const lock = lockOf(w, tab.ns);
+  lock.queue = lock.queue.filter((id) => id !== tab.id);
+  tab.lock = 'none';
+  if (lock.holder === tab.id) {
+    lock.holder = null;
+    grantNext(w, tab.ns);
+  }
+}
+
+function grantNext(w, ns) {
+  const lock = lockOf(w, ns);
+  while (lock.holder == null && lock.queue.length) {
+    const t = tabById(w, lock.queue.shift());
+    if (!t || t.status !== 'open') continue;
+    lock.holder = t.id;
+    t.lock = 'held';
+    deliver(w, t, { type: 'lock-granted' });
+  }
+}
+
+function stealLock(w, tab) {
+  const lock = lockOf(w, tab.ns);
+  const previous = lock.holder;
+  lock.queue = lock.queue.filter((id) => id !== tab.id);
+  lock.holder = tab.id;
+  tab.lock = 'held';
+  if (previous != null && previous !== tab.id) {
+    const p = tabById(w, previous);
+    if (p) { p.lock = 'none'; deliver(w, p, { type: 'lock-stolen' }); }
+  }
+}
+
+// --- открытие вкладки ---
+
+function openTab(w, version) {
+  const auth = w.browser.auth;
+  if (!auth) { log(w, 'Никто не вошёл — редактор не открыть', 'warn'); return; }
+  const tab = {
+    id: w.nextTab++,
+    userId: auth.userId,
+    ns: auth.userId,
+    version,
+    status: 'open',
+    frozen: false,
+    role: 'joining',
+    epoch: null,
+    seen: null,
+    handoff: null,
+    request: null,
+    wc: null,
+    lock: 'none',
+    timers: {},
+    inbox: [],
+    confirmLeave: null,
+    wasWriter: false,
+    peerVersion: null,
+    notice: '',
+  };
+  w.tabs.push(tab);
+  log(w, `Открыта ${tn(tab.id)}${version !== PROTOCOL_VERSION ? ` со старой версией приложения (протокол v${version})` : ''}: ${NAMES[auth.userId]}`);
+  join(w, tab);
+}
+
+function join(w, tab) {
+  tab.role = 'joining';
+  tab.seen = clone(readRecord(w, tab.ns));
+  if (requestLock(w, tab, true) === 'granted') {
+    startFromServer(w, tab, null);
+    return;
+  }
+  post(w, tab, { kind: 'hello', from: tab.id, version: tab.version });
+  tab.timers.hello = w.now + FORCE_AFTER_MS;
+  requestLock(w, tab, false);
+}
+
+function startFromServer(w, tab, reason) {
+  const record = readRecord(w, tab.ns);
+  tab.epoch = record.epoch + 1;
+  writeRecord(w, tab.ns, { epoch: tab.epoch, writer: tab.id });
+  tab.seen = { epoch: tab.epoch, writer: tab.id };
+  tab.role = 'writer';
+  tab.wasWriter = true;
+  tab.request = null;
+  tab.timers = { heartbeat: w.now + HEARTBEAT_MS };
+  if (w.resource === 'course') {
+    const d = w.server.draft;
+    tab.wc = online(w)
+      ? { edits: [...d.edits], seq: 0, base: [...d.edits], baseRevision: d.revision, sync: 'synchronized', inFlight: null, session: 'editing', holder: null }
+      : { edits: null, seq: 0, base: null, baseRevision: null, sync: 'sync-failed', inFlight: null, session: 'editing', holder: null };
+  } else {
+    tab.wc = { edits: [], seq: 0, baseRevision: w.server.review.revision, publication: null, session: 'editing', holder: null };
+  }
+  log(w, `${Tn(tab.id)} пишет: счётчик смен ${tab.epoch}, Working Copy загружена с сервера${reason ? ` (${reason})` : ''}`, 'ok');
+  if (online(w)) acquireLease(w, tab);
+  broadcastState(w, tab);
+}
+
+function acquireLease(w, tab) {
+  const session = w.browser.auth.session;
+  const lease = w.server.lease;
+  if (!lease || lease.session === session) {
+    w.server.lease = { session, userId: tab.userId };
+    tab.wc.session = 'editing';
+    tab.wc.holder = null;
+    return;
+  }
+  tab.wc.session = 'lease-unavailable';
+  tab.wc.holder = lease.userId === tab.userId ? 'self' : lease.userId;
+  log(w, `${Tn(tab.id)}: lease занят — ${holderName(tab.wc.holder)}`, 'warn');
+}
+
+// --- события вкладки ---
+
+function handleEvent(w, tab, event) {
+  if (tab.status !== 'open') return;
+  if (tab.role === 'writer' && event.type !== 'auth-changed') {
+    const guard = guardFor(w, tab);
+    if (!guard.ok) loseRole(w, tab, guard);
+  }
+  switch (event.type) {
+    case 'message': return onMessage(w, tab, event.msg);
+    case 'lock-granted': return onLockGranted(w, tab);
+    case 'lock-stolen': return onLockStolen(w, tab);
+    case 'response': return onResponse(w, tab, event);
+    case 'auth-changed': return onAuthChanged(w, tab);
+  }
+}
+
+function onMessage(w, tab, msg) {
+  switch (msg.kind) {
+    case 'hello':
+      if (tab.role === 'writer') broadcastState(w, tab);
+      return;
+    case 'writer-state': return onWriterState(w, tab, msg);
+    case 'handoff-request': return onHandoffRequest(w, tab, msg);
+    case 'handoff-accepted': return onHandoffAccepted(w, tab, msg);
+    case 'handoff-grant': return onHandoffGrant(w, tab, msg);
+  }
+}
+
+function onWriterState(w, tab, msg) {
+  if (!['joining', 'copy', 'no-copy', 'incompatible'].includes(tab.role)) return;
+  if (msg.version !== tab.version) {
+    if (tab.role !== 'incompatible') {
+      log(w, `${Tn(tab.id)}: пишущая ${tn(msg.from)} работает на протоколе v${msg.version}, эта — на v${tab.version}. Живой копии и смены нет`, 'warn');
+    }
+    tab.role = 'incompatible';
+    tab.peerVersion = msg.version;
+    tab.wc = null;
+    tab.seen = { epoch: msg.epoch, writer: msg.from };
+    delete tab.timers.hello;
+    return;
+  }
+  if (!isNewerState(tab.seen, tab.wc, msg)) return;
+  const becameCopy = tab.role !== 'copy';
+  tab.role = 'copy';
+  tab.wc = clone(msg.wc);
+  tab.epoch = msg.epoch;
+  tab.seen = { epoch: msg.epoch, writer: msg.from };
+  delete tab.timers.hello;
+  if (becameCopy) log(w, `${Tn(tab.id)} — живая копия ${tGen(msg.from)}, только чтение`);
+}
+
+function onHandoffRequest(w, tab, msg) {
+  if (tab.role !== 'writer' || msg.version !== tab.version) return;
+  const waiting = quietBlockers(w.resource, tab.wc);
+  tab.handoff = { to: msg.from };
+  delete tab.timers.sync;
+  if (!waiting.length) {
+    log(w, `${Tn(tab.id)} получила «Продолжить здесь» от ${tGen(msg.from)}`);
+    grantHandoff(w, tab);
+    return;
+  }
+  log(w, `${Tn(tab.id)} получила «Продолжить здесь» от ${tGen(msg.from)}, правки остановлены. Ждёт: ${waiting.join(', ')}`);
+  post(w, tab, { kind: 'handoff-accepted', from: tab.id, to: msg.from, waiting, version: tab.version });
+}
+
+function grantHandoff(w, tab) {
+  const to = tab.handoff.to;
+  const record = readRecord(w, tab.ns);
+  const epoch = record.epoch + 1;
+  writeRecord(w, tab.ns, { epoch, writer: to });
+  const wc = clone(tab.wc);
+  tab.role = 'copy';
+  tab.handoff = null;
+  tab.epoch = epoch;
+  tab.seen = { epoch, writer: to };
+  tab.timers = { reclaim: w.now + RECLAIM_MS }; // lock держим, пока получатель не заберёт
+  tab.notice = `Редактирование передано во ${tAcc(to)}`;
+  log(w, `${Tn(tab.id)} передала Working Copy во ${tAcc(to)}: счётчик смен ${record.epoch} → ${epoch}, сервер не участвует`, 'ok');
+  post(w, tab, { kind: 'handoff-grant', from: tab.id, to, epoch, wc, version: tab.version });
+}
+
+function onHandoffAccepted(w, tab, msg) {
+  if (tab.role !== 'copy' || !tab.request || msg.to !== tab.id) return;
+  tab.request.accepted = true;
+  tab.request.waiting = msg.waiting;
+  tab.timers.force = w.now + REQUEST_TIMEOUT_MS + FORCE_AFTER_MS;
+}
+
+function onHandoffGrant(w, tab, msg) {
+  if (msg.version !== tab.version) return;
+  if (msg.to === tab.id) {
+    const record = readRecord(w, tab.ns);
+    if (record.writer !== tab.id || record.epoch !== msg.epoch) return; // устаревшая передача
+    stealLock(w, tab);
+    tab.role = 'writer';
+    tab.wasWriter = true;
+    tab.epoch = msg.epoch;
+    tab.seen = { epoch: msg.epoch, writer: tab.id };
+    tab.wc = clone(msg.wc);
+    tab.request = null;
+    tab.timers = {};
+    tab.notice = `Редактирование продолжено здесь: Working Copy пришла из ${tGen(msg.from)}`;
+    log(w, `${Tn(tab.id)} пишет: приняла Working Copy и забрала lock`, 'ok');
+    resumeWriter(w, tab);
+    broadcastState(w, tab);
+    return;
+  }
+  if (['copy', 'joining', 'no-copy'].includes(tab.role)) {
+    tab.role = 'copy';
+    tab.wc = clone(msg.wc);
+    tab.epoch = msg.epoch;
+    tab.seen = { epoch: msg.epoch, writer: msg.to };
+    delete tab.timers.hello;
+    if (tab.request) {
+      tab.request = null;
+      delete tab.timers.force;
+      tab.notice = `Редактирование ушло во ${tAcc(msg.to)}`;
+    }
+  }
+}
+
+function onLockGranted(w, tab) {
+  if (tab.role === 'writer') return;
+  if (tab.role === 'signed-out' || tab.role === 'other-user') { releaseLock(w, tab); return; }
+  const record = readRecord(w, tab.ns);
+  if (record.writer === tab.id) return;
+  // Lock отдают только вместе с документом: прежняя пишущая вкладка закрылась или ушла.
+  promote(w, tab, record);
+}
+
+function promote(w, tab, record) {
+  const gone = record.writer;
+  if (tab.role !== 'copy' || !tab.wc) {
+    startFromServer(w, tab, gone != null ? `${tn(gone)} закрыта, живой копии здесь не было` : null);
+    return;
+  }
+  const epoch = record.epoch + 1;
+  writeRecord(w, tab.ns, { epoch, writer: tab.id });
+  tab.role = 'writer';
+  tab.wasWriter = true;
+  tab.epoch = epoch;
+  tab.seen = { epoch, writer: tab.id };
+  tab.request = null;
+  tab.timers = {};
+  tab.wc = adoptOrphanedWorkingCopy(w.resource, tab.wc);
+  tab.notice = `${Tn(gone)} закрыта — редактирование продолжено здесь`;
+  log(w, `Lock из очереди перешёл к ${tLoc(tab.id)}: ${tGen(gone)} больше нет. Продолжает от живой копии, счётчик ${record.epoch} → ${epoch}`, 'ok');
+  resumeWriter(w, tab);
+  broadcastState(w, tab);
+}
+
+function onLockStolen(w, tab) {
+  delete tab.timers.reclaim;
+  if (tab.role === 'writer') {
+    // запись всё ещё называет эту вкладку: lock возвращается ей
+    stealLock(w, tab);
+    log(w, `${Tn(tab.id)}: lock забрали, но запись о пишущей вкладке называет её — lock возвращён`, 'warn');
+    return;
+  }
+  if (['copy', 'joining', 'no-copy', 'incompatible'].includes(tab.role) && tab.lock === 'none') requestLock(w, tab, false);
+}
+
+function loseRole(w, tab, guard) {
+  if (guard.reason === 'session-changed') { onAuthChanged(w, tab); return; }
+  const record = guard.record;
+  tab.role = 'copy';
+  tab.handoff = null;
+  tab.request = null;
+  tab.timers = {};
+  tab.epoch = record.epoch;
+  tab.seen = { ...record };
+  tab.notice = `Редактирование уже во ${tLoc(record.writer)} — эта вкладка стала живой копией`;
+  log(w, `${Tn(tab.id)} по счётчику смен (${record.epoch}) узнала, что больше не пишет, — стала живой копией`, 'ok');
+  post(w, tab, { kind: 'hello', from: tab.id, version: tab.version });
+  if (tab.lock === 'held') releaseLock(w, tab);
+  if (tab.lock === 'none') requestLock(w, tab, false);
+}
+
+// --- таймеры ---
+
+function fireTimer(w, tab, name) {
+  delete tab.timers[name];
+  if (tab.role === 'writer' && (name === 'sync' || name === 'heartbeat')) {
+    const guard = guardFor(w, tab);
+    if (!guard.ok) {
+      const what = name === 'sync' ? 'автосохранения' : 'heartbeat';
+      if (guard.reason === 'role-moved') {
+        log(w, `${Tn(tab.id)}: сработал таймер ${what}, но счётчик смен в localStorage уже ${guard.record.epoch}, а у вкладки ${tab.epoch}. Запрос не отправлен`, 'ok');
+      }
+      loseRole(w, tab, guard);
+      return;
+    }
+  }
+  switch (name) {
+    case 'sync': runSync(w, tab); break;
+    case 'heartbeat': heartbeat(w, tab); break;
+    case 'force': forceTakeover(w, tab); break;
+    case 'hello': helloTimeout(w, tab); break;
+    case 'reclaim': reclaim(w, tab); break;
+  }
+}
+
+function tick(w, ms) {
+  const until = w.now + ms;
+  log(w, `Прошло ${(ms / 1000).toLocaleString('ru')} с`, 'time');
+  for (let i = 0; i < 300; i++) {
+    let best = null;
+    for (const t of w.tabs) {
+      if (t.status !== 'open' || t.frozen) continue;
+      for (const [name, at] of Object.entries(t.timers)) {
+        if (at != null && at <= until && (!best || at < best.at)) best = { t, name, at };
+      }
+    }
+    if (!best) break;
+    w.now = Math.max(w.now, best.at);
+    fireTimer(w, best.t, best.name);
+    drain(w);
+  }
+  w.now = until;
+}
+
+function helloTimeout(w, tab) {
+  if (tab.role !== 'joining') return;
+  tab.role = 'no-copy';
+  log(w, `${Tn(tab.id)}: пишущая вкладка не ответила. Живой копии нет — силой продолжить нельзя`, 'warn');
+}
+
+function reclaim(w, tab) {
+  if (lockOf(w, tab.ns).holder !== tab.id || tab.role !== 'copy') return;
+  const record = readRecord(w, tab.ns);
+  const epoch = record.epoch + 1;
+  writeRecord(w, tab.ns, { epoch, writer: tab.id });
+  tab.role = 'writer';
+  tab.epoch = epoch;
+  tab.seen = { epoch, writer: tab.id };
+  tab.notice = `${Tn(record.writer)} не приняла редактирование — продолжаем здесь`;
+  log(w, `${Tn(tab.id)}: получатель не забрал lock — роль возвращена, счётчик ${epoch}`, 'warn');
+  resumeWriter(w, tab);
+  broadcastState(w, tab);
+}
+
+// --- правка, синхронизация, публикация ---
+
+function canEdit(w, tab) {
+  if (tab.status !== 'open' || tab.frozen || tab.role !== 'writer' || tab.handoff) return false;
+  const wc = tab.wc;
+  if (wc.session !== 'editing') return false;
+  if (w.resource === 'course') return wc.edits != null;
+  return wc.publication == null;
+}
+
+function typeEdit(w, tab) {
+  if (tab.role !== 'writer') return;
+  const guard = guardFor(w, tab);
+  if (!guard.ok) {
+    log(w, `${Tn(tab.id)}: нажатие не применено — редактирование уже в другой вкладке`, 'warn');
+    loseRole(w, tab, guard);
+    return;
+  }
+  if (!canEdit(w, tab)) return;
+  const wc = tab.wc;
+  wc.edits.push(`правка ${w.nextEdit++} · вкл. ${tab.id}`);
+  wc.seq += 1;
+  if (w.resource === 'course') {
+    wc.sync = 'pending';
+    tab.timers.sync = w.now + SYNC_IDLE_MS;
+  }
+  tab.notice = '';
+  broadcastState(w, tab); // в той же задаче, что и правка
+}
+
+function sendRequest(w, tab, kind, payload) {
+  const req = { id: w.nextReq++, tabId: tab.id, kind, payload, session: w.browser.auth.session, userId: tab.userId };
+  w.server.requests.push(req);
+  return req;
+}
+
+function runSync(w, tab) {
+  delete tab.timers.sync;
+  const wc = tab.wc;
+  if (tab.handoff || wc.inFlight != null || wc.session !== 'editing' || wc.edits == null) return;
+  if (wc.base == null) { reread(w, tab); return; }
+  if (sameList(wc.edits, wc.base)) { wc.sync = 'synchronized'; broadcastState(w, tab); return; }
+  if (!online(w)) {
+    wc.sync = 'sync-failed';
+    log(w, `${Tn(tab.id)}: сети нет — «Не сохранено · Повторить», правки на месте`, 'warn');
+    broadcastState(w, tab);
+    return;
+  }
+  const req = sendRequest(w, tab, 'sync', { edits: [...wc.edits], baseRevision: wc.baseRevision });
+  wc.inFlight = req.id;
+  wc.sync = 'syncing';
+  log(w, `${Tn(tab.id)} отправила пакет синхронизации №${req.id} от revision ${wc.baseRevision}`);
+  broadcastState(w, tab);
+}
+
+function reread(w, tab) {
+  const wc = tab.wc;
+  if (!online(w)) { wc.sync = 'sync-failed'; return; }
+  const d = w.server.draft;
+  wc.base = [...d.edits];
+  wc.baseRevision = d.revision;
+  if (wc.edits == null) wc.edits = [...d.edits];
+  wc.sync = sameList(wc.edits, wc.base) ? 'synchronized' : 'pending';
+  if (wc.sync === 'pending') tab.timers.sync = w.now + SYNC_IDLE_MS;
+  log(w, `${Tn(tab.id)} перечитала черновик: revision ${d.revision}${wc.sync === 'pending' ? '. Недостающие правки уйдут следующим пакетом' : ''}`);
+}
+
+function resumeWriter(w, tab) {
+  tab.timers.heartbeat = w.now + HEARTBEAT_MS;
+  const wc = tab.wc;
+  if (w.resource === 'course') {
+    if (!online(w)) { if (wc.base == null || !sameList(wc.edits ?? [], wc.base)) wc.sync = 'sync-failed'; return; }
+    if (wc.base == null) reread(w, tab);
+    else if (wc.sync !== 'synchronized') tab.timers.sync = w.now + SYNC_IDLE_MS;
+    return;
+  }
+  if (wc.publication?.status === 'unconfirmed' && online(w)) sendPublication(w, tab, true);
+}
+
+function publish(w, tab) {
+  if (w.resource !== 'review' || !canEdit(w, tab) || !tab.wc.edits.length) return;
+  const guard = guardFor(w, tab);
+  if (!guard.ok) { loseRole(w, tab, guard); return; }
+  tab.wc.publication = { status: 'in-flight', key: `K${w.nextKey++}`, edits: [...tab.wc.edits], reqId: null };
+  sendPublication(w, tab, false);
+}
+
+function retryPublication(w, tab) {
+  if (tab.role !== 'writer' || tab.frozen || tab.wc.publication?.status !== 'unconfirmed') return;
+  const guard = guardFor(w, tab);
+  if (!guard.ok) { loseRole(w, tab, guard); return; }
+  sendPublication(w, tab, true);
+}
+
+function sendPublication(w, tab, retry) {
+  const wc = tab.wc;
+  const p = wc.publication;
+  if (!online(w)) {
+    p.status = 'unconfirmed';
+    p.reqId = null;
+    log(w, `${Tn(tab.id)}: сети нет — «Публикация не подтверждена · Повторить»`, 'warn');
+    broadcastState(w, tab);
+    return;
+  }
+  const req = sendRequest(w, tab, 'publish', { key: p.key, edits: [...p.edits], baseRevision: wc.baseRevision });
+  p.status = 'in-flight';
+  p.reqId = req.id;
+  log(w, `${Tn(tab.id)} ${retry ? 'повторяет' : 'отправляет'} публикацию: запрос №${req.id}, ключ ${p.key}`);
+  broadcastState(w, tab);
+}
+
+function onResponse(w, tab, event) {
+  const { req, result } = event;
+  if (tab.role !== 'writer') {
+    log(w, `Ответ на запрос №${req.id} пришёл во ${tAcc(tab.id)}, которая уже не пишет, — проигнорирован`);
+    return;
+  }
+  const wc = tab.wc;
+  if (req.kind === 'sync') {
+    if (wc.inFlight !== req.id) return;
+    wc.inFlight = null;
+    if (result.status === 'ack') {
+      wc.base = result.edits;
+      wc.baseRevision = result.revision;
+      wc.sync = sameList(wc.edits, wc.base) ? 'synchronized' : 'pending';
+      if (wc.sync === 'pending' && !tab.handoff) tab.timers.sync = w.now + SYNC_IDLE_MS;
+    } else if (result.status === 'conflict') {
+      log(w, `${Tn(tab.id)}: черновик на сервере новее — перечитывает`, 'warn');
+      reread(w, tab);
+    } else if (result.status === 'locked') {
+      interrupt(w, tab, result.holder);
+    } else {
+      log(w, `${Tn(tab.id)}: исход пакета №${req.id} неизвестен — черновик будет перечитан`, 'warn');
+      wc.base = null;
+      if (online(w)) reread(w, tab); else wc.sync = 'sync-failed';
+    }
+  } else {
+    const p = wc.publication;
+    if (!p || p.reqId !== req.id) return;
+    if (result.status === 'published') {
+      wc.edits = [];
+      wc.seq += 1;
+      wc.baseRevision = result.revision;
+      wc.publication = null;
+      tab.notice = `Опубликовано: Review revision ${result.revision}${result.replay ? ' (повтор с тем же ключом вернул ту же revision)' : ''}`;
+      log(w, `${Tn(tab.id)}: ${tab.notice}`, 'ok');
+    } else if (result.status === 'unknown') {
+      p.status = 'unconfirmed';
+      p.reqId = null;
+      log(w, `${Tn(tab.id)}: «Публикация не подтверждена» — Working Copy заморожена, ключ ${p.key} сохранён`, 'warn');
+    } else if (result.status === 'conflict') {
+      interrupt(w, tab, null);
+    } else if (result.status === 'locked') {
+      interrupt(w, tab, result.holder);
+    }
+  }
+  if (tab.handoff && !quietBlockers(w.resource, wc).length) grantHandoff(w, tab);
+  else broadcastState(w, tab);
+}
+
+function interrupt(w, tab, holder) {
+  tab.wc.session = 'interrupted';
+  tab.wc.holder = holder;
+  log(w, `${Tn(tab.id)}: lease больше не наш — ${holder ? holderName(holder) : 'revision изменилась'}. Состояние interrupted во всех вкладках браузера`, 'warn');
+}
+
+function heartbeat(w, tab) {
+  tab.timers.heartbeat = w.now + HEARTBEAT_MS;
+  if (!online(w) || tab.wc.session !== 'editing') return;
+  const session = w.browser.auth.session;
+  const lease = w.server.lease;
+  if (!lease || lease.session === session) { w.server.lease = { session, userId: tab.userId }; return; }
+  interrupt(w, tab, lease.userId === tab.userId ? 'self' : lease.userId);
+  broadcastState(w, tab);
+}
+
+function retakeLease(w, tab) {
+  if (tab.role !== 'writer' || tab.frozen) return;
+  const guard = guardFor(w, tab);
+  if (!guard.ok) { loseRole(w, tab, guard); return; }
+  if (!online(w)) { log(w, 'Сети нет — lease не взять', 'warn'); return; }
+  const wc = tab.wc;
+  const session = w.browser.auth.session;
+  const lease = w.server.lease;
+  const sameUser = lease && lease.userId === tab.userId;
+  if (!lease || lease.session === session || sameUser) {
+    w.server.lease = { session, userId: tab.userId };
+    wc.session = 'editing';
+    wc.holder = null;
+    log(w, `${Tn(tab.id)} ${sameUser && lease.session !== session ? 'перехватила lease у своей другой сессии' : 'взяла lease'}`, 'ok');
+    if (w.resource === 'course') reread(w, tab);
+  } else {
+    wc.holder = lease.userId;
+    log(w, `Lease всё ещё у ${holderName(lease.userId)}`, 'warn');
+  }
+  broadcastState(w, tab);
+}
+
+// --- «Продолжить здесь» и силовая смена ---
+
+function continueHere(w, tab) {
+  if (tab.role !== 'copy' || tab.frozen || tab.request) return;
+  const record = readRecord(w, tab.ns);
+  tab.request = { since: w.now, accepted: false, waiting: [] };
+  tab.timers.force = w.now + FORCE_AFTER_MS;
+  log(w, `${Tn(tab.id)}: «Продолжить здесь» — просит ${tAcc(record.writer)} отдать Working Copy`);
+  post(w, tab, { kind: 'handoff-request', from: tab.id, to: record.writer, version: tab.version });
+}
+
+function forceTakeover(w, tab) {
+  if (!tab.request || tab.role !== 'copy' || !tab.wc) return;
+  const record = readRecord(w, tab.ns);
+  if (record.epoch !== tab.seen.epoch) {
+    tab.request = null;
+    tab.notice = 'Редактирование уже сменило вкладку';
+    post(w, tab, { kind: 'hello', from: tab.id, version: tab.version });
+    return;
+  }
+  const silent = record.writer;
+  const epoch = record.epoch + 1;
+  writeRecord(w, tab.ns, { epoch, writer: tab.id }); // сначала счётчик
+  stealLock(w, tab);                                 // потом lock
+  tab.role = 'writer';
+  tab.wasWriter = true;
+  tab.epoch = epoch;
+  tab.seen = { epoch, writer: tab.id };
+  tab.request = null;
+  tab.timers = {};
+  tab.wc = adoptOrphanedWorkingCopy(w.resource, tab.wc);
+  tab.notice = `${Tn(silent)} не ответила — редактирование продолжено здесь от живой копии`;
+  log(w, `Силовая смена: ${tn(silent)} молчит. ${Tn(tab.id)} записала счётчик ${epoch} в localStorage и забрала lock (steal)`, 'warn');
+  resumeWriter(w, tab);
+  broadcastState(w, tab);
+}
+
+// --- заморозка, закрытие, bfcache ---
+
+function freeze(w, tab) {
+  if (tab.frozen) return;
+  tab.frozen = true;
+  log(w, `Браузер заморозил ${tAcc(tab.id)}: её таймеры и сообщения ждут разморозки`, 'warn');
+}
+
+function thaw(w, tab) {
+  if (!tab.frozen) return;
+  tab.frozen = false;
+  log(w, `${Tn(tab.id)} разморожена. Сначала просроченные таймеры, потом накопившиеся события (${tab.inbox.length})`);
+  const due = Object.entries(tab.timers).filter(([, at]) => at <= w.now).sort((a, b) => a[1] - b[1]);
+  for (const [name] of due) if (tab.timers[name] != null) fireTimer(w, tab, name);
+  const inbox = tab.inbox;
+  tab.inbox = [];
+  for (const event of inbox) handleEvent(w, tab, event);
+}
+
+function hasCompatibleCopy(w, tab) {
+  return w.tabs.some((t) => t !== tab && t.status === 'open' && t.ns === tab.ns && t.role === 'copy' && t.version === tab.version && t.wc);
+}
+
+function needsLeaveWarning(w, tab) {
+  const holdsWork = (tab.role === 'writer' || tab.role === 'signed-out') && hasUnsavedWork(w.resource, tab.wc);
+  return holdsWork && !hasCompatibleCopy(w, tab);
+}
+
+function closeTab(w, tab) {
+  if (tab.frozen) {
+    log(w, `${Tn(tab.id)} закрыта замороженной — beforeunload не срабатывает`, 'warn');
+    killTab(w, tab, 'закрыта');
+    return;
+  }
+  if (needsLeaveWarning(w, tab)) {
+    tab.confirmLeave = 'close';
+    log(w, `Браузер спрашивает во ${tLoc(tab.id)}: «Покинуть страницу? Изменения могут не сохраниться» — совместимой живой копии нет`, 'warn');
+    return;
+  }
+  killTab(w, tab, 'закрыта');
+}
+
+function answerLeave(w, tab, leave) {
+  const how = tab.confirmLeave;
+  tab.confirmLeave = null;
+  if (!leave) { log(w, `${Tn(tab.id)}: Teacher остаётся на странице`); return; }
+  log(w, `${Tn(tab.id)}: Teacher подтверждает уход — несохранённые правки теряются осознанно`, 'warn');
+  if (how === 'back') hideToBfcache(w, tab); else killTab(w, tab, 'закрыта');
+}
+
+function killTab(w, tab, how) {
+  tab.status = 'closed';
+  tab.timers = {};
+  tab.inbox = [];
+  tab.frozen = false;
+  releaseLock(w, tab); // браузер освобождает lock вместе с документом
+  log(w, `${Tn(tab.id)} ${how}`);
+  releaseLeaseIfLast(w, tab);
+}
+
+function releaseLeaseIfLast(w, tab) {
+  const rest = w.tabs.filter((t) => t.status === 'open' && t.ns === tab.ns && t.role !== 'other-user');
+  const lease = w.server.lease;
+  const auth = w.browser.auth;
+  if (!rest.length && lease && auth && lease.session === auth.session && online(w)) {
+    w.server.lease = null;
+    log(w, 'Последняя вкладка редактора ушла — lease снят', 'ok');
+  }
+}
+
+function bfBack(w, tab) {
+  if (tab.frozen) return;
+  if (needsLeaveWarning(w, tab)) {
+    tab.confirmLeave = 'back';
+    log(w, `Браузер спрашивает во ${tLoc(tab.id)}: «Покинуть страницу? Изменения могут не сохраниться»`, 'warn');
+    return;
+  }
+  hideToBfcache(w, tab);
+}
+
+function hideToBfcache(w, tab) {
+  tab.status = 'bfcache';
+  tab.timers = {};
+  tab.inbox = [];
+  tab.request = null;
+  tab.handoff = null;
+  releaseLock(w, tab);
+  log(w, `${Tn(tab.id)}: pagehide — ушла назад и могла попасть в bfcache. Lock и канал закрыты, как при уходе`);
+  releaseLeaseIfLast(w, tab);
+}
+
+function bfForward(w, tab) {
+  if (tab.status !== 'bfcache') return;
+  tab.status = 'open';
+  const record = readRecord(w, tab.ns);
+  const untouched = tab.role === 'writer' && record.writer === tab.id && record.epoch === tab.epoch;
+  if (untouched && requestLock(w, tab, true) === 'granted') {
+    log(w, `${Tn(tab.id)}: pageshow из bfcache — с тех пор никто не писал, продолжает со своей Working Copy`, 'ok');
+    resumeWriter(w, tab);
+    broadcastState(w, tab);
+    return;
+  }
+  tab.wc = null;
+  tab.request = null;
+  tab.handoff = null;
+  tab.epoch = null;
+  log(w, `${Tn(tab.id)}: pageshow из bfcache — запись о пишущей вкладке изменилась, старое состояние в памяти отброшено, вкладка подключается заново`);
+  join(w, tab);
+}
+
+// --- сеть и сервер ---
+
+function setNetwork(w, isOnline) {
+  w.browser.network = isOnline ? 'online' : 'offline';
+  if (!isOnline) {
+    log(w, 'Сеть пропала', 'warn');
+    for (const req of [...w.server.requests]) {
+      w.server.requests = w.server.requests.filter((r) => r !== req);
+      deliver(w, tabById(w, req.tabId), { type: 'response', req: { id: req.id, kind: req.kind }, result: { status: 'unknown' } });
+    }
+    return;
+  }
+  log(w, 'Сеть вернулась');
+  for (const tab of w.tabs) {
+    if (tab.status !== 'open' || tab.frozen || tab.role !== 'writer') continue;
+    const wc = tab.wc;
+    if (w.resource === 'course') {
+      if (wc.base == null) reread(w, tab);
+      if (wc.inFlight == null && wc.sync !== 'synchronized') runSync(w, tab);
+    } else if (wc.publication?.status === 'unconfirmed') {
+      sendPublication(w, tab, true);
+    }
+  }
+}
+
+function respond(w, reqId, mode) {
+  const req = w.server.requests.find((r) => r.id === reqId);
+  if (!req) return;
+  w.server.requests = w.server.requests.filter((r) => r !== req);
+  const result = serverApply(w, req);
+  if (mode === 'lose') log(w, `Сервер обработал запрос №${req.id}, но ответ потерялся`, 'warn');
+  deliver(w, tabById(w, req.tabId), {
+    type: 'response',
+    req: { id: req.id, kind: req.kind },
+    result: mode === 'lose' ? { status: 'unknown' } : result,
+  });
+}
+
+function serverApply(w, req) {
+  const lease = w.server.lease;
+  if (lease && lease.session !== req.session) {
+    return { status: 'locked', holder: lease.userId === req.userId ? 'self' : lease.userId };
+  }
+  if (req.kind === 'sync') {
+    const d = w.server.draft;
+    if (w.revisionCheck && req.payload.baseRevision !== d.revision) {
+      log(w, `Сервер отклонил запрос №${req.id}: черновик уже revision ${d.revision}, запрос основан на ${req.payload.baseRevision} → 409`, 'ok');
+      return { status: 'conflict' };
+    }
+    const lost = d.edits.filter((e) => !req.payload.edits.includes(e));
+    if (lost.length) {
+      w.server.lost.push(...lost);
+      log(w, `ТИХАЯ ПОТЕРЯ: запрос №${req.id} из ${tGen(req.tabId)} перезаписал черновик, пропали «${lost.join('», «')}»`, 'loss');
+    }
+    d.edits = [...req.payload.edits];
+    d.revision += 1;
+    return { status: 'ack', revision: d.revision, edits: [...d.edits] };
+  }
+  const review = w.server.review;
+  const known = review.keys[req.payload.key];
+  if (known != null) return { status: 'published', revision: known, replay: true };
+  if (req.payload.baseRevision !== review.revision) return { status: 'conflict' };
+  review.revision += 1;
+  review.edits = [...req.payload.edits];
+  review.keys[req.payload.key] = review.revision;
+  log(w, `Сервер опубликовал Review revision ${review.revision} (ключ ${req.payload.key}) — Саша увидит её целиком`, 'ok');
+  return { status: 'published', revision: review.revision, replay: false };
+}
+
+function serverLease(w, who) {
+  if (who === 'free') { w.server.lease = null; log(w, 'Lease освобождён на сервере'); return; }
+  if (who === 'laptop') { w.server.lease = { session: 'ноутбук', userId: 'anna' }; log(w, 'Анна открывает редактор на ноутбуке: lease переходит к той сессии', 'warn'); return; }
+  w.server.lease = { session: 'Борис', userId: 'boris' };
+  log(w, 'Lease Анны истекает, его берёт Борис', 'warn');
+}
+
+// --- аккаунт: cookie сессии общий для всех вкладок браузера ---
+
+function logout(w) {
+  if (!w.browser.auth) return;
+  log(w, `Выход из аккаунта ${NAMES_GEN[w.browser.auth.userId]}: сессия закончилась во всех вкладках`, 'warn');
+  w.browser.auth = null;
+  for (const t of w.tabs) if (t.status === 'open') deliver(w, t, { type: 'auth-changed' });
+}
+
+function login(w, userId) {
+  const session = `S${w.browser.nextSession++}`;
+  w.browser.auth = { userId, session };
+  log(w, `Вход: ${NAMES[userId]}, новая сессия ${session}`);
+  for (const t of w.tabs) if (t.status === 'open') deliver(w, t, { type: 'auth-changed' });
+}
+
+function onAuthChanged(w, tab) {
+  const auth = w.browser.auth;
+  if (tab.role === 'other-user') return;
+  if (!auth) {
+    if (tab.role === 'signed-out') return;
+    tab.before = tab.role;
+    tab.role = 'signed-out';
+    tab.timers = {};
+    tab.request = null;
+    tab.handoff = null;
+    log(w, `${Tn(tab.id)}: сессии нет — запись остановлена, содержимое скрыто`);
+    return;
+  }
+  if (auth.userId === tab.userId) {
+    if (tab.role !== 'signed-out') return;
+    const record = readRecord(w, tab.ns);
+    if (tab.before === 'writer' && record.writer === tab.id && record.epoch === tab.epoch) {
+      tab.role = 'writer';
+      w.server.lease = { session: auth.session, userId: tab.userId };
+      tab.wc.session = 'editing';
+      tab.wc.holder = null;
+      log(w, `${Tn(tab.id)} снова пишет: lease прежней сессии перехвачен тем же User`, 'ok');
+      resumeWriter(w, tab);
+      broadcastState(w, tab);
+    } else {
+      tab.role = tab.wc ? 'copy' : 'joining';
+      post(w, tab, { kind: 'hello', from: tab.id, version: tab.version });
+    }
+    return;
+  }
+  tab.role = 'other-user';
+  const hadWork = hasUnsavedWork(w.resource, tab.wc);
+  tab.wc = null;
+  tab.timers = {};
+  tab.request = null;
+  tab.handoff = null;
+  releaseLock(w, tab);
+  tab.notice = '';
+  log(w, `${Tn(tab.id)}: вход ${NAMES_GEN[auth.userId]} — Working Copy ${NAMES_GEN[tab.userId]} удалена из вкладки${hadWork ? ' вместе с несохранёнными правками' : ''}`, hadWork ? 'warn' : 'info');
+}
+
+window.TabProtocolPrototype = { createWorld, dispatch, PROTOCOL_VERSION };
+</script>
+
+<script>
+// ===================================================================
+// Страница (выбросить): отрисовка и сценарии
+// ===================================================================
+const { createWorld: newWorld, dispatch: step, PROTOCOL_VERSION: CURRENT } = window.TabProtocolPrototype;
+
+const SCENARIOS = [
+  {
+    id: 'voluntary', title: 'Добровольная смена', resource: 'course', check: true, contracts: 'TAB-01, TAB-02',
+    text: 'Анна правит Course Page во вкладке 1, открывает вкладку 2 и нажимает там «Продолжить здесь», пока пакет синхронизации ещё в полёте. Следите: вкладка 1 сразу отвечает, дожидается ответа сервера и только потом отдаёт Working Copy. К lease никто не обращается, счётчик смен растёт на 1.',
+    steps: [
+      ['Открыть вкладку 1', { type: 'open-tab' }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['+1 с: вкладка 1 отправляет пакет', { type: 'tick', ms: 1000 }],
+      ['Вкладка 2: «Продолжить здесь»', { type: 'continue-here', tab: 2 }],
+      ['Сервер отвечает на №1', { type: 'respond', req: 1, mode: 'answer' }],
+      ['Вкладка 2: правка', { type: 'type', tab: 2 }],
+      ['+1 с', { type: 'tick', ms: 1000 }],
+      ['Сервер отвечает на №2', { type: 'respond', req: 2, mode: 'answer' }],
+    ],
+  },
+  {
+    id: 'offline', title: 'Смена без сети', resource: 'course', check: true, contracts: 'DRF-E3',
+    text: 'Сети нет. Анна правит во вкладке 1, открывает вкладку 2 и продолжает там. Следите: живая копия приходит без сервера, «Продолжить здесь» работает офлайн, а когда сеть возвращается, вкладка 2 досылает все правки.',
+    steps: [
+      ['Открыть вкладку 1', { type: 'open-tab' }],
+      ['Сеть пропала', { type: 'network', online: false }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['+1 с: «Не сохранено»', { type: 'tick', ms: 1000 }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['Вкладка 2: «Продолжить здесь»', { type: 'continue-here', tab: 2 }],
+      ['Вкладка 2: правка', { type: 'type', tab: 2 }],
+      ['Сеть вернулась', { type: 'network', online: true }],
+      ['Сервер отвечает на №1', { type: 'respond', req: 1, mode: 'answer' }],
+    ],
+  },
+  {
+    id: 'forced', title: 'Силовая смена и разморозка', resource: 'course', check: true, contracts: 'TAB-03',
+    text: 'Вкладка 1 заморожена с правкой, ещё не отправленной на сервер. Вкладка 2 просит продолжить, ответа нет 3 с, и она продолжает от живой копии. Следите за разморозкой: таймер автосохранения вкладки 1 срабатывает раньше, чем она узнаёт о потере lock, но сверка счётчика не пускает запрос.',
+    steps: [
+      ['Открыть вкладку 1', { type: 'open-tab' }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['Заморозить вкладку 1', { type: 'freeze', tab: 1 }],
+      ['Вкладка 2: «Продолжить здесь»', { type: 'continue-here', tab: 2 }],
+      ['+3 с: силовая смена', { type: 'tick', ms: 3000 }],
+      ['Вкладка 2: правка', { type: 'type', tab: 2 }],
+      ['Разморозить вкладку 1', { type: 'thaw', tab: 1 }],
+      ['+1 с', { type: 'tick', ms: 1000 }],
+      ['Сервер отвечает на №1', { type: 'respond', req: 1, mode: 'answer' }],
+    ],
+  },
+  {
+    id: 'late-checked', title: 'Запоздавший запрос: backend проверяет revision', resource: 'course', check: true, contracts: 'TAB-07',
+    text: 'Вкладка 1 отправила пакет и замёрзла. Вкладка 2 силой продолжила, дописала правку и сохранила её. Потом до сервера доходит старый пакет вкладки 1. Следите: при проверке revision он получает 409 и черновик не трогает (допущение #113).',
+    steps: [
+      ['Открыть вкладку 1', { type: 'open-tab' }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['+1 с: вкладка 1 отправляет №1', { type: 'tick', ms: 1000 }],
+      ['Заморозить вкладку 1', { type: 'freeze', tab: 1 }],
+      ['Вкладка 2: «Продолжить здесь»', { type: 'continue-here', tab: 2 }],
+      ['+3 с: силовая смена', { type: 'tick', ms: 3000 }],
+      ['Вкладка 2: правка', { type: 'type', tab: 2 }],
+      ['+1 с: вкладка 2 отправляет №2', { type: 'tick', ms: 1000 }],
+      ['Сервер отвечает на №2', { type: 'respond', req: 2, mode: 'answer' }],
+      ['Запоздавший №1 доходит', { type: 'respond', req: 1, mode: 'answer' }],
+      ['Разморозить вкладку 1', { type: 'thaw', tab: 1 }],
+    ],
+  },
+  {
+    id: 'late-unchecked', title: 'Запоздавший запрос без проверки revision', resource: 'course', check: false, contracts: 'TAB-07',
+    text: 'Те же шаги, но backend не проверяет revision черновика. Следите: запоздавший пакет вкладки 1 молча перезаписывает черновик, а вкладка 2 считает, что всё сохранено. Это узкое окно силового пути, которое владелец принял на случай отказа backend.',
+    steps: null,
+  },
+  {
+    id: 'publication', title: 'Публикация Review не разрывается', resource: 'review', check: true, contracts: 'TAB-04',
+    text: 'Анна публикует Review во вкладке 1 и сразу просит продолжить во вкладке 2. Ответ на публикацию теряется. Следите: вкладка 1 отдаёт неподтверждённую публикацию вместе с ключом, вкладка 2 повторяет её с тем же ключом, и сервер возвращает ту же revision — Review одна.',
+    steps: [
+      ['Открыть вкладку 1', { type: 'open-tab' }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Вкладка 1: «Опубликовать»', { type: 'publish', tab: 1 }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['Вкладка 2: «Продолжить здесь»', { type: 'continue-here', tab: 2 }],
+      ['Ответ на №1 теряется', { type: 'respond', req: 1, mode: 'lose' }],
+      ['Сервер отвечает на повтор №2', { type: 'respond', req: 2, mode: 'answer' }],
+    ],
+  },
+  {
+    id: 'close', title: 'Закрытие пишущей вкладки', resource: 'course', check: true, contracts: 'TAB-08',
+    text: 'Открыты три вкладки, Анна закрывает пишущую. Следите: браузер не спрашивает о несохранённых правках, потому что есть живая копия. Lock уходит первой копии в очереди, и она продолжает сама. Lease снимается, только когда закрыта последняя вкладка.',
+    steps: [
+      ['Открыть вкладку 1', { type: 'open-tab' }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['Открыть вкладку 3', { type: 'open-tab' }],
+      ['Закрыть вкладку 1', { type: 'close', tab: 1 }],
+      ['Вкладка 2: правка', { type: 'type', tab: 2 }],
+      ['Вкладка 3: «Продолжить здесь»', { type: 'continue-here', tab: 3 }],
+      ['+1 с: вкладка 3 отправляет №1', { type: 'tick', ms: 1000 }],
+      ['Сервер отвечает на №1', { type: 'respond', req: 1, mode: 'answer' }],
+      ['Закрыть вкладку 2', { type: 'close', tab: 2 }],
+      ['Закрыть вкладку 3', { type: 'close', tab: 3 }],
+    ],
+  },
+  {
+    id: 'no-copy', title: 'Вкладка без живой копии', resource: 'course', check: true, contracts: '—',
+    text: 'Вкладка 2 открылась, когда пишущая вкладка 1 уже была заморожена, поэтому живой копии у неё нет. Следите: силой продолжить нельзя, Teacher видит «перейдите в ту вкладку». Как только вкладка 1 оживает, она отвечает, и вкладка 2 становится живой копией.',
+    steps: [
+      ['Открыть вкладку 1', { type: 'open-tab' }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Заморозить вкладку 1', { type: 'freeze', tab: 1 }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['+3 с: ответа нет', { type: 'tick', ms: 3000 }],
+      ['Разморозить вкладку 1', { type: 'thaw', tab: 1 }],
+    ],
+  },
+  {
+    id: 'versions', title: 'Разные версии приложения', resource: 'course', check: true, contracts: 'TAB-05',
+    text: 'Вкладка 1 открыта до деплоя и работает на старом протоколе, вкладка 2 — на новом. Следите: Working Copy другой версии не принимается, смены нет. Закрыть вкладку 1 с несохранёнными правками браузер не даёт молча. После сохранения вкладка 2 продолжает с сервера.',
+    steps: [
+      ['Открыть вкладку 1 (старая версия)', { type: 'open-tab', version: CURRENT - 1 }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['Закрыть вкладку 1', { type: 'close', tab: 1 }],
+      ['«Остаться»', { type: 'leave', tab: 1, leave: false }],
+      ['+1 с: вкладка 1 отправляет №1', { type: 'tick', ms: 1000 }],
+      ['Сервер отвечает на №1', { type: 'respond', req: 1, mode: 'answer' }],
+      ['Закрыть вкладку 1', { type: 'close', tab: 1 }],
+    ],
+  },
+  {
+    id: 'auth', title: 'Выход из аккаунта и другой User', resource: 'course', check: true, contracts: 'TAB-06',
+    text: 'Cookie сессии общий для всех вкладок. Анна выходит в одной вкладке — запись останавливается во всех. Повторный вход Анны продолжает работу. Вход Бориса удаляет Working Copy Анны из всех вкладок, а вкладка Бориса живёт в своём канале и не видит правок Анны.',
+    steps: [
+      ['Открыть вкладку 1', { type: 'open-tab' }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Выйти из аккаунта', { type: 'logout' }],
+      ['Войти как Анна', { type: 'login', userId: 'anna' }],
+      ['Выйти из аккаунта', { type: 'logout' }],
+      ['Войти как Борис', { type: 'login', userId: 'boris' }],
+      ['Открыть вкладку 3', { type: 'open-tab' }],
+    ],
+  },
+  {
+    id: 'sessions', title: 'Своя другая сессия и чужой Teacher', resource: 'course', check: true, contracts: 'TAB-09',
+    text: 'Вторая вкладка этого браузера — просто живая копия, сервер о ней не знает. Другая сессия Анны (ноутбук) и Борис — это 423 на сервере, и тексты у них разные. Следите: interrupted видят все вкладки браузера, потому что lease у них один.',
+    steps: [
+      ['Открыть вкладку 1', { type: 'open-tab' }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['Анна на ноутбуке берёт lease', { type: 'server-lease', who: 'laptop' }],
+      ['+20 с: heartbeat', { type: 'tick', ms: 20000 }],
+      ['Вкладка 1: «Вернуть сюда»', { type: 'retake', tab: 1 }],
+      ['Борис берёт lease', { type: 'server-lease', who: 'boris' }],
+      ['+20 с: heartbeat', { type: 'tick', ms: 20000 }],
+    ],
+  },
+  {
+    id: 'bfcache', title: 'Назад и вперёд (bfcache)', resource: 'course', check: true, contracts: 'TAB-08',
+    text: 'Пишущая вкладка уходит назад по истории. Следите: это обычный уход, копия продолжает. Когда страница возвращается из bfcache, она не воскрешает старую Working Copy, а подключается заново.',
+    steps: [
+      ['Открыть вкладку 1', { type: 'open-tab' }],
+      ['Вкладка 1: правка', { type: 'type', tab: 1 }],
+      ['Открыть вкладку 2', { type: 'open-tab' }],
+      ['Вкладка 1: «Назад»', { type: 'bf-back', tab: 1 }],
+      ['Вкладка 2: правка', { type: 'type', tab: 2 }],
+      ['Вкладка 1: «Вперёд»', { type: 'bf-forward', tab: 1 }],
+    ],
+  },
+];
+SCENARIOS.find((s) => s.id === 'late-unchecked').steps = SCENARIOS.find((s) => s.id === 'late-checked').steps;
+
+const ui = {
+  world: newWorld(),
+  scenario: null,
+  stepIndex: 0,
+};
+
+function apply(action) {
+  ui.world = step(ui.world, action);
+  render();
+}
+
+function reset(resource = ui.world.resource, revisionCheck = ui.world.revisionCheck) {
+  ui.world = newWorld({ resource, revisionCheck });
+}
+
+function startScenario(id) {
+  const s = SCENARIOS.find((x) => x.id === id);
+  ui.scenario = id;
+  ui.stepIndex = 0;
+  reset(s.resource, s.check);
+  render();
+}
+
+function runStep(index) {
+  const s = SCENARIOS.find((x) => x.id === ui.scenario);
+  if (index !== ui.stepIndex) return;
+  ui.stepIndex += 1;
+  apply(s.steps[index][1]);
+}
+
+// --- отрисовка ---
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmtTime = (ms) => `${(ms / 1000).toLocaleString('ru', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} с`;
+const btn = (label, action, { disabled = false, primary = false, title = '' } = {}) =>
+  `<button data-action='${esc(JSON.stringify(action))}' ${disabled ? 'disabled' : ''} ${primary ? 'class="primary"' : ''} ${title ? `title="${esc(title)}"` : ''}>${esc(label)}</button>`;
+
+function renderSettings() {
+  const w = ui.world;
+  document.getElementById('settings').innerHTML = `
+    <span class="muted">Ресурс:</span>
+    <button data-set="course" class="${w.resource === 'course' ? 'seg-on' : ''}">Страница курса</button>
+    <button data-set="review" class="${w.resource === 'review' ? 'seg-on' : ''}">Проверка попытки</button>
+    <label class="check" style="margin-left: 12px; ${w.resource !== 'course' ? 'opacity:.45' : ''}">
+      <input type="checkbox" data-set="check" ${w.revisionCheck ? 'checked' : ''} ${w.resource !== 'course' ? 'disabled' : ''}>
+      Backend проверяет revision черновика при записи (допущение #113)
+    </label>
+    <button data-set="reset" style="margin-left: auto;">Сбросить</button>`;
+}
+
+function renderWalkthroughs() {
+  const current = SCENARIOS.find((s) => s.id === ui.scenario);
+  const tabs = SCENARIOS.map((s) =>
+    `<button data-scenario="${s.id}" aria-selected="${s.id === ui.scenario}">${esc(s.title)}</button>`).join('');
+  let body = '<p class="muted">Выберите сценарий: мир сбросится, а шаги будут выполняться по одному. Свободная игра — кнопками ниже.</p>';
+  if (current) {
+    const steps = current.steps.map(([label], i) => {
+      const cls = i < ui.stepIndex ? 'done' : i === ui.stepIndex ? 'next' : '';
+      return `<button data-step="${i}" class="${cls}" ${i !== ui.stepIndex ? 'disabled' : ''}>${i + 1}. ${esc(label)}</button>`;
+    }).join('');
+    body = `
+      <p>${esc(current.text)}</p>
+      <p class="muted">Контракты матрицы: ${esc(current.contracts)}</p>
+      <div class="steps">${steps}</div>
+      <div class="row" style="margin-top: 10px;">
+        <button data-scenario="${current.id}">Начать сценарий заново</button>
+        ${ui.stepIndex >= current.steps.length ? '<span class="muted">Сценарий пройден — можно продолжить свободно.</span>' : ''}
+      </div>`;
+  }
+  document.getElementById('walkthroughs').innerHTML = `<h2>Сценарии</h2><div class="scenario-tabs">${tabs}</div>${body}`;
+}
+
+function syncLabel(wc) {
+  if (wc.edits == null) return 'Черновик не загружен · ждём сеть';
+  if (wc.base == null) return 'Сверяем черновик с сервером…';
+  return {
+    synchronized: 'Сохранено',
+    pending: 'Изменения ждут сохранения',
+    syncing: 'Сохранение…',
+    'sync-failed': 'Не сохранено · Повторить',
+  }[wc.sync];
+}
+
+function wcSummary(w, wc) {
+  if (!wc) return '';
+  const saved = w.resource === 'course' && wc.base ? new Set(wc.base) : new Set();
+  const chips = (wc.edits ?? []).map((e) => `<span class="chip ${w.resource === 'course' && !saved.has(e) ? 'unsaved' : ''}">${esc(e)}</span>`).join('');
+  let status = '';
+  if (w.resource === 'course') status = syncLabel(wc);
+  else if (wc.publication?.status === 'in-flight') status = `Публикация… (ключ ${wc.publication.key})`;
+  else if (wc.publication?.status === 'unconfirmed') status = `Публикация не подтверждена · Повторить (ключ ${wc.publication.key})`;
+  else status = wc.edits.length ? 'Не опубликовано' : `Опубликованная revision ${wc.baseRevision}, правок нет`;
+  return `<div class="muted" style="font-size: 12px;">Working Copy · ${esc(status)}</div><div class="chips">${chips || '<span class="muted" style="font-size: 12px;">пусто</span>'}</div>`;
+}
+
+function sessionLine(wc) {
+  if (!wc || wc.session === 'editing') return '';
+  if (wc.session === 'lease-unavailable') {
+    return wc.holder === 'self'
+      ? 'Открыт в другой сессии — на другом устройстве или в другом окне · Вернуть сюда'
+      : `Редактирует ${NAMES_UI[wc.holder] ?? '…'} · Попробовать снова`;
+  }
+  if (wc.holder === 'self') return 'Прервано: редактор открыт в другой сессии — на другом устройстве или в другом окне · Вернуть сюда';
+  if (wc.holder) return `Прервано: редактирует ${NAMES_UI[wc.holder]} · Попробовать снова`;
+  return 'Прервано: Review изменилась · Неопубликованные изменения в панели восстановления';
+}
+const NAMES_UI = { anna: 'Анна', boris: 'Борис' };
+const NAMES_GEN_UI = { anna: 'Анны', boris: 'Бориса' };
+
+function screenFor(w, tab) {
+  if (tab.status === 'closed') return { tone: '', title: 'Закрыта', text: '' };
+  if (tab.status === 'bfcache') return { tone: '', title: 'Ушла назад (bfcache)', text: 'Страница скрыта. «Вперёд» вернёт её.' };
+  if (tab.confirmLeave) return { tone: 'warn', title: 'Покинуть страницу?', text: 'Изменения могут не сохраниться.' };
+  const wc = tab.wc;
+  switch (tab.role) {
+    case 'writer': {
+      if (tab.handoff) return { tone: 'accent', title: `Передаём редактирование во вкладку ${tab.handoff.to}…`, text: 'Правки здесь остановлены, ждём ответа сервера.' };
+      const s = sessionLine(wc);
+      if (s) return { tone: 'warn', title: 'Только чтение', text: s };
+      return { tone: 'ok', title: 'Вы редактируете здесь', text: '' };
+    }
+    case 'copy': {
+      const s = sessionLine(wc);
+      if (tab.request) {
+        if (tab.request.accepted) return { tone: 'accent', title: `Вкладка ${tab.seen.writer} заканчивает`, text: `Ждём: ${tab.request.waiting.join(', ')}.` };
+        const left = Math.max(0, (tab.timers.force ?? w.now) - w.now);
+        return { tone: 'accent', title: `Ждём ответа вкладки ${tab.seen.writer}…`, text: `Если она промолчит, продолжим здесь через ${fmtTime(left)}.` };
+      }
+      return { tone: '', title: 'Только чтение', text: `Редактирование идёт во вкладке ${tab.seen.writer} этого браузера · Продолжить здесь${s ? `. ${s}` : ''}` };
+    }
+    case 'joining': return { tone: '', title: 'Открываем редактор…', text: 'Спрашиваем пишущую вкладку.' };
+    case 'no-copy': return { tone: 'warn', title: 'Редактор открыт в другой вкладке, она не отвечает', text: 'Перейдите в неё. Здесь продолжить нельзя: этой вкладке не от чего продолжать.' };
+    case 'incompatible': return { tone: 'warn', title: 'Редактор открыт во вкладке с другой версией MergeMinds', text: 'Закончите работу там и закройте её — эта вкладка продолжит сама. Обновить её можно и сейчас.' };
+    case 'signed-out': return { tone: 'warn', title: 'Вы вышли из аккаунта', text: `Правки этой вкладки скрыты и хранятся, пока она открыта. Войдите как ${NAMES_UI[tab.userId]}, чтобы продолжить.` };
+    case 'other-user': return { tone: 'loss', title: 'Открыт другой аккаунт', text: `Редактор ${NAMES_GEN_UI[tab.userId]} закрыт, Working Copy удалена из вкладки.` };
+  }
+  return { tone: '', title: tab.role, text: '' };
+}
+
+function tabActions(w, tab) {
+  if (tab.status === 'closed') return '';
+  if (tab.status === 'bfcache') return btn('Вперёд (из bfcache)', { type: 'bf-forward', tab: tab.id });
+  if (tab.confirmLeave) return btn('Уйти', { type: 'leave', tab: tab.id, leave: true }) + btn('Остаться', { type: 'leave', tab: tab.id, leave: false }, { primary: true });
+  if (tab.frozen) return btn('Разморозить', { type: 'thaw', tab: tab.id }, { primary: true }) + btn('Закрыть', { type: 'close', tab: tab.id });
+  const a = [];
+  const wc = tab.wc;
+  if (tab.role === 'writer') {
+    const editable = !tab.handoff && wc.session === 'editing' && (w.resource === 'course' ? wc.edits != null : !wc.publication);
+    a.push(btn('Правка', { type: 'type', tab: tab.id }, { disabled: !editable, primary: editable }));
+    if (w.resource === 'review') {
+      a.push(btn('Опубликовать', { type: 'publish', tab: tab.id }, { disabled: !editable || !wc.edits.length }));
+      if (wc.publication?.status === 'unconfirmed') a.push(btn('Повторить публикацию', { type: 'retry-publication', tab: tab.id }, { disabled: !!tab.handoff }));
+    }
+    if (wc.session !== 'editing') a.push(btn(wc.holder === 'self' ? 'Вернуть сюда' : 'Попробовать снова', { type: 'retake', tab: tab.id }, { primary: true }));
+  }
+  if (['copy', 'no-copy', 'incompatible'].includes(tab.role)) {
+    const why = tab.role === 'no-copy' ? 'Нет живой копии' : tab.role === 'incompatible' ? 'Другая версия протокола' : '';
+    a.push(btn('Продолжить здесь', { type: 'continue-here', tab: tab.id }, { disabled: tab.role !== 'copy' || !!tab.request, primary: tab.role === 'copy' && !tab.request, title: why }));
+  }
+  a.push(btn('Заморозить', { type: 'freeze', tab: tab.id }));
+  a.push(btn('Назад', { type: 'bf-back', tab: tab.id }, { title: 'pagehide; страница может уйти в bfcache' }));
+  a.push(btn('Закрыть', { type: 'close', tab: tab.id }));
+  return a.join('');
+}
+
+function roleBadge(tab) {
+  if (tab.status !== 'open') return '';
+  return {
+    writer: '<span class="badge writer">Пишет</span>',
+    copy: '<span class="badge copy">Живая копия</span>',
+    joining: '<span class="badge">Подключается</span>',
+    'no-copy': '<span class="badge warn">Без копии</span>',
+    incompatible: '<span class="badge warn">Другая версия</span>',
+    'signed-out': '<span class="badge warn">Нет сессии</span>',
+    'other-user': '<span class="badge">Другой User</span>',
+  }[tab.role] ?? '';
+}
+
+function renderTabs() {
+  const w = ui.world;
+  document.getElementById('tab-actions').innerHTML =
+    btn('Открыть вкладку', { type: 'open-tab' }, { disabled: !w.browser.auth }) +
+    btn('Открыть со старой версией', { type: 'open-tab', version: CURRENT - 1 }, { disabled: !w.browser.auth });
+  const cards = w.tabs.map((tab) => {
+    const screen = screenFor(w, tab);
+    const hidden = tab.role === 'signed-out' || tab.role === 'other-user' || tab.status !== 'open';
+    const lockText = { held: 'держит', queued: 'в очереди', none: '—' }[tab.lock];
+    return `
+      <article class="panel tab-card ${tab.status !== 'open' ? 'closed' : ''} ${tab.frozen ? 'frozen' : ''}">
+        <div class="tab-head">
+          <strong>Вкладка ${tab.id}</strong>
+          ${roleBadge(tab)}
+          ${tab.frozen ? '<span class="badge frozen">Заморожена</span>' : ''}
+          ${tab.version !== CURRENT ? `<span class="badge warn">протокол v${tab.version}</span>` : ''}
+          <span class="badge">${esc(NAMES_UI[tab.userId])}</span>
+        </div>
+        <div class="screen tone-${screen.tone}">
+          <div class="title">${esc(screen.title)}</div>
+          ${screen.text ? `<div>${esc(screen.text)}</div>` : ''}
+          ${tab.notice && tab.status === 'open' ? `<div class="notice">${esc(tab.notice)}</div>` : ''}
+        </div>
+        ${hidden ? '' : wcSummary(w, tab.wc)}
+        <div class="row">${tabActions(w, tab)}</div>
+        <div class="internals mono">
+          счётчик смен ${tab.epoch ?? '—'} · lock: ${lockText} · seq ${tab.wc?.seq ?? '—'}${tab.inbox.length ? ` · ждут разморозки: ${tab.inbox.length}` : ''}${Object.keys(tab.timers).length ? ` · таймеры: ${Object.entries(tab.timers).map(([n, at]) => `${n}@${fmtTime(at)}`).join(', ')}` : ''}
+        </div>
+      </article>`;
+  }).join('');
+  document.getElementById('tabs').innerHTML = cards || '<p class="muted">Вкладок нет. Откройте первую.</p>';
+}
+
+function renderBrowser() {
+  const w = ui.world;
+  const b = w.browser;
+  const records = Object.entries(b.records).map(([ns, r]) => `${NAMES_UI[ns]}: счётчик ${r.epoch}, пишет вкладка ${r.writer ?? '—'}`).join('<br>') || '—';
+  const locks = Object.entries(b.locks).map(([ns, l]) => `${NAMES_UI[ns]}: держит ${l.holder ?? '—'} · очередь ${l.queue.length ? l.queue.join(', ') : '—'}`).join('<br>') || '—';
+  document.getElementById('browser').innerHTML = `
+    <h2>Браузер</h2>
+    <div class="kv">
+      <span class="k">Время</span><span>${fmtTime(w.now)}</span>
+      <span class="k">Сессия</span><span>${b.auth ? `${NAMES_UI[b.auth.userId]} · ${b.auth.session}` : 'никто не вошёл'}</span>
+      <span class="k">Сеть</span><span>${b.network === 'online' ? 'есть' : 'нет'}</span>
+      <span class="k">localStorage</span><span class="mono">${records}</span>
+      <span class="k">Web Lock</span><span class="mono">${locks}</span>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      ${btn('+1 с', { type: 'tick', ms: 1000 })}${btn('+3 с', { type: 'tick', ms: 3000 })}${btn('+20 с', { type: 'tick', ms: 20000 })}
+      ${btn(b.network === 'online' ? 'Отключить сеть' : 'Вернуть сеть', { type: 'network', online: b.network !== 'online' })}
+    </div>
+    <div class="row" style="margin-top: 8px;">
+      ${btn('Выйти из аккаунта', { type: 'logout' }, { disabled: !b.auth })}
+      ${btn('Войти как Анна', { type: 'login', userId: 'anna' }, { disabled: !!b.auth })}
+      ${btn('Войти как Борис', { type: 'login', userId: 'boris' }, { disabled: !!b.auth })}
+    </div>`;
+}
+
+function renderServer() {
+  const w = ui.world;
+  const s = w.server;
+  const lease = s.lease ? `${NAMES_UI[s.lease.userId]} · сессия ${s.lease.session}` : 'свободен';
+  let doc = '';
+  if (w.resource === 'course') {
+    const lostSet = new Set(s.lost);
+    const chips = s.draft.edits.map((e) => `<span class="chip">${esc(e)}</span>`).join('') +
+      [...lostSet].filter((e) => !s.draft.edits.includes(e)).map((e) => `<span class="chip lost">${esc(e)}</span>`).join('');
+    doc = `<span class="k">Черновик</span><span>revision ${s.draft.revision}<div class="chips">${chips || '<span class="muted">пусто</span>'}</div></span>`;
+  } else {
+    const chips = s.review.edits.map((e) => `<span class="chip">${esc(e)}</span>`).join('');
+    const keys = Object.entries(s.review.keys).map(([k, r]) => `${k} → ${r}`).join(', ') || '—';
+    doc = `<span class="k">Review</span><span>revision ${s.review.revision}<div class="chips">${chips || '<span class="muted">не опубликована</span>'}</div></span>
+           <span class="k">Ключи</span><span class="mono">${keys}</span>`;
+  }
+  const reqs = s.requests.map((r) => {
+    const tab = w.tabs.find((t) => t.id === r.tabId);
+    const state = !tab || tab.status !== 'open' ? 'вкладка закрыта' : tab.frozen ? 'вкладка заморожена' : tab.role === 'writer' ? 'вкладка пишет' : 'вкладка уже не пишет';
+    const what = r.kind === 'sync' ? `пакет синхронизации от revision ${r.payload.baseRevision}` : `публикация, ключ ${r.payload.key}`;
+    return `<div class="req"><div>№${r.id} · ${what}</div><div class="muted" style="font-size: 12px;">из вкладки ${r.tabId} (${state})</div>
+      <div class="row">${btn('Ответить', { type: 'respond', req: r.id, mode: 'answer' })}${btn('Потерять ответ', { type: 'respond', req: r.id, mode: 'lose' })}</div></div>`;
+  }).join('');
+  document.getElementById('server').innerHTML = `
+    <h2>Сервер</h2>
+    ${s.lost.length ? `<div class="alert" style="margin-bottom: 10px;">Черновик молча потерял правки: ${esc(s.lost.join(', '))}</div>` : ''}
+    <div class="kv">
+      <span class="k">Lease</span><span>${esc(lease)}</span>
+      ${doc}
+    </div>
+    <div class="row" style="margin-top: 10px;">
+      ${btn('Анна на ноутбуке берёт lease', { type: 'server-lease', who: 'laptop' })}
+      ${btn('Борис берёт lease', { type: 'server-lease', who: 'boris' })}
+      ${btn('Освободить', { type: 'server-lease', who: 'free' })}
+    </div>
+    <h3 style="margin-top: 14px;">Запросы в полёте</h3>
+    <div class="stack" style="gap: 6px;">${reqs || '<span class="muted">нет</span>'}</div>`;
+}
+
+function renderLog() {
+  const w = ui.world;
+  const rows = w.log.map((e, i) => ({ ...e, i })).reverse().map((e) =>
+    `<div class="log-row ${e.kind} ${e.i >= w.mark ? 'fresh' : ''}"><span class="t">${fmtTime(e.at)}</span><span class="m">${esc(e.text)}</span></div>`).join('');
+  document.getElementById('log').innerHTML = rows || '<span class="muted">Пока ничего.</span>';
+}
+
+function render() {
+  renderSettings();
+  renderWalkthroughs();
+  renderTabs();
+  renderBrowser();
+  renderServer();
+  renderLog();
+}
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('button, input');
+  if (!el || el.disabled) return;
+  if (el.dataset.action) { apply(JSON.parse(el.dataset.action)); return; }
+  if (el.dataset.step != null) { runStep(Number(el.dataset.step)); return; }
+  if (el.dataset.scenario) { startScenario(el.dataset.scenario); return; }
+  const set = el.dataset.set;
+  if (set === 'course' || set === 'review') { ui.scenario = null; reset(set, ui.world.revisionCheck); render(); }
+  if (set === 'check') { ui.world = { ...ui.world, revisionCheck: el.checked }; render(); }
+  if (set === 'reset') { ui.scenario = null; reset(); render(); }
+});
+
+render();
+</script>
+</body>
+</html>
