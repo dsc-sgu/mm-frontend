@@ -4,7 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
-import prettier from 'eslint-plugin-prettier';
+import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
 export default defineConfig([
   globalIgnores(['dist', '**/routeTree.gen.ts']),
@@ -20,11 +20,7 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
-    plugins: {
-      prettier,
-    },
     rules: {
-      'prettier/prettier': 'error',
       'no-restricted-imports': [
         'error',
         {
@@ -45,4 +41,5 @@ export default defineConfig([
       '@typescript-eslint/consistent-type-definitions': 'off',
     },
   },
+  prettierRecommended,
 ]);

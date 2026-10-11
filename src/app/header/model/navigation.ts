@@ -3,7 +3,6 @@ import type {
   MakeRouteMatchUnion,
   RegisteredRouter,
 } from '@tanstack/react-router';
-import '@tanstack/router-core';
 
 export type HeaderLinkTarget = {
   to: string;
@@ -42,7 +41,7 @@ export type HeaderState = {
   navItems: HeaderNavItem[];
 };
 
-declare module '@tanstack/router-core' {
+declare module '@tanstack/react-router' {
   // Module augmentation intentionally uses interface declaration merging.
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface StaticDataRouteOption {
