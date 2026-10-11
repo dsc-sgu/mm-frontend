@@ -33,7 +33,6 @@
         "@tiptap/starter-kit": "^3.24.0",
         "axios": "^1.13.4",
         "class-variance-authority": "^0.7.1",
-        "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
         "dompurify": "^3.4.8",
         "immutable": "^5.1.6",

@@ -1,5 +1,11 @@
 # React + TypeScript + Vite
 
+## Class names
+
+Use `cn()` from `@/shadcn/lib/utils` to combine class names and resolve Tailwind conflicts. It uses `tailwind-merge` directly and accepts strings, falsy values, and nested arrays.
+
+Object-map inputs are not supported; use conditional expressions such as `cn('base', active && 'active')` instead.
+
 ## Mock authorization
 
 To run the frontend with mock authorization, add this to `.env.local` and restart the Vite dev server:
