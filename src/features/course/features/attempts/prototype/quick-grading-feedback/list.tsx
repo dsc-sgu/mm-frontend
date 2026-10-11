@@ -1,6 +1,9 @@
-// PROTOTYPE (#121): fixed-height virtualized rows. Rows are never measured,
-// so anything that tried to grow a row would visibly overlap its neighbour.
+// PROTOTYPE (#121): fixed-height virtualized rows in one container with row
+// dividers (#45). Rows are never measured, so anything that tried to grow a
+// row would visibly overlap its neighbour.
 import type { ReactNode } from 'react';
+
+import { cn } from '@/shadcn/lib/utils';
 
 import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
 import type { RowsVirtualizer } from './use-fixed-rows';
@@ -23,32 +26,37 @@ export function FixedRowsList({
   'use no memo';
 
   return (
-    <div
-      ref={setListRef}
-      className="relative"
-      style={{ height: `${virtualizer.getTotalSize()}px` }}
-    >
-      {virtualizer.getVirtualItems().map((item) => {
-        const attempt = attempts[item.index];
+    <div className="overflow-hidden rounded-2xl border bg-card">
+      <div
+        ref={setListRef}
+        className="relative"
+        style={{ height: `${virtualizer.getTotalSize()}px` }}
+      >
+        {virtualizer.getVirtualItems().map((item) => {
+          const attempt = attempts[item.index];
 
-        if (!attempt) {
-          return null;
-        }
+          if (!attempt) {
+            return null;
+          }
 
-        return (
-          <div
-            key={item.key}
-            data-index={item.index}
-            className="absolute top-0 left-0 w-full"
-            style={{
-              height: `${rowHeight}px`,
-              transform: `translateY(${item.start - scrollMargin}px)`,
-            }}
-          >
-            {renderRow(attempt)}
-          </div>
-        );
-      })}
+          return (
+            <div
+              key={item.key}
+              data-index={item.index}
+              className={cn(
+                'absolute top-0 left-0 w-full',
+                item.index > 0 ? 'border-t border-border/70' : null
+              )}
+              style={{
+                height: `${rowHeight}px`,
+                transform: `translateY(${item.start - scrollMargin}px)`,
+              }}
+            >
+              {renderRow(attempt)}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
