@@ -18,7 +18,7 @@ export const sessionKeys = {
  * Checking the session is safe to repeat. One retry covers a network failure
  * or a gateway status; any other failure, and cancellation, is final.
  */
-export function canRetrySessionCheck(failureCount: number, error: Error) {
+function canRetrySessionCheck(failureCount: number, error: Error) {
   if (failureCount >= 1 || !(error instanceof OperationFailure)) {
     return false;
   }

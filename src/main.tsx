@@ -29,14 +29,16 @@ const router = createRouter({
 
 // The first render already checks the session, so the worker must be running
 // before it. Production builds drop this branch together with MSW.
-async function startMockBackend() {
+async function enableMockBackend() {
   if (import.meta.env.DEV && import.meta.env.VITE_MOCK_BACKEND === 'true') {
-    const mockBackend = await import('@/app/mock-backend/browser');
-    await mockBackend.startMockBackend();
+    const { startMockBackend } = await import('@/app/mock-backend/browser');
+    await startMockBackend();
   }
 }
 
-void startMockBackend().then(() => {
+// If the worker fails to start, nothing renders: requests must not silently
+// reach the real backend while the mock backend is requested.
+void enableMockBackend().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
