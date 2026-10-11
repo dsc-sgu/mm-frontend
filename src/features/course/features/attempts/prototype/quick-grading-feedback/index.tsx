@@ -27,7 +27,7 @@ import { withRealisticNames } from './names';
 import { RecoveryDialog } from './recovery';
 import { QuickGradingTopBar } from './top-bar';
 import { columnsKey, desktopColumns, type FeedbackColumn } from './columns';
-import { QuickRow } from './row';
+import { QuickRow, type RowLayout } from './row';
 import {
   INITIAL_QUICK_SESSION,
   canGrade,
@@ -49,7 +49,29 @@ const feedbackColumnByVariant: Record<VariantKey, FeedbackColumn> = {
   B: 'field',
 };
 
-const ROW_HEIGHT = { desktop: 64, mobile: 120 } as const;
+// One fixed height per layout tier, so the virtualizer never measures rows.
+const ROW_HEIGHT: Record<RowLayout, number> = {
+  wide: 64,
+  medium: 88,
+  stacked: 124,
+};
+// Tier breakpoints per variant, picked by measurement with realistic ФИО:
+// the narrowest width at which Student and Task still fit (one line for wide,
+// two clamped lines for medium). B pays for its feedback zone with width.
+const TIER_FROM: Record<VariantKey, { wide: string; medium: string }> = {
+  A: { wide: '(min-width: 1200px)', medium: '(min-width: 900px)' },
+  B: { wide: '(min-width: 1360px)', medium: '(min-width: 1000px)' },
+};
+
+type FitKind = 'name' | 'task' | 'submission' | 'state';
+type FitReport = Record<FitKind, number> & { rows: number };
+const EMPTY_FIT: FitReport = {
+  rows: 0,
+  name: 0,
+  task: 0,
+  submission: 0,
+  state: 0,
+};
 
 function toVariantKey(value: string | undefined): VariantKey {
   return VARIANTS.find((variant) => variant.key === value)?.key ?? 'A';
@@ -75,14 +97,20 @@ export function QuickGradingFeedbackPrototype({
   'use no memo';
 
   const variant = toVariantKey(rawVariant);
-  const desktop = useMediaQuery('(min-width: 768px)');
-  const layout = desktop ? 'desktop' : 'mobile';
+  const wideTier = useMediaQuery(TIER_FROM[variant].wide);
+  const mediumTier = useMediaQuery(TIER_FROM[variant].medium);
+  const layout: RowLayout = wideTier
+    ? 'wide'
+    : mediumTier
+      ? 'medium'
+      : 'stacked';
+  const desktop = layout !== 'stacked';
   const rowHeight = ROW_HEIGHT[layout];
 
   const [realisticNames, setRealisticNames] = useState(true);
   // The Course Attempts page caps content at max-w-7xl (1280px); "широко"
   // lets quick grading use the full viewport to see whether that saves B.
-  const [fullWidth, setFullWidth] = useState(false);
+  const [fullWidth, setFullWidth] = useState(true);
   const attempts = useMemo(
     () =>
       realisticNames ? withRealisticNames(loadedAttempts) : loadedAttempts,
@@ -124,21 +152,32 @@ export function QuickGradingFeedbackPrototype({
     };
   }, []);
 
-  // Surface whether full names fit: count rendered Student names that are cut
-  // off by the zone width. Polling is fine for a throwaway prototype.
-  const [truncatedNames, setTruncatedNames] = useState({ cut: 0, shown: 0 });
+  // Surface whether texts fit: count rendered `[data-fit]` texts cut off by
+  // their zone, horizontally (ellipsis) or vertically (line clamp). Polling is
+  // fine for a throwaway prototype.
+  const [fit, setFit] = useState<FitReport>(EMPTY_FIT);
   useEffect(() => {
     const measure = () => {
-      const names = [
-        ...document.querySelectorAll<HTMLElement>('[data-student-name]'),
-      ];
-      const cut = names.filter(
-        (name) => name.scrollWidth > name.clientWidth + 1
-      ).length;
-      setTruncatedNames((previous) =>
-        previous.cut === cut && previous.shown === names.length
-          ? previous
-          : { cut, shown: names.length }
+      const next: FitReport = {
+        ...EMPTY_FIT,
+        rows: document.querySelectorAll('article').length,
+      };
+
+      for (const element of document.querySelectorAll<HTMLElement>(
+        '[data-fit]'
+      )) {
+        const kind = element.dataset.fit as FitKind;
+        const cut =
+          element.scrollWidth > element.clientWidth + 1 ||
+          element.scrollHeight > element.clientHeight + 1;
+
+        if (cut && kind in next) {
+          next[kind] += 1;
+        }
+      }
+
+      setFit((previous) =>
+        JSON.stringify(previous) === JSON.stringify(next) ? previous : next
       );
     };
     measure();
@@ -376,7 +415,6 @@ export function QuickGradingFeedbackPrototype({
                   }
                   saving={session.saving.has(attempt.id)}
                   gradeable={gradeable}
-                  active={false}
                   gradeInputRef={registerField(`${attempt.id}:grade`)}
                   onGradeChange={(value) => edit(attempt.id, 'grade', value)}
                   onGradeKeyDown={handleGradeKeyDown(attempt)}
@@ -496,9 +534,9 @@ export function QuickGradingFeedbackPrototype({
         {desktop ? (
           <span
             className="px-1 text-xs tabular-nums"
-            title="Сколько ФИО из отрисованных строк обрезано шириной зоны Студент"
+            title={`Обрезано в ${fit.rows} отрисованных строках: ФИО ${fit.name}, задания ${fit.task}, отправлено ${fit.submission}, состояние ${fit.state}`}
           >
-            обрезано {truncatedNames.cut}/{truncatedNames.shown}
+            обрезано {fit.name + fit.task + fit.submission + fit.state}
           </span>
         ) : null}
         <label className="flex cursor-pointer items-center gap-1 px-1 text-xs">
@@ -530,7 +568,7 @@ export function QuickGradingFeedbackPrototype({
             {
               variant,
               layout,
-              truncatedNames,
+              fit,
               fullWidth,
               activeAttemptId: session.activeAttemptId,
               entries: Object.fromEntries(session.entries),
@@ -558,7 +596,6 @@ function ListHeader({
     'Задание',
     'Отправлено',
     'Состояние',
-    'Diff',
     'Балл',
     ...(feedbackColumn === 'field' ? ['Общий отзыв'] : []),
     ...(showAction ? ['Действие'] : []),
