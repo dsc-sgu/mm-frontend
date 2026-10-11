@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import type { CodeViewHandle } from '@pierre/diffs/react';
 import { useQuery } from '@tanstack/react-query';
 
-import { SESSION_OPTIONS } from '@/features/auth/api/queries';
+import { sessionOptions } from '@/features/auth/api/queries';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -104,7 +104,7 @@ function AttemptReviewPageLoaded({
   const createReplyMutation = useCreateAttemptReviewCommentReplyMutation();
   const updateReplyMutation = useUpdateAttemptReviewCommentReplyMutation();
   const deleteReplyMutation = useDeleteAttemptReviewCommentReplyMutation();
-  const { data: sessionData } = useQuery(SESSION_OPTIONS);
+  const { data: sessionData } = useQuery(sessionOptions);
   const [activeFilePath, setActiveFilePath] = useState<string | null>(
     review.changedFiles[0]?.path ?? null
   );
@@ -119,7 +119,7 @@ function AttemptReviewPageLoaded({
     useRef<CodeViewHandle<AttemptReviewLineCommentAnnotation> | null>(null);
   const isDesktopReviewLayout = useMediaQuery('(min-width: 1024px)');
   const currentReviewer = useMemo(() => {
-    if (sessionData?.status !== 'AUTHORIZED') {
+    if (sessionData?.status !== 'authorized') {
       return undefined;
     }
 
@@ -168,7 +168,7 @@ function AttemptReviewPageLoaded({
   );
 
   const canReplyToComments =
-    sessionData?.status === 'AUTHORIZED' &&
+    sessionData?.status === 'authorized' &&
     (sessionData.session.role === 'teacher' ||
       sessionData.session.username === studentUsername);
   const canSave =

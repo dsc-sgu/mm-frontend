@@ -20,7 +20,7 @@ After installing the updated dependencies:
 
 1. Run `bun run build` to regenerate `src/routeTree.gen.ts` through the Vite router plugin, and commit the generated changes.
 2. Run `bunx tsc -b` after generation to check route loading contexts, navigation parameters/search, and the `StaticDataRouteOption` augmentation against the new tree.
-3. Run `bun run lint`, then smoke-check the production bundle with `bun run preview`: login, course list, Course Page, Course Attempts, Attempt review, and browser Back/Forward. Use a teacher session for the attempts and review routes. Mock authorization bypasses the login form, so disable it when checking login.
+3. Run `bun run lint`, then smoke-check in the dev server with the mock backend enabled: login, course list, Course Page, Course Attempts, Attempt review, and browser Back/Forward. Use a teacher session for the attempts and review routes. The mock backend starts signed in, so sign out to check the login form. The production bundle (`bun run preview`) has no mock backend and needs a running backend.
 
 ### Plate updates
 
@@ -30,7 +30,7 @@ The exact selection `53.0.0` pin introduced with marquee selection in `b6344c4` 
 
 1. Before updating, run `bun run test:browser playwright/course-page-editor/lists.spec.ts playwright/course-page-editor/focus.spec.ts` in all three configured engines. These protect DOC-14 (list numbering) and DOC-18 (focus after structural commands); existing expected failures belong to DOC1, DOC4 and DOC5, not to dependency updates.
 2. Update the cohort and `bun.lock` together, then run `bun install --frozen-lockfile`, `bun run lint`, `bun run build`, and the full `bun run test:browser` suite. Do not update TipTap as part of this cohort.
-3. With mock authorization enabled, open `/courses/modern-information-technologies/edit`. Insert a block through the slash menu; marquee-select adjacent blocks and check the selection count; drag a single block by its handle and check the resulting order.
+3. With the mock backend enabled, open `/courses/modern-information-technologies/edit`. Insert a block through the slash menu; marquee-select adjacent blocks and check the selection count; drag a single block by its handle and check the resulting order.
 4. Select text and create a link, collapse and expand a spoiler, and edit a code block's language and filename. Apply, open the read-only Course Page, then reopen the editor; check the link destination, block order, code language and filename survive.
 
 `queueMicrotask` and `editor.meta._forceFocus` in `page-edit/model/block-operations.ts` remain unchanged. Any upgrade regression must preserve the visible DOC-18 caret outcome without introducing `BlockCommands`.
@@ -39,17 +39,21 @@ The exact selection `53.0.0` pin introduced with marquee selection in `b6344c4` 
 
 Attempts and attempt review import grading helpers and score fields directly from `@/features/course/features/grading`.
 
-## Mock authorization
+## Mock backend
 
-To run the frontend with mock authorization, add this to `.env.local` and restart the Vite dev server:
+Remote operations always call Fetch at the backend URLs. In the dev server, requests go through the Vite proxy to `VITE_API_PROXY_TARGET_URL` (`http://localhost:8034` by default). To serve them from the MSW mock backend instead, add this to `.env.local` and restart the Vite dev server:
 
 ```env
-VITE_MOCK_AUTH=true
+VITE_MOCK_BACKEND=true
 ```
 
-With mock authorization enabled, the app immediately signs in as `mit-teacher` without showing the login form. This user is a teacher for the “Современные информационные технологии” course and a student in every other mock course.
+The mock backend runs in the browser and starts from a deterministic seed; every page load returns it to the seed. The seed is signed in as `mit-teacher` (`mit-teacher@example.com`, password `Teacher123`), a teacher for the “Современные информационные технологии” course and a student in every other mock course. `mit-student` (`mit-student@example.com`, `Student123`) is a student of that course. Sign out to see the login form; users registered in the form last until the next page load.
 
-Remove the flag or set it to `false` to use the real `/api/v1/auth/*` backend endpoints.
+So far only auth goes through MSW; other features still use in-memory mocks with or without the flag. Production builds never include MSW.
+
+## Tests
+
+`bun run test` runs Vitest: `*.test.ts` in Node and `*.test.tsx` in jsdom with React Testing Library. Both use the MSW handlers of the mock backend. After each test, handlers and the mock backend state return to the seed. Failure profiles for `server.use(...)` (`fail:network`, `fail:http-500`, `fail:invalid`, `fail:held`) are in `src/app/mock-backend/failures.ts`.
 
 ## Browser tests
 
@@ -60,7 +64,7 @@ bunx playwright install chromium firefox webkit
 bun run test:browser
 ```
 
-Playwright starts its own Vite dev server on port 5180 with mock authorization; set `PLAYWRIGHT_PORT` to use another port. Pass `--project=chromium` (or `firefox`, `webkit`) to run one engine.
+Playwright starts its own Vite dev server on port 5180 with the mock backend; set `PLAYWRIGHT_PORT` to use another port. Pass `--project=chromium` (or `firefox`, `webkit`) to run one engine.
 
 A test marked `test.fail()` describes target behaviour the current code lacks; its comment names the slice that brings it. When that slice lands, the test starts passing, Playwright reports the unexpected pass, and the PR removes the mark.
 
@@ -68,7 +72,7 @@ A test marked `test.fail()` describes target behaviour the current code lacks; i
 
 shadcn components import primitives from the single `radix-ui` package. Do not add individual `@radix-ui/react-*` packages as direct dependencies; they may still appear as transitive dependencies in `bun.lock`.
 
-After changing Radix imports or versions, run `bun run lint` and `bun run build`, then smoke-check with mock authorization enabled:
+After changing Radix imports or versions, run `bun run lint` and `bun run build`, then smoke-check with the mock backend enabled:
 
 1. Open `/courses/modern-information-technologies/tasks/1` and confirm the header avatar shows the `СП` fallback.
 2. Open the avatar menu by clicking it. Close it with Escape, focus the trigger, and reopen it with ArrowDown. Check ArrowDown/ArrowUp navigation between “Настройки” and “Выход”, then Escape closes the menu and returns focus to the trigger.
@@ -76,7 +80,7 @@ After changing Radix imports or versions, run `bun run lint` and `bun run build`
 
 ## Runtime dependency smoke checks
 
-Keep DOMPurify, Sonner, Zustand, and libphonenumber-js updates within their current major versions. After updating them, run `bun install --frozen-lockfile`, `bun run lint`, and `bun run build`, then smoke-check with mock authorization enabled:
+Keep DOMPurify, Sonner, Zustand, and libphonenumber-js updates within their current major versions. After updating them, run `bun install --frozen-lockfile`, `bun run lint`, and `bun run build`, then smoke-check with the mock backend enabled:
 
 1. Open `/courses/modern-information-technologies/tasks/1/attempts/student/1` and confirm the saved review preserves rich-text formatting. Exercise `sanitizeRichTextHtml` in `src/features/course/features/attempt-review/ui/rich-text/sanitize.ts` with scripts, inline event handlers, and unsafe link schemes; these must be removed while HTTPS, email, phone, course-relative, and fragment links remain.
 2. Open `/courses/modern-information-technologies/edit`. Change the title and reset it; confirm the original title returns and the unsaved-changes bar disappears. Clear the title and confirm Apply is disabled and Ctrl/Cmd+S shows the validation-error toast. Restore a valid title and apply; confirm the success toast and clean editor state. Ctrl/Cmd+S without changes should show the informational toast.

@@ -23,12 +23,11 @@ import {
   DropdownMenuTrigger,
 } from '@/shadcn/components/ui/dropdown-menu';
 import { Link, useMatches } from '@tanstack/react-router';
-import { useQuery, type UseMutateAsyncFunction } from '@tanstack/react-query';
-import {
-  SESSION_OPTIONS,
-  useLogoutMutation,
-} from '@/features/auth/api/queries';
-import type { FetchSessionResponse } from '@/features/auth/api/client';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { sessionOptions, useLogoutMutation } from '@/features/auth/api/queries';
+import type { Session } from '@/features/auth/model/types';
+import { authFailureText } from '@/features/auth/ui/failure-text';
 import { HeaderBreadcrumbs } from '@/app/header/ui/breadcrumbs';
 import { HeaderSectionNav } from '@/app/header/ui/section-nav';
 import { getHeaderState } from '@/app/header/model/state';
@@ -37,8 +36,14 @@ import { cn } from '@/shadcn/lib/utils';
 export function Header() {
   const matches = useMatches();
   const { breadcrumbs, navItems } = getHeaderState(matches);
-  const { data: sessionData } = useQuery(SESSION_OPTIONS);
-  const { mutateAsync: logoutMut } = useLogoutMutation();
+  const { data: sessionData } = useQuery(sessionOptions);
+  const logoutMutation = useLogoutMutation();
+
+  const logOut = () => {
+    logoutMutation.mutate(undefined, {
+      onError: (error) => toast.error(authFailureText('logout', error)),
+    });
+  };
 
   return (
     <header
@@ -60,8 +65,8 @@ export function Header() {
 
         <div className="flex shrink-0 items-center gap-1">
           <ToggleThemeBtn />
-          {sessionData?.status === 'AUTHORIZED' && (
-            <AuthorizedPart sessionData={sessionData} logoutMut={logoutMut} />
+          {sessionData?.status === 'authorized' && (
+            <AuthorizedPart session={sessionData.session} onLogOut={logOut} />
           )}
         </div>
       </div>
@@ -117,11 +122,11 @@ function ToggleThemeBtn() {
 }
 
 function AuthorizedPart({
-  sessionData,
-  logoutMut,
+  session,
+  onLogOut,
 }: {
-  sessionData: Extract<FetchSessionResponse, { status: 'AUTHORIZED' }>;
-  logoutMut: UseMutateAsyncFunction<void, Error, void, unknown>;
+  session: Session;
+  onLogOut: () => void;
 }) {
   return (
     <>
@@ -149,12 +154,9 @@ function AuthorizedPart({
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-10 w-10 rounded-full p-0">
             <Avatar className="h-9 w-9">
-              <AvatarImage
-                src={sessionData.session.avatarURL}
-                alt={sessionData.session.username}
-              />
+              <AvatarImage src={session.avatarURL} alt={session.username} />
               <AvatarFallback className="text-xs">
-                {sessionNameAbbreviation(sessionData)}
+                {sessionNameAbbreviation(session)}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -163,10 +165,10 @@ function AuthorizedPart({
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="flex flex-col">
             <span className="text-sm leading-none font-medium">
-              {sessionFullName(sessionData)}
+              {sessionFullName(session)}
             </span>
             <span className="text-xs text-muted-foreground">
-              @{sessionData.session.username}
+              @{session.username}
             </span>
           </DropdownMenuLabel>
 
@@ -177,7 +179,7 @@ function AuthorizedPart({
             Настройки
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={async () => await logoutMut()}>
+          <DropdownMenuItem onClick={onLogOut}>
             <LogOut className="mr-2 h-4 w-4" />
             Выход
           </DropdownMenuItem>
@@ -187,14 +189,10 @@ function AuthorizedPart({
   );
 }
 
-function sessionFullName({
-  session: { firstName, lastName, patronymic },
-}: Extract<FetchSessionResponse, { status: 'AUTHORIZED' }>) {
+function sessionFullName({ firstName, lastName, patronymic }: Session) {
   return [firstName, lastName, patronymic].filter(Boolean).join(' ');
 }
 
-function sessionNameAbbreviation({
-  session: { firstName, lastName },
-}: Extract<FetchSessionResponse, { status: 'AUTHORIZED' }>) {
+function sessionNameAbbreviation({ firstName, lastName }: Session) {
   return lastName[0] + firstName[0];
 }

@@ -3,9 +3,11 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import { routeTree } from './routeTree.gen.ts';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
+import { createQueryClient } from '@/app/remote-data/query-client';
+import { RouteError } from '@/app/route-error';
 
-const queryClient = new QueryClient();
+const queryClient = createQueryClient();
 
 declare global {
   // Global augmentation intentionally uses interface declaration merging.
@@ -19,12 +21,27 @@ if (import.meta.env.DEV) {
   window.__TANSTACK_QUERY_CLIENT__ = queryClient;
 }
 
-const router = createRouter({ routeTree, context: { queryClient } });
+const router = createRouter({
+  routeTree,
+  context: { queryClient },
+  defaultErrorComponent: RouteError,
+});
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  </StrictMode>
-);
+// The first render already checks the session, so the worker must be running
+// before it. Production builds drop this branch together with MSW.
+async function startMockBackend() {
+  if (import.meta.env.DEV && import.meta.env.VITE_MOCK_BACKEND === 'true') {
+    const mockBackend = await import('@/app/mock-backend/browser');
+    await mockBackend.startMockBackend();
+  }
+}
+
+void startMockBackend().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </StrictMode>
+  );
+});

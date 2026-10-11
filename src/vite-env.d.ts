@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_MOCK_AUTH?: string;
+  /** `true` starts the MSW mock backend in the dev server. */
+  readonly VITE_MOCK_BACKEND?: string;
 }
 
 interface ImportMeta {

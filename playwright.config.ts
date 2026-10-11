@@ -45,7 +45,7 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !IS_CI,
     timeout: 120_000,
-    // The app runs on the in-memory mocks and mock authorization.
-    env: { VITE_MOCK_AUTH: 'true' },
+    // The app runs on the in-memory mocks and the MSW mock backend.
+    env: { VITE_MOCK_BACKEND: 'true' },
   },
 });
