@@ -200,6 +200,7 @@ const VERTICALS = [
   { key: "att", name: "Course Attempts", src: [117] },
   { key: "qg", name: "Quick grading", src: [114, 117] },
   { key: "drf", name: "Course editing: lifecycle", src: [118] },
+  { key: "tab", name: "Вкладки редактора", src: [132, 116, 118] },
   { key: "doc", name: "Course Page: документ", src: [119, 74, 72] },
   { key: "a11y", name: "Accessibility", src: [68] },
 ];
@@ -234,7 +235,7 @@ const FIXTURES = [
     key: "world:course-draft",
     kind: "Мир",
     name: "Опубликованный snapshot и черновики",
-    body: "Опубликованный Course Snapshot S1 с doc:all-blocks. Варианты: no-draft, restored-draft (черновик Анны с правками), stale-draft (после основы черновика опубликован S2), lease-held-by-boris.",
+    body: "Опубликованный Course Snapshot S1 с doc:all-blocks. Варианты: no-draft, restored-draft (черновик Анны с правками), stale-draft (после основы черновика опубликован S2), lease-held-by-boris, lease-held-by-anna-elsewhere (другая сессия Анны). Revision черновика с проверкой при записи — допущение #113, помечено в handlers.",
   },
   {
     key: "doc:all-blocks",
@@ -307,6 +308,12 @@ const FIXTURES = [
     kind: "Отказ",
     name: "Worker/WASM недоступен",
     body: "Только Playwright: скрипт Worker или WASM блокируется через route.",
+  },
+  {
+    key: "tabs",
+    kind: "Вкладки",
+    name: "Две вкладки одного браузера",
+    body: "Playwright: две страницы одного BrowserContext — общие cookie, localStorage, BroadcastChannel и Web Locks. Stateful: пара фейковых вкладок с общими localStorage, каналом и lock; тест замораживает вкладку (её сообщения и таймеры ждут разморозки) и выпускает её запрос к серверу с задержкой.",
   },
   {
     key: "clock",
@@ -443,7 +450,7 @@ const ROWS = [
   { id: "REV-31", v: "rev", slice: "#116·6", risk: "integrity", layer: "component", fx: ["world:review"], src: [116],
     text: "Держатель lease меняет Grade, Overall Feedback и свои root comments; root comments другого Teacher'а только для чтения." },
   { id: "REV-32", v: "rev", slice: "#116·7", risk: "integrity", layer: "stateful", fx: ["clock"], src: [116],
-    text: "Lease на fake clock: `leaseId` на сессию; heartbeat ~20 с и сразу при возврате на вкладку; незаметно истёкший свой lease берётся снова; взятый другим → `interrupted`." },
+    text: "Lease на fake clock: один на браузер (auth session); heartbeat ~20 с и сразу при возврате на вкладку; незаметно истёкший свой lease берётся снова; взятый другим → `interrupted`." },
   { id: "REV-33", v: "rev", slice: "#116·7", risk: "integrity", layer: "component", fx: ["world:review"], src: [116],
     text: "Lease занят при входе: только чтение, «Проверяет X», «Попробовать взять на проверку»; автоматического захвата нет; holder обновляется при focus." },
   { id: "REV-34", v: "rev", slice: "#116·7", risk: "integrity", layer: "boundary", fx: ["world:review"], src: [116],
@@ -464,8 +471,8 @@ const ROWS = [
     text: "Запись manifest падает → публикация заблокирована с именем файла; после восстановления «Повторить» → публикация доступна." },
   { id: "REV-E4", v: "rev", slice: "#116·7", risk: "integrity", layer: "e2e", fx: ["world:review"], src: [116],
     text: "Борис держит Review Lease → Анна видит «Проверяет Борис», публикация недоступна." },
-  { id: "REV-E5", v: "rev", slice: "#116·7", risk: "data", layer: "e2e", fx: ["world:review"], src: [116], inv: ["I5"],
-    text: "Вторая вкладка Анны → только чтение с «Продолжить здесь»; после перехвата первая вкладка `interrupted`, её Working Copy в панели восстановления." },
+  { id: "REV-E5", v: "rev", slice: "#132", risk: "data", layer: "e2e", fx: ["world:review", "tabs"], src: [116, 132], inv: ["I5"],
+    text: "Анна открывает ту же Attempt во второй вкладке → живая копия только для чтения; Grade и комментарий из первой видны в копии; «Продолжить здесь» → Working Copy со всеми правками редактируется во второй, первая стала копией; публикация из второй → Саша видит всё." },
 
   // ── Course Attempts ──
   { id: "ATT-01", v: "att", slice: "#117·1", risk: "corr", layer: "model", fx: [], src: [117],
@@ -565,15 +572,35 @@ const ROWS = [
   { id: "DRF-20", v: "drf", slice: "#118·4", risk: "data", layer: "boundary", fx: ["world:course-draft"], src: [118],
     text: "`interrupted` только при явном ответе «lease не мой»." },
   { id: "DRF-21", v: "drf", slice: "#118·4", risk: "data", layer: "component", fx: ["world:course-draft"], src: [118], flag: "q12", inv: ["I6"],
-    text: "Из `interrupted`: `restored` = base → `editing`; ≠ base → «Взять версию с сервера» (подтверждение) / «Перезаписать черновик моей версией»; `stale_conflict` → `stale`; `423` → `lease-unavailable`, Working Copy только для чтения + предупреждение при уходе." },
+    text: "Из `interrupted` (lease взяла другая сессия: другое устройство Анны или Борис): `restored` = base → `editing`; ≠ base → «Взять версию с сервера» (подтверждение) / «Перезаписать черновик моей версией»; `stale_conflict` → `stale`; `423` → `lease-unavailable`, Working Copy только для чтения + предупреждение при уходе." },
   { id: "DRF-E1", v: "drf", slice: "#118·2", risk: "integrity", layer: "e2e", fx: ["world:course-draft"], src: [118],
     text: "Анна правит текст и список, добавляет блок, публикует через диалог → Саша видит новую Course Page с теми же номерами списков." },
   { id: "DRF-E2", v: "drf", slice: "#118·3", risk: "data", layer: "e2e", fx: ["world:course-draft", "fail:network"], src: [118], inv: ["I6"],
     text: "Сеть пропала во время правки → «Не сохранено · Повторить», правки на месте; сеть вернулась → «Сохранено»; reload → `restored` со всей работой." },
-  { id: "DRF-E3", v: "drf", slice: "#118·4", risk: "data", layer: "e2e", fx: ["world:course-draft"], src: [118], inv: ["I6"],
-    text: "Вторая вкладка Анны → «Открыт в другой вкладке · Продолжить здесь»; после перехвата первая вкладка `interrupted`, правки не теряются молча." },
+  { id: "DRF-E3", v: "drf", slice: "#132", risk: "data", layer: "e2e", fx: ["world:course-draft", "tabs", "fail:network"], src: [118, 132], inv: ["I6"],
+    text: "Без сети Анна правит Course Page во вкладке 1, открывает вкладку 2 → живая копия с неотправленными правками; «Продолжить здесь» работает без сети; сеть вернулась → вкладка 2 досылает правки; публикация → Саша видит все правки." },
   { id: "DRF-E4", v: "drf", slice: "#118·2", risk: "integrity", layer: "e2e", fx: ["world:course-draft"], src: [118],
     text: "Борис держит Course Editing Lease → Анна видит опубликованную версию только для чтения и «Редактирует Борис · Попробовать снова»." },
+
+  // ── Вкладки редактора ──
+  { id: "TAB-01", v: "tab", slice: "#132", risk: "data", layer: "stateful", fx: ["tabs"], src: [132], inv: ["I5", "I6"],
+    text: "Вторая вкладка того же ресурса открывается живой копией только для чтения; правки пишущей вкладки появляются в копии; копия не отправляет записей." },
+  { id: "TAB-02", v: "tab", slice: "#132", risk: "data", layer: "stateful", fx: ["tabs"], src: [132], inv: ["I5", "I6"],
+    text: "Добровольная смена: «Продолжить здесь» → пишущая вкладка дожидается пакета синхронизации в полёте и отдаёт Working Copy; новая продолжает с теми же правками; обращений к lease нет; счётчик смен +1." },
+  { id: "TAB-03", v: "tab", slice: "#132", risk: "data", layer: "stateful", fx: ["tabs", "clock"], src: [132], inv: ["I6"],
+    text: "Силовая смена: пишущая вкладка заморожена дольше таймаута → вторая пишет от последней живой копии, счётчик +1; после разморозки таймер автосохранения первой срабатывает раньше сигнала о потере lock — она сверяет счётчик, ничего не отправляет и становится копией." },
+  { id: "TAB-04", v: "tab", slice: "#132", risk: "integrity", layer: "stateful", fx: ["tabs"], src: [132, 116], inv: ["I4"],
+    text: "Смена не разрывает публикацию Review: пока исход неизвестен (в полёте или `publication-unconfirmed`), Working Copy и `idempotencyKey` остаются у одной вкладки." },
+  { id: "TAB-05", v: "tab", slice: "#132", risk: "integrity", layer: "stateful", fx: ["tabs"], src: [132],
+    text: "Вкладки с разной версией протокола: Working Copy другой версии не принимается, смены нет." },
+  { id: "TAB-06", v: "tab", slice: "#132", risk: "access", layer: "stateful", fx: ["tabs"], src: [132, 125],
+    text: "Канал и lock привязаны к `UserId` и ресурсу: вкладка другого User того же браузера не получает живую копию; выход из аккаунта останавливает пишущую вкладку." },
+  { id: "TAB-07", v: "tab", slice: "#132", risk: "data", layer: "boundary", fx: ["world:course-draft", "tabs"], src: [132, 113], inv: ["I6"],
+    text: "Запрос замороженной вкладки, дошедший после силовой смены, получает `409` по revision черновика и не перезаписывает правки новой пишущей вкладки (допущение #113)." },
+  { id: "TAB-08", v: "tab", slice: "#132", risk: "data", layer: "browser", fx: ["tabs"], src: [132], inv: ["I5", "I6"],
+    text: "Две страницы одного контекста в трёх движках: BroadcastChannel доставляет живую копию, Web Lock держит одна вкладка, закрытие пишущей освобождает право писать." },
+  { id: "TAB-09", v: "tab", slice: "#132", risk: "corr", layer: "component", fx: ["world:course-draft"], src: [132, 118],
+    text: "Lease у другой сессии того же User (`423`, holder — сам User) показывается иначе, чем «Редактирует X»." },
 
   // ── Course Page: документ ──
   { id: "DOC-01", v: "doc", slice: "#119·3", risk: "data", layer: "model", fx: [], src: [119], flag: "q4",
@@ -716,12 +743,28 @@ const QUESTIONS = [
     rec: "Решено владельцем (Q11.1): сохраняется текущая заморозка — список не перепроверяется автоматически до явного выхода из режима, строки меняют только per-Attempt исходы batch и события lease; после выхода один refetch (QG-10, QG-11).",
   },
   {
-    q: "Q12. Повторное взятие lease из `interrupted` вернуло `new`. Так бывает, если другая вкладка того же Teacher'а опубликовала или удалила черновик. «Спроектировать lifecycle Course Page Working Copy» этот исход не описывает.",
+    q: "Q12. Повторное взятие lease из `interrupted` вернуло `new`. Так бывает, если другая сессия того же Teacher'а (другое устройство) опубликовала или удалила черновик. «Спроектировать lifecycle Course Page Working Copy» этот исход не описывает.",
     rec: "Одно правило для `new` и `restored`: сравнить серверный черновик с `base`; равен → `editing`, иначе → «Взять версию с сервера» / «Перезаписать черновик моей версией». После `new` блоки получают новые id, поэтому почти всегда будет выбор — безопасный исход (DRF-21).",
   },
   {
     q: "Q13. `423` при повторном взятии из `interrupted`. Решение ведёт в `lease-unavailable`, но там нет Working Copy и нет предупреждения при уходе, а строка обещает сохранить и то и другое.",
     rec: "Оставаться в `interrupted` и обновить `holder`: Working Copy и предупреждение при уходе сохраняются без новых полей у `lease-unavailable` (DRF-21).",
+  },
+  {
+    q: "Q14. Как вкладки одного Teacher'а делят редактор?",
+    rec: "Решено владельцем: пишет одна вкладка, остальные показывают живую копию; «Продолжить здесь» передаёт Working Copy локально, без сервера. Для Review и Course Page, в MVP (TAB-01…TAB-09, REV-E5, DRF-E3).",
+  },
+  {
+    q: "Q14.1. Формы смены пишущей вкладки.",
+    rec: "Решено владельцем: добровольная — пишущая вкладка отвечает и отдаёт Working Copy; силовая — она молчит дольше таймаута, и новая продолжает от последней живой копии. После Q14.3 обе формы локальные.",
+  },
+  {
+    q: "Q14.2. Где проектировать протокол.",
+    rec: "Решено владельцем: отдельный тикет «Спроектировать смену пишущей вкладки редактора» (#132); в матрице только строки уровня контракта; уточнения к #116 и #118 — комментариями при закрытии #120.",
+  },
+  {
+    q: "Q14.3. Lease привязан к браузеру.",
+    rec: "Решено владельцем: lease по auth session, без клиентского `leaseId`. Единственность пишущей вкладки — Web Lock и счётчик смен в localStorage: каждая смена его увеличивает, пишущая вкладка синхронно сверяет свой номер перед каждой записью. У backend запрошена проверка revision черновика при записи (#113, TAB-07); если backend откажет, принимается узкое окно запоздавшего запроса на силовом пути.",
   },
 ];
 
