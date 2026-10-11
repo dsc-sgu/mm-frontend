@@ -1,10 +1,12 @@
 // PROTOTYPE (#121): where does optional Overall Feedback live in compact quick
-// grading? Four variants on the real Course Attempts route, switched with
-// `?variant=A|B|C|D`. Rows share one fixed height per breakpoint; only the
-// feedback affordance differs. Save is simulated in memory (see session.ts).
-import { useEffect, useReducer, useRef, useState } from 'react';
+// grading? Two variants on the real Course Attempts route, switched with
+// `?variant=A|B` (C and D were rejected). Rows share one fixed height per
+// breakpoint; only the feedback affordance differs. The filter sidebar is
+// replaced by a top bar so the list gets the full page width. Save is
+// simulated in memory (see session.ts).
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { Filter, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Kbd } from '@/shadcn/components/ui/kbd';
@@ -13,18 +15,17 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { PrototypeSwitcher } from '@/app/prototype-switcher';
 import { BottomActionBar } from '@/features/course/features/attempts/ui/bottom-bar';
 import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
-import {
-  FeedbackIndicator,
-  FeedbackPreview,
-  InlineFeedbackCell,
-  KeyHints,
-  PopoverFeedbackCell,
-} from './feedback';
-import { FeedbackInspector } from './inspector';
+import type {
+  CourseAttemptStudent,
+  CourseAttemptTask,
+  CourseAttemptsFilters,
+} from '@/features/course/features/attempts/model/types';
+import { InlineFeedbackCell, PopoverFeedbackCell } from './feedback';
 import { FixedRowsList } from './list';
 import { useFixedRowsVirtualizer } from './use-fixed-rows';
-import { PresaveSheet } from './presave';
+import { withRealisticNames } from './names';
 import { RecoveryDialog } from './recovery';
+import { QuickGradingTopBar } from './top-bar';
 import { columnsKey, desktopColumns, type FeedbackColumn } from './columns';
 import { QuickRow } from './row';
 import {
@@ -39,8 +40,6 @@ import {
 const VARIANTS = [
   { key: 'A', name: 'Popover из кнопки' },
   { key: 'B', name: 'Поле в строке' },
-  { key: 'C', name: 'Inspector' },
-  { key: 'D', name: 'Шаг перед публикацией' },
 ] as const;
 
 type VariantKey = (typeof VARIANTS)[number]['key'];
@@ -48,8 +47,6 @@ type VariantKey = (typeof VARIANTS)[number]['key'];
 const feedbackColumnByVariant: Record<VariantKey, FeedbackColumn> = {
   A: 'button',
   B: 'field',
-  C: 'icon',
-  D: 'icon',
 };
 
 const ROW_HEIGHT = { desktop: 64, mobile: 120 } as const;
@@ -59,12 +56,18 @@ function toVariantKey(value: string | undefined): VariantKey {
 }
 
 export function QuickGradingFeedbackPrototype({
-  attempts,
+  attempts: loadedAttempts,
+  filters,
+  tasks,
+  students,
   variant: rawVariant,
   onVariantChange,
   onExit,
 }: {
   attempts: readonly CourseAttempt[];
+  filters: CourseAttemptsFilters;
+  tasks: readonly CourseAttemptTask[];
+  students: readonly CourseAttemptStudent[];
   variant: string | undefined;
   onVariantChange: (variant: string) => void;
   onExit: () => void;
@@ -73,10 +76,18 @@ export function QuickGradingFeedbackPrototype({
 
   const variant = toVariantKey(rawVariant);
   const desktop = useMediaQuery('(min-width: 768px)');
-  const wide = useMediaQuery('(min-width: 1024px)');
   const layout = desktop ? 'desktop' : 'mobile';
   const rowHeight = ROW_HEIGHT[layout];
-  const inspectorInBar = variant === 'C' && !wide;
+
+  const [realisticNames, setRealisticNames] = useState(true);
+  // The Course Attempts page caps content at max-w-7xl (1280px); "широко"
+  // lets quick grading use the full viewport to see whether that saves B.
+  const [fullWidth, setFullWidth] = useState(false);
+  const attempts = useMemo(
+    () =>
+      realisticNames ? withRealisticNames(loadedAttempts) : loadedAttempts,
+    [loadedAttempts, realisticNames]
+  );
 
   const [session, dispatch] = useReducer(
     quickSessionReducer,
@@ -86,7 +97,6 @@ export function QuickGradingFeedbackPrototype({
   const [showState, setShowState] = useState(false);
   const [showAction, setShowAction] = useState(false);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
-  const [presaveOpen, setPresaveOpen] = useState(false);
 
   const { virtualizer, setListRef, scrollMargin } = useFixedRowsVirtualizer({
     count: attempts.length,
@@ -106,13 +116,36 @@ export function QuickGradingFeedbackPrototype({
       html.style.scrollPaddingBottom,
     ];
     html.style.scrollPaddingTop = '5rem';
-    html.style.scrollPaddingBottom = inspectorInBar ? '15rem' : '9rem';
+    html.style.scrollPaddingBottom = '9rem';
 
     return () => {
       html.style.scrollPaddingTop = previous[0] ?? '';
       html.style.scrollPaddingBottom = previous[1] ?? '';
     };
-  }, [inspectorInBar]);
+  }, []);
+
+  // Surface whether full names fit: count rendered Student names that are cut
+  // off by the zone width. Polling is fine for a throwaway prototype.
+  const [truncatedNames, setTruncatedNames] = useState({ cut: 0, shown: 0 });
+  useEffect(() => {
+    const measure = () => {
+      const names = [
+        ...document.querySelectorAll<HTMLElement>('[data-student-name]'),
+      ];
+      const cut = names.filter(
+        (name) => name.scrollWidth > name.clientWidth + 1
+      ).length;
+      setTruncatedNames((previous) =>
+        previous.cut === cut && previous.shown === names.length
+          ? previous
+          : { cut, shown: names.length }
+      );
+    };
+    measure();
+    const interval = window.setInterval(measure, 400);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   // ── focus navigation ──────────────────────────────────────────────────────
 
@@ -125,11 +158,8 @@ export function QuickGradingFeedbackPrototype({
     }
   };
 
-  const focusField = (
-    attemptId: string,
-    field: 'grade' | 'feedback' | 'inspector'
-  ) => {
-    const key = field === 'inspector' ? 'inspector' : `${attemptId}:${field}`;
+  const focusField = (attemptId: string, field: 'grade' | 'feedback') => {
+    const key = `${attemptId}:${field}`;
     const tryFocus = () => {
       const element = fields.current.get(key);
 
@@ -201,35 +231,8 @@ export function QuickGradingFeedbackPrototype({
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault();
         moveGrade(attempt.id, event.key === 'ArrowDown' ? 1 : -1);
-        return;
-      }
-
-      if (variant === 'C' && event.key === 'Tab' && !event.shiftKey) {
-        event.preventDefault();
-        focusField(attempt.id, 'inspector');
       }
     };
-
-  const handleInspectorKeyDown = (
-    event: KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>
-  ) => {
-    const attemptId = session.activeAttemptId;
-
-    if (!attemptId) {
-      return;
-    }
-
-    if (event.key === 'Enter' || (event.key === 'Tab' && !event.shiftKey)) {
-      event.preventDefault();
-      moveGrade(attemptId, event.shiftKey ? -1 : 1);
-      return;
-    }
-
-    if ((event.key === 'Tab' && event.shiftKey) || event.key === 'Escape') {
-      event.preventDefault();
-      focusField(attemptId, 'grade');
-    }
-  };
 
   // ── derived session summary ───────────────────────────────────────────────
 
@@ -287,41 +290,6 @@ export function QuickGradingFeedbackPrototype({
 
   // ── rendering ─────────────────────────────────────────────────────────────
 
-  const activeAttempt =
-    attempts.find((attempt) => attempt.id === session.activeAttemptId) ?? null;
-  const activeEditable = activeAttempt
-    ? canGrade(activeAttempt, session) && !session.saving.has(activeAttempt.id)
-    : false;
-  const activeOutcome = activeAttempt
-    ? session.outcomes.get(activeAttempt.id)
-    : undefined;
-  const inspector = (placement: 'sidebar' | 'bar') => (
-    <FeedbackInspector
-      placement={placement}
-      attempt={activeAttempt}
-      grade={
-        activeAttempt
-          ? (session.entries.get(activeAttempt.id)?.grade ?? '')
-          : ''
-      }
-      feedback={
-        activeEditable && activeAttempt
-          ? (session.entries.get(activeAttempt.id)?.feedback ?? '')
-          : activeOutcome?.status === 'saved'
-            ? activeOutcome.feedback
-            : ''
-      }
-      editable={activeEditable}
-      fieldRef={registerField('inspector')}
-      onFeedbackChange={(value) => {
-        if (activeAttempt) {
-          edit(activeAttempt.id, 'feedback', value);
-        }
-      }}
-      onFieldKeyDown={handleInspectorKeyDown}
-    />
-  );
-
   const renderFeedbackCell = (attempt: CourseAttempt) => {
     const entry = session.entries.get(attempt.id);
     const outcome = session.outcomes.get(attempt.id);
@@ -352,57 +320,33 @@ export function QuickGradingFeedbackPrototype({
             onFocus={() => activate(attempt.id)}
           />
         );
-      case 'C': {
-        const openInspector = editable
-          ? () => {
-              activate(attempt.id);
-              focusField(attempt.id, 'inspector');
-            }
-          : undefined;
-
-        return layout === 'desktop' ? (
-          <FeedbackIndicator feedback={feedback} onClick={openInspector} />
-        ) : (
-          <FeedbackPreview
-            feedback={feedback}
-            emptyLabel={editable ? 'отзыв' : undefined}
-            onClick={openInspector}
-          />
-        );
-      }
-      case 'D':
-        return layout === 'desktop' ? (
-          <FeedbackIndicator feedback={feedback} />
-        ) : (
-          <FeedbackPreview feedback={feedback} />
-        );
     }
   };
 
   return (
     <main
       className={cn(
-        'mx-auto flex w-full max-w-7xl flex-col px-3 py-4 sm:px-6 sm:py-5',
-        'lg:px-8'
+        'mx-auto flex w-full flex-col px-3 py-4 sm:px-6 sm:py-5 lg:px-8',
+        fullWidth ? null : 'max-w-7xl'
       )}
     >
-      <div
-        className={cn(
-          'mt-4 grid min-w-0 gap-4 sm:mt-6 sm:gap-6',
-          'lg:grid-cols-[20rem_minmax(0,1fr)]'
-        )}
-      >
-        {wide ? (
-          variant === 'C' ? (
-            inspector('sidebar')
-          ) : (
-            <LockedFiltersCard variant={variant} count={attempts.length} />
-          )
-        ) : null}
+      <div className="mt-4 min-w-0 sm:mt-6">
+        <QuickGradingTopBar
+          count={attempts.length}
+          filters={filters}
+          tasks={tasks}
+          students={students}
+          hints={variantHints[variant].map((hint) => (
+            <span key={hint.action} className="flex items-center gap-1">
+              {hint.keys.map((key) => (
+                <Kbd key={key}>{key}</Kbd>
+              ))}
+              {hint.action}
+            </span>
+          ))}
+        />
 
-        <section
-          className={cn('min-w-0', inspectorInBar ? 'pb-72' : 'pb-44 sm:pb-36')}
-        >
+        <section className="min-w-0 pb-44 sm:pb-36">
           {desktop ? (
             <ListHeader
               feedbackColumn={feedbackColumnByVariant[variant]}
@@ -432,9 +376,7 @@ export function QuickGradingFeedbackPrototype({
                   }
                   saving={session.saving.has(attempt.id)}
                   gradeable={gradeable}
-                  active={
-                    variant === 'C' && session.activeAttemptId === attempt.id
-                  }
+                  active={false}
                   gradeInputRef={registerField(`${attempt.id}:grade`)}
                   onGradeChange={(value) => edit(attempt.id, 'grade', value)}
                   onGradeKeyDown={handleGradeKeyDown(attempt)}
@@ -448,7 +390,6 @@ export function QuickGradingFeedbackPrototype({
       </div>
 
       <BottomActionBar>
-        {inspectorInBar ? inspector('bar') : null}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0 text-sm leading-tight">
             <p className="font-semibold">Быстрая оценка</p>
@@ -496,31 +437,14 @@ export function QuickGradingFeedbackPrototype({
               type="button"
               className="h-10"
               disabled={!canSave}
-              onClick={variant === 'D' ? () => setPresaveOpen(true) : startSave}
+              onClick={startSave}
             >
               <Save className="size-4" />
-              {variant === 'D' ? 'Проверить и опубликовать…' : 'Сохранить'}
+              Сохранить
             </Button>
           </div>
         </div>
       </BottomActionBar>
-
-      <PresaveSheet
-        open={presaveOpen}
-        layout={layout}
-        items={publishable.map((attempt) => ({
-          attempt,
-          entry: session.entries.get(attempt.id)!,
-        }))}
-        onOpenChange={setPresaveOpen}
-        onFeedbackChange={(attemptId, value) =>
-          edit(attemptId, 'feedback', value)
-        }
-        onPublish={() => {
-          setPresaveOpen(false);
-          startSave();
-        }}
-      />
 
       <RecoveryDialog
         open={recoveryOpen}
@@ -545,6 +469,38 @@ export function QuickGradingFeedbackPrototype({
           />
           конфликт
         </label>
+        <label
+          className="flex cursor-pointer items-center gap-1 px-1 text-xs"
+          title="Реалистичные «Фамилия Имя Отчество» вместо коротких моковых имён"
+        >
+          <input
+            type="checkbox"
+            checked={realisticNames}
+            onChange={(event) => setRealisticNames(event.target.checked)}
+          />
+          ФИО
+        </label>
+        {desktop ? (
+          <label
+            className="flex cursor-pointer items-center gap-1 px-1 text-xs"
+            title="Снять ограничение max-w-7xl (1280px) у страницы"
+          >
+            <input
+              type="checkbox"
+              checked={fullWidth}
+              onChange={(event) => setFullWidth(event.target.checked)}
+            />
+            широко
+          </label>
+        ) : null}
+        {desktop ? (
+          <span
+            className="px-1 text-xs tabular-nums"
+            title="Сколько ФИО из отрисованных строк обрезано шириной зоны Студент"
+          >
+            обрезано {truncatedNames.cut}/{truncatedNames.shown}
+          </span>
+        ) : null}
         <label className="flex cursor-pointer items-center gap-1 px-1 text-xs">
           <input
             type="checkbox"
@@ -574,6 +530,8 @@ export function QuickGradingFeedbackPrototype({
             {
               variant,
               layout,
+              truncatedNames,
+              fullWidth,
               activeAttemptId: session.activeAttemptId,
               entries: Object.fromEntries(session.entries),
               saving: [...session.saving],
@@ -623,49 +581,18 @@ function ListHeader({
   );
 }
 
-const variantHints: Record<Exclude<VariantKey, 'C'>, string[]> = {
+const variantHints: Record<
+  VariantKey,
+  Array<{ keys: string[]; action: string }>
+> = {
   A: [
-    'Enter / ↓ — следующий балл, Shift+Enter / ↑ — предыдущий.',
-    'Tab — к кнопке отзыва, Enter — открыть; в поле отзыва Enter — следующий балл.',
+    { keys: ['Enter', '↓'], action: 'следующий балл' },
+    { keys: ['Tab'], action: 'кнопка отзыва' },
+    { keys: ['Enter'], action: 'в отзыве — дальше' },
   ],
   B: [
-    'Enter / ↓ — следующий балл, Shift+Enter / ↑ — предыдущий.',
-    'Tab: балл → отзыв → следующий балл; в отзыве Enter — следующий балл.',
-  ],
-  D: [
-    'Enter / ↓ — следующий балл, Shift+Enter / ↑ — предыдущий.',
-    'Отзывы добавляются на шаге «Проверить и опубликовать».',
+    { keys: ['Enter', '↓'], action: 'следующий балл' },
+    { keys: ['Tab'], action: 'балл → отзыв → балл' },
+    { keys: ['Enter'], action: 'в отзыве — дальше' },
   ],
 };
-
-function LockedFiltersCard({
-  variant,
-  count,
-}: {
-  variant: Exclude<VariantKey, 'C'>;
-  count: number;
-}) {
-  return (
-    <aside
-      className={cn(
-        'sticky top-20 self-start rounded-3xl border border-border bg-card',
-        'p-5 text-sm'
-      )}
-    >
-      <h2 className="flex items-center gap-2 font-semibold text-muted-foreground">
-        <Filter className="size-4" /> Фильтры
-      </h2>
-      <p className="mt-2 text-muted-foreground">
-        Недоступны во время быстрой оценки. Попыток в сессии: {count}.
-      </p>
-      <KeyHints>
-        <Kbd>Клавиши</Kbd>
-      </KeyHints>
-      <ul className="mt-1 grid gap-1 text-xs text-muted-foreground">
-        {variantHints[variant].map((hint) => (
-          <li key={hint}>{hint}</li>
-        ))}
-      </ul>
-    </aside>
-  );
-}

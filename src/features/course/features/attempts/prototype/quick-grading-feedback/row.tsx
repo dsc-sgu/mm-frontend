@@ -67,7 +67,11 @@ export function QuickRow(props: RowProps) {
         )}
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
-          <span className="truncate text-sm font-semibold">
+          <span
+            data-student-name
+            title={attempt.student.fullName}
+            className="truncate text-sm font-semibold"
+          >
             {attempt.student.fullName}
           </span>
           <span className="shrink-0 text-xs">
@@ -106,7 +110,11 @@ export function QuickRow(props: RowProps) {
       )}
     >
       <div className="min-w-0 pr-3 leading-tight">
-        <p className="truncate text-sm font-semibold">
+        <p
+          data-student-name
+          title={attempt.student.fullName}
+          className="truncate text-sm font-semibold"
+        >
           {attempt.student.fullName}
         </p>
         <p className="truncate text-xs text-muted-foreground">

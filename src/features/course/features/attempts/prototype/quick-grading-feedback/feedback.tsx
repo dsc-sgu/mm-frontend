@@ -168,7 +168,7 @@ export function InlineFeedbackCell({
       ref={inputRef}
       value={feedback}
       title={feedback || undefined}
-      placeholder="Общий отзыв — необязательно"
+      placeholder="необязательно"
       aria-label={`Общий отзыв: ${attempt.student.fullName}`}
       onFocus={onFocus}
       onChange={(event) => onFeedbackChange(event.target.value)}
@@ -183,120 +183,18 @@ export function InlineFeedbackCell({
   );
 }
 
-// ── C, D: read-only preview in the row ──────────────────────────────────────
-
-export function FeedbackPreview({
-  feedback,
-  emptyLabel,
-  onClick,
-}: {
-  feedback: string;
-  emptyLabel?: string;
-  onClick?: () => void;
-}) {
-  const filled = feedback.trim() !== '';
-
-  if (!filled && !emptyLabel) {
-    return null;
-  }
-
-  const content = filled ? (
-    <>
-      <MessageSquareText className="size-3.5 shrink-0 text-primary" />
-      <span className="truncate">{feedback}</span>
-    </>
-  ) : (
-    <>
-      <MessageSquarePlus className="size-3.5 shrink-0" />
-      <span className="truncate">{emptyLabel}</span>
-    </>
-  );
-
-  if (!onClick) {
-    return (
-      <span
-        title={feedback || undefined}
-        className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground"
-      >
-        {content}
-      </span>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      tabIndex={-1}
-      title={feedback || undefined}
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick();
-      }}
-      className={cn(
-        'flex w-full min-w-0 items-center gap-1.5 rounded-md text-left text-xs',
-        'text-muted-foreground hover:text-foreground',
-        filled ? null : 'opacity-70'
-      )}
-    >
-      {content}
-    </button>
-  );
-}
-
-export function FeedbackIndicator({
-  feedback,
-  onClick,
-}: {
-  feedback: string;
-  onClick?: () => void;
-}) {
-  const filled = feedback.trim() !== '';
-
-  if (!filled && !onClick) {
-    return null;
-  }
-
-  const icon = filled ? (
-    <MessageSquareText className="size-4 text-primary" />
-  ) : (
-    <MessageSquarePlus className="size-4" />
-  );
-  const label = filled ? `Общий отзыв: ${feedback}` : 'Добавить общий отзыв';
-
-  if (!onClick) {
-    return (
-      <span
-        title={feedback}
-        aria-label={label}
-        className="grid size-7 shrink-0 place-items-center"
-      >
-        {icon}
-      </span>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      tabIndex={-1}
-      title={filled ? feedback : label}
-      aria-label={label}
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick();
-      }}
-      className={cn(
-        'grid size-7 shrink-0 place-items-center rounded-md',
-        'text-muted-foreground hover:bg-accent hover:text-foreground'
-      )}
-    >
-      {icon}
-    </button>
-  );
-}
+// ── read-only preview for saved or locked rows ──────────────────────────────
 
 function ReadonlyFeedback({ feedback }: { feedback: string }) {
-  return <FeedbackPreview feedback={feedback} />;
+  return (
+    <span
+      title={feedback}
+      className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground"
+    >
+      <MessageSquareText className="size-3.5 shrink-0 text-primary" />
+      <span className="truncate">{feedback}</span>
+    </span>
+  );
 }
 
 export function KeyHints({ children }: { children: ReactNode }) {

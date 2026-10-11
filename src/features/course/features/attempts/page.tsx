@@ -107,6 +107,9 @@ export function CourseAttemptsPage({
     return (
       <QuickGradingFeedbackPrototype
         attempts={attempts}
+        filters={filters.normalizedAppliedFilters}
+        tasks={tasks}
+        students={students}
         variant={prototypeVariant}
         onVariantChange={onPrototypeVariantChange}
         onExit={grading.exitQuickGrading}
