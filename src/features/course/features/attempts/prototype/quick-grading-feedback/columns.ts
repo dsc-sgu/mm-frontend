@@ -1,14 +1,23 @@
 // PROTOTYPE (#121): desktop zones of the compact row from #45/#100:
-// Student | Task (+ attempt, diff) | Submission | State | Grade [| Feedback].
-// Diff has no zone of its own. Quick grading (variant B) adds the inline
-// Overall Feedback field and gives Student and Task the largest share of the
-// free width so full "Фамилия Имя Отчество" fits; normal mode has no
-// feedback zone. No row action: the whole row opens the Attempt (#117) and
-// quick grading has no "Ревью" button (it cost ~110px at every breakpoint).
-export type FeedbackColumn = 'field' | 'none';
+// Student | Task | Submission | State | Diff | Grade [| Feedback] [| Action].
+export type FeedbackColumn = 'button' | 'field';
 
-export const desktopColumns: Record<FeedbackColumn, string> = {
+export type ColumnsKey = FeedbackColumn | `${FeedbackColumn}-action`;
+
+export const desktopColumns: Record<ColumnsKey, string> = {
+  button:
+    'grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_9.5rem_8.5rem_5.25rem_9.75rem]',
+  'button-action':
+    'grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_9.5rem_8.5rem_5.25rem_9.75rem_7rem]',
   field:
-    'grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_11rem_8.5rem_7.25rem_minmax(10rem,1fr)]',
-  none: 'grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_11rem_8.5rem_7.25rem]',
+    'grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_9.5rem_8.5rem_5.25rem_7.25rem_minmax(9rem,1.3fr)]',
+  'field-action':
+    'grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_9.5rem_8.5rem_5.25rem_7.25rem_minmax(9rem,1.3fr)_7rem]',
 };
+
+export function columnsKey(
+  feedbackColumn: FeedbackColumn,
+  showAction: boolean
+): ColumnsKey {
+  return showAction ? `${feedbackColumn}-action` : feedbackColumn;
+}

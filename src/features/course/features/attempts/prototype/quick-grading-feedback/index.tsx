@@ -1,38 +1,36 @@
 // PROTOTYPE (#121): where does optional Overall Feedback live in compact quick
-// grading? Chosen: B, an inline field in the row (A popover, C inspector and
-// D pre-publish step were rejected; see git history of this branch). Rows
-// share one fixed height per layout tier. The page-wide top bar shows the
-// locked filters; the list gets the full page width. Save is simulated in
-// memory (see session.ts).
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+// grading? Variants on the real Course Attempts route, switched with
+// `?variant=A|B`: A — popover from a button in the Grade zone, B — inline
+// field in its own zone. C (inspector) and D (pre-publish step) were rejected
+// and live only in this branch's history. Filters are a top bar by default;
+// the switcher toggles back to the sidebar to compare row width. Rows share
+// one fixed height per breakpoint. Save is simulated in memory (session.ts).
+import { useEffect, useReducer, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { Keyboard, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
-import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shadcn/components/ui/popover';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { PrototypeSwitcher } from '@/app/prototype-switcher';
-import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
+import { BottomActionBar } from '@/features/course/features/attempts/ui/bottom-bar';
 import type {
+  CourseAttempt,
   CourseAttemptStudent,
   CourseAttemptTask,
   CourseAttemptsFilters,
 } from '@/features/course/features/attempts/model/types';
-import { InlineFeedbackCell } from './feedback';
-import { FixedRowsList, ListHeader } from './list';
-import { useFixedRowsVirtualizer } from './use-fixed-rows';
-import { withRealisticNames, withRealisticStudentNames } from './names';
+import { columnsKey, desktopColumns, type FeedbackColumn } from './columns';
+import {
+  InlineFeedbackCell,
+  PopoverFeedbackCell,
+  type PublishedFeedback,
+} from './feedback';
+import { LockedFiltersSidebar, LockedFiltersTopBar } from './filters';
+import { FixedRowsList } from './list';
+import { mockPublishedFeedback } from './mock-feedback';
 import { RecoveryDialog } from './recovery';
-import { ExitDialog } from './exit-dialog';
-import { getModKeyLabel, isExitShortcut, isSaveShortcut } from './shortcuts';
-import { QuickGradingTopBar, StickyTop } from './top-bar';
-import { QuickRow, type RowLayout } from './row';
+import { QuickRow } from './row';
 import {
   INITIAL_QUICK_SESSION,
   canGrade,
@@ -41,67 +39,62 @@ import {
   simulateSave,
   type QuickEntry,
 } from './session';
+import { useFixedRowsVirtualizer } from './use-fixed-rows';
 
-const VARIANTS = [{ key: 'B', name: 'Быстрая оценка · поле в строке' }];
+const VARIANTS = [
+  { key: 'A', name: 'Popover из кнопки' },
+  { key: 'B', name: 'Поле в строке' },
+] as const;
 
-// One fixed height per layout tier, so the virtualizer never measures rows.
-const ROW_HEIGHT: Record<RowLayout, number> = {
-  wide: 64,
-  medium: 88,
-  stacked: 124,
-};
-// Tier breakpoints, picked by measurement with realistic ФИО: the narrowest
-// width at which Student and Task still fit (one line for wide, two clamped
-// lines for medium). The inline feedback zone costs width.
-const QUICK_TIER_FROM = {
-  wide: '(min-width: 1400px)',
-  medium: '(min-width: 1120px)',
+type VariantKey = (typeof VARIANTS)[number]['key'];
+
+const feedbackColumnByVariant: Record<VariantKey, FeedbackColumn> = {
+  A: 'button',
+  B: 'field',
 };
 
-type FitKind = 'name' | 'task' | 'submission' | 'state';
-type FitReport = Record<FitKind, number> & { rows: number };
-const EMPTY_FIT: FitReport = {
-  rows: 0,
-  name: 0,
-  task: 0,
-  submission: 0,
-  state: 0,
+const hintsByVariant: Record<VariantKey, string[]> = {
+  A: [
+    'Enter / ↓ — следующий балл, Shift+Enter / ↑ — предыдущий',
+    'Tab — к кнопке отзыва, Enter — открыть; в отзыве Enter — следующий балл',
+  ],
+  B: [
+    'Enter / ↓ — следующий балл, Shift+Enter / ↑ — предыдущий',
+    'Tab: балл → отзыв → следующий балл; в отзыве Enter — следующий балл',
+  ],
 };
+
+const ROW_HEIGHT = { desktop: 64, mobile: 120 } as const;
+
+function toVariantKey(value: string | undefined): VariantKey {
+  return VARIANTS.find((variant) => variant.key === value)?.key ?? 'A';
+}
 
 export function QuickGradingFeedbackPrototype({
-  attempts: loadedAttempts,
-  filters,
+  attempts,
+  appliedFilters,
   tasks,
   students,
+  variant: rawVariant,
+  onVariantChange,
   onExit,
 }: {
   attempts: readonly CourseAttempt[];
-  filters: CourseAttemptsFilters;
+  appliedFilters: CourseAttemptsFilters;
   tasks: readonly CourseAttemptTask[];
   students: readonly CourseAttemptStudent[];
+  variant: string | undefined;
+  onVariantChange: (variant: string) => void;
   onExit: () => void;
 }) {
   'use no memo';
 
-  const wideTier = useMediaQuery(QUICK_TIER_FROM.wide);
-  const mediumTier = useMediaQuery(QUICK_TIER_FROM.medium);
-  const layout: RowLayout = wideTier
-    ? 'wide'
-    : mediumTier
-      ? 'medium'
-      : 'stacked';
-  const desktop = layout !== 'stacked';
+  const variant = toVariantKey(rawVariant);
+  const feedbackColumn = feedbackColumnByVariant[variant];
+  const desktop = useMediaQuery('(min-width: 768px)');
+  const wide = useMediaQuery('(min-width: 1024px)');
+  const layout = desktop ? 'desktop' : 'mobile';
   const rowHeight = ROW_HEIGHT[layout];
-
-  const [realisticNames, setRealisticNames] = useState(true);
-  // The Course Attempts page caps content at max-w-7xl (1280px); "широко"
-  // lets quick grading use the full viewport to see whether that saves B.
-  const [fullWidth, setFullWidth] = useState(true);
-  const attempts = useMemo(
-    () =>
-      realisticNames ? withRealisticNames(loadedAttempts) : loadedAttempts,
-    [loadedAttempts, realisticNames]
-  );
 
   const [session, dispatch] = useReducer(
     quickSessionReducer,
@@ -109,9 +102,10 @@ export function QuickGradingFeedbackPrototype({
   );
   const [simulateConflict, setSimulateConflict] = useState(true);
   const [showState, setShowState] = useState(false);
+  const [showAction, setShowAction] = useState(false);
+  const [filtersAside, setFiltersAside] = useState(false);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
-  const [exitOpen, setExitOpen] = useState(false);
-  const modKeyLabel = getModKeyLabel();
+  const sidebar = filtersAside && wide;
 
   const { virtualizer, setListRef, scrollMargin } = useFixedRowsVirtualizer({
     count: attempts.length,
@@ -121,40 +115,22 @@ export function QuickGradingFeedbackPrototype({
 
   useEffect(() => {
     virtualizer.measure();
-  }, [rowHeight, virtualizer]);
+  }, [rowHeight, sidebar, virtualizer]);
 
-  // Surface whether texts fit: count rendered `[data-fit]` texts cut off by
-  // their zone, horizontally (ellipsis) or vertically (line clamp). Polling is
-  // fine for a throwaway prototype.
-  const [fit, setFit] = useState<FitReport>(EMPTY_FIT);
+  // Keep focused fields clear of the sticky header and the bottom bar.
   useEffect(() => {
-    const measure = () => {
-      const next: FitReport = {
-        ...EMPTY_FIT,
-        rows: document.querySelectorAll('article').length,
-      };
+    const html = document.documentElement;
+    const previous = [
+      html.style.scrollPaddingTop,
+      html.style.scrollPaddingBottom,
+    ];
+    html.style.scrollPaddingTop = '5rem';
+    html.style.scrollPaddingBottom = '9rem';
 
-      for (const element of document.querySelectorAll<HTMLElement>(
-        '[data-fit]'
-      )) {
-        const kind = element.dataset.fit as FitKind;
-        const cut =
-          element.scrollWidth > element.clientWidth + 1 ||
-          element.scrollHeight > element.clientHeight + 1;
-
-        if (cut && kind in next) {
-          next[kind] += 1;
-        }
-      }
-
-      setFit((previous) =>
-        JSON.stringify(previous) === JSON.stringify(next) ? previous : next
-      );
+    return () => {
+      html.style.scrollPaddingTop = previous[0] ?? '';
+      html.style.scrollPaddingBottom = previous[1] ?? '';
     };
-    measure();
-    const interval = window.setInterval(measure, 400);
-
-    return () => window.clearInterval(interval);
   }, []);
 
   // ── focus navigation ──────────────────────────────────────────────────────
@@ -168,22 +144,18 @@ export function QuickGradingFeedbackPrototype({
     }
   };
 
-  const focusField = (attemptId: string, field: 'grade' | 'feedback') => {
-    const key = `${attemptId}:${field}`;
+  const focusGrade = (attemptId: string) => {
+    const key = `${attemptId}:grade`;
     const tryFocus = () => {
       const element = fields.current.get(key);
 
-      if (!element) {
+      if (!(element instanceof HTMLInputElement)) {
         return false;
       }
 
       element.focus();
       element.scrollIntoView({ block: 'nearest' });
-
-      if (element instanceof HTMLInputElement) {
-        element.select();
-      }
-
+      element.select();
       return true;
     };
 
@@ -219,7 +191,7 @@ export function QuickGradingFeedbackPrototype({
 
       if (attempt && canGrade(attempt, session)) {
         activate(attempt.id);
-        focusField(attempt.id, 'grade');
+        focusGrade(attempt.id);
         return;
       }
 
@@ -286,69 +258,55 @@ export function QuickGradingFeedbackPrototype({
   };
 
   const exit = () => {
-    if (gradeableDirty.length > 0 || session.recovery.length > 0) {
-      setExitOpen(true);
+    if (
+      (gradeableDirty.length > 0 || session.recovery.length > 0) &&
+      !window.confirm(
+        'Есть несохранённые баллы или неопубликованные записи. Выйти и потерять их?'
+      )
+    ) {
       return;
     }
 
     onExit();
   };
 
-  // Mod+S saves (and never opens the browser's "Save page"); with invalid
-  // values it jumps to the first error instead. Esc leaves the session unless
-  // a popover, drawer or dialog consumed it first. Re-subscribes every render
-  // to see the latest session; fine for a prototype.
-  useEffect(() => {
-    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (isSaveShortcut(event)) {
-        event.preventDefault();
-
-        if (canSave) {
-          startSave();
-        } else if (invalid[0]) {
-          focusField(invalid[0].id, 'grade');
-        }
-
-        return;
-      }
-
-      if (
-        isExitShortcut(event) &&
-        !recoveryOpen &&
-        !exitOpen &&
-        !document.querySelector('[role="dialog"]')
-      ) {
-        event.preventDefault();
-        exit();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  });
-
   // ── rendering ─────────────────────────────────────────────────────────────
 
-  const renderFeedbackCell = (attempt: CourseAttempt) => {
-    const entry = session.entries.get(attempt.id);
+  const publishedFeedback = (
+    attempt: CourseAttempt
+  ): PublishedFeedback | null => {
     const outcome = session.outcomes.get(attempt.id);
+
+    if (outcome?.status === 'saved') {
+      return outcome.feedback
+        ? { text: outcome.feedback, author: 'Вы, в этой сессии' }
+        : null;
+    }
+
+    if (attempt.grade) {
+      const text = mockPublishedFeedback(attempt);
+      return text ? { text, author: attempt.grade.gradedBy } : null;
+    }
+
+    return null;
+  };
+
+  const renderFeedbackCell = (attempt: CourseAttempt) => {
     const editable =
       canGrade(attempt, session) && !session.saving.has(attempt.id);
-    const feedback = editable
-      ? (entry?.feedback ?? '')
-      : outcome?.status === 'saved'
-        ? outcome.feedback
-        : (entry?.feedback ?? '');
     const common = {
       layout,
       attempt,
-      feedback,
+      feedback: session.entries.get(attempt.id)?.feedback ?? '',
       editable,
+      published: editable ? null : publishedFeedback(attempt),
       onFeedbackChange: (value: string) => edit(attempt.id, 'feedback', value),
       onCommitNext: () => moveGrade(attempt.id, 1),
     } as const;
 
-    return (
+    return variant === 'A' ? (
+      <PopoverFeedbackCell {...common} />
+    ) : (
       <InlineFeedbackCell
         {...common}
         inputRef={registerField(`${attempt.id}:feedback`)}
@@ -357,135 +315,136 @@ export function QuickGradingFeedbackPrototype({
     );
   };
 
+  const filtersProps = {
+    filters: appliedFilters,
+    tasks,
+    students,
+    count: attempts.length,
+    hints: hintsByVariant[variant],
+  };
+
+  const list = (
+    <section className="min-w-0 pb-44 sm:pb-36">
+      {desktop ? (
+        <ListHeader feedbackColumn={feedbackColumn} showAction={showAction} />
+      ) : null}
+      <FixedRowsList
+        attempts={attempts}
+        rowHeight={rowHeight}
+        virtualizer={virtualizer}
+        setListRef={setListRef}
+        scrollMargin={scrollMargin}
+        renderRow={(attempt) => {
+          const entry = session.entries.get(attempt.id);
+          const gradeable = canGrade(attempt, session);
+
+          return (
+            <QuickRow
+              layout={layout}
+              feedbackColumn={feedbackColumn}
+              showAction={showAction}
+              attempt={attempt}
+              entry={entry}
+              outcome={session.outcomes.get(attempt.id)}
+              error={
+                gradeable ? entryError(entry, attempt.task.maxScore) : null
+              }
+              saving={session.saving.has(attempt.id)}
+              gradeable={gradeable}
+              active={false}
+              gradeInputRef={registerField(`${attempt.id}:grade`)}
+              onGradeChange={(value) => edit(attempt.id, 'grade', value)}
+              onGradeKeyDown={handleGradeKeyDown(attempt)}
+              onActivate={() => activate(attempt.id)}
+              feedbackCell={renderFeedbackCell(attempt)}
+            />
+          );
+        }}
+      />
+    </section>
+  );
+
   return (
     <main
       className={cn(
-        'mx-auto flex w-full flex-col px-3 py-4 sm:px-6 sm:py-5 lg:px-8',
-        fullWidth ? null : 'max-w-7xl'
+        'mx-auto flex w-full max-w-7xl flex-col px-3 py-4 sm:px-6 sm:py-5',
+        'lg:px-8'
       )}
     >
-      <div className="mt-1 min-w-0 sm:mt-3">
-        <StickyTop>
-          <QuickGradingTopBar
-            count={attempts.length}
-            filters={filters}
-            tasks={tasks}
-            students={
-              realisticNames ? withRealisticStudentNames(students) : students
-            }
-            actions={
-              <>
-                <span className="px-1 text-xs text-muted-foreground">
-                  Не сохранено: {gradeableDirty.length}
-                  {invalid.length > 0 ? (
-                    <span className="text-destructive">
-                      {' '}
-                      · ошибок: {invalid.length}
-                    </span>
-                  ) : null}
-                  {savedCount > 0 ? ` · опубликовано: ${savedCount}` : null}
+      {sidebar ? (
+        <div
+          className={cn(
+            'mt-4 grid min-w-0 gap-6 sm:mt-6',
+            'grid-cols-[20rem_minmax(0,1fr)]'
+          )}
+        >
+          <LockedFiltersSidebar {...filtersProps} />
+          {list}
+        </div>
+      ) : (
+        <div className="mt-4 min-w-0 sm:mt-6">
+          {filtersAside ? null : (
+            <LockedFiltersTopBar {...filtersProps} compact={!desktop} />
+          )}
+          {list}
+        </div>
+      )}
+
+      <BottomActionBar>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0 text-sm leading-tight">
+            <p className="font-semibold">Быстрая оценка</p>
+            <p className="text-xs text-muted-foreground">
+              Не сохранено: {gradeableDirty.length}
+              {invalid.length > 0 ? (
+                <span className="text-destructive">
+                  {' '}
+                  · ошибок: {invalid.length}
                 </span>
-                {invalid[0] ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-destructive"
-                    onClick={() => focusField(invalid[0]!.id, 'grade')}
-                  >
-                    К ошибке
-                  </Button>
-                ) : null}
-                {session.recovery.length > 0 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 border-destructive/50 text-destructive"
-                    onClick={() => setRecoveryOpen(true)}
-                  >
-                    Не опубликовано: {session.recovery.length}
-                  </Button>
-                ) : null}
-                {desktop ? <KeyHintsButton modKeyLabel={modKeyLabel} /> : null}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-8"
-                  onClick={exit}
-                >
-                  Выйти
-                  {desktop ? <Kbd>Esc</Kbd> : null}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="h-8"
-                  disabled={!canSave}
-                  onClick={startSave}
-                >
-                  <Save className="size-3.5" />
-                  Сохранить
-                  {desktop ? (
-                    <KbdGroup>
-                      <Kbd>{modKeyLabel}</Kbd>
-                      <Kbd>S</Kbd>
-                    </KbdGroup>
-                  ) : null}
-                </Button>
-              </>
-            }
-          />
-          {desktop ? <ListHeader feedbackColumn="field" /> : null}
-        </StickyTop>
-
-        <section className="min-w-0 pb-24">
-          <FixedRowsList
-            attempts={attempts}
-            rowHeight={rowHeight}
-            virtualizer={virtualizer}
-            setListRef={setListRef}
-            scrollMargin={scrollMargin}
-            renderRow={(attempt) => {
-              const entry = session.entries.get(attempt.id);
-              const gradeable = canGrade(attempt, session);
-
-              return (
-                <QuickRow
-                  layout={layout}
-                  feedbackColumn="field"
-                  attempt={attempt}
-                  entry={entry}
-                  outcome={session.outcomes.get(attempt.id)}
-                  error={
-                    gradeable ? entryError(entry, attempt.task.maxScore) : null
-                  }
-                  saving={session.saving.has(attempt.id)}
-                  gradeable={gradeable}
-                  gradeInputRef={registerField(`${attempt.id}:grade`)}
-                  onGradeChange={(value) => edit(attempt.id, 'grade', value)}
-                  onGradeKeyDown={handleGradeKeyDown(attempt)}
-                  onActivate={() => activate(attempt.id)}
-                  feedbackCell={renderFeedbackCell(attempt)}
-                />
-              );
-            }}
-          />
-        </section>
-      </div>
-
-      <ExitDialog
-        open={exitOpen}
-        unsavedCount={gradeableDirty.length}
-        recoveryCount={session.recovery.length}
-        modKeyLabel={modKeyLabel}
-        onOpenChange={setExitOpen}
-        onExit={() => {
-          setExitOpen(false);
-          onExit();
-        }}
-      />
+              ) : null}
+              {savedCount > 0 ? ` · опубликовано: ${savedCount}` : null}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {invalid[0] ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-10 text-destructive"
+                onClick={() => focusGrade(invalid[0]!.id)}
+              >
+                К ошибке
+              </Button>
+            ) : null}
+            {session.recovery.length > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 border-destructive/50 text-destructive"
+                onClick={() => setRecoveryOpen(true)}
+              >
+                Не опубликовано: {session.recovery.length}
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10"
+              onClick={exit}
+            >
+              Выйти
+            </Button>
+            <Button
+              type="button"
+              className="h-10"
+              disabled={!canSave}
+              onClick={startSave}
+            >
+              <Save className="size-4" /> Сохранить
+            </Button>
+          </div>
+        </div>
+      </BottomActionBar>
 
       <RecoveryDialog
         open={recoveryOpen}
@@ -497,47 +456,23 @@ export function QuickGradingFeedbackPrototype({
         }
       />
 
-      <PrototypeSwitcher variants={VARIANTS} current="B" onChange={() => {}}>
-        <label className="flex cursor-pointer items-center gap-1 px-1 text-xs">
-          <input
-            type="checkbox"
-            checked={simulateConflict}
-            onChange={(event) => setSimulateConflict(event.target.checked)}
-          />
-          конфликт
-        </label>
-        <label
-          className="flex cursor-pointer items-center gap-1 px-1 text-xs"
-          title="Реалистичные «Фамилия Имя Отчество» вместо коротких моковых имён"
+      <PrototypeSwitcher
+        variants={VARIANTS}
+        current={variant}
+        onChange={onVariantChange}
+      >
+        <SwitcherToggle checked={filtersAside} onChange={setFiltersAside}>
+          фильтры сбоку
+        </SwitcherToggle>
+        <SwitcherToggle checked={showAction} onChange={setShowAction}>
+          действие
+        </SwitcherToggle>
+        <SwitcherToggle
+          checked={simulateConflict}
+          onChange={setSimulateConflict}
         >
-          <input
-            type="checkbox"
-            checked={realisticNames}
-            onChange={(event) => setRealisticNames(event.target.checked)}
-          />
-          ФИО
-        </label>
-        {desktop ? (
-          <label
-            className="flex cursor-pointer items-center gap-1 px-1 text-xs"
-            title="Снять ограничение max-w-7xl (1280px) у страницы"
-          >
-            <input
-              type="checkbox"
-              checked={fullWidth}
-              onChange={(event) => setFullWidth(event.target.checked)}
-            />
-            широко
-          </label>
-        ) : null}
-        {desktop ? (
-          <span
-            className="px-1 text-xs tabular-nums"
-            title={`Обрезано в ${fit.rows} отрисованных строках: ФИО ${fit.name}, задания ${fit.task}, отправлено ${fit.submission}, состояние ${fit.state}`}
-          >
-            обрезано {fit.name + fit.task + fit.submission + fit.state}
-          </span>
-        ) : null}
+          конфликт
+        </SwitcherToggle>
         <button
           type="button"
           className="rounded-full px-2 py-1 text-xs underline"
@@ -557,11 +492,9 @@ export function QuickGradingFeedbackPrototype({
         >
           {JSON.stringify(
             {
+              variant,
               layout,
-              fit,
-              exitOpen,
-              fullWidth,
-              activeAttemptId: session.activeAttemptId,
+              filters: sidebar ? 'sidebar' : 'top',
               entries: Object.fromEntries(session.entries),
               saving: [...session.saving],
               outcomes: Object.fromEntries(session.outcomes),
@@ -576,47 +509,57 @@ export function QuickGradingFeedbackPrototype({
   );
 }
 
-// The session shortcuts no longer fit the bar next to the actions, so they
-// live behind one button.
-function KeyHintsButton({ modKeyLabel }: { modKeyLabel: string }) {
-  const hints: Array<{ keys: string[]; action: string }> = [
-    { keys: ['Enter', '↓'], action: 'следующий балл' },
-    { keys: ['Shift+Enter', '↑'], action: 'предыдущий балл' },
-    { keys: ['Tab'], action: 'балл → отзыв → следующий балл' },
-    { keys: ['Enter'], action: 'в отзыве — следующий балл' },
-    { keys: [modKeyLabel, 'S'], action: 'сохранить' },
-    { keys: ['Esc'], action: 'выйти' },
+function SwitcherToggle({
+  checked,
+  onChange,
+  children,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  children: string;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-1 px-1 text-xs whitespace-nowrap">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      {children}
+    </label>
+  );
+}
+
+function ListHeader({
+  feedbackColumn,
+  showAction,
+}: {
+  feedbackColumn: FeedbackColumn;
+  showAction: boolean;
+}) {
+  const zones = [
+    'Задание',
+    'Отправлено',
+    'Состояние',
+    'Diff',
+    'Балл',
+    ...(feedbackColumn === 'field' ? ['Общий отзыв'] : []),
+    ...(showAction ? ['Действие'] : []),
   ];
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-8 text-muted-foreground"
-          aria-label="Клавиши"
-          title="Клавиши"
-        >
-          <Keyboard className="size-4" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
-        <p className="mb-2 text-sm font-semibold">Клавиши</p>
-        <ul className="grid gap-1.5 text-xs text-muted-foreground">
-          {hints.map((hint) => (
-            <li key={hint.action} className="flex items-center gap-1.5">
-              <KbdGroup>
-                {hint.keys.map((key) => (
-                  <Kbd key={key}>{key}</Kbd>
-                ))}
-              </KbdGroup>
-              {hint.action}
-            </li>
-          ))}
-        </ul>
-      </PopoverContent>
-    </Popover>
+    <div
+      className={cn(
+        'mb-1.5 grid px-4 text-xs font-medium text-muted-foreground',
+        desktopColumns[columnsKey(feedbackColumn, showAction)]
+      )}
+    >
+      <span>Студент</span>
+      {zones.map((zone) => (
+        <span key={zone} className="truncate px-3">
+          {zone}
+        </span>
+      ))}
+    </div>
   );
 }
