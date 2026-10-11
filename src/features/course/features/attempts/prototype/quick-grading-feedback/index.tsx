@@ -9,7 +9,7 @@ import type { KeyboardEvent } from 'react';
 import { Save } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
-import { Kbd } from '@/shadcn/components/ui/kbd';
+import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { PrototypeSwitcher } from '@/app/prototype-switcher';
@@ -25,8 +25,10 @@ import { FixedRowsList } from './list';
 import { useFixedRowsVirtualizer } from './use-fixed-rows';
 import { withRealisticNames } from './names';
 import { RecoveryDialog } from './recovery';
+import { ExitDialog } from './exit-dialog';
+import { getModKeyLabel, isExitShortcut, isSaveShortcut } from './shortcuts';
 import { QuickGradingTopBar } from './top-bar';
-import { columnsKey, desktopColumns, type FeedbackColumn } from './columns';
+import { desktopColumns, type FeedbackColumn } from './columns';
 import { QuickRow, type RowLayout } from './row';
 import {
   INITIAL_QUICK_SESSION,
@@ -123,8 +125,9 @@ export function QuickGradingFeedbackPrototype({
   );
   const [simulateConflict, setSimulateConflict] = useState(true);
   const [showState, setShowState] = useState(false);
-  const [showAction, setShowAction] = useState(false);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
+  const [exitOpen, setExitOpen] = useState(false);
+  const modKeyLabel = getModKeyLabel();
 
   const { virtualizer, setListRef, scrollMargin } = useFixedRowsVirtualizer({
     count: attempts.length,
@@ -315,17 +318,46 @@ export function QuickGradingFeedbackPrototype({
   };
 
   const exit = () => {
-    if (
-      (gradeableDirty.length > 0 || session.recovery.length > 0) &&
-      !window.confirm(
-        'Есть несохранённые баллы или неопубликованные записи. Выйти и потерять их?'
-      )
-    ) {
+    if (gradeableDirty.length > 0 || session.recovery.length > 0) {
+      setExitOpen(true);
       return;
     }
 
     onExit();
   };
+
+  // Mod+S saves (and never opens the browser's "Save page"); with invalid
+  // values it jumps to the first error instead. Esc leaves the session unless
+  // a popover, drawer or dialog consumed it first. Re-subscribes every render
+  // to see the latest session; fine for a prototype.
+  useEffect(() => {
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (isSaveShortcut(event)) {
+        event.preventDefault();
+
+        if (canSave) {
+          startSave();
+        } else if (invalid[0]) {
+          focusField(invalid[0].id, 'grade');
+        }
+
+        return;
+      }
+
+      if (
+        isExitShortcut(event) &&
+        !recoveryOpen &&
+        !exitOpen &&
+        !document.querySelector('[role="dialog"]')
+      ) {
+        event.preventDefault();
+        exit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
 
   // ── rendering ─────────────────────────────────────────────────────────────
 
@@ -387,10 +419,7 @@ export function QuickGradingFeedbackPrototype({
 
         <section className="min-w-0 pb-44 sm:pb-36">
           {desktop ? (
-            <ListHeader
-              feedbackColumn={feedbackColumnByVariant[variant]}
-              showAction={showAction}
-            />
+            <ListHeader feedbackColumn={feedbackColumnByVariant[variant]} />
           ) : null}
           <FixedRowsList
             attempts={attempts}
@@ -406,7 +435,6 @@ export function QuickGradingFeedbackPrototype({
                 <QuickRow
                   layout={layout}
                   feedbackColumn={feedbackColumnByVariant[variant]}
-                  showAction={showAction}
                   attempt={attempt}
                   entry={entry}
                   outcome={session.outcomes.get(attempt.id)}
@@ -470,6 +498,7 @@ export function QuickGradingFeedbackPrototype({
               onClick={exit}
             >
               Выйти
+              {desktop ? <Kbd>Esc</Kbd> : null}
             </Button>
             <Button
               type="button"
@@ -479,10 +508,28 @@ export function QuickGradingFeedbackPrototype({
             >
               <Save className="size-4" />
               Сохранить
+              {desktop ? (
+                <KbdGroup>
+                  <Kbd>{modKeyLabel}</Kbd>
+                  <Kbd>S</Kbd>
+                </KbdGroup>
+              ) : null}
             </Button>
           </div>
         </div>
       </BottomActionBar>
+
+      <ExitDialog
+        open={exitOpen}
+        unsavedCount={gradeableDirty.length}
+        recoveryCount={session.recovery.length}
+        modKeyLabel={modKeyLabel}
+        onOpenChange={setExitOpen}
+        onExit={() => {
+          setExitOpen(false);
+          onExit();
+        }}
+      />
 
       <RecoveryDialog
         open={recoveryOpen}
@@ -539,14 +586,6 @@ export function QuickGradingFeedbackPrototype({
             обрезано {fit.name + fit.task + fit.submission + fit.state}
           </span>
         ) : null}
-        <label className="flex cursor-pointer items-center gap-1 px-1 text-xs">
-          <input
-            type="checkbox"
-            checked={showAction}
-            onChange={(event) => setShowAction(event.target.checked)}
-          />
-          действие
-        </label>
         <button
           type="button"
           className="rounded-full px-2 py-1 text-xs underline"
@@ -569,6 +608,7 @@ export function QuickGradingFeedbackPrototype({
               variant,
               layout,
               fit,
+              exitOpen,
               fullWidth,
               activeAttemptId: session.activeAttemptId,
               entries: Object.fromEntries(session.entries),
@@ -585,27 +625,20 @@ export function QuickGradingFeedbackPrototype({
   );
 }
 
-function ListHeader({
-  feedbackColumn,
-  showAction,
-}: {
-  feedbackColumn: FeedbackColumn;
-  showAction: boolean;
-}) {
+function ListHeader({ feedbackColumn }: { feedbackColumn: FeedbackColumn }) {
   const zones = [
     'Задание',
     'Отправлено',
     'Состояние',
     'Балл',
     ...(feedbackColumn === 'field' ? ['Общий отзыв'] : []),
-    ...(showAction ? ['Действие'] : []),
   ];
 
   return (
     <div
       className={cn(
         'mb-1.5 grid px-4 text-xs font-medium text-muted-foreground',
-        desktopColumns[columnsKey(feedbackColumn, showAction)]
+        desktopColumns[feedbackColumn]
       )}
     >
       <span>Студент</span>
