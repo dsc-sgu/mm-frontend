@@ -521,7 +521,7 @@ const ROWS = [
   { id: "QG-07", v: "qg", slice: "#117·6", risk: "data", layer: "component", fx: ["world:quick-grading"], src: [114],
     text: "Выход, смена route или reload при dirty entries или оставшихся recovery entries → подтверждение с предложением скопировать или скачать." },
   { id: "QG-09", v: "qg", slice: "#117·6", risk: "data", layer: "model", fx: [], src: [114],
-    text: "Обновление строки во время режима (событие lease, сверка, явное обновление): dirty entry у Attempt, ставшей reviewed, → recovery entry «Review уже появилась» с автором и Grade; pending не трогаются до сверки; entries, введённые пока batch в полёте, остаются dirty." },
+    text: "Обновление строки во время режима (событие lease, перечитывание Reviews, явное обновление): dirty entry у Attempt, ставшей reviewed, → recovery entry «Review уже появилась» с автором и Grade; pending не трогаются до исхода повтора batch; entries, введённые пока batch в полёте, остаются dirty." },
   { id: "QG-10", v: "qg", slice: "#117·6", risk: "data", layer: "boundary", fx: ["world:quick-grading", "clock"], src: [114, 117],
     text: "Во время quick grading focus, reconnect и инвалидация после batch дают 0 запросов списка Course Attempts; выход из режима — ровно один refetch." },
   { id: "QG-11", v: "qg", slice: "#117·6", risk: "data", layer: "component", fx: ["world:quick-grading"], src: [114],
