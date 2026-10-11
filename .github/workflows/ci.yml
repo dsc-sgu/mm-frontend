@@ -26,13 +26,10 @@ jobs:
         with:
           bun-version: 1.3.14
 
-      # `bun run` executes tsc, eslint and vite through their `node` shebang.
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-
       - run: bun install --frozen-lockfile
 
-      - run: bun run lint
+      # tsc, eslint and vite have a `node` shebang. `--bun` runs them on Bun
+      # instead of whatever Node the runner image ships.
+      - run: bun run --bun lint
 
-      - run: bun run build
+      - run: bun run --bun build
