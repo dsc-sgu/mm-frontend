@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Filter } from 'lucide-react';
 
 import {
@@ -25,7 +25,6 @@ import { AttemptCard } from './ui/card';
 import {
   BottomActionBar,
   IdleBottomActions,
-  QuickGradingBottomActions,
   SelectionBottomActions,
 } from './ui/bottom-bar';
 import { AttemptsFilterSidebar, AttemptsFiltersContent } from './ui/sidebar';
@@ -33,12 +32,16 @@ import { VirtualizedAttemptsList } from './ui/virtualized-list';
 import type { CourseAttemptsFilters } from './model/types';
 import type { CourseId } from '@/features/course/model/identity';
 import { cn } from '@/shadcn/lib/utils';
+// PROTOTYPE (#121): throwaway quick-grading variants, see the prototype folder.
+import { QuickGradingFeedbackPrototype } from './prototype/quick-grading-feedback';
 
 type CourseAttemptsPageProps = {
   courseId: CourseId;
   courseSlug: string;
   appliedFilters: CourseAttemptsFilters;
   onApplyFilters: (filters: CourseAttemptsFilters) => void;
+  prototypeVariant?: string;
+  onPrototypeVariantChange: (variant: string) => void;
 };
 
 export function CourseAttemptsPage({
@@ -46,6 +49,8 @@ export function CourseAttemptsPage({
   courseSlug,
   appliedFilters,
   onApplyFilters,
+  prototypeVariant,
+  onPrototypeVariantChange,
 }: CourseAttemptsPageProps) {
   const filters = useCourseAttemptsFilters({ appliedFilters, onApplyFilters });
   const quickGradingState = useCourseAttemptsQuickGradingState();
@@ -86,6 +91,31 @@ export function CourseAttemptsPage({
   });
   const filterActionsDisabledReason =
     getCourseAttemptsFilterActionsDisabledReason(pageMode);
+
+  // PROTOTYPE (#121): `?variant=` opens quick grading once the list is loaded.
+  const prototypeAutoStarted = useRef(false);
+  const { startQuickGrading } = grading;
+  useEffect(() => {
+    if (
+      prototypeVariant &&
+      attemptsQuery.isSuccess &&
+      !prototypeAutoStarted.current
+    ) {
+      prototypeAutoStarted.current = true;
+      startQuickGrading();
+    }
+  }, [attemptsQuery.isSuccess, prototypeVariant, startQuickGrading]);
+
+  if (pageMode === 'quick-grading') {
+    return (
+      <QuickGradingFeedbackPrototype
+        attempts={attempts}
+        variant={prototypeVariant}
+        onVariantChange={onPrototypeVariantChange}
+        onExit={grading.exitQuickGrading}
+      />
+    );
+  }
 
   const filtersPanel = {
     appliedFilters: filters.normalizedAppliedFilters,
