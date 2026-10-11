@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Filter } from 'lucide-react';
 
 import {
@@ -31,8 +31,10 @@ import { AttemptsFilterSidebar, AttemptsFiltersContent } from './ui/sidebar';
 import { VirtualizedAttemptsList } from './ui/virtualized-list';
 import type { CourseAttemptsFilters } from './model/types';
 import { cn } from '@/shadcn/lib/utils';
-// PROTOTYPE (#121): throwaway quick-grading variants, see the prototype folder.
+// PROTOTYPE (#121): throwaway quick-grading and filter bar prototype, see the
+// prototype folder.
 import { QuickGradingFeedbackPrototype } from './prototype/quick-grading-feedback';
+import { BrowsePrototype } from './prototype/quick-grading-feedback/browse';
 
 type CourseAttemptsPageProps = {
   courseSlug: string;
@@ -89,20 +91,8 @@ export function CourseAttemptsPage({
   const filterActionsDisabledReason =
     getCourseAttemptsFilterActionsDisabledReason(pageMode);
 
-  // PROTOTYPE (#121): `?variant=` opens quick grading once the list is loaded.
-  const prototypeAutoStarted = useRef(false);
-  const { startQuickGrading } = grading;
-  useEffect(() => {
-    if (
-      prototypeVariant &&
-      attemptsQuery.isSuccess &&
-      !prototypeAutoStarted.current
-    ) {
-      prototypeAutoStarted.current = true;
-      startQuickGrading();
-    }
-  }, [attemptsQuery.isSuccess, prototypeVariant, startQuickGrading]);
-
+  // PROTOTYPE (#121): quick grading always renders the prototype; with
+  // `?variant=` normal mode renders the top-bar filter prototype too.
   if (pageMode === 'quick-grading') {
     return (
       <QuickGradingFeedbackPrototype
@@ -110,9 +100,28 @@ export function CourseAttemptsPage({
         filters={filters.normalizedAppliedFilters}
         tasks={tasks}
         students={students}
-        variant={prototypeVariant}
-        onVariantChange={onPrototypeVariantChange}
         onExit={grading.exitQuickGrading}
+      />
+    );
+  }
+
+  if (prototypeVariant) {
+    return (
+      <BrowsePrototype
+        courseSlug={courseSlug}
+        attempts={attempts}
+        loading={attemptsQuery.isPending}
+        tasks={tasks}
+        students={students}
+        applied={filters.normalizedAppliedFilters}
+        draft={filters.draftFilters}
+        variant={prototypeVariant}
+        onDraftChange={filters.setDraftFilters}
+        onApplyDraft={filters.applyDraftFilters}
+        onApply={onApplyFilters}
+        onReset={filters.resetFilters}
+        onVariantChange={onPrototypeVariantChange}
+        onStartQuickGrading={grading.startQuickGrading}
       />
     );
   }

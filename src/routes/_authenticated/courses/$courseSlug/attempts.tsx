@@ -13,8 +13,15 @@ import type {
   CourseAttemptsRouteSearch,
 } from '@/features/course/features/attempts/model/types';
 
-// PROTOTYPE (#121)
-type PrototypeSearch = CourseAttemptsRouteSearch & { variant?: string };
+// PROTOTYPE (#121): the router parses `?variant=2` as a number and quotes a
+// numeric-looking string when it writes one back, so keep numbers as numbers.
+type PrototypeSearch = CourseAttemptsRouteSearch & {
+  variant?: string | number;
+};
+
+function toSearchVariant(variant: string): string | number {
+  return /^\d+$/.test(variant) ? Number(variant) : variant;
+}
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/attempts'
@@ -27,10 +34,12 @@ export const Route = createFileRoute(
       ),
     },
   },
-  // PROTOTYPE (#121): `variant` selects a quick-grading prototype variant.
+  // PROTOTYPE (#121): `variant` selects a filter bar prototype variant.
   validateSearch: (search: Record<string, unknown>): PrototypeSearch => ({
     ...validateCourseAttemptsSearch(search),
-    ...(typeof search.variant === 'string' ? { variant: search.variant } : {}),
+    ...(typeof search.variant === 'string' || typeof search.variant === 'number'
+      ? { variant: search.variant }
+      : {}),
   }),
   async beforeLoad({ context, params }) {
     await requireCourseRole({
@@ -56,7 +65,7 @@ function RouteComponent() {
       void navigate({
         search: (previous: PrototypeSearch) => ({
           ...searchFromCourseAttemptsFilters(filters),
-          ...(previous.variant ? { variant: previous.variant } : {}),
+          ...(previous.variant != null ? { variant: previous.variant } : {}),
         }),
       });
     },
@@ -65,7 +74,10 @@ function RouteComponent() {
   const handlePrototypeVariantChange = useCallback(
     (variant: string) => {
       void navigate({
-        search: (previous: PrototypeSearch) => ({ ...previous, variant }),
+        search: (previous: PrototypeSearch) => ({
+          ...previous,
+          variant: toSearchVariant(variant),
+        }),
         replace: true,
       });
     },
@@ -77,7 +89,9 @@ function RouteComponent() {
       courseSlug={courseSlug}
       appliedFilters={appliedFilters}
       onApplyFilters={handleApplyFilters}
-      prototypeVariant={search.variant}
+      prototypeVariant={
+        search.variant == null ? undefined : String(search.variant)
+      }
       onPrototypeVariantChange={handlePrototypeVariantChange}
     />
   );

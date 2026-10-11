@@ -114,6 +114,7 @@ export function QuickRow(props: RowProps) {
       className={cn(
         'grid h-full items-center px-4',
         desktopColumns[props.feedbackColumn],
+        props.feedbackColumn === 'none' ? 'cursor-pointer' : null,
         rowInteraction
       )}
     >
@@ -154,7 +155,6 @@ export function QuickRow(props: RowProps) {
       </Zone>
       <Zone height={zoneHeight}>
         <GradeZoneContent {...props} />
-        {feedbackOwnZone ? null : props.feedbackCell}
       </Zone>
       {feedbackOwnZone ? (
         <Zone height={zoneHeight}>
