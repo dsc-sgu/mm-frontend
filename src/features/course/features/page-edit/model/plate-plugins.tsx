@@ -5,6 +5,7 @@ import { LinkRules } from '@platejs/link';
 import { LinkPlugin } from '@platejs/link/react';
 import { BulletedListRules, OrderedListRules } from '@platejs/list';
 import { ListPlugin } from '@platejs/list/react';
+import { PlaywrightPlugin } from '@platejs/playwright';
 import { BlockSelectionPlugin } from '@platejs/selection/react';
 import { TogglePlugin } from '@platejs/toggle/react';
 import {
@@ -341,4 +342,6 @@ export const coursePagePlatePlugins = [
   TrailingBlockPlugin.configure({
     options: { type: KEYS.p },
   }),
+  // Lets Playwright tests reach the editor instance; never in production.
+  ...(import.meta.env.DEV ? [PlaywrightPlugin] : []),
 ];

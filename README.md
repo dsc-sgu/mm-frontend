@@ -38,6 +38,19 @@ With mock authorization enabled, the app immediately signs in as `mit-teacher` w
 
 Remove the flag or set it to `false` to use the real `/api/v1/auth/*` backend endpoints.
 
+## Browser tests
+
+Playwright tests live in `playwright/` and run in Chromium, Firefox and WebKit. Install the browsers once, then run the suite:
+
+```bash
+bunx playwright install chromium firefox webkit
+bun run test:browser
+```
+
+Playwright starts its own Vite dev server on port 5180 with mock authorization; set `PLAYWRIGHT_PORT` to use another port. Pass `--project=chromium` (or `firefox`, `webkit`) to run one engine.
+
+A test marked `test.fail()` describes target behaviour the current code lacks; its comment names the slice that brings it. When that slice lands, the test starts passing, Playwright reports the unexpected pass, and the PR removes the mark.
+
 ## Radix UI
 
 shadcn components import primitives from the single `radix-ui` package. Do not add individual `@radix-ui/react-*` packages as direct dependencies; they may still appear as transitive dependencies in `bun.lock`.

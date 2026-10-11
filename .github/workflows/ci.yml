@@ -33,3 +33,40 @@ jobs:
       - run: bun run --bun lint
 
       - run: bun run --bun build
+
+  playwright:
+    name: Playwright (${{ matrix.browser }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      # Engines are equal: one failing must not cancel the others.
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      # The Playwright runner and the Vite dev server it starts run on Node.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - run: bun install --frozen-lockfile
+
+      - run: bunx playwright install --with-deps ${{ matrix.browser }}
+
+      - run: bun run test:browser --project=${{ matrix.browser }}
+
+      # Traces and screenshots are diagnostics only.
+      - if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-${{ matrix.browser }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
