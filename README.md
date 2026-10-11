@@ -12,6 +12,16 @@ With mock authorization enabled, the app immediately signs in as `mit-teacher` w
 
 Remove the flag or set it to `false` to use the real `/api/v1/auth/*` backend endpoints.
 
+## Radix UI
+
+shadcn components import primitives from the single `radix-ui` package. Do not add individual `@radix-ui/react-*` packages as direct dependencies; they may still appear as transitive dependencies in `bun.lock`.
+
+After changing Radix imports or versions, run `bun run lint` and `bun run build`, then smoke-check with mock authorization enabled:
+
+1. Open `/courses/modern-information-technologies/tasks/1` and confirm the header avatar shows the `СП` fallback.
+2. Open the avatar menu by clicking it. Close it with Escape, focus the trigger, and reopen it with ArrowDown. Check ArrowDown/ArrowUp navigation between “Настройки” and “Выход”, then Escape closes the menu and returns focus to the trigger.
+3. Confirm “Посмотреть попытки студентов” and “Редактировать задание” render as links, not nested buttons, and that the first link navigates to the course attempts.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
