@@ -25,6 +25,13 @@ The React Compiler is enabled on this template. See [this documentation](https:/
 
 Note: This will impact Vite dev & build performances.
 
+## Linting and formatting
+
+- `bun run lint` reports lint violations and Prettier formatting violations as ESLint errors.
+- `bun run format` fixes formatting using `.prettierrc`, including Tailwind class sorting.
+
+`eslint-plugin-prettier/recommended` is the last entry in `eslint.config.js`. It enables Prettier checks and disables conflicting ESLint formatting rules through `eslint-config-prettier`.
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
