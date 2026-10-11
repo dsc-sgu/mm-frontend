@@ -11,7 +11,6 @@
 // Diff lives next to the attempt badge in the Task zone, not in its own column.
 import type { KeyboardEvent, ReactNode } from 'react';
 import {
-  ArrowRight,
   CircleAlert,
   CircleCheck,
   CircleDashed,
@@ -20,7 +19,6 @@ import {
   LockKeyhole,
 } from 'lucide-react';
 
-import { Button } from '@/shadcn/components/ui/button';
 import { Input } from '@/shadcn/components/ui/input';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
@@ -34,14 +32,13 @@ import type {
   QuickEntry,
   RowOutcome,
 } from '@/features/course/features/attempts/prototype/quick-grading-feedback/session';
-import { columnsKey, desktopColumns, type FeedbackColumn } from './columns';
+import { desktopColumns, type FeedbackColumn } from './columns';
 
 export type RowLayout = 'wide' | 'medium' | 'stacked';
 
 export type RowProps = {
   layout: RowLayout;
   feedbackColumn: FeedbackColumn;
-  showAction: boolean;
   attempt: CourseAttempt;
   entry: QuickEntry | undefined;
   outcome: RowOutcome | undefined;
@@ -116,7 +113,7 @@ export function QuickRow(props: RowProps) {
       onClick={props.onActivate}
       className={cn(
         'grid h-full items-center px-4',
-        desktopColumns[columnsKey(props.feedbackColumn, props.showAction)],
+        desktopColumns[props.feedbackColumn],
         rowInteraction
       )}
     >
@@ -162,21 +159,6 @@ export function QuickRow(props: RowProps) {
       {feedbackOwnZone ? (
         <Zone height={zoneHeight}>
           <div className="min-w-0 flex-1">{props.feedbackCell}</div>
-        </Zone>
-      ) : null}
-      {props.showAction ? (
-        <Zone height={zoneHeight}>
-          <Button
-            type="button"
-            variant="outline"
-            tabIndex={-1}
-            title="В прототипе никуда не ведёт: показывает, сколько места занимает действие строки"
-            className="h-9 rounded-lg px-2.5"
-            onClick={(event) => event.stopPropagation()}
-          >
-            Ревью
-            <ArrowRight className="size-4" />
-          </Button>
         </Zone>
       ) : null}
     </article>
