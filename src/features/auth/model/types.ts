@@ -1,19 +1,12 @@
-import type { Session } from '@/features/auth/model/schema';
-
-export type FetchSessionResponse =
-  | { status: 'AUTHORIZED'; session: Session }
-  | { status: 'NOT_AUTHORIZED' };
-
-export type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-export type RegisterRequest = {
+export type Session = {
+  userId: string;
+  username: string;
   email: string;
   firstName: string;
   lastName: string;
-  password: string;
-  patronymic?: string;
-  username: string;
+  patronymic: string;
+  avatarURL: string;
+  // TODO: Remove with course-local roles (ACC1).
+  role: string;
+  sessionExpiresAt: string;
 };

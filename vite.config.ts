@@ -1,10 +1,31 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'path';
 import tailwindcss from '@tailwindcss/vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 
 const profiling = process.env.PROFILING === 'true';
+
+// Serves the MSW worker from the dev server only: production builds ship no
+// mock service worker, and the worker always matches the installed msw.
+function mockServiceWorker(): Plugin {
+  const workerPath = createRequire(import.meta.url).resolve(
+    'msw/mockServiceWorker.js'
+  );
+
+  return {
+    name: 'mock-service-worker',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/mockServiceWorker.js', (_request, response) => {
+        response.setHeader('Content-Type', 'text/javascript');
+        response.end(readFileSync(workerPath));
+      });
+    },
+  };
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -22,6 +43,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
       tailwindcss(),
+      mockServiceWorker(),
     ],
     server: {
       proxy: {
