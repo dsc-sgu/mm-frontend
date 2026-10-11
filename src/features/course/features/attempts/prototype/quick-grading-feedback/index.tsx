@@ -6,14 +6,18 @@
 // memory (see session.ts).
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { Save } from 'lucide-react';
+import { Keyboard, Save } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shadcn/components/ui/popover';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { PrototypeSwitcher } from '@/app/prototype-switcher';
-import { BottomActionBar } from '@/features/course/features/attempts/ui/bottom-bar';
 import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
 import type {
   CourseAttemptStudent,
@@ -27,7 +31,7 @@ import { withRealisticNames, withRealisticStudentNames } from './names';
 import { RecoveryDialog } from './recovery';
 import { ExitDialog } from './exit-dialog';
 import { getModKeyLabel, isExitShortcut, isSaveShortcut } from './shortcuts';
-import { QuickGradingTopBar } from './top-bar';
+import { QuickGradingTopBar, StickyTop } from './top-bar';
 import { QuickRow, type RowLayout } from './row';
 import {
   INITIAL_QUICK_SESSION,
@@ -118,22 +122,6 @@ export function QuickGradingFeedbackPrototype({
   useEffect(() => {
     virtualizer.measure();
   }, [rowHeight, virtualizer]);
-
-  // Keep focused fields clear of the sticky header and the bottom bar.
-  useEffect(() => {
-    const html = document.documentElement;
-    const previous = [
-      html.style.scrollPaddingTop,
-      html.style.scrollPaddingBottom,
-    ];
-    html.style.scrollPaddingTop = '5rem';
-    html.style.scrollPaddingBottom = '9rem';
-
-    return () => {
-      html.style.scrollPaddingTop = previous[0] ?? '';
-      html.style.scrollPaddingBottom = previous[1] ?? '';
-    };
-  }, []);
 
   // Surface whether texts fit: count rendered `[data-fit]` texts cut off by
   // their zone, horizontally (ellipsis) or vertically (line clamp). Polling is
@@ -376,26 +364,83 @@ export function QuickGradingFeedbackPrototype({
         fullWidth ? null : 'max-w-7xl'
       )}
     >
-      <div className="mt-4 min-w-0 sm:mt-6">
-        <QuickGradingTopBar
-          count={attempts.length}
-          filters={filters}
-          tasks={tasks}
-          students={
-            realisticNames ? withRealisticStudentNames(students) : students
-          }
-          hints={keyHints.map((hint) => (
-            <span key={hint.action} className="flex items-center gap-1">
-              {hint.keys.map((key) => (
-                <Kbd key={key}>{key}</Kbd>
-              ))}
-              {hint.action}
-            </span>
-          ))}
-        />
-
-        <section className="min-w-0 pb-44 sm:pb-36">
+      <div className="mt-1 min-w-0 sm:mt-3">
+        <StickyTop>
+          <QuickGradingTopBar
+            count={attempts.length}
+            filters={filters}
+            tasks={tasks}
+            students={
+              realisticNames ? withRealisticStudentNames(students) : students
+            }
+            actions={
+              <>
+                <span className="px-1 text-xs text-muted-foreground">
+                  Не сохранено: {gradeableDirty.length}
+                  {invalid.length > 0 ? (
+                    <span className="text-destructive">
+                      {' '}
+                      · ошибок: {invalid.length}
+                    </span>
+                  ) : null}
+                  {savedCount > 0 ? ` · опубликовано: ${savedCount}` : null}
+                </span>
+                {invalid[0] ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-destructive"
+                    onClick={() => focusField(invalid[0]!.id, 'grade')}
+                  >
+                    К ошибке
+                  </Button>
+                ) : null}
+                {session.recovery.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 border-destructive/50 text-destructive"
+                    onClick={() => setRecoveryOpen(true)}
+                  >
+                    Не опубликовано: {session.recovery.length}
+                  </Button>
+                ) : null}
+                {desktop ? <KeyHintsButton modKeyLabel={modKeyLabel} /> : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={exit}
+                >
+                  Выйти
+                  {desktop ? <Kbd>Esc</Kbd> : null}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-8"
+                  disabled={!canSave}
+                  onClick={startSave}
+                >
+                  <Save className="size-3.5" />
+                  Сохранить
+                  {desktop ? (
+                    <KbdGroup>
+                      <Kbd>{modKeyLabel}</Kbd>
+                      <Kbd>S</Kbd>
+                    </KbdGroup>
+                  ) : null}
+                </Button>
+              </>
+            }
+          />
           {desktop ? <ListHeader feedbackColumn="field" /> : null}
+        </StickyTop>
+
+        <section className="min-w-0 pb-24">
           <FixedRowsList
             attempts={attempts}
             rowHeight={rowHeight}
@@ -429,70 +474,6 @@ export function QuickGradingFeedbackPrototype({
           />
         </section>
       </div>
-
-      <BottomActionBar>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="min-w-0 text-sm leading-tight">
-            <p className="font-semibold">Быстрая оценка</p>
-            <p className="text-xs text-muted-foreground">
-              Не сохранено: {gradeableDirty.length}
-              {invalid.length > 0 ? (
-                <span className="text-destructive">
-                  {' '}
-                  · ошибок: {invalid.length}
-                </span>
-              ) : null}
-              {savedCount > 0 ? ` · опубликовано: ${savedCount}` : null}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {invalid[0] ? (
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-10 text-destructive"
-                onClick={() => focusField(invalid[0]!.id, 'grade')}
-              >
-                К ошибке
-              </Button>
-            ) : null}
-            {session.recovery.length > 0 ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="h-10 border-destructive/50 text-destructive"
-                onClick={() => setRecoveryOpen(true)}
-              >
-                Не опубликовано: {session.recovery.length}
-              </Button>
-            ) : null}
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10"
-              onClick={exit}
-            >
-              Выйти
-              {desktop ? <Kbd>Esc</Kbd> : null}
-            </Button>
-            <Button
-              type="button"
-              className="h-10"
-              disabled={!canSave}
-              onClick={startSave}
-            >
-              <Save className="size-4" />
-              Сохранить
-              {desktop ? (
-                <KbdGroup>
-                  <Kbd>{modKeyLabel}</Kbd>
-                  <Kbd>S</Kbd>
-                </KbdGroup>
-              ) : null}
-            </Button>
-          </div>
-        </div>
-      </BottomActionBar>
 
       <ExitDialog
         open={exitOpen}
@@ -595,8 +576,47 @@ export function QuickGradingFeedbackPrototype({
   );
 }
 
-const keyHints: Array<{ keys: string[]; action: string }> = [
-  { keys: ['Enter', '↓'], action: 'следующий балл' },
-  { keys: ['Tab'], action: 'балл → отзыв → балл' },
-  { keys: ['Enter'], action: 'в отзыве — дальше' },
-];
+// The session shortcuts no longer fit the bar next to the actions, so they
+// live behind one button.
+function KeyHintsButton({ modKeyLabel }: { modKeyLabel: string }) {
+  const hints: Array<{ keys: string[]; action: string }> = [
+    { keys: ['Enter', '↓'], action: 'следующий балл' },
+    { keys: ['Shift+Enter', '↑'], action: 'предыдущий балл' },
+    { keys: ['Tab'], action: 'балл → отзыв → следующий балл' },
+    { keys: ['Enter'], action: 'в отзыве — следующий балл' },
+    { keys: [modKeyLabel, 'S'], action: 'сохранить' },
+    { keys: ['Esc'], action: 'выйти' },
+  ];
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8 text-muted-foreground"
+          aria-label="Клавиши"
+          title="Клавиши"
+        >
+          <Keyboard className="size-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80">
+        <p className="mb-2 text-sm font-semibold">Клавиши</p>
+        <ul className="grid gap-1.5 text-xs text-muted-foreground">
+          {hints.map((hint) => (
+            <li key={hint.action} className="flex items-center gap-1.5">
+              <KbdGroup>
+                {hint.keys.map((key) => (
+                  <Kbd key={key}>{key}</Kbd>
+                ))}
+              </KbdGroup>
+              {hint.action}
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
+  );
+}

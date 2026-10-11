@@ -73,7 +73,7 @@ export function PrototypeSwitcher({
   return (
     <div
       className={cn(
-        'fixed top-2 left-1/2 z-[100] -translate-x-1/2',
+        'fixed bottom-3 left-1/2 z-[100] -translate-x-1/2',
         'flex max-w-[calc(100vw-1rem)] items-center gap-1 rounded-full',
         'bg-zinc-950 p-1 text-sm text-zinc-50 shadow-2xl ring-2 ring-fuchsia-500',
         'dark:bg-zinc-50 dark:text-zinc-950'

@@ -1,32 +1,26 @@
-// PROTOTYPE (#121): normal-mode Course Attempts with the page-wide top bar in
-// place of the filter sidebar. Three filter bar variants, switched with
-// `?variant=1|2|3` (filter-bar.tsx). The list is the compact row from quick
-// grading without the Grade field; the whole row opens the Attempt (#117).
-// "Быстрая оценка" starts quick grading over the applied filters, and the
-// same bar then shows them as locked chips.
+// PROTOTYPE (#121): normal-mode Course Attempts with the page-wide, pinned
+// top bar in place of the filter sidebar and the bottom action bar (bulk
+// selection is gone, #114). Any `?variant=` turns it on. The list is the
+// compact row from quick grading without the Grade field; the whole row opens
+// the Attempt (#117). "Быстрая оценка" (Alt+G) starts quick grading over the
+// applied filters, and the same bar then shows them as locked chips.
 import { useEffect, useMemo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { PrototypeSwitcher } from '@/app/prototype-switcher';
 import type {
   CourseAttempt,
   CourseAttemptStudent,
   CourseAttemptTask,
   CourseAttemptsFilters,
 } from '@/features/course/features/attempts/model/types';
-import { FilterBar, type FilterBarVariant } from './filter-bar';
+import { FilterBar } from './filter-bar';
 import { FixedRowsList, ListHeader } from './list';
 import { withRealisticNames, withRealisticStudentNames } from './names';
 import { QuickRow, type RowLayout } from './row';
+import { StickyTop } from './top-bar';
 import { useFixedRowsVirtualizer } from './use-fixed-rows';
-
-const FILTER_VARIANTS = [
-  { key: '1', name: 'Применить в каждом фильтре' },
-  { key: '2', name: 'Общее «Применить»' },
-  { key: '3', name: 'Панель «Фильтры»' },
-] as const;
 
 const ROW_HEIGHT: Record<RowLayout, number> = {
   wide: 64,
@@ -40,10 +34,6 @@ const BROWSE_TIER_FROM = {
   medium: '(min-width: 920px)',
 };
 
-function toFilterVariant(value: string | undefined): FilterBarVariant {
-  return FILTER_VARIANTS.find((variant) => variant.key === value)?.key ?? '1';
-}
-
 export function BrowsePrototype({
   courseSlug,
   attempts: loadedAttempts,
@@ -52,12 +42,9 @@ export function BrowsePrototype({
   students: loadedStudents,
   applied,
   draft,
-  variant: rawVariant,
   onDraftChange,
   onApplyDraft,
-  onApply,
   onReset,
-  onVariantChange,
   onStartQuickGrading,
 }: {
   courseSlug: string;
@@ -67,17 +54,13 @@ export function BrowsePrototype({
   students: readonly CourseAttemptStudent[];
   applied: CourseAttemptsFilters;
   draft: CourseAttemptsFilters;
-  variant: string | undefined;
   onDraftChange: (filters: CourseAttemptsFilters) => void;
   onApplyDraft: () => void;
-  onApply: (filters: CourseAttemptsFilters) => void;
   onReset: () => void;
-  onVariantChange: (variant: string) => void;
   onStartQuickGrading: () => void;
 }) {
   'use no memo';
 
-  const variant = toFilterVariant(rawVariant);
   const navigate = useNavigate();
   const wideTier = useMediaQuery(BROWSE_TIER_FROM.wide);
   const mediumTier = useMediaQuery(BROWSE_TIER_FROM.medium);
@@ -118,23 +101,27 @@ export function BrowsePrototype({
       },
     });
 
+  const showListHeader =
+    !loading && attempts.length > 0 && layout !== 'stacked';
+
   return (
     <main className="mx-auto flex w-full flex-col px-3 py-4 sm:px-6 sm:py-5 lg:px-8">
-      <div className="mt-4 min-w-0 sm:mt-6">
-        <FilterBar
-          variant={variant}
-          applied={applied}
-          draft={draft}
-          tasks={tasks}
-          students={students}
-          count={attempts.length}
-          loading={loading}
-          onDraftChange={onDraftChange}
-          onApplyDraft={onApplyDraft}
-          onApply={onApply}
-          onReset={onReset}
-          onStartQuickGrading={onStartQuickGrading}
-        />
+      <div className="mt-1 min-w-0 sm:mt-3">
+        <StickyTop>
+          <FilterBar
+            applied={applied}
+            draft={draft}
+            tasks={tasks}
+            students={students}
+            count={attempts.length}
+            loading={loading}
+            onDraftChange={onDraftChange}
+            onApplyDraft={onApplyDraft}
+            onReset={onReset}
+            onStartQuickGrading={onStartQuickGrading}
+          />
+          {showListHeader ? <ListHeader feedbackColumn="none" /> : null}
+        </StickyTop>
 
         <section className="min-w-0 pb-24">
           {loading ? (
@@ -154,44 +141,33 @@ export function BrowsePrototype({
               </p>
             </div>
           ) : (
-            <>
-              {layout === 'stacked' ? null : (
-                <ListHeader feedbackColumn="none" />
+            <FixedRowsList
+              attempts={attempts}
+              rowHeight={rowHeight}
+              virtualizer={virtualizer}
+              setListRef={setListRef}
+              scrollMargin={scrollMargin}
+              renderRow={(attempt) => (
+                <QuickRow
+                  layout={layout}
+                  feedbackColumn="none"
+                  attempt={attempt}
+                  entry={undefined}
+                  outcome={undefined}
+                  error={null}
+                  saving={false}
+                  gradeable={false}
+                  gradeInputRef={() => {}}
+                  onGradeChange={() => {}}
+                  onGradeKeyDown={() => {}}
+                  onActivate={() => openAttempt(attempt)}
+                  feedbackCell={null}
+                />
               )}
-              <FixedRowsList
-                attempts={attempts}
-                rowHeight={rowHeight}
-                virtualizer={virtualizer}
-                setListRef={setListRef}
-                scrollMargin={scrollMargin}
-                renderRow={(attempt) => (
-                  <QuickRow
-                    layout={layout}
-                    feedbackColumn="none"
-                    attempt={attempt}
-                    entry={undefined}
-                    outcome={undefined}
-                    error={null}
-                    saving={false}
-                    gradeable={false}
-                    gradeInputRef={() => {}}
-                    onGradeChange={() => {}}
-                    onGradeKeyDown={() => {}}
-                    onActivate={() => openAttempt(attempt)}
-                    feedbackCell={null}
-                  />
-                )}
-              />
-            </>
+            />
           )}
         </section>
       </div>
-
-      <PrototypeSwitcher
-        variants={FILTER_VARIANTS}
-        current={variant}
-        onChange={onVariantChange}
-      />
     </main>
   );
 }
