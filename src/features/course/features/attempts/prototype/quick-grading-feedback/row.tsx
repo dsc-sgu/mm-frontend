@@ -282,8 +282,9 @@ function SubmissionLine({ attempt }: { attempt: CourseAttempt }) {
   );
 }
 
-// "за 1 день 4 часа до дедлайна" does not fit a 9.5rem zone; the full phrase
-// stays in the tooltip.
+// Same wording as the full label in the tooltip ("за 1 день 4 часа до
+// дедлайна"), with abbreviated units; the longest form, "2 д 23 ч после
+// дедлайна", fits the 11rem Submission zone.
 function compactRelation({
   submittedAt,
   deadlineAt,
@@ -313,7 +314,9 @@ function compactRelation({
           ? `${hours} ч`
           : `${minutes} мин`;
 
-  return difference < 0 ? `за ${duration} до срока` : `опоздание ${duration}`;
+  return difference < 0
+    ? `за ${duration} до дедлайна`
+    : `${duration} после дедлайна`;
 }
 
 function GradeZoneContent({
@@ -465,13 +468,19 @@ function StateZoneContent({
     >
       <span className="shrink-0">{state.icon}</span>
       <span className="min-w-0 leading-tight">
-        <span data-fit="state" className="block truncate">
+        <span
+          data-fit="state"
+          className={cn('truncate', compact ? null : 'block')}
+        >
           {state.label}
         </span>
-        {'detail' in state && !compact ? (
+        {'detail' in state ? (
           <span
             data-fit="state"
-            className="block truncate font-normal text-muted-foreground"
+            className={cn(
+              'truncate font-normal text-muted-foreground',
+              compact ? 'ml-1.5' : 'block'
+            )}
           >
             {state.detail}
           </span>
