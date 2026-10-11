@@ -1,5 +1,11 @@
 # React + TypeScript + Vite
 
+## Dependency contracts
+
+Code-block highlighting uses direct dependencies on `shiki` and `@shikijs/themes` with compatible release ranges. Keep the `github-light` and `github-dark` themes as individual dynamic imports instead of importing the full theme bundle.
+
+Header route metadata augments `StaticDataRouteOption` through the direct `@tanstack/react-router` dependency, not its transitive `@tanstack/router-core` package.
+
 ## Mock authorization
 
 To run the frontend with mock authorization, add this to `.env.local` and restart the Vite dev server:
