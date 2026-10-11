@@ -564,7 +564,7 @@ const ROWS = [
     text: "Lease: heartbeat ~20 с и при возврате; тихое повторное взятие; сбой heartbeat → `sync-failed`, не `interrupted`; правки продолжаются; lease берётся снова после восстановления связи." },
   { id: "DRF-20", v: "drf", slice: "#118·4", risk: "data", layer: "boundary", fx: ["world:course-draft"], src: [118],
     text: "`interrupted` только при явном ответе «lease не мой»." },
-  { id: "DRF-21", v: "drf", slice: "#118·4", risk: "data", layer: "component", fx: ["world:course-draft"], src: [118], inv: ["I6"],
+  { id: "DRF-21", v: "drf", slice: "#118·4", risk: "data", layer: "component", fx: ["world:course-draft"], src: [118], flag: "q12", inv: ["I6"],
     text: "Из `interrupted`: `restored` = base → `editing`; ≠ base → «Взять версию с сервера» (подтверждение) / «Перезаписать черновик моей версией»; `stale_conflict` → `stale`; `423` → `lease-unavailable`, Working Copy только для чтения + предупреждение при уходе." },
   { id: "DRF-E1", v: "drf", slice: "#118·2", risk: "integrity", layer: "e2e", fx: ["world:course-draft"], src: [118],
     text: "Анна правит текст и список, добавляет блок, публикует через диалог → Саша видит новую Course Page с теми же номерами списков." },
@@ -714,6 +714,14 @@ const QUESTIONS = [
   {
     q: "Q11. Набор строк во время quick grading.",
     rec: "Решено владельцем (Q11.1): сохраняется текущая заморозка — список не перепроверяется автоматически до явного выхода из режима, строки меняют только per-Attempt исходы batch и события lease; после выхода один refetch (QG-10, QG-11).",
+  },
+  {
+    q: "Q12. Повторное взятие lease из `interrupted` вернуло `new`. Так бывает, если другая вкладка того же Teacher'а опубликовала или удалила черновик. «Спроектировать lifecycle Course Page Working Copy» этот исход не описывает.",
+    rec: "Одно правило для `new` и `restored`: сравнить серверный черновик с `base`; равен → `editing`, иначе → «Взять версию с сервера» / «Перезаписать черновик моей версией». После `new` блоки получают новые id, поэтому почти всегда будет выбор — безопасный исход (DRF-21).",
+  },
+  {
+    q: "Q13. `423` при повторном взятии из `interrupted`. Решение ведёт в `lease-unavailable`, но там нет Working Copy и нет предупреждения при уходе, а строка обещает сохранить и то и другое.",
+    rec: "Оставаться в `interrupted` и обновить `holder`: Working Copy и предупреждение при уходе сохраняются без новых полей у `lease-unavailable` (DRF-21).",
   },
 ];
 
