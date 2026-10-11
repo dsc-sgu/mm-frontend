@@ -59,8 +59,8 @@ const ROW_HEIGHT: Record<RowLayout, number> = {
 // the narrowest width at which Student and Task still fit (one line for wide,
 // two clamped lines for medium). B pays for its feedback zone with width.
 const TIER_FROM: Record<VariantKey, { wide: string; medium: string }> = {
-  A: { wide: '(min-width: 1200px)', medium: '(min-width: 900px)' },
-  B: { wide: '(min-width: 1360px)', medium: '(min-width: 1000px)' },
+  A: { wide: '(min-width: 1200px)', medium: '(min-width: 920px)' },
+  B: { wide: '(min-width: 1400px)', medium: '(min-width: 1120px)' },
 };
 
 type FitKind = 'name' | 'task' | 'submission' | 'state';
