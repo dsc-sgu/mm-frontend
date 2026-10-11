@@ -1,31 +1,35 @@
 // PROTOTYPE (#121): where does optional Overall Feedback live in compact quick
-// grading? Four variants on the real Course Attempts route, switched with
-// `?variant=A|B|C|D`. Rows share one fixed height per breakpoint; only the
-// feedback affordance differs. Save is simulated in memory (see session.ts).
+// grading? Variants on the real Course Attempts route, switched with
+// `?variant=A|B`: A — popover from a button in the Grade zone, B — inline
+// field in its own zone. C (inspector) and D (pre-publish step) were rejected
+// and live only in this branch's history. Filters are a top bar by default;
+// the switcher toggles back to the sidebar to compare row width. Rows share
+// one fixed height per breakpoint. Save is simulated in memory (session.ts).
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { Filter, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
-import { Kbd } from '@/shadcn/components/ui/kbd';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { PrototypeSwitcher } from '@/app/prototype-switcher';
 import { BottomActionBar } from '@/features/course/features/attempts/ui/bottom-bar';
-import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
-import {
-  FeedbackIndicator,
-  FeedbackPreview,
-  InlineFeedbackCell,
-  KeyHints,
-  PopoverFeedbackCell,
-} from './feedback';
-import { FeedbackInspector } from './inspector';
-import { FixedRowsList } from './list';
-import { useFixedRowsVirtualizer } from './use-fixed-rows';
-import { PresaveSheet } from './presave';
-import { RecoveryDialog } from './recovery';
+import type {
+  CourseAttempt,
+  CourseAttemptStudent,
+  CourseAttemptTask,
+  CourseAttemptsFilters,
+} from '@/features/course/features/attempts/model/types';
 import { columnsKey, desktopColumns, type FeedbackColumn } from './columns';
+import {
+  InlineFeedbackCell,
+  PopoverFeedbackCell,
+  type PublishedFeedback,
+} from './feedback';
+import { LockedFiltersSidebar, LockedFiltersTopBar } from './filters';
+import { FixedRowsList } from './list';
+import { mockPublishedFeedback } from './mock-feedback';
+import { RecoveryDialog } from './recovery';
 import { QuickRow } from './row';
 import {
   INITIAL_QUICK_SESSION,
@@ -35,12 +39,11 @@ import {
   simulateSave,
   type QuickEntry,
 } from './session';
+import { useFixedRowsVirtualizer } from './use-fixed-rows';
 
 const VARIANTS = [
   { key: 'A', name: 'Popover из кнопки' },
   { key: 'B', name: 'Поле в строке' },
-  { key: 'C', name: 'Inspector' },
-  { key: 'D', name: 'Шаг перед публикацией' },
 ] as const;
 
 type VariantKey = (typeof VARIANTS)[number]['key'];
@@ -48,8 +51,17 @@ type VariantKey = (typeof VARIANTS)[number]['key'];
 const feedbackColumnByVariant: Record<VariantKey, FeedbackColumn> = {
   A: 'button',
   B: 'field',
-  C: 'icon',
-  D: 'icon',
+};
+
+const hintsByVariant: Record<VariantKey, string[]> = {
+  A: [
+    'Enter / ↓ — следующий балл, Shift+Enter / ↑ — предыдущий',
+    'Tab — к кнопке отзыва, Enter — открыть; в отзыве Enter — следующий балл',
+  ],
+  B: [
+    'Enter / ↓ — следующий балл, Shift+Enter / ↑ — предыдущий',
+    'Tab: балл → отзыв → следующий балл; в отзыве Enter — следующий балл',
+  ],
 };
 
 const ROW_HEIGHT = { desktop: 64, mobile: 120 } as const;
@@ -60,11 +72,17 @@ function toVariantKey(value: string | undefined): VariantKey {
 
 export function QuickGradingFeedbackPrototype({
   attempts,
+  appliedFilters,
+  tasks,
+  students,
   variant: rawVariant,
   onVariantChange,
   onExit,
 }: {
   attempts: readonly CourseAttempt[];
+  appliedFilters: CourseAttemptsFilters;
+  tasks: readonly CourseAttemptTask[];
+  students: readonly CourseAttemptStudent[];
   variant: string | undefined;
   onVariantChange: (variant: string) => void;
   onExit: () => void;
@@ -72,11 +90,11 @@ export function QuickGradingFeedbackPrototype({
   'use no memo';
 
   const variant = toVariantKey(rawVariant);
+  const feedbackColumn = feedbackColumnByVariant[variant];
   const desktop = useMediaQuery('(min-width: 768px)');
   const wide = useMediaQuery('(min-width: 1024px)');
   const layout = desktop ? 'desktop' : 'mobile';
   const rowHeight = ROW_HEIGHT[layout];
-  const inspectorInBar = variant === 'C' && !wide;
 
   const [session, dispatch] = useReducer(
     quickSessionReducer,
@@ -85,8 +103,9 @@ export function QuickGradingFeedbackPrototype({
   const [simulateConflict, setSimulateConflict] = useState(true);
   const [showState, setShowState] = useState(false);
   const [showAction, setShowAction] = useState(false);
+  const [filtersAside, setFiltersAside] = useState(false);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
-  const [presaveOpen, setPresaveOpen] = useState(false);
+  const sidebar = filtersAside && wide;
 
   const { virtualizer, setListRef, scrollMargin } = useFixedRowsVirtualizer({
     count: attempts.length,
@@ -96,7 +115,7 @@ export function QuickGradingFeedbackPrototype({
 
   useEffect(() => {
     virtualizer.measure();
-  }, [rowHeight, virtualizer]);
+  }, [rowHeight, sidebar, virtualizer]);
 
   // Keep focused fields clear of the sticky header and the bottom bar.
   useEffect(() => {
@@ -106,13 +125,13 @@ export function QuickGradingFeedbackPrototype({
       html.style.scrollPaddingBottom,
     ];
     html.style.scrollPaddingTop = '5rem';
-    html.style.scrollPaddingBottom = inspectorInBar ? '15rem' : '9rem';
+    html.style.scrollPaddingBottom = '9rem';
 
     return () => {
       html.style.scrollPaddingTop = previous[0] ?? '';
       html.style.scrollPaddingBottom = previous[1] ?? '';
     };
-  }, [inspectorInBar]);
+  }, []);
 
   // ── focus navigation ──────────────────────────────────────────────────────
 
@@ -125,25 +144,18 @@ export function QuickGradingFeedbackPrototype({
     }
   };
 
-  const focusField = (
-    attemptId: string,
-    field: 'grade' | 'feedback' | 'inspector'
-  ) => {
-    const key = field === 'inspector' ? 'inspector' : `${attemptId}:${field}`;
+  const focusGrade = (attemptId: string) => {
+    const key = `${attemptId}:grade`;
     const tryFocus = () => {
       const element = fields.current.get(key);
 
-      if (!element) {
+      if (!(element instanceof HTMLInputElement)) {
         return false;
       }
 
       element.focus();
       element.scrollIntoView({ block: 'nearest' });
-
-      if (element instanceof HTMLInputElement) {
-        element.select();
-      }
-
+      element.select();
       return true;
     };
 
@@ -179,7 +191,7 @@ export function QuickGradingFeedbackPrototype({
 
       if (attempt && canGrade(attempt, session)) {
         activate(attempt.id);
-        focusField(attempt.id, 'grade');
+        focusGrade(attempt.id);
         return;
       }
 
@@ -201,35 +213,8 @@ export function QuickGradingFeedbackPrototype({
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault();
         moveGrade(attempt.id, event.key === 'ArrowDown' ? 1 : -1);
-        return;
-      }
-
-      if (variant === 'C' && event.key === 'Tab' && !event.shiftKey) {
-        event.preventDefault();
-        focusField(attempt.id, 'inspector');
       }
     };
-
-  const handleInspectorKeyDown = (
-    event: KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>
-  ) => {
-    const attemptId = session.activeAttemptId;
-
-    if (!attemptId) {
-      return;
-    }
-
-    if (event.key === 'Enter' || (event.key === 'Tab' && !event.shiftKey)) {
-      event.preventDefault();
-      moveGrade(attemptId, event.shiftKey ? -1 : 1);
-      return;
-    }
-
-    if ((event.key === 'Tab' && event.shiftKey) || event.key === 'Escape') {
-      event.preventDefault();
-      focusField(attemptId, 'grade');
-    }
-  };
 
   // ── derived session summary ───────────────────────────────────────────────
 
@@ -287,97 +272,97 @@ export function QuickGradingFeedbackPrototype({
 
   // ── rendering ─────────────────────────────────────────────────────────────
 
-  const activeAttempt =
-    attempts.find((attempt) => attempt.id === session.activeAttemptId) ?? null;
-  const activeEditable = activeAttempt
-    ? canGrade(activeAttempt, session) && !session.saving.has(activeAttempt.id)
-    : false;
-  const activeOutcome = activeAttempt
-    ? session.outcomes.get(activeAttempt.id)
-    : undefined;
-  const inspector = (placement: 'sidebar' | 'bar') => (
-    <FeedbackInspector
-      placement={placement}
-      attempt={activeAttempt}
-      grade={
-        activeAttempt
-          ? (session.entries.get(activeAttempt.id)?.grade ?? '')
-          : ''
-      }
-      feedback={
-        activeEditable && activeAttempt
-          ? (session.entries.get(activeAttempt.id)?.feedback ?? '')
-          : activeOutcome?.status === 'saved'
-            ? activeOutcome.feedback
-            : ''
-      }
-      editable={activeEditable}
-      fieldRef={registerField('inspector')}
-      onFeedbackChange={(value) => {
-        if (activeAttempt) {
-          edit(activeAttempt.id, 'feedback', value);
-        }
-      }}
-      onFieldKeyDown={handleInspectorKeyDown}
-    />
-  );
+  const publishedFeedback = (
+    attempt: CourseAttempt
+  ): PublishedFeedback | null => {
+    const outcome = session.outcomes.get(attempt.id);
+
+    if (outcome?.status === 'saved') {
+      return outcome.feedback
+        ? { text: outcome.feedback, author: 'Вы, в этой сессии' }
+        : null;
+    }
+
+    if (attempt.grade) {
+      const text = mockPublishedFeedback(attempt);
+      return text ? { text, author: attempt.grade.gradedBy } : null;
+    }
+
+    return null;
+  };
 
   const renderFeedbackCell = (attempt: CourseAttempt) => {
-    const entry = session.entries.get(attempt.id);
-    const outcome = session.outcomes.get(attempt.id);
     const editable =
       canGrade(attempt, session) && !session.saving.has(attempt.id);
-    const feedback = editable
-      ? (entry?.feedback ?? '')
-      : outcome?.status === 'saved'
-        ? outcome.feedback
-        : (entry?.feedback ?? '');
     const common = {
       layout,
       attempt,
-      feedback,
+      feedback: session.entries.get(attempt.id)?.feedback ?? '',
       editable,
+      published: editable ? null : publishedFeedback(attempt),
       onFeedbackChange: (value: string) => edit(attempt.id, 'feedback', value),
       onCommitNext: () => moveGrade(attempt.id, 1),
     } as const;
 
-    switch (variant) {
-      case 'A':
-        return <PopoverFeedbackCell {...common} />;
-      case 'B':
-        return (
-          <InlineFeedbackCell
-            {...common}
-            inputRef={registerField(`${attempt.id}:feedback`)}
-            onFocus={() => activate(attempt.id)}
-          />
-        );
-      case 'C': {
-        const openInspector = editable
-          ? () => {
-              activate(attempt.id);
-              focusField(attempt.id, 'inspector');
-            }
-          : undefined;
-
-        return layout === 'desktop' ? (
-          <FeedbackIndicator feedback={feedback} onClick={openInspector} />
-        ) : (
-          <FeedbackPreview
-            feedback={feedback}
-            emptyLabel={editable ? 'отзыв' : undefined}
-            onClick={openInspector}
-          />
-        );
-      }
-      case 'D':
-        return layout === 'desktop' ? (
-          <FeedbackIndicator feedback={feedback} />
-        ) : (
-          <FeedbackPreview feedback={feedback} />
-        );
-    }
+    return variant === 'A' ? (
+      <PopoverFeedbackCell {...common} />
+    ) : (
+      <InlineFeedbackCell
+        {...common}
+        inputRef={registerField(`${attempt.id}:feedback`)}
+        onFocus={() => activate(attempt.id)}
+      />
+    );
   };
+
+  const filtersProps = {
+    filters: appliedFilters,
+    tasks,
+    students,
+    count: attempts.length,
+    hints: hintsByVariant[variant],
+  };
+
+  const list = (
+    <section className="min-w-0 pb-44 sm:pb-36">
+      {desktop ? (
+        <ListHeader feedbackColumn={feedbackColumn} showAction={showAction} />
+      ) : null}
+      <FixedRowsList
+        attempts={attempts}
+        rowHeight={rowHeight}
+        virtualizer={virtualizer}
+        setListRef={setListRef}
+        scrollMargin={scrollMargin}
+        renderRow={(attempt) => {
+          const entry = session.entries.get(attempt.id);
+          const gradeable = canGrade(attempt, session);
+
+          return (
+            <QuickRow
+              layout={layout}
+              feedbackColumn={feedbackColumn}
+              showAction={showAction}
+              attempt={attempt}
+              entry={entry}
+              outcome={session.outcomes.get(attempt.id)}
+              error={
+                gradeable ? entryError(entry, attempt.task.maxScore) : null
+              }
+              saving={session.saving.has(attempt.id)}
+              gradeable={gradeable}
+              active={false}
+              gradeInputRef={registerField(`${attempt.id}:grade`)}
+              onGradeChange={(value) => edit(attempt.id, 'grade', value)}
+              onGradeKeyDown={handleGradeKeyDown(attempt)}
+              onActivate={() => activate(attempt.id)}
+              feedbackCell={renderFeedbackCell(attempt)}
+            />
+          );
+        }}
+      />
+    </section>
+  );
 
   return (
     <main
@@ -386,69 +371,26 @@ export function QuickGradingFeedbackPrototype({
         'lg:px-8'
       )}
     >
-      <div
-        className={cn(
-          'mt-4 grid min-w-0 gap-4 sm:mt-6 sm:gap-6',
-          'lg:grid-cols-[20rem_minmax(0,1fr)]'
-        )}
-      >
-        {wide ? (
-          variant === 'C' ? (
-            inspector('sidebar')
-          ) : (
-            <LockedFiltersCard variant={variant} count={attempts.length} />
-          )
-        ) : null}
-
-        <section
-          className={cn('min-w-0', inspectorInBar ? 'pb-72' : 'pb-44 sm:pb-36')}
+      {sidebar ? (
+        <div
+          className={cn(
+            'mt-4 grid min-w-0 gap-6 sm:mt-6',
+            'grid-cols-[20rem_minmax(0,1fr)]'
+          )}
         >
-          {desktop ? (
-            <ListHeader
-              feedbackColumn={feedbackColumnByVariant[variant]}
-              showAction={showAction}
-            />
-          ) : null}
-          <FixedRowsList
-            attempts={attempts}
-            rowHeight={rowHeight}
-            virtualizer={virtualizer}
-            setListRef={setListRef}
-            scrollMargin={scrollMargin}
-            renderRow={(attempt) => {
-              const entry = session.entries.get(attempt.id);
-              const gradeable = canGrade(attempt, session);
-
-              return (
-                <QuickRow
-                  layout={layout}
-                  feedbackColumn={feedbackColumnByVariant[variant]}
-                  showAction={showAction}
-                  attempt={attempt}
-                  entry={entry}
-                  outcome={session.outcomes.get(attempt.id)}
-                  error={
-                    gradeable ? entryError(entry, attempt.task.maxScore) : null
-                  }
-                  saving={session.saving.has(attempt.id)}
-                  gradeable={gradeable}
-                  active={
-                    variant === 'C' && session.activeAttemptId === attempt.id
-                  }
-                  gradeInputRef={registerField(`${attempt.id}:grade`)}
-                  onGradeChange={(value) => edit(attempt.id, 'grade', value)}
-                  onGradeKeyDown={handleGradeKeyDown(attempt)}
-                  onActivate={() => activate(attempt.id)}
-                  feedbackCell={renderFeedbackCell(attempt)}
-                />
-              );
-            }}
-          />
-        </section>
-      </div>
+          <LockedFiltersSidebar {...filtersProps} />
+          {list}
+        </div>
+      ) : (
+        <div className="mt-4 min-w-0 sm:mt-6">
+          {filtersAside ? null : (
+            <LockedFiltersTopBar {...filtersProps} compact={!desktop} />
+          )}
+          {list}
+        </div>
+      )}
 
       <BottomActionBar>
-        {inspectorInBar ? inspector('bar') : null}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0 text-sm leading-tight">
             <p className="font-semibold">Быстрая оценка</p>
@@ -469,7 +411,7 @@ export function QuickGradingFeedbackPrototype({
                 type="button"
                 variant="ghost"
                 className="h-10 text-destructive"
-                onClick={() => focusField(invalid[0]!.id, 'grade')}
+                onClick={() => focusGrade(invalid[0]!.id)}
               >
                 К ошибке
               </Button>
@@ -496,31 +438,13 @@ export function QuickGradingFeedbackPrototype({
               type="button"
               className="h-10"
               disabled={!canSave}
-              onClick={variant === 'D' ? () => setPresaveOpen(true) : startSave}
+              onClick={startSave}
             >
-              <Save className="size-4" />
-              {variant === 'D' ? 'Проверить и опубликовать…' : 'Сохранить'}
+              <Save className="size-4" /> Сохранить
             </Button>
           </div>
         </div>
       </BottomActionBar>
-
-      <PresaveSheet
-        open={presaveOpen}
-        layout={layout}
-        items={publishable.map((attempt) => ({
-          attempt,
-          entry: session.entries.get(attempt.id)!,
-        }))}
-        onOpenChange={setPresaveOpen}
-        onFeedbackChange={(attemptId, value) =>
-          edit(attemptId, 'feedback', value)
-        }
-        onPublish={() => {
-          setPresaveOpen(false);
-          startSave();
-        }}
-      />
 
       <RecoveryDialog
         open={recoveryOpen}
@@ -537,22 +461,18 @@ export function QuickGradingFeedbackPrototype({
         current={variant}
         onChange={onVariantChange}
       >
-        <label className="flex cursor-pointer items-center gap-1 px-1 text-xs">
-          <input
-            type="checkbox"
-            checked={simulateConflict}
-            onChange={(event) => setSimulateConflict(event.target.checked)}
-          />
-          конфликт
-        </label>
-        <label className="flex cursor-pointer items-center gap-1 px-1 text-xs">
-          <input
-            type="checkbox"
-            checked={showAction}
-            onChange={(event) => setShowAction(event.target.checked)}
-          />
+        <SwitcherToggle checked={filtersAside} onChange={setFiltersAside}>
+          фильтры сбоку
+        </SwitcherToggle>
+        <SwitcherToggle checked={showAction} onChange={setShowAction}>
           действие
-        </label>
+        </SwitcherToggle>
+        <SwitcherToggle
+          checked={simulateConflict}
+          onChange={setSimulateConflict}
+        >
+          конфликт
+        </SwitcherToggle>
         <button
           type="button"
           className="rounded-full px-2 py-1 text-xs underline"
@@ -574,7 +494,7 @@ export function QuickGradingFeedbackPrototype({
             {
               variant,
               layout,
-              activeAttemptId: session.activeAttemptId,
+              filters: sidebar ? 'sidebar' : 'top',
               entries: Object.fromEntries(session.entries),
               saving: [...session.saving],
               outcomes: Object.fromEntries(session.outcomes),
@@ -586,6 +506,27 @@ export function QuickGradingFeedbackPrototype({
         </pre>
       ) : null}
     </main>
+  );
+}
+
+function SwitcherToggle({
+  checked,
+  onChange,
+  children,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  children: string;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-1 px-1 text-xs whitespace-nowrap">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      {children}
+    </label>
   );
 }
 
@@ -620,52 +561,5 @@ function ListHeader({
         </span>
       ))}
     </div>
-  );
-}
-
-const variantHints: Record<Exclude<VariantKey, 'C'>, string[]> = {
-  A: [
-    'Enter / ↓ — следующий балл, Shift+Enter / ↑ — предыдущий.',
-    'Tab — к кнопке отзыва, Enter — открыть; в поле отзыва Enter — следующий балл.',
-  ],
-  B: [
-    'Enter / ↓ — следующий балл, Shift+Enter / ↑ — предыдущий.',
-    'Tab: балл → отзыв → следующий балл; в отзыве Enter — следующий балл.',
-  ],
-  D: [
-    'Enter / ↓ — следующий балл, Shift+Enter / ↑ — предыдущий.',
-    'Отзывы добавляются на шаге «Проверить и опубликовать».',
-  ],
-};
-
-function LockedFiltersCard({
-  variant,
-  count,
-}: {
-  variant: Exclude<VariantKey, 'C'>;
-  count: number;
-}) {
-  return (
-    <aside
-      className={cn(
-        'sticky top-20 self-start rounded-3xl border border-border bg-card',
-        'p-5 text-sm'
-      )}
-    >
-      <h2 className="flex items-center gap-2 font-semibold text-muted-foreground">
-        <Filter className="size-4" /> Фильтры
-      </h2>
-      <p className="mt-2 text-muted-foreground">
-        Недоступны во время быстрой оценки. Попыток в сессии: {count}.
-      </p>
-      <KeyHints>
-        <Kbd>Клавиши</Kbd>
-      </KeyHints>
-      <ul className="mt-1 grid gap-1 text-xs text-muted-foreground">
-        {variantHints[variant].map((hint) => (
-          <li key={hint}>{hint}</li>
-        ))}
-      </ul>
-    </aside>
   );
 }

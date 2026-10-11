@@ -1,4 +1,5 @@
-// PROTOTYPE (#121): the variant-specific Overall Feedback affordances.
+// PROTOTYPE (#121): Overall Feedback affordances of variants A and B, plus a
+// read-only viewer for feedback already published in a Review.
 import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { MessageSquarePlus, MessageSquareText } from 'lucide-react';
 
@@ -21,11 +22,17 @@ import { cn } from '@/shadcn/lib/utils';
 import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
 import type { RowLayout } from '@/features/course/features/attempts/prototype/quick-grading-feedback/row';
 
+export type PublishedFeedback = {
+  text: string;
+  author: string;
+};
+
 export type FeedbackCellProps = {
   layout: RowLayout;
   attempt: CourseAttempt;
   feedback: string;
   editable: boolean;
+  published: PublishedFeedback | null;
   onFeedbackChange: (value: string) => void;
   onCommitNext: () => void;
 };
@@ -37,6 +44,7 @@ export function PopoverFeedbackCell({
   attempt,
   feedback,
   editable,
+  published,
   onFeedbackChange,
   onCommitNext,
 }: FeedbackCellProps) {
@@ -45,7 +53,14 @@ export function PopoverFeedbackCell({
   const filled = feedback.trim() !== '';
 
   if (!editable) {
-    return filled ? <ReadonlyFeedback feedback={feedback} /> : null;
+    return published ? (
+      <FeedbackViewer
+        layout={layout}
+        attempt={attempt}
+        published={published}
+        trigger="icon"
+      />
+    ) : null;
   }
 
   const commit = () => {
@@ -100,7 +115,7 @@ export function PopoverFeedbackCell({
             <DrawerHeader className="px-0 text-left">
               <DrawerTitle>Общий отзыв</DrawerTitle>
               <DrawerDescription>
-                {attempt.student.fullName} · #{attempt.attemptNumber}{' '}
+                {attempt.student.fullName} · №{attempt.attemptNumber}{' '}
                 {attempt.task.title}. Увидит Student вместе с баллом.
               </DrawerDescription>
             </DrawerHeader>
@@ -148,9 +163,11 @@ export function PopoverFeedbackCell({
 // ── B: always-visible inline field ──────────────────────────────────────────
 
 export function InlineFeedbackCell({
+  layout,
   attempt,
   feedback,
   editable,
+  published,
   onFeedbackChange,
   onCommitNext,
   inputRef,
@@ -160,7 +177,14 @@ export function InlineFeedbackCell({
   onFocus: () => void;
 }) {
   if (!editable) {
-    return feedback.trim() ? <ReadonlyFeedback feedback={feedback} /> : null;
+    return published ? (
+      <FeedbackViewer
+        layout={layout}
+        attempt={attempt}
+        published={published}
+        trigger="text"
+      />
+    ) : null;
   }
 
   return (
@@ -183,120 +207,99 @@ export function InlineFeedbackCell({
   );
 }
 
-// ── C, D: read-only preview in the row ──────────────────────────────────────
+// ── read-only viewer for published Overall Feedback ─────────────────────────
 
-export function FeedbackPreview({
-  feedback,
-  emptyLabel,
-  onClick,
+function FeedbackViewer({
+  layout,
+  attempt,
+  published,
+  trigger,
 }: {
-  feedback: string;
-  emptyLabel?: string;
-  onClick?: () => void;
+  layout: RowLayout;
+  attempt: CourseAttempt;
+  published: PublishedFeedback;
+  trigger: 'icon' | 'text';
 }) {
-  const filled = feedback.trim() !== '';
-
-  if (!filled && !emptyLabel) {
-    return null;
-  }
-
-  const content = filled ? (
-    <>
-      <MessageSquareText className="size-3.5 shrink-0 text-primary" />
-      <span className="truncate">{feedback}</span>
-    </>
-  ) : (
-    <>
-      <MessageSquarePlus className="size-3.5 shrink-0" />
-      <span className="truncate">{emptyLabel}</span>
-    </>
-  );
-
-  if (!onClick) {
-    return (
-      <span
-        title={feedback || undefined}
-        className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground"
-      >
-        {content}
-      </span>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      tabIndex={-1}
-      title={feedback || undefined}
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick();
-      }}
-      className={cn(
-        'flex w-full min-w-0 items-center gap-1.5 rounded-md text-left text-xs',
-        'text-muted-foreground hover:text-foreground',
-        filled ? null : 'opacity-70'
-      )}
-    >
-      {content}
-    </button>
-  );
-}
-
-export function FeedbackIndicator({
-  feedback,
-  onClick,
-}: {
-  feedback: string;
-  onClick?: () => void;
-}) {
-  const filled = feedback.trim() !== '';
-
-  if (!filled && !onClick) {
-    return null;
-  }
-
-  const icon = filled ? (
-    <MessageSquareText className="size-4 text-primary" />
-  ) : (
-    <MessageSquarePlus className="size-4" />
-  );
-  const label = filled ? `Общий отзыв: ${feedback}` : 'Добавить общий отзыв';
-
-  if (!onClick) {
-    return (
-      <span
-        title={feedback}
+  const [open, setOpen] = useState(false);
+  const label = `Посмотреть общий отзыв: ${attempt.student.fullName}`;
+  const triggerButton =
+    trigger === 'icon' ? (
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        tabIndex={-1}
+        title="Посмотреть общий отзыв"
         aria-label={label}
-        className="grid size-7 shrink-0 place-items-center"
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen(true);
+        }}
+        className="text-muted-foreground hover:text-foreground"
       >
-        {icon}
-      </span>
+        <MessageSquareText />
+      </Button>
+    ) : (
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label={label}
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen(true);
+        }}
+        className={cn(
+          'flex w-full min-w-0 items-center gap-1.5 rounded-md text-left',
+          'text-xs text-muted-foreground hover:text-foreground'
+        )}
+      >
+        <MessageSquareText className="size-3.5 shrink-0" />
+        <span className="truncate">{published.text}</span>
+      </button>
+    );
+  const body = (
+    <>
+      <p className="text-xs text-muted-foreground">
+        {published.author} · {attempt.student.fullName}, №
+        {attempt.attemptNumber}
+      </p>
+      <p className="mt-2 max-h-60 overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap">
+        {published.text}
+      </p>
+      <p className="mt-3 text-xs text-muted-foreground">
+        Изменить можно только в individual review.
+      </p>
+    </>
+  );
+
+  if (layout === 'mobile') {
+    return (
+      <>
+        {triggerButton}
+        <Drawer open={open} onOpenChange={setOpen}>
+          <DrawerContent className="px-4 pb-6">
+            <DrawerHeader className="px-0 text-left">
+              <DrawerTitle>Общий отзыв</DrawerTitle>
+              <DrawerDescription className="sr-only">
+                Опубликованный общий отзыв
+              </DrawerDescription>
+            </DrawerHeader>
+            {body}
+          </DrawerContent>
+        </Drawer>
+      </>
     );
   }
 
   return (
-    <button
-      type="button"
-      tabIndex={-1}
-      title={filled ? feedback : label}
-      aria-label={label}
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick();
-      }}
-      className={cn(
-        'grid size-7 shrink-0 place-items-center rounded-md',
-        'text-muted-foreground hover:bg-accent hover:text-foreground'
-      )}
-    >
-      {icon}
-    </button>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
+      <PopoverContent align="end" className="w-96">
+        <p className="text-sm font-semibold">Общий отзыв</p>
+        {body}
+      </PopoverContent>
+    </Popover>
   );
-}
-
-function ReadonlyFeedback({ feedback }: { feedback: string }) {
-  return <FeedbackPreview feedback={feedback} />;
 }
 
 export function KeyHints({ children }: { children: ReactNode }) {
