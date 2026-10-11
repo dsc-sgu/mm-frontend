@@ -2,7 +2,6 @@ import { CourseCard, CourseCardSkeleton } from '@/features/course/ui/card';
 import { useCoursesQuery } from '@/features/course/api/queries';
 import { DeadlinesCalendar } from '@/features/deadlines-calendar/calendar';
 import { createFileRoute } from '@tanstack/react-router';
-import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import { cn } from '@/shadcn/lib/utils';
 
@@ -74,13 +73,13 @@ function DashboardSection({
 }: DashboardSectionProps) {
   return (
     <section
-      className={clsx(
+      className={cn(
         'relative flex w-full flex-col overflow-hidden rounded-[2rem] bg-background xl:min-h-0',
         bordered && 'border border-border/70'
       )}
     >
       <div
-        className={clsx(
+        className={cn(
           'z-10 border-b border-border/70 px-6 py-5 md:px-7',
           'bg-background/70 backdrop-blur-2xl supports-backdrop-filter:bg-background/45',
           scrollable ? 'absolute inset-x-0 top-0' : 'sticky top-0 shrink-0'
@@ -92,7 +91,7 @@ function DashboardSection({
       </div>
 
       <div
-        className={clsx(
+        className={cn(
           'p-4 md:p-5 xl:min-h-0 xl:flex-1',
           scrollable && 'pt-24 md:pt-[100px] xl:overflow-auto',
           contentClassName

@@ -1,5 +1,17 @@
 # React + TypeScript + Vite
 
+## Class names
+
+Use `cn()` from `@/shadcn/lib/utils` to combine class names and resolve Tailwind conflicts. It uses `tailwind-merge` directly and accepts strings, falsy values, and nested arrays.
+
+Object-map inputs are not supported; use conditional expressions such as `cn('base', active && 'active')` instead.
+
+## Dependency contracts
+
+Code-block highlighting uses direct dependencies on `shiki` and `@shikijs/themes` with compatible release ranges. Keep the `github-light` and `github-dark` themes as individual dynamic imports instead of importing the full theme bundle.
+
+Header route metadata augments `StaticDataRouteOption` through the direct `@tanstack/react-router` dependency, not its transitive `@tanstack/router-core` package.
+
 ## Mock authorization
 
 To run the frontend with mock authorization, add this to `.env.local` and restart the Vite dev server:
@@ -34,6 +46,13 @@ Currently, two official plugins are available:
 The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
 
 Note: This will impact Vite dev & build performances.
+
+## Linting and formatting
+
+- `bun run lint` reports lint violations and Prettier formatting violations as ESLint errors.
+- `bun run format` fixes formatting using `.prettierrc`, including Tailwind class sorting.
+
+`eslint-plugin-prettier/recommended` is the last entry in `eslint.config.js`. It enables Prettier checks and disables conflicting ESLint formatting rules through `eslint-config-prettier`.
 
 ## Expanding the ESLint configuration
 
