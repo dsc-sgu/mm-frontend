@@ -58,6 +58,8 @@ export type HttpOperationRequest = RequestInit & {
 export type HttpResponseContext = {
   operation: string;
   response: Response;
+  /** The operation's signal, so body readers keep cancellation. */
+  signal?: AbortSignal | null;
 };
 
 /**
@@ -102,7 +104,7 @@ export async function runHttpOperation<T>(
   }
 
   // Deliberately outside the catch: decoder and programming errors stay as is.
-  return decode({ operation: name, response });
+  return decode({ operation: name, response, signal });
 }
 
 /**
@@ -122,7 +124,7 @@ export async function readJson<TSchema extends v.GenericSchema>(
   try {
     input = await context.response.json();
   } catch (cause) {
-    throwIfCancellation(cause);
+    throwIfCancellation(cause, context.signal);
     throw new OperationFailure(context.operation, {
       kind: 'unreadable-body',
       cause,

@@ -28,6 +28,7 @@ export function login(input: LoginInput): Promise<LoginOutcome> {
       }
       if (context.response.status !== 200) throw unexpectedHttp(context);
 
+      // The body is not read: the session check reports who signed in.
       return { status: 'signed-in' };
     }
   );

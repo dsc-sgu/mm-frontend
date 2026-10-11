@@ -111,6 +111,23 @@ describe('TR-03: cancellation', () => {
     expect(error).toMatchObject({ name: 'AbortError' });
   });
 
+  test('a custom abort reason while the body is read is rethrown as is', async () => {
+    const controller = new AbortController();
+    server.use(http.get(PAGE_URL, holdBody(controller.signal)));
+    const reason = new Error('route left');
+
+    const operation = runHttpOperation(
+      { name: 'read-page', url: PAGE_URL, signal: controller.signal },
+      async (context) => {
+        const body = readJson(context, PageDtoSchema);
+        controller.abort(reason);
+        return body;
+      }
+    );
+
+    await expect(operation).rejects.toBe(reason);
+  });
+
   test('a custom abort reason is rethrown as is', async () => {
     const held = holdResponse();
     server.use(http.get(PAGE_URL, held.resolver));
