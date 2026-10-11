@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { cn } from '@/shadcn/lib/utils';
 
 import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
+import { desktopColumns, type FeedbackColumn } from './columns';
 import type { RowsVirtualizer } from './use-fixed-rows';
 
 export function FixedRowsList({
@@ -57,6 +58,36 @@ export function FixedRowsList({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+export function ListHeader({
+  feedbackColumn,
+}: {
+  feedbackColumn: FeedbackColumn;
+}) {
+  const zones = [
+    'Задание',
+    'Отправлено',
+    'Состояние',
+    'Балл',
+    ...(feedbackColumn === 'field' ? ['Общий отзыв'] : []),
+  ];
+
+  return (
+    <div
+      className={cn(
+        'mb-1.5 grid px-4 text-xs font-medium text-muted-foreground',
+        desktopColumns[feedbackColumn]
+      )}
+    >
+      <span>Студент</span>
+      {zones.map((zone) => (
+        <span key={zone} className="truncate px-3">
+          {zone}
+        </span>
+      ))}
     </div>
   );
 }

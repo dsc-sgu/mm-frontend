@@ -1,9 +1,9 @@
 // PROTOTYPE (#121): where does optional Overall Feedback live in compact quick
-// grading? Two variants on the real Course Attempts route, switched with
-// `?variant=A|B` (C and D were rejected). Rows share one fixed height per
-// breakpoint; only the feedback affordance differs. The filter sidebar is
-// replaced by a top bar so the list gets the full page width. Save is
-// simulated in memory (see session.ts).
+// grading? Chosen: B, an inline field in the row (A popover, C inspector and
+// D pre-publish step were rejected; see git history of this branch). Rows
+// share one fixed height per layout tier. The page-wide top bar shows the
+// locked filters; the list gets the full page width. Save is simulated in
+// memory (see session.ts).
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { Save } from 'lucide-react';
@@ -20,15 +20,14 @@ import type {
   CourseAttemptTask,
   CourseAttemptsFilters,
 } from '@/features/course/features/attempts/model/types';
-import { InlineFeedbackCell, PopoverFeedbackCell } from './feedback';
-import { FixedRowsList } from './list';
+import { InlineFeedbackCell } from './feedback';
+import { FixedRowsList, ListHeader } from './list';
 import { useFixedRowsVirtualizer } from './use-fixed-rows';
-import { withRealisticNames } from './names';
+import { withRealisticNames, withRealisticStudentNames } from './names';
 import { RecoveryDialog } from './recovery';
 import { ExitDialog } from './exit-dialog';
 import { getModKeyLabel, isExitShortcut, isSaveShortcut } from './shortcuts';
 import { QuickGradingTopBar } from './top-bar';
-import { desktopColumns, type FeedbackColumn } from './columns';
 import { QuickRow, type RowLayout } from './row';
 import {
   INITIAL_QUICK_SESSION,
@@ -39,17 +38,7 @@ import {
   type QuickEntry,
 } from './session';
 
-const VARIANTS = [
-  { key: 'A', name: 'Popover из кнопки' },
-  { key: 'B', name: 'Поле в строке' },
-] as const;
-
-type VariantKey = (typeof VARIANTS)[number]['key'];
-
-const feedbackColumnByVariant: Record<VariantKey, FeedbackColumn> = {
-  A: 'button',
-  B: 'field',
-};
+const VARIANTS = [{ key: 'B', name: 'Быстрая оценка · поле в строке' }];
 
 // One fixed height per layout tier, so the virtualizer never measures rows.
 const ROW_HEIGHT: Record<RowLayout, number> = {
@@ -57,12 +46,12 @@ const ROW_HEIGHT: Record<RowLayout, number> = {
   medium: 88,
   stacked: 124,
 };
-// Tier breakpoints per variant, picked by measurement with realistic ФИО:
-// the narrowest width at which Student and Task still fit (one line for wide,
-// two clamped lines for medium). B pays for its feedback zone with width.
-const TIER_FROM: Record<VariantKey, { wide: string; medium: string }> = {
-  A: { wide: '(min-width: 1200px)', medium: '(min-width: 920px)' },
-  B: { wide: '(min-width: 1400px)', medium: '(min-width: 1120px)' },
+// Tier breakpoints, picked by measurement with realistic ФИО: the narrowest
+// width at which Student and Task still fit (one line for wide, two clamped
+// lines for medium). The inline feedback zone costs width.
+const QUICK_TIER_FROM = {
+  wide: '(min-width: 1400px)',
+  medium: '(min-width: 1120px)',
 };
 
 type FitKind = 'name' | 'task' | 'submission' | 'state';
@@ -75,32 +64,23 @@ const EMPTY_FIT: FitReport = {
   state: 0,
 };
 
-function toVariantKey(value: string | undefined): VariantKey {
-  return VARIANTS.find((variant) => variant.key === value)?.key ?? 'A';
-}
-
 export function QuickGradingFeedbackPrototype({
   attempts: loadedAttempts,
   filters,
   tasks,
   students,
-  variant: rawVariant,
-  onVariantChange,
   onExit,
 }: {
   attempts: readonly CourseAttempt[];
   filters: CourseAttemptsFilters;
   tasks: readonly CourseAttemptTask[];
   students: readonly CourseAttemptStudent[];
-  variant: string | undefined;
-  onVariantChange: (variant: string) => void;
   onExit: () => void;
 }) {
   'use no memo';
 
-  const variant = toVariantKey(rawVariant);
-  const wideTier = useMediaQuery(TIER_FROM[variant].wide);
-  const mediumTier = useMediaQuery(TIER_FROM[variant].medium);
+  const wideTier = useMediaQuery(QUICK_TIER_FROM.wide);
+  const mediumTier = useMediaQuery(QUICK_TIER_FROM.medium);
   const layout: RowLayout = wideTier
     ? 'wide'
     : mediumTier
@@ -380,18 +360,13 @@ export function QuickGradingFeedbackPrototype({
       onCommitNext: () => moveGrade(attempt.id, 1),
     } as const;
 
-    switch (variant) {
-      case 'A':
-        return <PopoverFeedbackCell {...common} />;
-      case 'B':
-        return (
-          <InlineFeedbackCell
-            {...common}
-            inputRef={registerField(`${attempt.id}:feedback`)}
-            onFocus={() => activate(attempt.id)}
-          />
-        );
-    }
+    return (
+      <InlineFeedbackCell
+        {...common}
+        inputRef={registerField(`${attempt.id}:feedback`)}
+        onFocus={() => activate(attempt.id)}
+      />
+    );
   };
 
   return (
@@ -406,8 +381,10 @@ export function QuickGradingFeedbackPrototype({
           count={attempts.length}
           filters={filters}
           tasks={tasks}
-          students={students}
-          hints={variantHints[variant].map((hint) => (
+          students={
+            realisticNames ? withRealisticStudentNames(students) : students
+          }
+          hints={keyHints.map((hint) => (
             <span key={hint.action} className="flex items-center gap-1">
               {hint.keys.map((key) => (
                 <Kbd key={key}>{key}</Kbd>
@@ -418,9 +395,7 @@ export function QuickGradingFeedbackPrototype({
         />
 
         <section className="min-w-0 pb-44 sm:pb-36">
-          {desktop ? (
-            <ListHeader feedbackColumn={feedbackColumnByVariant[variant]} />
-          ) : null}
+          {desktop ? <ListHeader feedbackColumn="field" /> : null}
           <FixedRowsList
             attempts={attempts}
             rowHeight={rowHeight}
@@ -434,7 +409,7 @@ export function QuickGradingFeedbackPrototype({
               return (
                 <QuickRow
                   layout={layout}
-                  feedbackColumn={feedbackColumnByVariant[variant]}
+                  feedbackColumn="field"
                   attempt={attempt}
                   entry={entry}
                   outcome={session.outcomes.get(attempt.id)}
@@ -541,11 +516,7 @@ export function QuickGradingFeedbackPrototype({
         }
       />
 
-      <PrototypeSwitcher
-        variants={VARIANTS}
-        current={variant}
-        onChange={onVariantChange}
-      >
+      <PrototypeSwitcher variants={VARIANTS} current="B" onChange={() => {}}>
         <label className="flex cursor-pointer items-center gap-1 px-1 text-xs">
           <input
             type="checkbox"
@@ -605,7 +576,6 @@ export function QuickGradingFeedbackPrototype({
         >
           {JSON.stringify(
             {
-              variant,
               layout,
               fit,
               exitOpen,
@@ -625,44 +595,8 @@ export function QuickGradingFeedbackPrototype({
   );
 }
 
-function ListHeader({ feedbackColumn }: { feedbackColumn: FeedbackColumn }) {
-  const zones = [
-    'Задание',
-    'Отправлено',
-    'Состояние',
-    'Балл',
-    ...(feedbackColumn === 'field' ? ['Общий отзыв'] : []),
-  ];
-
-  return (
-    <div
-      className={cn(
-        'mb-1.5 grid px-4 text-xs font-medium text-muted-foreground',
-        desktopColumns[feedbackColumn]
-      )}
-    >
-      <span>Студент</span>
-      {zones.map((zone) => (
-        <span key={zone} className="truncate px-3">
-          {zone}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-const variantHints: Record<
-  VariantKey,
-  Array<{ keys: string[]; action: string }>
-> = {
-  A: [
-    { keys: ['Enter', '↓'], action: 'следующий балл' },
-    { keys: ['Tab'], action: 'кнопка отзыва' },
-    { keys: ['Enter'], action: 'в отзыве — дальше' },
-  ],
-  B: [
-    { keys: ['Enter', '↓'], action: 'следующий балл' },
-    { keys: ['Tab'], action: 'балл → отзыв → балл' },
-    { keys: ['Enter'], action: 'в отзыве — дальше' },
-  ],
-};
+const keyHints: Array<{ keys: string[]; action: string }> = [
+  { keys: ['Enter', '↓'], action: 'следующий балл' },
+  { keys: ['Tab'], action: 'балл → отзыв → балл' },
+  { keys: ['Enter'], action: 'в отзыве — дальше' },
+];

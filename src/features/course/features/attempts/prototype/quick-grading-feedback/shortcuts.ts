@@ -26,6 +26,21 @@ export function isExitShortcut(event: KeyboardEvent) {
   );
 }
 
+// Mod+Enter applies filters, as in the current sidebar.
+export function isApplyShortcut(
+  event: Pick<
+    KeyboardEvent,
+    'key' | 'metaKey' | 'ctrlKey' | 'altKey' | 'shiftKey'
+  >
+) {
+  return (
+    event.key === 'Enter' &&
+    (isApplePlatform() ? event.metaKey : event.ctrlKey) &&
+    !event.altKey &&
+    !event.shiftKey
+  );
+}
+
 export function getModKeyLabel() {
   return isApplePlatform() ? '⌘' : 'Ctrl';
 }
