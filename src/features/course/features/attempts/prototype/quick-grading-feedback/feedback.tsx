@@ -30,7 +30,7 @@ export type FeedbackCellProps = {
   onCommitNext: () => void;
 };
 
-// ── A: icon button → popover (desktop) / drawer (phone) ────────────────────
+// ── A: icon button → popover (desktop) / drawer (stacked) ──────────────────
 
 export function PopoverFeedbackCell({
   layout,
@@ -72,7 +72,7 @@ export function PopoverFeedbackCell({
     <Button
       type="button"
       variant={filled ? 'secondary' : 'ghost'}
-      size={layout === 'mobile' ? 'sm' : 'icon'}
+      size={layout === 'stacked' ? 'sm' : 'icon'}
       title={filled ? feedback : 'Добавить общий отзыв'}
       aria-label={filled ? `Общий отзыв: ${feedback}` : 'Добавить общий отзыв'}
       onClick={(event) => {
@@ -81,17 +81,17 @@ export function PopoverFeedbackCell({
       }}
       className={cn(
         filled ? 'text-primary' : 'text-muted-foreground',
-        layout === 'mobile' ? 'ml-auto flex max-w-full' : null
+        layout === 'stacked' ? 'ml-auto flex max-w-full' : null
       )}
     >
       {filled ? <MessageSquareText /> : <MessageSquarePlus />}
-      {layout === 'mobile' ? (
+      {layout === 'stacked' ? (
         <span className="truncate">{filled ? feedback : 'Отзыв'}</span>
       ) : null}
     </Button>
   );
 
-  if (layout === 'mobile') {
+  if (layout === 'stacked') {
     return (
       <>
         {trigger}

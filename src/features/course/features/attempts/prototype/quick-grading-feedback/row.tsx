@@ -2,7 +2,13 @@
 // container with row dividers and stable zones, the student attempt history
 // (task/ui/attempt-history.tsx) as the visual reference. In quick grading the
 // Grade field takes the place of the row action. Only the feedback affordance
-// differs between variants; the list fixes the row height.
+// differs between variants.
+//
+// Each layout tier has one fixed row height, so the virtualizer never measures:
+// - wide: every text stays on one line;
+// - medium: Student name and Task title may wrap to two clamped lines;
+// - stacked: the phone card.
+// Diff lives next to the attempt badge in the Task zone, not in its own column.
 import type { KeyboardEvent, ReactNode } from 'react';
 import {
   ArrowRight,
@@ -30,7 +36,7 @@ import type {
 } from '@/features/course/features/attempts/prototype/quick-grading-feedback/session';
 import { columnsKey, desktopColumns, type FeedbackColumn } from './columns';
 
-export type RowLayout = 'desktop' | 'mobile';
+export type RowLayout = 'wide' | 'medium' | 'stacked';
 
 export type RowProps = {
   layout: RowLayout;
@@ -42,7 +48,6 @@ export type RowProps = {
   error: string | null;
   saving: boolean;
   gradeable: boolean;
-  active: boolean;
   gradeInputRef: (element: HTMLInputElement | null) => void;
   onGradeChange: (value: string) => void;
   onGradeKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
@@ -50,25 +55,27 @@ export type RowProps = {
   feedbackCell: ReactNode;
 };
 
+const rowInteraction = cn(
+  'transition-colors hover:bg-muted/60',
+  'focus-within:bg-primary/[0.04]',
+  'focus-within:shadow-[inset_3px_0_0_var(--color-primary)]'
+);
+
 export function QuickRow(props: RowProps) {
   const { layout, attempt } = props;
-  const relation = getDeadlineRelation({
-    submittedAt: attempt.submittedAt,
-    deadlineAt: attempt.deadlineAt,
-  });
 
-  if (layout === 'mobile') {
+  if (layout === 'stacked') {
     return (
       <article
         onClick={props.onActivate}
         className={cn(
-          'grid h-full grid-rows-[auto_auto_auto_1fr] gap-y-0.5 px-4 py-2.5',
-          props.active ? activeRowClassName : null
+          'grid h-full grid-rows-[auto_auto_auto_1fr] gap-y-1 px-4 py-2.5',
+          rowInteraction
         )}
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <span
-            data-student-name
+            data-fit="name"
             title={attempt.student.fullName}
             className="truncate text-sm font-semibold"
           >
@@ -78,16 +85,18 @@ export function QuickRow(props: RowProps) {
             <StateZoneContent {...props} compact />
           </span>
         </div>
-        <span className="truncate text-xs text-muted-foreground">
-          №{attempt.attemptNumber} · {attempt.task.title}
-        </span>
-        <div className="flex min-w-0 items-center justify-between gap-3 text-xs">
+        <div className="flex min-w-0 items-center gap-2">
+          <AttemptBadge number={attempt.attemptNumber} />
           <span
-            className={cn('truncate', relationTone[relation.timing])}
-            title={relation.label}
+            data-fit="task"
+            title={attempt.task.title}
+            className="truncate text-xs text-muted-foreground"
           >
-            {relation.label}
+            {attempt.task.title}
           </span>
+        </div>
+        <div className="flex min-w-0 items-center justify-between gap-3 text-xs">
+          <SubmissionLine attempt={attempt} />
           <DiffStats attempt={attempt} />
         </div>
         <div className="flex min-w-0 items-center gap-2">
@@ -99,6 +108,8 @@ export function QuickRow(props: RowProps) {
   }
 
   const feedbackOwnZone = props.feedbackColumn === 'field';
+  const zoneHeight = zoneHeightByLayout[layout];
+  const textFit = textFitByLayout[layout];
 
   return (
     <article
@@ -106,14 +117,14 @@ export function QuickRow(props: RowProps) {
       className={cn(
         'grid h-full items-center px-4',
         desktopColumns[columnsKey(props.feedbackColumn, props.showAction)],
-        props.active ? activeRowClassName : null
+        rowInteraction
       )}
     >
       <div className="min-w-0 pr-3 leading-tight">
         <p
-          data-student-name
+          data-fit="name"
           title={attempt.student.fullName}
-          className="truncate text-sm font-semibold"
+          className={cn('text-sm font-semibold', textFit)}
         >
           {attempt.student.fullName}
         </p>
@@ -121,51 +132,40 @@ export function QuickRow(props: RowProps) {
           {attempt.student.group}
         </p>
       </div>
-      <Zone>
-        <div className="min-w-0 leading-tight">
-          <p className="truncate text-sm" title={attempt.task.title}>
-            {attempt.task.title}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Попытка №{attempt.attemptNumber}
-          </p>
-        </div>
-      </Zone>
-      <Zone>
+      <Zone height={zoneHeight}>
         <div className="min-w-0 leading-tight">
           <p
-            className={cn(
-              'truncate text-xs font-semibold',
-              relationTone[relation.timing]
-            )}
-            title={relation.label}
+            data-fit="task"
+            title={attempt.task.title}
+            className={cn('text-sm', textFit)}
           >
-            {relation.label}
+            {attempt.task.title}
           </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {DATE_FORMAT.format(new Date(attempt.submittedAt))}
-          </p>
+          <div className="mt-1 flex items-center gap-2">
+            <AttemptBadge number={attempt.attemptNumber} />
+            <DiffStats attempt={attempt} />
+          </div>
         </div>
       </Zone>
-      <Zone>
-        <div className="min-w-0 text-xs leading-tight">
+      <Zone height={zoneHeight}>
+        <SubmissionZoneContent attempt={attempt} />
+      </Zone>
+      <Zone height={zoneHeight}>
+        <div className="min-w-0 text-xs">
           <StateZoneContent {...props} />
         </div>
       </Zone>
-      <Zone>
-        <DiffStats attempt={attempt} />
-      </Zone>
-      <Zone>
+      <Zone height={zoneHeight}>
         <GradeZoneContent {...props} />
         {feedbackOwnZone ? null : props.feedbackCell}
       </Zone>
       {feedbackOwnZone ? (
-        <Zone>
+        <Zone height={zoneHeight}>
           <div className="min-w-0 flex-1">{props.feedbackCell}</div>
         </Zone>
       ) : null}
       {props.showAction ? (
-        <Zone>
+        <Zone height={zoneHeight}>
           <Button
             type="button"
             variant="outline"
@@ -183,17 +183,22 @@ export function QuickRow(props: RowProps) {
   );
 }
 
-const activeRowClassName = cn(
-  'bg-primary/[0.04]',
-  'shadow-[inset_3px_0_0_var(--color-primary)]'
-);
+const zoneHeightByLayout: Record<Exclude<RowLayout, 'stacked'>, string> = {
+  wide: 'h-10',
+  medium: 'h-16',
+};
 
-function Zone({ children }: { children: ReactNode }) {
+const textFitByLayout: Record<Exclude<RowLayout, 'stacked'>, string> = {
+  wide: 'truncate',
+  medium: 'line-clamp-2 [overflow-wrap:anywhere]',
+};
+
+function Zone({ height, children }: { height: string; children: ReactNode }) {
   return (
     <div
       className={cn(
-        'flex h-10 min-w-0 items-center gap-1.5 border-l border-border/70',
-        'px-3'
+        'flex min-w-0 items-center gap-1.5 border-l border-border/70 px-3',
+        height
       )}
     >
       {children}
@@ -201,9 +206,31 @@ function Zone({ children }: { children: ReactNode }) {
   );
 }
 
+function AttemptBadge({ number }: { number: number }) {
+  return (
+    <span
+      title={number > 1 ? `Повторная попытка №${number}` : 'Первая попытка'}
+      className={cn(
+        'shrink-0 rounded-md px-1.5 text-[11px] leading-[18px] font-semibold',
+        number > 1
+          ? [
+              'bg-violet-100 text-violet-800',
+              'dark:bg-violet-500/20 dark:text-violet-200',
+            ]
+          : 'bg-muted text-muted-foreground'
+      )}
+    >
+      Попытка {number}
+    </span>
+  );
+}
+
 function DiffStats({ attempt }: { attempt: CourseAttempt }) {
   return (
-    <span className="flex shrink-0 items-center gap-2 text-xs font-medium">
+    <span
+      title="Строк добавлено и удалено в этой попытке"
+      className="flex shrink-0 items-center gap-1.5 text-xs font-medium"
+    >
       <span className="text-emerald-700 dark:text-emerald-300">
         +{attempt.diff.addedLines}
       </span>
@@ -212,6 +239,81 @@ function DiffStats({ attempt }: { attempt: CourseAttempt }) {
       </span>
     </span>
   );
+}
+
+function SubmissionZoneContent({ attempt }: { attempt: CourseAttempt }) {
+  const relation = getDeadlineRelation(attempt);
+
+  return (
+    <div className="min-w-0 leading-tight">
+      <p
+        data-fit="submission"
+        title={relation.label}
+        className={cn(
+          'truncate text-xs font-semibold',
+          relationTone[relation.timing]
+        )}
+      >
+        {compactRelation(attempt)}
+      </p>
+      <p className="truncate text-xs text-muted-foreground">
+        {DATE_FORMAT.format(new Date(attempt.submittedAt))}
+      </p>
+    </div>
+  );
+}
+
+function SubmissionLine({ attempt }: { attempt: CourseAttempt }) {
+  const relation = getDeadlineRelation(attempt);
+
+  return (
+    <span
+      data-fit="submission"
+      title={relation.label}
+      className="flex min-w-0 items-center gap-1.5 truncate"
+    >
+      <span className={cn('font-semibold', relationTone[relation.timing])}>
+        {compactRelation(attempt)}
+      </span>
+      <span className="text-muted-foreground">
+        {DATE_FORMAT.format(new Date(attempt.submittedAt))}
+      </span>
+    </span>
+  );
+}
+
+// "за 1 день 4 часа до дедлайна" does not fit a 9.5rem zone; the full phrase
+// stays in the tooltip.
+function compactRelation({
+  submittedAt,
+  deadlineAt,
+}: Pick<CourseAttempt, 'submittedAt' | 'deadlineAt'>) {
+  const difference =
+    new Date(submittedAt).getTime() - new Date(deadlineAt).getTime();
+
+  if (!Number.isFinite(difference)) {
+    return 'срок не указан';
+  }
+
+  if (difference === 0) {
+    return 'точно в срок';
+  }
+
+  const minutes = Math.max(1, Math.round(Math.abs(difference) / 60_000));
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const duration =
+    days >= 3
+      ? `${days} д`
+      : days > 0
+        ? hours > 0
+          ? `${days} д ${hours} ч`
+          : `${days} д`
+        : hours > 0
+          ? `${hours} ч`
+          : `${minutes} мин`;
+
+  return difference < 0 ? `за ${duration} до срока` : `опоздание ${duration}`;
 }
 
 function GradeZoneContent({
@@ -287,98 +389,111 @@ function StateZoneContent({
   entry,
   compact = false,
 }: RowProps & { compact?: boolean }) {
-  const second = (text: string) =>
-    compact ? null : (
-      <span className="block truncate font-normal text-muted-foreground">
-        {text}
-      </span>
-    );
+  const state = (() => {
+    if (saving) {
+      return {
+        icon: <Spinner className="size-3.5" />,
+        label: 'Публикуется…',
+      };
+    }
 
-  if (saving) {
-    return <State icon={<Spinner className="size-3.5" />}>Публикуется…</State>;
-  }
+    if (outcome?.status === 'saved') {
+      return {
+        icon: <CircleCheck className={iconTone.ok} />,
+        label: 'Опубликовано',
+      };
+    }
 
-  if (outcome?.status === 'saved') {
-    return (
-      <State icon={<CircleCheck className={iconTone.ok} />}>Опубликовано</State>
-    );
-  }
+    if (outcome?.status === 'conflict') {
+      return {
+        icon: <CircleX className="size-3.5 text-destructive" />,
+        tone: 'text-destructive',
+        label: 'Уже оценено',
+        detail: `${shortName(outcome.author)} · ${outcome.publishedGrade}`,
+        title: `Review уже опубликовал ${outcome.author} с баллом ${outcome.publishedGrade}. Ваш балл не сохранён.`,
+      };
+    }
 
-  if (outcome?.status === 'conflict') {
-    return (
-      <State
-        icon={<CircleX className="size-3.5 text-destructive" />}
-        className="text-destructive"
-      >
-        Review уже есть
-        {second(`${outcome.author} · ${outcome.publishedGrade}`)}
-      </State>
-    );
-  }
+    if (attempt.grade) {
+      return {
+        icon: <CircleCheck className={iconTone.ok} />,
+        label: 'Оценено',
+        detail: shortName(attempt.grade.gradedBy),
+        title: `Оценил ${attempt.grade.gradedBy}`,
+      };
+    }
 
-  if (attempt.grade) {
-    return (
-      <State icon={<CircleCheck className={iconTone.ok} />}>
-        Оценено
-        {second(attempt.grade.gradedBy)}
-      </State>
-    );
-  }
+    if (attempt.reviewLock) {
+      return {
+        icon: <LockKeyhole className={iconTone.warn} />,
+        tone: 'text-amber-700 dark:text-amber-300',
+        label: 'На проверке',
+        detail: shortName(attempt.reviewLock.teacherName),
+        title: `Проверяет ${attempt.reviewLock.teacherName}`,
+      };
+    }
 
-  if (attempt.reviewLock) {
-    return (
-      <State
-        icon={<LockKeyhole className={iconTone.warn} />}
-        className="text-amber-700 dark:text-amber-300"
-      >
-        На проверке
-        {second(attempt.reviewLock.teacherName)}
-      </State>
-    );
-  }
+    if (error) {
+      return {
+        icon: <CircleAlert className="size-3.5 text-destructive" />,
+        tone: 'font-semibold text-destructive',
+        label: error,
+      };
+    }
 
-  if (error) {
-    return (
-      <State
-        icon={<CircleAlert className="size-3.5 text-destructive" />}
-        className="font-semibold text-destructive"
-      >
-        {error}
-      </State>
-    );
-  }
+    if (entry) {
+      return {
+        icon: <CircleDot className="size-3.5 text-orange-600" />,
+        tone: 'font-semibold text-orange-600 dark:text-orange-300',
+        label: 'Не сохранено',
+      };
+    }
 
-  if (entry) {
-    return (
-      <State
-        icon={<CircleDot className="size-3.5 text-orange-600" />}
-        className="font-semibold text-orange-600 dark:text-orange-300"
-      >
-        Не сохранено
-      </State>
-    );
-  }
+    return {
+      icon: <CircleDashed className={iconTone.warn} />,
+      label: 'Не оценено',
+    };
+  })();
 
   return (
-    <State icon={<CircleDashed className={iconTone.warn} />}>Не оценено</State>
+    <span
+      title={'title' in state ? state.title : undefined}
+      className={cn(
+        'flex min-w-0 items-center gap-1.5',
+        'tone' in state ? state.tone : null
+      )}
+    >
+      <span className="shrink-0">{state.icon}</span>
+      <span className="min-w-0 leading-tight">
+        <span data-fit="state" className="block truncate">
+          {state.label}
+        </span>
+        {'detail' in state && !compact ? (
+          <span
+            data-fit="state"
+            className="block truncate font-normal text-muted-foreground"
+          >
+            {state.detail}
+          </span>
+        ) : null}
+      </span>
+    </span>
   );
 }
 
-function State({
-  icon,
-  className,
-  children,
-}: {
-  icon: ReactNode;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <span className={cn('flex min-w-0 items-center gap-1.5', className)}>
-      <span className="shrink-0">{icon}</span>
-      <span className="min-w-0 truncate">{children}</span>
-    </span>
-  );
+// "Фамилия Имя Отчество" → "Фамилия И. О."; mock teachers are "Имя Фамилия".
+function shortName(fullName: string) {
+  const parts = fullName.split(' ').filter(Boolean);
+
+  if (parts.length === 3) {
+    return `${parts[0]} ${parts[1]?.[0]}. ${parts[2]?.[0]}.`;
+  }
+
+  if (parts.length === 2) {
+    return `${parts[1]} ${parts[0]?.[0]}.`;
+  }
+
+  return fullName;
 }
 
 function ScoreBadge({ score, maxScore }: { score: number; maxScore: number }) {
