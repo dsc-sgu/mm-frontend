@@ -9,54 +9,54 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthRouteImport } from './routes/_auth'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedCoursesCourseSlugRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/route'
 import { Route as AuthenticatedCoursesCourseSlugIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/index'
-import { Route as AuthenticatedCoursesCourseSlugStatsRouteImport } from './routes/_authenticated/courses/$courseSlug/stats'
-import { Route as AuthenticatedCoursesCourseSlugJournalRouteImport } from './routes/_authenticated/courses/$courseSlug/journal'
-import { Route as AuthenticatedCoursesCourseSlugFilesRouteImport } from './routes/_authenticated/courses/$courseSlug/files'
-import { Route as AuthenticatedCoursesCourseSlugEditRouteImport } from './routes/_authenticated/courses/$courseSlug/edit'
 import { Route as AuthenticatedCoursesCourseSlugAttemptsRouteImport } from './routes/_authenticated/courses/$courseSlug/attempts'
+import { Route as AuthenticatedCoursesCourseSlugEditRouteImport } from './routes/_authenticated/courses/$courseSlug/edit'
+import { Route as AuthenticatedCoursesCourseSlugFilesRouteImport } from './routes/_authenticated/courses/$courseSlug/files'
+import { Route as AuthenticatedCoursesCourseSlugJournalRouteImport } from './routes/_authenticated/courses/$courseSlug/journal'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/route'
+import { Route as AuthenticatedCoursesCourseSlugStatsRouteImport } from './routes/_authenticated/courses/$courseSlug/stats'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/index'
-import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/route'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/$studentUsername/route'
-import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/index'
+import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/route'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/$studentUsername/index'
-import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdEditRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/edit'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/route'
+import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/index'
+import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdEditRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/edit'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/index'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsCommitIdRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/$commitId'
 import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/route'
 import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/index'
 import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
 
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedRoute,
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/register',
   path: '/register',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => AuthRoute,
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCoursesCourseSlugRouteRoute =
   AuthenticatedCoursesCourseSlugRouteRouteImport.update({
@@ -70,22 +70,10 @@ const AuthenticatedCoursesCourseSlugIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
   } as any)
-const AuthenticatedCoursesCourseSlugStatsRoute =
-  AuthenticatedCoursesCourseSlugStatsRouteImport.update({
-    id: '/stats',
-    path: '/stats',
-    getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
-  } as any)
-const AuthenticatedCoursesCourseSlugJournalRoute =
-  AuthenticatedCoursesCourseSlugJournalRouteImport.update({
-    id: '/journal',
-    path: '/journal',
-    getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
-  } as any)
-const AuthenticatedCoursesCourseSlugFilesRoute =
-  AuthenticatedCoursesCourseSlugFilesRouteImport.update({
-    id: '/files',
-    path: '/files',
+const AuthenticatedCoursesCourseSlugAttemptsRoute =
+  AuthenticatedCoursesCourseSlugAttemptsRouteImport.update({
+    id: '/attempts',
+    path: '/attempts',
     getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
   } as any)
 const AuthenticatedCoursesCourseSlugEditRoute =
@@ -94,10 +82,16 @@ const AuthenticatedCoursesCourseSlugEditRoute =
     path: '/edit',
     getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
   } as any)
-const AuthenticatedCoursesCourseSlugAttemptsRoute =
-  AuthenticatedCoursesCourseSlugAttemptsRouteImport.update({
-    id: '/attempts',
-    path: '/attempts',
+const AuthenticatedCoursesCourseSlugFilesRoute =
+  AuthenticatedCoursesCourseSlugFilesRouteImport.update({
+    id: '/files',
+    path: '/files',
+    getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
+  } as any)
+const AuthenticatedCoursesCourseSlugJournalRoute =
+  AuthenticatedCoursesCourseSlugJournalRouteImport.update({
+    id: '/journal',
+    path: '/journal',
     getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
   } as any)
 const AuthenticatedCoursesCourseSlugRepositoriesRouteRoute =
@@ -106,17 +100,17 @@ const AuthenticatedCoursesCourseSlugRepositoriesRouteRoute =
     path: '/repositories',
     getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
   } as any)
+const AuthenticatedCoursesCourseSlugStatsRoute =
+  AuthenticatedCoursesCourseSlugStatsRouteImport.update({
+    id: '/stats',
+    path: '/stats',
+    getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
+  } as any)
 const AuthenticatedCoursesCourseSlugRepositoriesIndexRoute =
   AuthenticatedCoursesCourseSlugRepositoriesIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedCoursesCourseSlugRepositoriesRouteRoute,
-  } as any)
-const AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute =
-  AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteImport.update({
-    id: '/tasks/$taskId',
-    path: '/tasks/$taskId',
-    getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
   } as any)
 const AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRoute =
   AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRouteImport.update(
@@ -127,11 +121,11 @@ const AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRoute =
         AuthenticatedCoursesCourseSlugRepositoriesRouteRoute,
     } as any,
   )
-const AuthenticatedCoursesCourseSlugTasksTaskIdIndexRoute =
-  AuthenticatedCoursesCourseSlugTasksTaskIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute,
+const AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute =
+  AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteImport.update({
+    id: '/tasks/$taskId',
+    path: '/tasks/$taskId',
+    getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
   } as any)
 const AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameIndexRoute =
   AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameIndexRouteImport.update(
@@ -142,12 +136,6 @@ const AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameIndexRoute =
         AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRoute,
     } as any,
   )
-const AuthenticatedCoursesCourseSlugTasksTaskIdEditRoute =
-  AuthenticatedCoursesCourseSlugTasksTaskIdEditRouteImport.update({
-    id: '/edit',
-    path: '/edit',
-    getParentRoute: () => AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute,
-  } as any)
 const AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRoute =
   AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRouteImport.update(
     {
@@ -157,6 +145,18 @@ const AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRoute
         AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRoute,
     } as any,
   )
+const AuthenticatedCoursesCourseSlugTasksTaskIdIndexRoute =
+  AuthenticatedCoursesCourseSlugTasksTaskIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute,
+  } as any)
+const AuthenticatedCoursesCourseSlugTasksTaskIdEditRoute =
+  AuthenticatedCoursesCourseSlugTasksTaskIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute,
+  } as any)
 const AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsIndexRoute =
   AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsIndexRouteImport.update(
     {
@@ -355,13 +355,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_auth': {
       id: '/_auth'
       path: ''
@@ -369,12 +362,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/register': {
       id: '/_auth/register'
@@ -383,12 +383,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/login': {
-      id: '/_auth/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof AuthRoute
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/courses/$courseSlug': {
       id: '/_authenticated/courses/$courseSlug'
@@ -404,25 +404,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoursesCourseSlugIndexRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
     }
-    '/_authenticated/courses/$courseSlug/stats': {
-      id: '/_authenticated/courses/$courseSlug/stats'
-      path: '/stats'
-      fullPath: '/courses/$courseSlug/stats'
-      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugStatsRouteImport
-      parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
-    }
-    '/_authenticated/courses/$courseSlug/journal': {
-      id: '/_authenticated/courses/$courseSlug/journal'
-      path: '/journal'
-      fullPath: '/courses/$courseSlug/journal'
-      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugJournalRouteImport
-      parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
-    }
-    '/_authenticated/courses/$courseSlug/files': {
-      id: '/_authenticated/courses/$courseSlug/files'
-      path: '/files'
-      fullPath: '/courses/$courseSlug/files'
-      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugFilesRouteImport
+    '/_authenticated/courses/$courseSlug/attempts': {
+      id: '/_authenticated/courses/$courseSlug/attempts'
+      path: '/attempts'
+      fullPath: '/courses/$courseSlug/attempts'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugAttemptsRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
     }
     '/_authenticated/courses/$courseSlug/edit': {
@@ -432,11 +418,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoursesCourseSlugEditRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
     }
-    '/_authenticated/courses/$courseSlug/attempts': {
-      id: '/_authenticated/courses/$courseSlug/attempts'
-      path: '/attempts'
-      fullPath: '/courses/$courseSlug/attempts'
-      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugAttemptsRouteImport
+    '/_authenticated/courses/$courseSlug/files': {
+      id: '/_authenticated/courses/$courseSlug/files'
+      path: '/files'
+      fullPath: '/courses/$courseSlug/files'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugFilesRouteImport
+      parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
+    }
+    '/_authenticated/courses/$courseSlug/journal': {
+      id: '/_authenticated/courses/$courseSlug/journal'
+      path: '/journal'
+      fullPath: '/courses/$courseSlug/journal'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugJournalRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
     }
     '/_authenticated/courses/$courseSlug/repositories': {
@@ -446,11 +439,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesRouteRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
     }
+    '/_authenticated/courses/$courseSlug/stats': {
+      id: '/_authenticated/courses/$courseSlug/stats'
+      path: '/stats'
+      fullPath: '/courses/$courseSlug/stats'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugStatsRouteImport
+      parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
+    }
     '/_authenticated/courses/$courseSlug/repositories/': {
       id: '/_authenticated/courses/$courseSlug/repositories/'
       path: '/'
       fullPath: '/courses/$courseSlug/repositories/'
       preLoaderRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesIndexRouteImport
+      parentRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesRouteRoute
+    }
+    '/_authenticated/courses/$courseSlug/repositories/$studentUsername': {
+      id: '/_authenticated/courses/$courseSlug/repositories/$studentUsername'
+      path: '/$studentUsername'
+      fullPath: '/courses/$courseSlug/repositories/$studentUsername'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesRouteRoute
     }
     '/_authenticated/courses/$courseSlug/tasks/$taskId': {
@@ -460,12 +467,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
     }
-    '/_authenticated/courses/$courseSlug/repositories/$studentUsername': {
-      id: '/_authenticated/courses/$courseSlug/repositories/$studentUsername'
-      path: '/$studentUsername'
-      fullPath: '/courses/$courseSlug/repositories/$studentUsername'
-      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRouteImport
-      parentRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesRouteRoute
+    '/_authenticated/courses/$courseSlug/repositories/$studentUsername/': {
+      id: '/_authenticated/courses/$courseSlug/repositories/$studentUsername/'
+      path: '/'
+      fullPath: '/courses/$courseSlug/repositories/$studentUsername/'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameIndexRouteImport
+      parentRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRoute
+    }
+    '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits': {
+      id: '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits'
+      path: '/commits'
+      fullPath: '/courses/$courseSlug/repositories/$studentUsername/commits'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRouteImport
+      parentRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRoute
     }
     '/_authenticated/courses/$courseSlug/tasks/$taskId/': {
       id: '/_authenticated/courses/$courseSlug/tasks/$taskId/'
@@ -474,26 +488,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdIndexRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute
     }
-    '/_authenticated/courses/$courseSlug/repositories/$studentUsername/': {
-      id: '/_authenticated/courses/$courseSlug/repositories/$studentUsername/'
-      path: '/'
-      fullPath: '/courses/$courseSlug/repositories/$studentUsername/'
-      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameIndexRouteImport
-      parentRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRoute
-    }
     '/_authenticated/courses/$courseSlug/tasks/$taskId/edit': {
       id: '/_authenticated/courses/$courseSlug/tasks/$taskId/edit'
       path: '/edit'
       fullPath: '/courses/$courseSlug/tasks/$taskId/edit'
       preLoaderRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdEditRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute
-    }
-    '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits': {
-      id: '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits'
-      path: '/commits'
-      fullPath: '/courses/$courseSlug/repositories/$studentUsername/commits'
-      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRouteImport
-      parentRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRoute
     }
     '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/': {
       id: '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/'

@@ -12,6 +12,16 @@ Code-block highlighting uses direct dependencies on `shiki` and `@shikijs/themes
 
 Header route metadata augments `StaticDataRouteOption` through the direct `@tanstack/react-router` dependency, not its transitive `@tanstack/router-core` package.
 
+### TanStack updates
+
+Update `@tanstack/react-query` within major 5 and `@tanstack/react-router` / `@tanstack/router-plugin` within major 1 together. Router packages are versioned independently; choose versions satisfying the plugin's `@tanstack/react-router` peer range rather than forcing identical version numbers. Keep `@tanstack/react-virtual` out of this update cohort.
+
+After installing the updated dependencies:
+
+1. Run `bun run build` to regenerate `src/routeTree.gen.ts` through the Vite router plugin, and commit the generated changes.
+2. Run `bunx tsc -b` after generation to check route loading contexts, navigation parameters/search, and the `StaticDataRouteOption` augmentation against the new tree.
+3. Run `bun run lint`, then smoke-check the production bundle with `bun run preview`: login, course list, Course Page, Course Attempts, Attempt review, and browser Back/Forward. Use a teacher session for the attempts and review routes. Mock authorization bypasses the login form, so disable it when checking login.
+
 ## Course grading
 
 Attempts and attempt review import grading helpers and score fields directly from `@/features/course/features/grading`.
