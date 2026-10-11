@@ -43,9 +43,9 @@ export async function openEmptyEditor(page: Page) {
   const editable = getEditable(page);
 
   await editable.locator('[data-slate-string]').first().click();
-  // The first Mod+A selects the block text, the second selects every block.
-  await page.keyboard.press('ControlOrMeta+a');
-  await page.keyboard.press('ControlOrMeta+a');
+  // Fixture setup selects the document directly: consecutive Mod+A presses
+  // can race the DOM/Plate selection sync and the block-selection focus handoff.
+  await setSelection(page, await getEditorHandle(page, editable), []);
   await page.keyboard.press('Backspace');
   await expectBlocks(editable, ['']);
 
@@ -144,6 +144,9 @@ export async function runBlockCommand(block: Locator, command: BlockCommand) {
 
   await openBlockMenu(block);
   await page.getByRole('menuitem', { name: command, exact: true }).click();
+  // A click dispatches the command before its scheduled focus handoff settles.
+  // Wait for the editor before the caller sends another keyboard action.
+  await expect(getEditable(page)).toBeFocused();
 }
 
 export async function transformBlock(block: Locator, kind: BlockKind) {
