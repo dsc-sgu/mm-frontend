@@ -1,5 +1,11 @@
 # React + TypeScript + Vite
 
+## Class names
+
+Use `cn()` from `@/shadcn/lib/utils` to combine class names and resolve Tailwind conflicts. It uses `tailwind-merge` directly and accepts strings, falsy values, and nested arrays.
+
+Object-map inputs are not supported; use conditional expressions such as `cn('base', active && 'active')` instead.
+
 ## Dependency contracts
 
 Code-block highlighting uses direct dependencies on `shiki` and `@shikijs/themes` with compatible release ranges. Keep the `github-light` and `github-dark` themes as individual dynamic imports instead of importing the full theme bundle.
