@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Filter } from 'lucide-react';
 
 import {
@@ -25,24 +25,29 @@ import { AttemptCard } from './ui/card';
 import {
   BottomActionBar,
   IdleBottomActions,
-  QuickGradingBottomActions,
   SelectionBottomActions,
 } from './ui/bottom-bar';
 import { AttemptsFilterSidebar, AttemptsFiltersContent } from './ui/sidebar';
 import { VirtualizedAttemptsList } from './ui/virtualized-list';
 import type { CourseAttemptsFilters } from './model/types';
 import { cn } from '@/shadcn/lib/utils';
+// PROTOTYPE (#121): throwaway quick-grading variants, see the prototype folder.
+import { QuickGradingFeedbackPrototype } from './prototype/quick-grading-feedback';
 
 type CourseAttemptsPageProps = {
   courseSlug: string;
   appliedFilters: CourseAttemptsFilters;
   onApplyFilters: (filters: CourseAttemptsFilters) => void;
+  prototypeVariant?: string;
+  onPrototypeVariantChange: (variant: string) => void;
 };
 
 export function CourseAttemptsPage({
   courseSlug,
   appliedFilters,
   onApplyFilters,
+  prototypeVariant,
+  onPrototypeVariantChange,
 }: CourseAttemptsPageProps) {
   const filters = useCourseAttemptsFilters({ appliedFilters, onApplyFilters });
   const quickGradingState = useCourseAttemptsQuickGradingState();
@@ -83,6 +88,31 @@ export function CourseAttemptsPage({
   });
   const filterActionsDisabledReason =
     getCourseAttemptsFilterActionsDisabledReason(pageMode);
+
+  // PROTOTYPE (#121): `?variant=` opens quick grading once the list is loaded.
+  const prototypeAutoStarted = useRef(false);
+  const { startQuickGrading } = grading;
+  useEffect(() => {
+    if (
+      prototypeVariant &&
+      attemptsQuery.isSuccess &&
+      !prototypeAutoStarted.current
+    ) {
+      prototypeAutoStarted.current = true;
+      startQuickGrading();
+    }
+  }, [attemptsQuery.isSuccess, prototypeVariant, startQuickGrading]);
+
+  if (pageMode === 'quick-grading') {
+    return (
+      <QuickGradingFeedbackPrototype
+        attempts={attempts}
+        variant={prototypeVariant}
+        onVariantChange={onPrototypeVariantChange}
+        onExit={grading.exitQuickGrading}
+      />
+    );
+  }
 
   const filtersPanel = {
     appliedFilters: filters.normalizedAppliedFilters,
@@ -137,21 +167,6 @@ export function CourseAttemptsPage({
                 Измените фильтры и нажмите «Применить».
               </p>
             </div>
-          ) : pageMode === 'quick-grading' ? (
-            <VirtualizedAttemptsList
-              attempts={attempts}
-              renderAttempt={(attempt) => (
-                <AttemptCard
-                  mode="quick-grading"
-                  attempt={attempt}
-                  draftScore={grading.getDraftScore(attempt)}
-                  onDraftScoreChange={(score) =>
-                    grading.changeDraftScore(attempt, score)
-                  }
-                  onDraftScoreReset={() => grading.resetDraftScore(attempt)}
-                />
-              )}
-            />
           ) : (
             <VirtualizedAttemptsList
               attempts={attempts}
@@ -221,15 +236,7 @@ export function CourseAttemptsPage({
           </div>
 
           <BottomActionBar>
-            {pageMode === 'quick-grading' ? (
-              <QuickGradingBottomActions
-                hasDraftChanges={grading.hasDraftChanges}
-                hasDraftValidationErrors={grading.hasDraftValidationErrors}
-                savePending={grading.savePending}
-                onExitQuickGrading={grading.exitQuickGrading}
-                onSaveQuickGrades={grading.saveQuickGrades}
-              />
-            ) : pageMode === 'selection' ? (
+            {pageMode === 'selection' ? (
               <SelectionBottomActions
                 selectedCount={selectedAttemptsCount}
                 savePending={grading.savePending}
