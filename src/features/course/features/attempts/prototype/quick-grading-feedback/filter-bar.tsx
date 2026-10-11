@@ -1,20 +1,22 @@
-// PROTOTYPE (#121): three structurally different filter bars for normal-mode
-// Course Attempts, switched with `?variant=1|2|3`. All keep the explicit-apply
-// contract from #117: the URL owns applied filters, nothing refetches while a
-// selection is being composed, and Mod+Enter applies.
-// 1 — every pill has its own popover with "Применить" (Airtable, DoorDash
-//     Merchant); a draft lives only while its popover is open.
-// 2 — pills edit one shared draft, the bar applies it at once (Unify); the
-//     current sidebar semantics in a row.
-// 3 — one "Фильтры" panel with the current sidebar content, applied filters
-//     as removable chips next to it (GetYourGuide, Calendly, Twenty).
+// PROTOTYPE (#121): normal-mode filter bar for Course Attempts, chosen over
+// a per-pill apply (Airtable, DoorDash Merchant) and a "Фильтры" panel
+// (GetYourGuide, Calendly); both are in this branch's history. Pills edit one
+// shared draft and the bar applies it at once, like Unify and the current
+// sidebar. It keeps the explicit-apply contract from #117: the URL owns
+// applied filters, nothing refetches while a selection is being composed —
+// "Оценено" included — and Mod+Enter applies.
+//
+// While the draft differs from the applied filters, the bar shows only the
+// pending controls: the attempt count and "Быстрая оценка" would describe the
+// applied list, not what the pills show, so they are hidden rather than
+// disabled. Alt+G starts quick grading when nothing is pending.
 import {
   useEffect,
   useState,
   type ComponentProps,
   type ReactNode,
 } from 'react';
-import { Check, ChevronDown, SlidersHorizontal, X, Zap } from 'lucide-react';
+import { Check, ChevronDown, Zap } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import {
@@ -38,7 +40,6 @@ import type {
   CourseAttemptTask,
   CourseAttemptsFilters,
 } from '@/features/course/features/attempts/model/types';
-import { AttemptsFiltersContent } from '@/features/course/features/attempts/ui/sidebar';
 import {
   GRADED_OPTIONS,
   appliedChips,
@@ -46,15 +47,16 @@ import {
   studentNames,
   summarize,
   taskTitles,
-  withoutFilter,
 } from './filter-labels';
-import { getModKeyLabel, isApplyShortcut } from './shortcuts';
-import { BarFrame, Chip } from './top-bar';
-
-export type FilterBarVariant = '1' | '2' | '3';
+import {
+  getAltKeyLabel,
+  getModKeyLabel,
+  isApplyShortcut,
+  isStartQuickGradingShortcut,
+} from './shortcuts';
+import { BarFrame } from './top-bar';
 
 type FilterBarProps = {
-  variant: FilterBarVariant;
   applied: CourseAttemptsFilters;
   draft: CourseAttemptsFilters;
   tasks: readonly CourseAttemptTask[];
@@ -63,201 +65,94 @@ type FilterBarProps = {
   loading: boolean;
   onDraftChange: (filters: CourseAttemptsFilters) => void;
   onApplyDraft: () => void;
-  onApply: (filters: CourseAttemptsFilters) => void;
   onReset: () => void;
   onStartQuickGrading: () => void;
 };
 
-export function FilterBar(props: FilterBarProps) {
-  switch (props.variant) {
-    case '1':
-      return <PerFilterApplyBar {...props} />;
-    case '2':
-      return <SharedDraftBar {...props} />;
-    case '3':
-      return <PanelBar {...props} />;
-  }
-}
-
-// ── 1: apply inside every pill ──────────────────────────────────────────────
-
-function PerFilterApplyBar(props: FilterBarProps) {
-  const { applied, tasks, students, onApply, onReset } = props;
-  const anyApplied = appliedChips(applied, tasks, students).length > 0;
-
-  return (
-    <BarFrame trailing={<Trailing {...props} />}>
-      <ApplyingListFilter
-        label="Задания"
-        placeholder="Найти задание"
-        options={taskOptions(tasks)}
-        applied={applied.tasks}
-        summary={(values) => summarize(taskTitles(values, tasks))}
-        onApply={(values) => onApply({ ...applied, tasks: values })}
-      />
-      <ApplyingListFilter
-        label="Студенты"
-        placeholder="Найти студента или группу"
-        options={studentOptions(students)}
-        applied={applied.students}
-        summary={(values) => summarize(studentNames(values, students))}
-        onApply={(values) => onApply({ ...applied, students: values })}
-      />
-      <GradedFilter
-        value={applied.graded}
-        state={applied.graded === 'any' ? 'idle' : 'active'}
-        onPick={(graded) => onApply({ ...applied, graded })}
-      />
-      {anyApplied ? <ResetAllButton onClick={onReset} /> : null}
-    </BarFrame>
-  );
-}
-
-function ApplyingListFilter({
-  label,
-  placeholder,
-  options,
+export function FilterBar({
   applied,
-  summary,
-  onApply,
-}: {
-  label: string;
-  placeholder: string;
-  options: Option[];
-  applied: string[];
-  summary: (values: string[]) => string;
-  onApply: (values: string[]) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [local, setLocal] = useState(applied);
-  const dirty = !sameValues(local, applied);
-  const apply = () => {
-    onApply(local);
-    setOpen(false);
-  };
-
-  return (
-    <Popover
-      open={open}
-      onOpenChange={(next) => {
-        if (next) {
-          setLocal(applied);
-        }
-
-        setOpen(next);
-      }}
-    >
-      <PopoverTrigger asChild>
-        <FilterPill
-          label={label}
-          selection={applied.length > 0 ? summary(applied) : null}
-          state={applied.length > 0 ? 'active' : 'idle'}
-        />
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="w-80 p-0"
-        onKeyDownCapture={(event) => {
-          if (isApplyShortcut(event)) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            if (dirty) {
-              apply();
-            }
-          }
-        }}
-      >
-        <OptionsList
-          placeholder={placeholder}
-          options={options}
-          selected={local}
-          pinned={applied}
-          onToggle={(value) => setLocal(toggle(local, value))}
-        />
-        <PopoverFooter>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={local.length === 0}
-            onClick={() => setLocal([])}
-          >
-            Очистить
-          </Button>
-          <Button type="button" size="sm" disabled={!dirty} onClick={apply}>
-            Применить
-            <ApplyKeys />
-          </Button>
-        </PopoverFooter>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-// ── 2: one shared draft, applied from the bar ───────────────────────────────
-
-function SharedDraftBar(props: FilterBarProps) {
-  const { applied, draft, tasks, students, onDraftChange, onApplyDraft } =
-    props;
+  draft,
+  tasks,
+  students,
+  count,
+  loading,
+  onDraftChange,
+  onApplyDraft,
+  onReset,
+  onStartQuickGrading,
+}: FilterBarProps) {
   const dirty = !areCourseAttemptsFiltersEqual(applied, draft);
   const anyDraft = appliedChips(draft, tasks, students).length > 0;
+  const canStartQuickGrading = !dirty && !loading && count > 0;
 
-  // Mod+Enter anywhere on the page applies the pending draft.
+  // Mod+Enter applies a pending draft; Alt+G starts quick grading when
+  // nothing is pending.
   useEffect(() => {
-    if (!dirty) {
-      return;
-    }
-
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (isApplyShortcut(event)) {
+      if (dirty && isApplyShortcut(event)) {
         event.preventDefault();
         onApplyDraft();
+        return;
+      }
+
+      if (canStartQuickGrading && isStartQuickGradingShortcut(event)) {
+        event.preventDefault();
+        onStartQuickGrading();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [dirty, onApplyDraft]);
+  }, [canStartQuickGrading, dirty, onApplyDraft, onStartQuickGrading]);
 
   return (
     <BarFrame
       trailing={
-        <>
-          {dirty ? (
-            <span className="flex items-center gap-1.5">
-              <span className="text-xs text-amber-700 dark:text-amber-300">
-                Фильтры изменены
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8"
-                onClick={() => onDraftChange(applied)}
-              >
-                Отменить
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="h-8"
-                onClick={onApplyDraft}
-              >
-                Применить
-                <ApplyKeys />
-              </Button>
+        dirty ? (
+          <>
+            <span className="text-xs text-amber-700 dark:text-amber-300">
+              Фильтры изменены
             </span>
-          ) : null}
-          <Trailing
-            {...props}
-            quickDisabledReason={
-              dirty
-                ? 'Сначала примените или отмените изменения фильтров'
-                : undefined
-            }
-          />
-        </>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8"
+              onClick={() => onDraftChange(applied)}
+            >
+              Отменить
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="h-8"
+              onClick={onApplyDraft}
+            >
+              Применить
+              <ApplyKeys />
+            </Button>
+          </>
+        ) : (
+          <>
+            <span className="px-1 text-sm text-muted-foreground tabular-nums">
+              {loading ? 'Загрузка…' : `Попыток: ${count}`}
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              className="h-8"
+              disabled={!canStartQuickGrading}
+              onClick={onStartQuickGrading}
+            >
+              <Zap className="size-3.5" />
+              Быстрая оценка
+              <KbdGroup className="max-md:hidden">
+                <Kbd>{getAltKeyLabel()}</Kbd>
+                <Kbd>G</Kbd>
+              </KbdGroup>
+            </Button>
+          </>
+        )
       }
     >
       <DraftListFilter
@@ -291,7 +186,7 @@ function SharedDraftBar(props: FilterBarProps) {
         }
         onPick={(graded) => onDraftChange({ ...draft, graded })}
       />
-      {anyDraft ? <ResetAllButton onClick={props.onReset} /> : null}
+      {anyDraft ? <ResetAllButton onClick={onReset} /> : null}
     </BarFrame>
   );
 }
@@ -376,106 +271,6 @@ function DraftListFilter({
         </PopoverFooter>
       </PopoverContent>
     </Popover>
-  );
-}
-
-// ── 3: one panel with the current sidebar content ───────────────────────────
-
-function PanelBar(props: FilterBarProps) {
-  const {
-    applied,
-    draft,
-    tasks,
-    students,
-    count,
-    loading,
-    onDraftChange,
-    onApplyDraft,
-    onApply,
-    onReset,
-  } = props;
-  const [open, setOpen] = useState(false);
-  const chips = appliedChips(applied, tasks, students);
-
-  return (
-    <BarFrame trailing={<Trailing {...props} />}>
-      <Popover
-        open={open}
-        onOpenChange={(next) => {
-          // Closing the panel without "Применить" drops the draft.
-          if (!next) {
-            onDraftChange(applied);
-          }
-
-          setOpen(next);
-        }}
-      >
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 rounded-full px-3"
-          >
-            <SlidersHorizontal className="size-3.5" />
-            Фильтры
-            {chips.length > 0 ? (
-              <span
-                className={cn(
-                  'rounded-full bg-primary px-1.5 text-[11px] leading-4',
-                  'text-primary-foreground'
-                )}
-              >
-                {chips.length}
-              </span>
-            ) : null}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-[22rem] p-4">
-          <AttemptsFiltersContent
-            idPrefix="bar"
-            showHeader={false}
-            panel={{
-              appliedFilters: applied,
-              draftFilters: draft,
-              attemptsCount: count,
-              loading,
-              tasks: [...tasks],
-              students: [...students],
-              onDraftFiltersChange: onDraftChange,
-              onApplyFilters: onApplyDraft,
-              onResetFilters: onReset,
-            }}
-            onAfterApply={() => setOpen(false)}
-            onAfterReset={() => setOpen(false)}
-          />
-        </PopoverContent>
-      </Popover>
-      {chips.length === 0 ? (
-        <span className="px-1 text-xs text-muted-foreground">
-          все попытки курса
-        </span>
-      ) : (
-        chips.map((chip) => (
-          <Chip key={chip.key} label={chip.label} value={chip.value}>
-            <button
-              type="button"
-              aria-label={`Убрать фильтр «${chip.label}»`}
-              title="Убрать фильтр"
-              onClick={() => onApply(withoutFilter(applied, chip.key))}
-              className={cn(
-                'grid size-5 shrink-0 place-items-center rounded-full',
-                'text-muted-foreground hover:bg-foreground/10',
-                'hover:text-foreground'
-              )}
-            >
-              <X className="size-3" />
-            </button>
-          </Chip>
-        ))
-      )}
-      {chips.length > 0 ? <ResetAllButton onClick={onReset} /> : null}
-    </BarFrame>
   );
 }
 
@@ -699,34 +494,6 @@ function ResetAllButton({ onClick }: { onClick: () => void }) {
     >
       Сбросить всё
     </Button>
-  );
-}
-
-function Trailing({
-  count,
-  loading,
-  quickDisabledReason,
-  onStartQuickGrading,
-}: Pick<FilterBarProps, 'count' | 'loading' | 'onStartQuickGrading'> & {
-  quickDisabledReason?: string;
-}) {
-  return (
-    <>
-      <span className="text-sm text-muted-foreground tabular-nums">
-        {loading ? 'Загрузка…' : `Попыток: ${count}`}
-      </span>
-      <Button
-        type="button"
-        size="sm"
-        className="h-8"
-        disabled={Boolean(quickDisabledReason) || loading || count === 0}
-        title={quickDisabledReason}
-        onClick={onStartQuickGrading}
-      >
-        <Zap className="size-3.5" />
-        Быстрая оценка
-      </Button>
-    </>
   );
 }
 

@@ -12,15 +12,11 @@ import type {
   CourseAttemptsRouteSearch,
 } from '@/features/course/features/attempts/model/types';
 
-// PROTOTYPE (#121): the router parses `?variant=2` as a number and quotes a
-// numeric-looking string when it writes one back, so keep numbers as numbers.
+// PROTOTYPE (#121): any `variant` turns on the top-bar prototype. The router
+// parses `?variant=2` as a number, so accept both.
 type PrototypeSearch = CourseAttemptsRouteSearch & {
   variant?: string | number;
 };
-
-function toSearchVariant(variant: string): string | number {
-  return /^\d+$/.test(variant) ? Number(variant) : variant;
-}
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/attempts'
@@ -34,7 +30,6 @@ export const Route = createFileRoute(
       ),
     },
   },
-  // PROTOTYPE (#121): `variant` selects a filter bar prototype variant.
   validateSearch: (search: Record<string, unknown>): PrototypeSearch => ({
     ...validateCourseAttemptsSearch(search),
     ...(typeof search.variant === 'string' || typeof search.variant === 'number'
@@ -64,19 +59,6 @@ function RouteComponent() {
     },
     [navigate]
   );
-  const handlePrototypeVariantChange = useCallback(
-    (variant: string) => {
-      void navigate({
-        search: (previous: PrototypeSearch) => ({
-          ...previous,
-          variant: toSearchVariant(variant),
-        }),
-        replace: true,
-      });
-    },
-    [navigate]
-  );
-
   return (
     <CourseAttemptsPage
       courseId={course.id}
@@ -86,7 +68,6 @@ function RouteComponent() {
       prototypeVariant={
         search.variant == null ? undefined : String(search.variant)
       }
-      onPrototypeVariantChange={handlePrototypeVariantChange}
     />
   );
 }

@@ -87,12 +87,3 @@ export function appliedChips(
       : []),
   ];
 }
-
-export function withoutFilter(
-  filters: CourseAttemptsFilters,
-  key: FilterKey
-): CourseAttemptsFilters {
-  return key === 'graded'
-    ? { ...filters, graded: 'any' }
-    : { ...filters, [key]: [] };
-}

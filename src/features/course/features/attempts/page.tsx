@@ -43,7 +43,6 @@ type CourseAttemptsPageProps = {
   appliedFilters: CourseAttemptsFilters;
   onApplyFilters: (filters: CourseAttemptsFilters) => void;
   prototypeVariant?: string;
-  onPrototypeVariantChange: (variant: string) => void;
 };
 
 export function CourseAttemptsPage({
@@ -52,7 +51,6 @@ export function CourseAttemptsPage({
   appliedFilters,
   onApplyFilters,
   prototypeVariant,
-  onPrototypeVariantChange,
 }: CourseAttemptsPageProps) {
   const filters = useCourseAttemptsFilters({ appliedFilters, onApplyFilters });
   const quickGradingState = useCourseAttemptsQuickGradingState();
@@ -118,12 +116,9 @@ export function CourseAttemptsPage({
         students={students}
         applied={filters.normalizedAppliedFilters}
         draft={filters.draftFilters}
-        variant={prototypeVariant}
         onDraftChange={filters.setDraftFilters}
         onApplyDraft={filters.applyDraftFilters}
-        onApply={onApplyFilters}
         onReset={filters.resetFilters}
-        onVariantChange={onPrototypeVariantChange}
         onStartQuickGrading={grading.startQuickGrading}
       />
     );
