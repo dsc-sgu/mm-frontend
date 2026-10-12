@@ -13,13 +13,13 @@ import { cn } from '@/shadcn/lib/utils';
 import {
   getShortcutLabels,
   matchesShortcut,
-  type Shortcut,
 } from '@/features/keyboard/shortcut';
 import { FilterMultiSelect } from './filter-multi-select';
 import {
   areCourseAttemptsFiltersEqual,
   EMPTY_COURSE_ATTEMPTS_FILTERS,
 } from '@/features/course/features/attempts/model/filters';
+import { applyFiltersShortcut } from '@/features/course/features/attempts/model/shortcuts';
 import type {
   CourseAttempt,
   CourseAttemptGradedFilter,
@@ -34,8 +34,6 @@ const GRADED_FILTER_OPTIONS: Array<{
   { value: 'no', label: 'Нет' },
   { value: 'yes', label: 'Да' },
 ];
-
-const applyShortcut: Shortcut = { mod: true, key: 'Enter' };
 
 export function AttemptsFiltersContent({
   idPrefix,
@@ -149,7 +147,7 @@ export function AttemptsFiltersContent({
   return (
     <div
       onKeyDownCapture={(event) => {
-        if (!matchesShortcut(event.nativeEvent, applyShortcut)) {
+        if (!matchesShortcut(event.nativeEvent, applyFiltersShortcut)) {
           return;
         }
 
@@ -497,7 +495,7 @@ function AttemptsFiltersActions({
   onReset: () => void;
 }) {
   const isDrawer = variant === 'drawer';
-  const applyShortcutLabels = getShortcutLabels(applyShortcut);
+  const applyShortcutLabels = getShortcutLabels(applyFiltersShortcut);
 
   return (
     <TooltipProvider>

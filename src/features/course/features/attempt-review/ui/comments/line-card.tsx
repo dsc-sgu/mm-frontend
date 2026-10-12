@@ -88,8 +88,8 @@ export function AttemptReviewLineCommentCard({
   const replyHtml = isReplying ? replyComposer.html : EMPTY_REPLY_HTML;
   const isReplySubmitDisabled =
     isReplySubmitting || isRichTextHtmlEmpty(replyHtml);
-  const submitShortcutKeys = getShortcutLabels(commentSubmitShortcut);
-  const cancelShortcutKeys = getShortcutLabels(commentCancelShortcut);
+  const submitShortcutLabels = getShortcutLabels(commentSubmitShortcut);
+  const cancelShortcutLabels = getShortcutLabels(commentCancelShortcut);
 
   function changeDraftHtml(html: string) {
     setDraftState({ sourceHtml: comment.html, html });
@@ -261,8 +261,8 @@ export function AttemptReviewLineCommentCard({
               <Check className="size-4" />
               Отправить
               <KbdGroup className="ml-1 hidden sm:inline-flex">
-                {submitShortcutKeys.map((key) => (
-                  <Kbd key={key}>{key}</Kbd>
+                {submitShortcutLabels.map((label) => (
+                  <Kbd key={label}>{label}</Kbd>
                 ))}
               </KbdGroup>
             </Button>
@@ -280,8 +280,8 @@ export function AttemptReviewLineCommentCard({
               )}
               Отмена
               <KbdGroup className="ml-1 hidden sm:inline-flex">
-                {cancelShortcutKeys.map((key) => (
-                  <Kbd key={key}>{key}</Kbd>
+                {cancelShortcutLabels.map((label) => (
+                  <Kbd key={label}>{label}</Kbd>
                 ))}
               </KbdGroup>
             </Button>
