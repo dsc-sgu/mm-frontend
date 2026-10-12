@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { DynamicIcon } from 'lucide-react/dynamic';
+import type { CourseSlug } from '@/features/course/model/identity';
 
 import { cn } from '@/shadcn/lib/utils';
 import { COURSE_COLORS } from '@/features/course/ui/theme';
@@ -11,7 +12,7 @@ import type {
 
 export type CourseCardProps = {
   title: string;
-  courseId: string;
+  slug: CourseSlug;
   teachers: Teacher[];
   iconName: LucideIconName;
   color: CourseColor;
@@ -25,7 +26,7 @@ function teacherFullName(t: Teacher) {
 }
 
 export function CourseCard({
-  courseId,
+  slug,
   title,
   teachers,
   iconName,
@@ -67,7 +68,7 @@ export function CourseCard({
       <div className="relative p-6">
         <Link
           to="/courses/$courseSlug"
-          params={{ courseSlug: courseId }}
+          params={{ courseSlug: slug }}
           className={cn(
             'block pr-16',
             'text-xl leading-snug font-semibold tracking-tight text-foreground hover:underline',

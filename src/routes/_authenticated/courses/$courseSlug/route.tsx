@@ -1,4 +1,4 @@
-import { COURSES_QUERY_OPTIONS } from '@/features/course/api/queries';
+import { coursesQueryOptions } from '@/features/course/api/queries';
 import { ensureValidCourseSlugOrRedirect } from '@/features/course/routing/params';
 import { requireCourseParticipant } from '@/features/course/routing/guards';
 import {
@@ -15,9 +15,9 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
       courseSlug,
     });
     const courses = await context.queryClient.ensureQueryData(
-      COURSES_QUERY_OPTIONS
+      coursesQueryOptions(context.session.userId)
     );
-    const course = courses.find((item) => item.courseId === courseSlug);
+    const course = courses.find((item) => item.slug === courseSlug);
 
     if (!course) {
       throw redirect({ to: '/' });

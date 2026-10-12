@@ -1,6 +1,8 @@
+import type { UserId, Username } from './identity';
+
 export type Session = {
-  userId: string;
-  username: string;
+  userId: UserId;
+  username: Username;
   email: string;
   firstName: string;
   lastName: string;

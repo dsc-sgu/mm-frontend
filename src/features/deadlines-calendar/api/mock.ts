@@ -1,4 +1,4 @@
-import { MOCK_COURSES } from '@/features/course/api/mock';
+import { mockBackend } from '@/app/mock-backend/state';
 import type {
   Deadline,
   DeadlinesByDay,
@@ -28,7 +28,8 @@ function getRandomDeadlineCount(): number {
 }
 
 function generateRandomDeadline(date: Date): Deadline {
-  const course = MOCK_COURSES[Math.floor(Math.random() * MOCK_COURSES.length)];
+  const { courses } = mockBackend.state;
+  const course = courses[Math.floor(Math.random() * courses.length)];
   const task = MOCK_TASKS[Math.floor(Math.random() * MOCK_TASKS.length)];
 
   const dueDate = new Date(date);

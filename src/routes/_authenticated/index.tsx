@@ -1,5 +1,7 @@
 import { CourseCard, CourseCardSkeleton } from '@/features/course/ui/card';
 import { useCoursesQuery } from '@/features/course/api/queries';
+import { coursesFailureText } from '@/features/course/ui/failure-text';
+import { Button } from '@/shadcn/components/ui/button';
 import { DeadlinesCalendar } from '@/features/deadlines-calendar/calendar';
 import { createFileRoute } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
@@ -15,7 +17,15 @@ export const Route = createFileRoute('/_authenticated/')({
 });
 
 function RouteComponent() {
-  const { data: courses = [], isPending } = useCoursesQuery();
+  const { session } = Route.useRouteContext();
+  const {
+    data: courses = [],
+    isPending,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = useCoursesQuery(session.userId);
 
   return (
     <main
@@ -29,11 +39,25 @@ function RouteComponent() {
           <DashboardSection title="Мои курсы" bordered scrollable>
             {isPending ? (
               <CourseListSkeleton />
+            ) : isError ? (
+              <div role="alert" className="py-10 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {coursesFailureText(error)}
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  disabled={isFetching}
+                  onClick={() => void refetch()}
+                >
+                  Повторить
+                </Button>
+              </div>
             ) : courses.length > 0 ? (
               <div className="grid gap-4">
                 {courses.map((course) => (
                   <CourseCard
-                    key={course.courseId}
+                    key={course.id}
                     {...course}
                     className="min-h-full w-full shadow-xs"
                   />

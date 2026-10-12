@@ -1,151 +1,35 @@
+import { http, HttpResponse } from 'msw';
+import { mockBackend } from '@/app/mock-backend/state';
 import type { CourseSummary } from '@/features/course/model/types';
 
-export const MOCK_COURSES: CourseSummary[] = [
-  {
-    courseId: 'algorithms-and-data-structures',
-    title: 'Алгоритмы и структуры данных',
-    shortTitle: 'АиСД',
-    color: 'teal',
-    iconName: 'code-xml',
-    teachers: [
-      {
-        lastName: 'Батраева',
-        firstName: 'Инна',
-        patronymic: 'Александровна',
-        username: 'inna_batraeva',
-      },
-      {
-        lastName: 'Сафрончик',
-        firstName: 'Мария',
-        patronymic: 'Ильинична',
-        username: 'maria_safronchik',
-      },
-    ],
-  },
-  {
-    courseId: 'databases',
-    title: 'Базы данных',
-    shortTitle: 'БД',
-    color: 'blue',
-    iconName: 'database',
-    teachers: [
-      {
-        lastName: 'Ковалев',
-        firstName: 'Павел',
-        patronymic: 'Сергеевич',
-        username: 'pavel_kovalev',
-      },
-    ],
-  },
-  {
-    courseId: 'programming-languages',
-    title: 'Языки программирования',
-    shortTitle: 'ЯП',
-    color: 'red',
-    iconName: 'braces',
-    teachers: [
-      {
-        lastName: 'Левченко',
-        firstName: 'Анна',
-        patronymic: 'Владимировна',
-        username: 'anna_levchenko',
-      },
-      {
-        lastName: 'Титов',
-        firstName: 'Егор',
-        patronymic: 'Романович',
-        username: 'egor_titov',
-      },
-    ],
-  },
-  {
-    courseId: 'frontend-engineering',
-    title: 'Фронтенд',
-    shortTitle: 'Фронтенд',
-    color: 'orange',
-    iconName: 'monitor-smartphone',
-    teachers: [
-      {
-        lastName: 'Громова',
-        firstName: 'Елизавета',
-        patronymic: 'Павловна',
-        username: 'elizaveta_gromova',
-      },
-    ],
-  },
-  {
-    courseId: 'operating-systems',
-    title: 'Операционные системы',
-    shortTitle: 'ОС',
-    color: 'violet',
-    iconName: 'cpu',
-    teachers: [
-      {
-        lastName: 'Морозов',
-        firstName: 'Андрей',
-        patronymic: 'Николаевич',
-        username: 'andrey_morozov',
-      },
-    ],
-  },
-  {
-    courseId: 'computer-networks',
-    title: 'Компьютерные сети',
-    shortTitle: 'КС',
-    color: 'pink',
-    iconName: 'network',
-    teachers: [
-      {
-        lastName: 'Семенова',
-        firstName: 'Дарья',
-        patronymic: 'Олеговна',
-        username: 'daria_semenova',
-      },
-    ],
-  },
-  {
-    courseId: 'modern-information-technologies',
-    title: 'Современные информационные технологии',
-    shortTitle: 'СИТ',
-    color: 'green',
-    iconName: 'rocket',
-    teachers: [
-      {
-        lastName: 'Архипов',
-        firstName: 'Иван',
-        patronymic: 'Сергеевич',
-        username: 'gohy279',
-      },
-      {
-        lastName: 'Кудяков',
-        firstName: 'Артём',
-        patronymic: 'Александрович',
-        username: 't3m8ch',
-      },
-    ],
-  },
+// Working URL and array projection pending backend confirmation:
+// https://github.com/dsc-sgu/mm-frontend/issues/113
+// Only 200 is a declared Fetch My Courses outcome; unauthenticated requests
+// receive 401, which the operation treats as an HTTP failure.
+export const courseHandlers = [
+  http.get('/api/v1/courses', () => {
+    const { users, session, courses, memberships } = mockBackend.state;
+    if (!session || !users.some((user) => user.id === session.userId)) {
+      return new HttpResponse(null, { status: 401 });
+    }
+
+    const courseIds = new Set(
+      memberships
+        .filter((membership) => membership.userId === session.userId)
+        .map((membership) => membership.courseId)
+    );
+    const summaries: CourseSummary[] = courses
+      .filter((course) => courseIds.has(course.id))
+      .map(({ id, slug, title, shortTitle, color, iconName, teachers }) => ({
+        id,
+        slug,
+        title,
+        shortTitle,
+        color,
+        iconName,
+        teachers,
+      }));
+
+    return HttpResponse.json(summaries, { status: 200 });
+  }),
 ];
-
-export function updateMockCourseSummary({
-  courseSlug,
-  summary,
-}: {
-  courseSlug: string;
-  summary: CourseSummary;
-}) {
-  const courseIndex = MOCK_COURSES.findIndex(
-    (course) => course.courseId === courseSlug
-  );
-
-  if (courseIndex === -1) {
-    return;
-  }
-
-  MOCK_COURSES[courseIndex] = summary;
-}
-
-export async function fetchCourses(): Promise<CourseSummary[]> {
-  await new Promise((resolve) => setTimeout(resolve, 150));
-
-  return MOCK_COURSES;
-}

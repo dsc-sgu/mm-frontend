@@ -1,15 +1,22 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
-import { fetchCourses } from '@/features/course/api/mock';
+import type { UserId } from '@/features/auth/model/identity';
+import { loadCourses } from '@/features/course/api/load-courses';
 
-export const COURSES_QUERY_KEY = ['courses'];
+export const coursesKeys = {
+  all: ['courses'] as const,
+  user: (userId: UserId) => [...coursesKeys.all, userId] as const,
+};
 
-export const COURSES_QUERY_OPTIONS = queryOptions({
-  queryKey: COURSES_QUERY_KEY,
-  queryFn: fetchCourses,
-  staleTime: 5 * 60 * 1000,
-  gcTime: 10 * 60 * 1000,
-});
+export function coursesQueryOptions(userId: UserId) {
+  return queryOptions({
+    queryKey: coursesKeys.user(userId),
+    queryFn: ({ signal }) => loadCourses(signal),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: false,
+  });
+}
 
-export function useCoursesQuery() {
-  return useQuery(COURSES_QUERY_OPTIONS);
+export function useCoursesQuery(userId: UserId) {
+  return useQuery(coursesQueryOptions(userId));
 }

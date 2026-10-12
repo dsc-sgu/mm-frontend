@@ -6,6 +6,7 @@ import {
   SESSION_EXPIRES_AT,
   type MockUser,
 } from '@/app/mock-backend/state';
+import { UsernameSchema } from '@/features/auth/model/identity';
 
 // MSW handlers for the auth endpoints of mm-backend@ddd9849
 // (internal/auth/users/handler.go): same URLs, statuses and payloads.
@@ -19,7 +20,7 @@ const RegisterBodySchema = v.object({
   firstName: v.string(),
   lastName: v.string(),
   patronymic: v.string(),
-  username: v.string(),
+  username: UsernameSchema,
   email: v.string(),
   password: v.string(),
 });
