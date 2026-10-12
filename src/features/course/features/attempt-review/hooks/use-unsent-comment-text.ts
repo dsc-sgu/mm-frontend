@@ -2,18 +2,17 @@ import { createContext, useContext } from 'react';
 
 import type { UnsentCommentTextStore } from '@/features/course/features/attempt-review/model/unsent-comment-text';
 
-// Without a provider a card still works; its unsent text just lives as long
-// as the card itself.
-const NO_UNSENT_COMMENT_TEXT: UnsentCommentTextStore = {
-  read: () => undefined,
-  write: () => {},
-  clear: () => {},
-};
-
-export const UnsentCommentTextContext = createContext<UnsentCommentTextStore>(
-  NO_UNSENT_COMMENT_TEXT
-);
+export const UnsentCommentTextContext =
+  createContext<UnsentCommentTextStore | null>(null);
 
 export function useUnsentCommentText(): UnsentCommentTextStore {
-  return useContext(UnsentCommentTextContext);
+  const store = useContext(UnsentCommentTextContext);
+
+  if (!store) {
+    throw new Error(
+      'useUnsentCommentText must be used inside UnsentCommentTextContext'
+    );
+  }
+
+  return store;
 }

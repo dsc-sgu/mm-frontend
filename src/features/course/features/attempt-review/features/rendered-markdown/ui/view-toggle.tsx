@@ -1,7 +1,7 @@
 import { FileCode, FileText, type LucideIcon } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
-import type { MarkdownFileView } from '@/features/course/features/attempt-review/features/rendered-markdown/model/markdown-file';
+import type { MarkdownFileView } from '@/features/course/features/attempt-review/features/rendered-markdown/model/file';
 
 type MarkdownViewToggleProps = {
   value: MarkdownFileView;

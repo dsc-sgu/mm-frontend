@@ -1,6 +1,6 @@
 import type { CodeViewItem } from '@pierre/diffs';
 
-import { isMarkdownFile } from '@/features/course/features/attempt-review/features/rendered-markdown/model/markdown-file';
+import { isMarkdownFile } from '@/features/course/features/attempt-review/features/rendered-markdown/model/file';
 import type { AttemptReviewCodeViewAnnotation } from './code-view-annotation';
 import type {
   AttemptReviewChangedFile,

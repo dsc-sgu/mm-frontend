@@ -75,15 +75,15 @@ export function AttemptReviewLineCommentCard({
   const isPendingDelete = commentStatus === 'pending-delete';
   const isPendingComment = isPendingLineComment(comment);
   const isEditableComment = isEditableLineComment({ comment, mode });
-  const unsentText = useUnsentCommentText();
+  const unsentTextStore = useUnsentCommentText();
   const commentTextKey = unsentCommentTextKeys.comment(comment.id);
   const replyTextKey = unsentCommentTextKeys.reply(comment.id);
   const [draftState, setDraftState] = useState(() => ({
     sourceHtml: comment.html,
-    html: unsentText.read(commentTextKey, comment.html) ?? comment.html,
+    html: unsentTextStore.read(commentTextKey, comment.html) ?? comment.html,
   }));
   const [replyComposer, setReplyComposer] = useState<ReplyComposerState>(() => {
-    const html = unsentText.read(replyTextKey, EMPTY_REPLY_HTML);
+    const html = unsentTextStore.read(replyTextKey, EMPTY_REPLY_HTML);
 
     return html === undefined
       ? { status: 'idle' }
@@ -102,22 +102,22 @@ export function AttemptReviewLineCommentCard({
 
   function changeDraftHtml(html: string) {
     setDraftState({ sourceHtml: comment.html, html });
-    unsentText.write(commentTextKey, { sourceHtml: comment.html, html });
+    unsentTextStore.write(commentTextKey, { sourceHtml: comment.html, html });
   }
 
   function submitComment(html: string) {
-    unsentText.clear(commentTextKey);
+    unsentTextStore.clear(commentTextKey);
     onSubmit(html);
   }
 
   function cancelComment() {
-    unsentText.clear(commentTextKey);
+    unsentTextStore.clear(commentTextKey);
     onCancel();
   }
 
   function editComment() {
     // A new edit starts from the saved text, not from an abandoned one.
-    unsentText.clear(commentTextKey);
+    unsentTextStore.clear(commentTextKey);
     onEdit();
   }
 
@@ -131,12 +131,18 @@ export function AttemptReviewLineCommentCard({
 
     const submittedHtml = replyComposer.html;
     setReplyComposer({ status: 'submitting', html: submittedHtml });
+    // Cleared before the request: a card remounted while it is in flight
+    // must not reopen the composer with text that is already being sent.
+    unsentTextStore.clear(replyTextKey);
 
     try {
       await onReplySubmit(submittedHtml);
-      unsentText.clear(replyTextKey);
       setReplyComposer({ status: 'idle' });
     } catch (error) {
+      unsentTextStore.write(replyTextKey, {
+        sourceHtml: EMPTY_REPLY_HTML,
+        html: submittedHtml,
+      });
       setReplyComposer({ status: 'editing', html: submittedHtml });
       throw error;
     }
@@ -150,11 +156,11 @@ export function AttemptReviewLineCommentCard({
 
       return { status: 'editing', html };
     });
-    unsentText.write(replyTextKey, { sourceHtml: EMPTY_REPLY_HTML, html });
+    unsentTextStore.write(replyTextKey, { sourceHtml: EMPTY_REPLY_HTML, html });
   }
 
   function startReply() {
-    unsentText.clear(replyTextKey);
+    unsentTextStore.clear(replyTextKey);
     setReplyComposer({ status: 'editing', html: EMPTY_REPLY_HTML });
   }
 
@@ -163,7 +169,7 @@ export function AttemptReviewLineCommentCard({
       return;
     }
 
-    unsentText.clear(replyTextKey);
+    unsentTextStore.clear(replyTextKey);
     setReplyComposer({ status: 'idle' });
   }
 
