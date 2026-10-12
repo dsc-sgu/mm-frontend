@@ -194,7 +194,7 @@ export const getAttemptDiffBreadcrumb: HeaderDataGetter<
   HeaderBreadcrumbItem[]
 > = (context) => {
   const { courseSlug, courseAccess } = getCourseData(context);
-  const attemptId = getParam(context, 'attemptId');
+  const attemptNumber = getParam(context, 'attemptNumber');
 
   if (courseAccess.role === 'teacher') {
     return [
@@ -203,18 +203,18 @@ export const getAttemptDiffBreadcrumb: HeaderDataGetter<
         to: '/courses/$courseSlug/attempts',
         params: { courseSlug },
       },
-      { label: formatAttemptLabel(attemptId) },
+      { label: formatAttemptLabel(attemptNumber) },
     ];
   }
 
-  return [{ label: formatAttemptLabel(attemptId) }];
+  return [{ label: formatAttemptLabel(attemptNumber) }];
 };
 
 export const getAttemptReviewBreadcrumb: HeaderDataGetter<
   HeaderBreadcrumbItem[]
 > = (context) => {
   const { courseSlug } = getCourseData(context);
-  const attemptId = getParam(context, 'attemptId');
+  const attemptNumber = getParam(context, 'attemptNumber');
 
   return [
     {
@@ -222,7 +222,7 @@ export const getAttemptReviewBreadcrumb: HeaderDataGetter<
       to: '/courses/$courseSlug/attempts',
       params: { courseSlug },
     },
-    { label: formatAttemptReviewLabel(attemptId) },
+    { label: formatAttemptReviewLabel(attemptNumber) },
   ];
 };
 
@@ -286,12 +286,12 @@ export function formatCommitLabel(commitId: string) {
   return commitId.length > 7 ? commitId.slice(0, 7) : commitId;
 }
 
-export function formatAttemptLabel(attemptId: string) {
-  return `Попытка #${attemptId}`;
+export function formatAttemptLabel(attemptNumber: string) {
+  return `Попытка #${attemptNumber}`;
 }
 
-export function formatAttemptReviewLabel(attemptId: string) {
-  return `Оценка попытки #${attemptId}`;
+export function formatAttemptReviewLabel(attemptNumber: string) {
+  return `Оценка попытки #${attemptNumber}`;
 }
 
 // Temporary route label stubs used until task/student/course detail APIs

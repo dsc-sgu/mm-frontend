@@ -1,3 +1,8 @@
+import * as v from 'valibot';
+import {
+  AttemptNumberSchema,
+  type AttemptNumber,
+} from '@/features/course/model/identity';
 import {
   applyReviewLockUpdatesToAttempts,
   type CourseAttemptReviewLockUpdate,
@@ -123,7 +128,10 @@ function buildAttempts(courseSlug: string): CourseAttempt[] {
 
       attempts.push({
         id: `${courseSlug}:attempt:${serial}`,
-        attemptNumber: ((studentIndex + attemptIndex) % 3) + 1,
+        attemptNumber: v.parse(
+          AttemptNumberSchema,
+          ((studentIndex + attemptIndex) % 3) + 1
+        ),
         task,
         student,
         submittedAt: new Date(submittedMs).toISOString(),
@@ -255,7 +263,7 @@ export function findMockCourseAttempt({
   courseSlug: string;
   taskId: string;
   studentUsername: string;
-  attemptNumber: number;
+  attemptNumber: AttemptNumber;
 }): CourseAttempt | undefined {
   return getCourseAttempts(courseSlug).find(
     (attempt) =>
@@ -277,7 +285,7 @@ export function upsertMockCourseAttemptGrade({
   courseSlug: string;
   taskId: string;
   studentUsername: string;
-  attemptNumber: number;
+  attemptNumber: AttemptNumber;
   score: number;
   gradedAt: string;
   gradedBy: string;

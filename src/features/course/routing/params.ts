@@ -1,6 +1,7 @@
 import { redirect } from '@tanstack/react-router';
 import * as v from 'valibot';
 import { UsernameSchema } from '@/features/auth/model/identity';
+import { AttemptNumberSchema } from '@/features/course/model/identity';
 
 const slugLikeSchema = v.pipe(
   v.string(),
@@ -14,6 +15,11 @@ export const positiveIntegerParamSchema = v.pipe(
   v.string(),
   v.regex(/^[1-9]\d*$/),
   v.transform(Number)
+);
+
+const attemptNumberParamSchema = v.pipe(
+  positiveIntegerParamSchema,
+  AttemptNumberSchema
 );
 
 export function ensureValidCourseSlugOrRedirect(courseSlug: string) {
@@ -51,6 +57,24 @@ export function ensurePositiveIntegerOrRedirect({
   courseSlug: string;
 }) {
   const result = v.safeParse(positiveIntegerParamSchema, value);
+  if (!result.success) {
+    throw redirect({
+      to: '/courses/$courseSlug',
+      params: { courseSlug },
+    });
+  }
+
+  return result.output;
+}
+
+export function ensureValidAttemptNumberOrRedirect({
+  attemptNumber,
+  courseSlug,
+}: {
+  attemptNumber: string;
+  courseSlug: string;
+}) {
+  const result = v.safeParse(attemptNumberParamSchema, attemptNumber);
   if (!result.success) {
     throw redirect({
       to: '/courses/$courseSlug',

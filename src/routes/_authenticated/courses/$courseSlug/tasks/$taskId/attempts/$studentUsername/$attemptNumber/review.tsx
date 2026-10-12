@@ -4,7 +4,7 @@ import { getAttemptReviewBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
-  '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
+  '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
 )({
   staticData: {
     header: {
@@ -23,7 +23,7 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const params = Route.useParams();
-  const { studentUsername } = Route.useRouteContext();
+  const { studentUsername, attemptNumber } = Route.useRouteContext();
 
   return (
     <AttemptReviewPage
@@ -31,7 +31,7 @@ function RouteComponent() {
       courseSlug={params.courseSlug}
       taskId={params.taskId}
       studentUsername={studentUsername}
-      attemptId={Number(params.attemptId)}
+      attemptNumber={attemptNumber}
     />
   );
 }

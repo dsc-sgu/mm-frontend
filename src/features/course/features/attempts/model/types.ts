@@ -1,3 +1,5 @@
+import type { AttemptNumber } from '@/features/course/model/identity';
+
 export type CourseAttemptGradedFilter = 'any' | 'no' | 'yes';
 
 export type CourseAttemptsFilters = {
@@ -44,7 +46,7 @@ export type CourseAttemptReviewLock = {
 
 export type CourseAttempt = {
   id: string;
-  attemptNumber: number;
+  attemptNumber: AttemptNumber;
   task: CourseAttemptTask;
   student: CourseAttemptStudent;
   submittedAt: string;

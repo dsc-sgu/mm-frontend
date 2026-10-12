@@ -39,6 +39,8 @@ The exact selection `53.0.0` pin introduced with marquee selection in `b6344c4` 
 
 Attempts and attempt review import grading helpers and score fields directly from `@/features/course/features/grading`.
 
+Attempt routes use `$attemptNumber` for the ordinal scoped to Course + Task + Student; existing URLs such as `/courses/modern-information-technologies/tasks/1/attempts/student/1/review` are unchanged. Route guards validate the URL segment with `AttemptNumberSchema` and pass the branded numeric `AttemptNumber` through route context to the page, queries and RAM operations. Attempt lists, Task history and the attempt selector use `attemptNumber` too. `attemptId` in quick grading and review-lock updates still means the distinct internal identity, not the ordinal.
+
 ## Mock backend
 
 Remote operations always call Fetch at the backend URLs. In the dev server, requests go through the Vite proxy to `VITE_API_PROXY_TARGET_URL` (`http://localhost:8034` by default). To serve them from the MSW mock backend instead, add this to `.env.local` and restart the Vite dev server:

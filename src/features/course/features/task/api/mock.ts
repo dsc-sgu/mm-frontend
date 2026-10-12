@@ -1,3 +1,8 @@
+import * as v from 'valibot';
+import {
+  AttemptNumberSchema,
+  type AttemptNumber,
+} from '@/features/course/model/identity';
 import type {
   TaskAttachment,
   TaskAttempt,
@@ -73,13 +78,13 @@ const ATTACHMENTS = [
 
 const ATTEMPTS = [
   {
-    number: 10,
+    attemptNumber: v.parse(AttemptNumberSchema, 10),
     studentUsername: 'student',
     submittedAt: '2026-03-03T10:05:00+03:00',
     review: { status: 'pending' },
   },
   {
-    number: 9,
+    attemptNumber: v.parse(AttemptNumberSchema, 9),
     studentUsername: 'student',
     submittedAt: '2026-03-02T09:15:00+03:00',
     review: {
@@ -90,7 +95,7 @@ const ATTEMPTS = [
     },
   },
   {
-    number: 8,
+    attemptNumber: v.parse(AttemptNumberSchema, 8),
     studentUsername: 'student',
     submittedAt: '2026-03-01T18:42:00+03:00',
     review: {
@@ -101,7 +106,7 @@ const ATTEMPTS = [
     },
   },
   {
-    number: 7,
+    attemptNumber: v.parse(AttemptNumberSchema, 7),
     studentUsername: 'student',
     submittedAt: '2026-02-28T16:30:00+03:00',
     review: {
@@ -112,7 +117,7 @@ const ATTEMPTS = [
     },
   },
   {
-    number: 6,
+    attemptNumber: v.parse(AttemptNumberSchema, 6),
     studentUsername: 'student',
     submittedAt: '2026-02-28T09:24:00+03:00',
     review: {
@@ -123,7 +128,7 @@ const ATTEMPTS = [
     },
   },
   {
-    number: 5,
+    attemptNumber: v.parse(AttemptNumberSchema, 5),
     studentUsername: 'student',
     submittedAt: '2026-02-27T10:20:00+03:00',
     review: {
@@ -134,7 +139,7 @@ const ATTEMPTS = [
     },
   },
   {
-    number: 4,
+    attemptNumber: v.parse(AttemptNumberSchema, 4),
     studentUsername: 'student',
     submittedAt: '2026-02-27T03:03:00+03:00',
     review: {
@@ -145,7 +150,7 @@ const ATTEMPTS = [
     },
   },
   {
-    number: 3,
+    attemptNumber: v.parse(AttemptNumberSchema, 3),
     studentUsername: 'student',
     submittedAt: '2026-02-26T23:59:00+03:00',
     review: {
@@ -156,7 +161,7 @@ const ATTEMPTS = [
     },
   },
   {
-    number: 2,
+    attemptNumber: v.parse(AttemptNumberSchema, 2),
     studentUsername: 'student',
     submittedAt: '2026-02-26T20:18:00+03:00',
     review: {
@@ -167,7 +172,7 @@ const ATTEMPTS = [
     },
   },
   {
-    number: 1,
+    attemptNumber: v.parse(AttemptNumberSchema, 1),
     studentUsername: 'student',
     submittedAt: '2026-02-25T02:07:00+03:00',
     review: {
@@ -216,17 +221,17 @@ export async function fetchTaskPage({
       attempts: ATTEMPTS.map((attempt) => ({
         ...attempt,
         studentUsername: studentUsername ?? attempt.studentUsername,
-        id: `${courseSlug}:${taskId}:attempt:${attempt.number}`,
+        id: `${courseSlug}:${taskId}:attempt:${attempt.attemptNumber}`,
         review: { ...attempt.review },
         attention: {
           status:
-            INITIAL_UNSEEN_ATTEMPT_NUMBERS.has(attempt.number) &&
+            INITIAL_UNSEEN_ATTEMPT_NUMBERS.has(attempt.attemptNumber) &&
             !seenAttemptUpdates.has(
               getAttemptUpdatesKey({
                 courseSlug,
                 taskId,
                 studentUsername: studentUsername ?? attempt.studentUsername,
-                attemptNumber: attempt.number,
+                attemptNumber: attempt.attemptNumber,
               })
             )
               ? 'unseen'
@@ -246,7 +251,7 @@ export async function markTaskAttemptUpdatesSeen({
   courseSlug: string;
   taskId: string;
   studentUsername: string;
-  attemptNumber: number;
+  attemptNumber: AttemptNumber;
 }): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 120));
 
@@ -269,7 +274,7 @@ function getAttemptUpdatesKey({
   courseSlug: string;
   taskId: string;
   studentUsername: string;
-  attemptNumber: number;
+  attemptNumber: AttemptNumber;
 }): string {
   return `${courseSlug}:${taskId}:${studentUsername}:${attemptNumber}`;
 }

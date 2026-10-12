@@ -33,15 +33,12 @@ import type {
   AttemptReviewDiffViewMode,
   AttemptReviewLineCommentReply,
   AttemptReviewMode,
+  AttemptReviewRouteParams,
 } from './model/types';
 
 type AttemptReviewPageProps = {
   mode: AttemptReviewMode;
-  courseSlug: string;
-  taskId: string;
-  studentUsername: string;
-  attemptId: number;
-};
+} & AttemptReviewRouteParams;
 
 type AttemptReviewPageLoadedProps = {
   review: AttemptReviewAggregate;
@@ -84,7 +81,7 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
 
   return (
     <AttemptReviewPageLoaded
-      key={`${props.courseSlug}:${props.taskId}:${props.studentUsername}:${props.attemptId}`}
+      key={`${props.courseSlug}:${props.taskId}:${props.studentUsername}:${props.attemptNumber}`}
       {...props}
       review={reviewQuery.data}
     />
@@ -96,10 +93,10 @@ function AttemptReviewPageLoaded({
   courseSlug,
   taskId,
   studentUsername,
-  attemptId,
+  attemptNumber,
   review,
 }: AttemptReviewPageLoadedProps) {
-  const params = { courseSlug, taskId, studentUsername, attemptId };
+  const params = { courseSlug, taskId, studentUsername, attemptNumber };
   const saveMutation = useSaveAttemptReviewMutation();
   const createReplyMutation = useCreateAttemptReviewCommentReplyMutation();
   const updateReplyMutation = useUpdateAttemptReviewCommentReplyMutation();
@@ -244,7 +241,7 @@ function AttemptReviewPageLoaded({
         >
           <div className="min-h-0 flex-1 overflow-hidden overscroll-contain">
             <AttemptReviewFileTree
-              key={`mobile-file-tree-${attemptId}`}
+              key={`mobile-file-tree-${attemptNumber}`}
               files={review.changedFiles}
               comments={draft.lineComments}
               activeFilePath={activeFilePath}

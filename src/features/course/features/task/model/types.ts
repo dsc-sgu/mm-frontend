@@ -1,3 +1,5 @@
+import type { AttemptNumber } from '@/features/course/model/identity';
+
 export type TaskAttachmentKind =
   | 'pdf'
   | 'document'
@@ -32,7 +34,7 @@ export type TaskAttemptAttention = {
 
 export type TaskAttempt = {
   id: string;
-  number: number;
+  attemptNumber: AttemptNumber;
   studentUsername: string;
   submittedAt: string;
   review: TaskAttemptReview;

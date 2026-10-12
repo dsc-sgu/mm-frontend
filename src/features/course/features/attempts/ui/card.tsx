@@ -138,8 +138,8 @@ export function AttemptCard(props: AttemptCardProps) {
             <Link
               to={
                 selected
-                  ? '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId'
-                  : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
+                  ? '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber'
+                  : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
               }
               params={getAttemptRouteParams(props.courseSlug, props.attempt)}
             >
@@ -355,6 +355,6 @@ function getAttemptRouteParams(courseSlug: string, attempt: CourseAttempt) {
     courseSlug,
     taskId: String(attempt.task.id),
     studentUsername: attempt.student.username,
-    attemptId: String(attempt.attemptNumber),
+    attemptNumber: String(attempt.attemptNumber),
   };
 }
