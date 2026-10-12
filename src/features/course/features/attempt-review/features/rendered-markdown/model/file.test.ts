@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isMarkdownFile } from './markdown-file';
+import { isMarkdownFile } from './file';
 
 describe('isMarkdownFile', () => {
   it.each([

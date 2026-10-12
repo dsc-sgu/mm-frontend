@@ -48,10 +48,10 @@ export function AttemptReviewCommentReplyItem({
   onUpdate,
   onDelete,
 }: AttemptReviewCommentReplyItemProps) {
-  const unsentText = useUnsentCommentText();
+  const unsentTextStore = useUnsentCommentText();
   const textKey = unsentCommentTextKeys.replyEdit(reply.id);
   const [state, setState] = useState<ReplyItemState>(() => {
-    const unsentHtml = unsentText.read(textKey, reply.html);
+    const unsentHtml = unsentTextStore.read(textKey, reply.html);
 
     return unsentHtml === undefined
       ? { mode: 'view', pending: false }
@@ -73,7 +73,7 @@ export function AttemptReviewCommentReplyItem({
   const cancelShortcutLabels = getShortcutLabels(commentCancelShortcut);
 
   function startEdit() {
-    unsentText.clear(textKey);
+    unsentTextStore.clear(textKey);
     setState({
       mode: 'editing',
       draftHtml: reply.html,
@@ -95,7 +95,10 @@ export function AttemptReviewCommentReplyItem({
         pending: false,
       };
     });
-    unsentText.write(textKey, { sourceHtml: reply.html, html: nextDraftHtml });
+    unsentTextStore.write(textKey, {
+      sourceHtml: reply.html,
+      html: nextDraftHtml,
+    });
   }
 
   async function submitEdit() {
@@ -110,12 +113,18 @@ export function AttemptReviewCommentReplyItem({
       sourceHtml: reply.html,
       pending: 'update',
     });
+    // Cleared before the request: a card remounted while it is in flight
+    // must not reopen the editor with text that is already being sent.
+    unsentTextStore.clear(textKey);
 
     try {
       await onUpdate(reply.id, submittedHtml);
-      unsentText.clear(textKey);
       setState({ mode: 'view', pending: false });
     } catch (error) {
+      unsentTextStore.write(textKey, {
+        sourceHtml: reply.html,
+        html: submittedHtml,
+      });
       setState({
         mode: 'editing',
         draftHtml: submittedHtml,
@@ -131,7 +140,7 @@ export function AttemptReviewCommentReplyItem({
       return;
     }
 
-    unsentText.clear(textKey);
+    unsentTextStore.clear(textKey);
     setState({ mode: 'view', pending: false });
   }
 

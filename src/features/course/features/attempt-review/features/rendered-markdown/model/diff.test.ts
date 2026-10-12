@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
-import { buildRenderedMarkdownDiff } from './rendered-diff';
+import { buildRenderedMarkdownDiff } from './diff';
 
 describe('buildRenderedMarkdownDiff', () => {
   it('keeps unchanged blocks and shows a rewritten paragraph as deleted then added', () => {
@@ -114,6 +114,18 @@ describe('buildRenderedMarkdownDiff', () => {
           html: '<img src="https://example.com/a.png" alt="Схема" loading="lazy" referrerpolicy="no-referrer">',
         },
       ],
+    });
+  });
+
+  it('drops data and ARIA attributes the diff viewer could mistake for its own', () => {
+    const diff = buildRenderedMarkdownDiff(
+      '',
+      'Строка <span data-line="1" data-column-number="1" aria-hidden="true">кода</span>\n'
+    );
+
+    expect(diff).toEqual({
+      status: 'rendered',
+      blocks: [{ change: 'added', html: '<p>Строка <span>кода</span></p>' }],
     });
   });
 

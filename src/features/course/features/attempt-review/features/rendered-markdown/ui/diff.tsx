@@ -8,8 +8,8 @@ import {
   buildRenderedMarkdownDiff,
   type RenderedMarkdownBlock,
   type RenderedMarkdownBlockChange,
-} from '@/features/course/features/attempt-review/features/rendered-markdown/model/rendered-diff';
-import styles from './rendered-diff.module.css';
+} from '@/features/course/features/attempt-review/features/rendered-markdown/model/diff';
+import styles from './diff.module.css';
 
 type RenderedMarkdownDiffViewProps = {
   oldText: string;
@@ -69,7 +69,12 @@ export function RenderedMarkdownDiffView({
           исходном диффе.
         </RenderedMarkdownNotice>
       ) : null}
-      {!hasRenderedChanges ? (
+      {diff.blocks.length === 0 ? (
+        <RenderedMarkdownNotice onShowSource={onShowSource}>
+          В файле нет содержимого, которое можно отрисовать.
+        </RenderedMarkdownNotice>
+      ) : null}
+      {diff.blocks.length > 0 && !hasRenderedChanges ? (
         <RenderedMarkdownNotice onShowSource={onShowSource}>
           Отрисованный текст не изменился: правки затрагивают только разметку.
         </RenderedMarkdownNotice>

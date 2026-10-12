@@ -1,5 +1,5 @@
 import { diffArrays } from 'diff';
-import { Marked, type Token, type Tokens, type TokensList } from 'marked';
+import { Marked, type Links, type Token, type Tokens } from 'marked';
 
 import { sanitizeMarkdownHtml } from './sanitize';
 
@@ -97,10 +97,10 @@ function splitBlocks(text: string): DocumentBlock[] {
     }
 
     if (token.type === 'list') {
-      return splitListItems(token as Tokens.List, tokens);
+      return splitListItems(token as Tokens.List, tokens.links);
     }
 
-    const html = renderTokens([token], tokens);
+    const html = renderTokens([token], tokens.links);
 
     return html ? [{ key: html, html }] : [];
   });
@@ -108,29 +108,27 @@ function splitBlocks(text: string): DocumentBlock[] {
 
 // Each item becomes a one-item list, so changing one checklist entry does not
 // mark the whole list as rewritten.
-function splitListItems(
-  list: Tokens.List,
-  document: TokensList
-): DocumentBlock[] {
+function splitListItems(list: Tokens.List, links: Links): DocumentBlock[] {
   const firstNumber = list.start === '' ? 1 : list.start;
 
   return list.items.map((item, index) => {
     const itemList = { ...list, raw: item.raw, items: [item] };
 
     return {
-      key: renderTokens([{ ...itemList, start: 1 }], document),
+      key: renderTokens([{ ...itemList, start: 1 }], links),
       html: renderTokens(
         [{ ...itemList, start: list.ordered ? firstNumber + index : '' }],
-        document
+        links
       ),
     };
   });
 }
 
 // Rendering block by block also closes any raw HTML tag a block left open, so
-// it cannot swallow the blocks after it.
-function renderTokens(tokens: Token[], document: TokensList): string {
+// it cannot swallow the blocks after it. Reference-style links still resolve
+// through the definitions of the whole document.
+function renderTokens(tokens: Token[], links: Links): string {
   return sanitizeMarkdownHtml(
-    markdown.parser(Object.assign(tokens, { links: document.links }))
+    markdown.parser(Object.assign(tokens, { links }))
   );
 }

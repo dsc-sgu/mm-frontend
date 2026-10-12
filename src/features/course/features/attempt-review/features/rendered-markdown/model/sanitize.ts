@@ -80,6 +80,10 @@ export function sanitizeMarkdownHtml(html: string): string {
   const fragment = DOMPurify.sanitize(html, {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
+    // The view sits inside CodeView, which reads `data-*` attributes such as
+    // `data-line` to find the line under the pointer.
+    ALLOW_DATA_ATTR: false,
+    ALLOW_ARIA_ATTR: false,
     RETURN_DOM_FRAGMENT: true,
   });
 
