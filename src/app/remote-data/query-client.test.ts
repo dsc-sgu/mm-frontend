@@ -7,7 +7,7 @@ import { countRequests } from '@/app/testing/count-requests';
 import {
   jsonBody,
   runHttpOperation,
-  unexpectedHttp,
+  unexpectedHttpStatus,
 } from '@/app/remote-data/http';
 import { createQueryClient } from '@/app/remote-data/query-client';
 
@@ -17,7 +17,7 @@ function probe(init: RequestInit = {}) {
   return runHttpOperation(
     { name: 'probe', url: PROBE_URL, ...init },
     async (context) => {
-      throw unexpectedHttp(context);
+      throw unexpectedHttpStatus(context);
     }
   );
 }

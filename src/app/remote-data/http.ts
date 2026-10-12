@@ -82,7 +82,7 @@ export type HttpResponseContext = {
  *       const conflict = await readJson(context, ConflictDtoSchema);
  *       return { status: 'conflict' as const, ...conflict };
  *     }
- *     if (context.response.status !== 200) throw unexpectedHttp(context);
+ *     if (context.response.status !== 200) throw unexpectedHttpStatus(context);
  *     const page = await readJson(context, PageDtoSchema);
  *     return { status: 'saved' as const, page };
  *   }
@@ -144,9 +144,9 @@ export async function readJson<TSchema extends v.GenericSchema>(
 
 /**
  * Creates an `unexpected-http` failure for a status the operation does not
- * declare. Use as `throw unexpectedHttp(context)`.
+ * declare. Use as `throw unexpectedHttpStatus(context)`.
  */
-export function unexpectedHttp(context: HttpResponseContext) {
+export function unexpectedHttpStatus(context: HttpResponseContext) {
   return new OperationFailure(context.operation, {
     kind: 'unexpected-http',
     status: context.response.status,

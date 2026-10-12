@@ -14,7 +14,7 @@ import {
   OperationFailure,
   readJson,
   runHttpOperation,
-  unexpectedHttp,
+  unexpectedHttpStatus,
 } from '@/app/remote-data/http';
 
 const PAGE_URL = '/api/test/page';
@@ -24,7 +24,7 @@ function readPage(signal?: AbortSignal) {
   return runHttpOperation(
     { name: 'read-page', url: PAGE_URL, signal },
     async (context) => {
-      if (context.response.status !== 200) throw unexpectedHttp(context);
+      if (context.response.status !== 200) throw unexpectedHttpStatus(context);
       return readJson(context, PageDtoSchema);
     }
   );

@@ -1,4 +1,4 @@
-import { runHttpOperation, unexpectedHttp } from '@/app/remote-data/http';
+import { runHttpOperation, unexpectedHttpStatus } from '@/app/remote-data/http';
 
 export function logout(): Promise<void> {
   return runHttpOperation(
@@ -13,7 +13,7 @@ export function logout(): Promise<void> {
       if (context.response.status === 204 || context.response.status === 401) {
         return;
       }
-      throw unexpectedHttp(context);
+      throw unexpectedHttpStatus(context);
     }
   );
 }
