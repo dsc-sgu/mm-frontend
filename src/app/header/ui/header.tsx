@@ -24,10 +24,9 @@ import {
 } from '@/shadcn/components/ui/dropdown-menu';
 import { Link, useMatches } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { sessionOptions, useLogoutMutation } from '@/features/auth/api/queries';
+import { sessionOptions } from '@/features/auth/api/queries';
+import { useLogOut } from '@/features/auth/hooks/use-log-out';
 import type { Session } from '@/features/auth/model/types';
-import { authFailureText } from '@/features/auth/ui/failure-text';
 import { HeaderBreadcrumbs } from '@/app/header/ui/breadcrumbs';
 import { HeaderSectionNav } from '@/app/header/ui/section-nav';
 import { getHeaderState } from '@/app/header/model/state';
@@ -37,13 +36,7 @@ export function Header() {
   const matches = useMatches();
   const { breadcrumbs, navItems } = getHeaderState(matches);
   const { data: sessionData } = useQuery(sessionOptions);
-  const logoutMutation = useLogoutMutation();
-
-  const logOut = () => {
-    logoutMutation.mutate(undefined, {
-      onError: (error) => toast.error(authFailureText('logout', error)),
-    });
-  };
+  const logOut = useLogOut();
 
   return (
     <header

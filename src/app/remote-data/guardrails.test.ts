@@ -43,8 +43,11 @@ describe('TR-06: remote-data guardrails', () => {
 
   test.each([
     "import { authHandlers } from '@/features/auth/api/mock';",
+    "import { authHandlers } from '@/features/auth/api/mock.ts';",
     "import { load } from './mock';",
+    "import { load } from './mock.ts';",
     "import { server } from '@/app/mock-backend/node';",
+    "import { server } from '@/app/mock-backend/node.ts';",
     "import { http } from 'msw';",
   ])('production code cannot `%s`', async (code) => {
     expect(await violations(code, FEATURE_FILE)).toEqual([

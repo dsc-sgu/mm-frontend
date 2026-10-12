@@ -14,9 +14,12 @@ const parentRelativeImports = {
 };
 
 const mockApiImports = {
+  // Patterns match the import string, and TypeScript allows `.ts` in it.
   group: [
     '**/api/mock',
+    '**/api/mock.*',
     './mock',
+    './mock.*',
     '@/app/mock-backend',
     '@/app/mock-backend/*',
   ],

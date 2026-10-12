@@ -19,14 +19,29 @@ export type TestRoute = {
   beforeLoad?: (queryClient: QueryClient) => Promise<unknown>;
 };
 
+export type RenderRoutesOptions = {
+  /** Rendered above the routes and kept across navigation, like the header. */
+  layout?: RouteComponent;
+};
+
 /**
  * Renders flat routes with a fresh Router and QueryClient. Like the app root,
  * the root route shows toasts, so a toast shown by mistake is visible.
  */
-export function renderRoutes(routes: TestRoute[], initialPath: string) {
+export function renderRoutes(
+  routes: TestRoute[],
+  initialPath: string,
+  { layout: Layout }: RenderRoutesOptions = {}
+) {
   const queryClient = createQueryClient();
   const rootRoute = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-    component: RootComponent,
+    component: () => (
+      <>
+        {Layout && <Layout />}
+        <Outlet />
+        <Toaster />
+      </>
+    ),
   });
   const routeTree = rootRoute.addChildren(
     routes.map(({ path, component, beforeLoad }) =>
@@ -53,13 +68,4 @@ export function renderRoutes(routes: TestRoute[], initialPath: string) {
   );
 
   return { queryClient, router };
-}
-
-function RootComponent() {
-  return (
-    <>
-      <Outlet />
-      <Toaster />
-    </>
-  );
 }
