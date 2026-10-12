@@ -3,7 +3,8 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import { cn } from '@/shadcn/lib/utils';
-import { getModKeyLabel } from '@/features/course/features/page-edit/model/platform';
+import { getShortcutLabels } from '@/features/keyboard/shortcut';
+import { saveShortcut } from '@/features/course/features/page-edit/model/shortcuts';
 
 export function CoursePageEditApplyBar({
   isDirty,
@@ -70,8 +71,9 @@ export function CoursePageEditApplyBar({
             {isSaving && <Loader2 className="size-4 animate-spin" />}
             Применить
             <KbdGroup aria-label="Горячая клавиша">
-              <Kbd>{getModKeyLabel()}</Kbd>
-              <Kbd>S</Kbd>
+              {getShortcutLabels(saveShortcut).map((label) => (
+                <Kbd key={label}>{label}</Kbd>
+              ))}
             </KbdGroup>
           </Button>
         </div>

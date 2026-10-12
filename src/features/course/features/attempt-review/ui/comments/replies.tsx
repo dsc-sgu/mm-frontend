@@ -2,10 +2,11 @@ import { Check, MessageSquare, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
+import { getShortcutLabels } from '@/features/keyboard/shortcut';
 import {
-  getAttemptReviewCancelShortcutKeys,
-  getAttemptReviewSubmitShortcutKeys,
-} from '@/features/course/features/attempt-review/model/keyboard-shortcuts';
+  commentCancelShortcut,
+  commentSubmitShortcut,
+} from '@/features/course/features/attempt-review/model/shortcuts';
 import { RichTextEditor } from '@/features/course/features/attempt-review/ui/rich-text/editor';
 import { AttemptReviewCommentReplyItem } from './reply-item';
 import type { AttemptReviewLineCommentReply } from '@/features/course/features/attempt-review/model/types';
@@ -39,8 +40,8 @@ export function AttemptReviewCommentReplies({
   onReplyUpdate,
   onReplyDelete,
 }: AttemptReviewCommentRepliesProps) {
-  const submitShortcutKeys = getAttemptReviewSubmitShortcutKeys();
-  const cancelShortcutKeys = getAttemptReviewCancelShortcutKeys();
+  const submitShortcutKeys = getShortcutLabels(commentSubmitShortcut);
+  const cancelShortcutKeys = getShortcutLabels(commentCancelShortcut);
 
   if (replies.length === 0 && !canReply && !isReplying) {
     return null;

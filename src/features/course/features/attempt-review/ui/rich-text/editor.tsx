@@ -6,10 +6,11 @@ import Placeholder from '@tiptap/extension-placeholder';
 import StarterKit from '@tiptap/starter-kit';
 
 import { cn } from '@/shadcn/lib/utils';
+import { matchesShortcut } from '@/features/keyboard/shortcut';
 import {
-  isAttemptReviewCancelShortcutEvent,
-  isAttemptReviewSubmitShortcutEvent,
-} from '@/features/course/features/attempt-review/model/keyboard-shortcuts';
+  commentCancelShortcut,
+  commentSubmitShortcut,
+} from '@/features/course/features/attempt-review/model/shortcuts';
 import { RichTextContent } from './content';
 import { RichTextEditorToolbar } from './toolbar';
 import styles from './editor.module.css';
@@ -97,7 +98,7 @@ export function RichTextEditor({
       handleKeyDown(_view, event) {
         if (
           onSubmitShortcutRef.current &&
-          isAttemptReviewSubmitShortcutEvent(event)
+          matchesShortcut(event, commentSubmitShortcut)
         ) {
           event.preventDefault();
           onSubmitShortcutRef.current();
@@ -106,7 +107,7 @@ export function RichTextEditor({
 
         if (
           onCancelShortcutRef.current &&
-          isAttemptReviewCancelShortcutEvent(event)
+          matchesShortcut(event, commentCancelShortcut)
         ) {
           event.preventDefault();
           onCancelShortcutRef.current();

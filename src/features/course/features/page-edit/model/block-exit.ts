@@ -1,12 +1,13 @@
 import { KEYS, type SlateEditor } from 'platejs';
 
 import { focusOrInsertParagraphBelow } from '@/features/course/features/page-edit/model/block-operations';
-import { isModShortcut } from '@/features/course/features/page-edit/model/shortcuts';
+import {
+  matchesShortcut,
+  type Shortcut,
+  type ShortcutEvent,
+} from '@/features/keyboard/shortcut';
 
-type BlockExitKeyboardEvent = Pick<
-  KeyboardEvent,
-  'altKey' | 'ctrlKey' | 'isComposing' | 'key' | 'metaKey' | 'shiftKey'
->;
+const exitShortcut: Shortcut = { mod: true, key: 'Enter' };
 
 function getStructuredBlock(editor: SlateEditor) {
   const codeBlock = editor.api.above({
@@ -24,11 +25,10 @@ function getStructuredBlock(editor: SlateEditor) {
 
 export function exitCourseStructuredBlock(
   editor: SlateEditor,
-  event: BlockExitKeyboardEvent
+  event: ShortcutEvent
 ) {
   if (
-    event.isComposing ||
-    !isModShortcut(event, 'Enter') ||
+    !matchesShortcut(event, exitShortcut) ||
     !editor.selection ||
     editor.api.isExpanded()
   ) {

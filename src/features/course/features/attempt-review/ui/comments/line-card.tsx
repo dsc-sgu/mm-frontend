@@ -10,10 +10,11 @@ import {
   isPendingLineComment,
 } from '@/features/course/features/attempt-review/model/comment-lifecycle';
 import { formatAttemptReviewCommentRange } from '@/features/course/features/attempt-review/model/comment-range';
+import { getShortcutLabels } from '@/features/keyboard/shortcut';
 import {
-  getAttemptReviewCancelShortcutKeys,
-  getAttemptReviewSubmitShortcutKeys,
-} from '@/features/course/features/attempt-review/model/keyboard-shortcuts';
+  commentCancelShortcut,
+  commentSubmitShortcut,
+} from '@/features/course/features/attempt-review/model/shortcuts';
 import { AttemptReviewCommentPendingNotice } from './pending-notice';
 import { AttemptReviewCommentReplies } from './replies';
 import { AttemptReviewCommentTimestamp } from './timestamp';
@@ -87,8 +88,8 @@ export function AttemptReviewLineCommentCard({
   const replyHtml = isReplying ? replyComposer.html : EMPTY_REPLY_HTML;
   const isReplySubmitDisabled =
     isReplySubmitting || isRichTextHtmlEmpty(replyHtml);
-  const submitShortcutKeys = getAttemptReviewSubmitShortcutKeys();
-  const cancelShortcutKeys = getAttemptReviewCancelShortcutKeys();
+  const submitShortcutKeys = getShortcutLabels(commentSubmitShortcut);
+  const cancelShortcutKeys = getShortcutLabels(commentCancelShortcut);
 
   function changeDraftHtml(html: string) {
     setDraftState({ sourceHtml: comment.html, html });
