@@ -1,5 +1,5 @@
 import {
-  ensurePositiveIntegerOrRedirect,
+  ensureValidAttemptNumberOrRedirect,
   ensureValidUsernameOrRedirect,
 } from '@/features/course/routing/params';
 import {
@@ -9,15 +9,15 @@ import {
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
-  '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId'
+  '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber'
 )({
   async beforeLoad({ context, params }) {
     const studentUsername = ensureValidUsernameOrRedirect({
       studentUsername: params.studentUsername,
       courseSlug: params.courseSlug,
     });
-    const attemptId = ensurePositiveIntegerOrRedirect({
-      value: params.attemptId,
+    const attemptNumber = ensureValidAttemptNumberOrRedirect({
+      attemptNumber: params.attemptNumber,
       courseSlug: params.courseSlug,
     });
     const courseAccess = await requireCourseParticipant({
@@ -43,7 +43,7 @@ export const Route = createFileRoute(
       });
     }
 
-    return { attemptId, studentUsername };
+    return { attemptNumber, studentUsername };
   },
   component: RouteComponent,
 });

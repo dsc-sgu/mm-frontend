@@ -95,7 +95,7 @@ function getAttemptReviewQueryKey(params: AttemptReviewRouteParams) {
     params.courseSlug,
     params.taskId,
     params.studentUsername,
-    params.attemptId,
+    params.attemptNumber,
   ];
 }
 

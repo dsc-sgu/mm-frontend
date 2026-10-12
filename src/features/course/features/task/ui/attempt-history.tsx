@@ -47,7 +47,7 @@ export function TaskAttemptHistory({
       courseSlug,
       taskId,
       studentUsername: attempt.studentUsername,
-      attemptNumber: attempt.number,
+      attemptNumber: attempt.attemptNumber,
     });
   }
 
@@ -136,12 +136,12 @@ function TaskAttemptHistoryItem({
       )}
       aria-label={
         hasUnseenUpdates
-          ? `Попытка №${attempt.number}, есть непросмотренные обновления`
-          : `Попытка №${attempt.number}`
+          ? `Попытка №${attempt.attemptNumber}, есть непросмотренные обновления`
+          : `Попытка №${attempt.attemptNumber}`
       }
     >
       <span className="col-start-1 row-start-1 flex items-center text-lg font-bold tracking-tight sm:min-h-12 sm:pr-4">
-        №{attempt.number}
+        №{attempt.attemptNumber}
       </span>
 
       <SubmissionTime attempt={attempt} deadlineRelation={relation} />
@@ -160,12 +160,12 @@ function TaskAttemptHistoryItem({
 
         <Button asChild variant="outline" className="h-9 rounded-lg px-3">
           <Link
-            to="/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId"
+            to="/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber"
             params={{
               courseSlug,
               taskId,
               studentUsername: attempt.studentUsername,
-              attemptId: String(attempt.number),
+              attemptNumber: String(attempt.attemptNumber),
             }}
             onClick={() => onOpenAttempt(attempt)}
           >

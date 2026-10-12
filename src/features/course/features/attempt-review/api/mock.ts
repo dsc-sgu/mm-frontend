@@ -1,4 +1,9 @@
 import { parseDiffFromFile, type FileDiffMetadata } from '@pierre/diffs';
+import * as v from 'valibot';
+import {
+  AttemptNumberSchema,
+  type AttemptNumber,
+} from '@/features/course/model/identity';
 
 import {
   findMockCourseAttempt,
@@ -23,7 +28,7 @@ import type {
 } from '@/features/course/features/attempt-review/model/types';
 
 type StoredAttemptReview = {
-  attemptNumber: number;
+  attemptNumber: AttemptNumber;
   submittedAt: string;
   deadlineAt: string;
   files: Record<string, string>;
@@ -57,8 +62,8 @@ export async function fetchAttemptReview(
   await new Promise((resolve) => setTimeout(resolve, 180));
 
   const series = getReviewSeries(params);
-  const current = findAttemptOrThrow(series, params.attemptId);
-  const previous = findPreviousAttempt(series, params.attemptId);
+  const current = findAttemptOrThrow(series, params.attemptNumber);
+  const previous = findPreviousAttempt(series, params.attemptNumber);
   const changedFiles = buildChangedFiles(previous?.files ?? {}, current.files);
 
   return {
@@ -92,7 +97,7 @@ export async function saveAttemptReview(
   await new Promise((resolve) => setTimeout(resolve, 220));
 
   const series = getReviewSeries(input);
-  const current = findAttemptOrThrow(series, input.attemptId);
+  const current = findAttemptOrThrow(series, input.attemptNumber);
   const now = new Date().toISOString();
   const gradedBy = 'Текущий преподаватель';
 
@@ -142,7 +147,7 @@ export async function saveAttemptReview(
       courseSlug: input.courseSlug,
       taskId: input.taskId,
       studentUsername: input.studentUsername,
-      attemptNumber: input.attemptId,
+      attemptNumber: input.attemptNumber,
       score: current.grade.score,
       gradedAt: current.grade.gradedAt,
       gradedBy: current.grade.gradedBy,
@@ -222,7 +227,7 @@ function getReviewSeries(params: AttemptReviewRouteParams): ReviewSeries {
     courseSlug: params.courseSlug,
     taskId: params.taskId,
     studentUsername: params.studentUsername,
-    attemptNumber: params.attemptId,
+    attemptNumber: params.attemptNumber,
   });
   const task: AttemptReviewTask = listAttempt?.task ?? {
     id: params.taskId,
@@ -237,21 +242,21 @@ function getReviewSeries(params: AttemptReviewRouteParams): ReviewSeries {
   };
   const baseSubmittedAt = listAttempt
     ? Date.parse(listAttempt.submittedAt) -
-      (params.attemptId - 1) * 36 * 60 * 60 * 1000
+      (params.attemptNumber - 1) * 36 * 60 * 60 * 1000
     : Date.UTC(2026, 4, 20, 12, 0, 0);
   const deadlineAt =
     listAttempt?.deadlineAt ??
     new Date(baseSubmittedAt + 48 * 60 * 60 * 1000).toISOString();
-  const maxAttemptNumber = Math.max(4, params.attemptId);
+  const maxAttemptNumber = Math.max(4, params.attemptNumber);
   const attempts = Array.from({ length: maxAttemptNumber }, (_, index) => {
-    const attemptNumber = index + 1;
+    const attemptNumber = v.parse(AttemptNumberSchema, index + 1);
     const submittedAt = new Date(
       baseSubmittedAt + index * 36 * 60 * 60 * 1000
     ).toISOString();
     const savedGrade =
-      attemptNumber === params.attemptId && listAttempt?.grade
+      attemptNumber === params.attemptNumber && listAttempt?.grade
         ? listAttempt.grade
-        : attemptNumber < params.attemptId
+        : attemptNumber < params.attemptNumber
           ? {
               score: Number((task.maxScore * (0.55 + index * 0.13)).toFixed(1)),
               maxScore: task.maxScore,
@@ -288,7 +293,7 @@ function seriesKey({
 
 function findAttemptOrThrow(
   series: ReviewSeries,
-  attemptNumber: number
+  attemptNumber: AttemptNumber
 ): StoredAttemptReview {
   const attempt = series.attempts.find(
     (item) => item.attemptNumber === attemptNumber
@@ -305,7 +310,7 @@ function findAttemptOrThrow(
 
 function findPreviousAttempt(
   series: ReviewSeries,
-  attemptNumber: number
+  attemptNumber: AttemptNumber
 ): StoredAttemptReview | null {
   return (
     [...series.attempts]
@@ -318,7 +323,7 @@ function findLineCommentOrThrow(
   params: AttemptReviewRouteParams & { commentId: string }
 ): AttemptReviewLineComment {
   const series = getReviewSeries(params);
-  const current = findAttemptOrThrow(series, params.attemptId);
+  const current = findAttemptOrThrow(series, params.attemptNumber);
   const comment = current.lineComments.find(
     (item) => item.id === params.commentId
   );
@@ -436,7 +441,7 @@ function cloneLineComment(
   };
 }
 
-function buildSnapshot(attemptNumber: number): Record<string, string> {
+function buildSnapshot(attemptNumber: AttemptNumber): Record<string, string> {
   const snapshots: Record<number, Record<string, string>> = {
     1: {
       'README.md': '# Практика\n\nПервое решение задачи.\n',
@@ -548,7 +553,7 @@ function buildStressFileContents(fileNumber: number): string {
 }
 
 function buildFeedback(
-  attemptNumber: number,
+  attemptNumber: AttemptNumber,
   grade: AttemptReviewGrade | null
 ): AttemptReviewRichFeedback {
   if (!grade) {
@@ -565,7 +570,9 @@ function buildFeedback(
   };
 }
 
-function buildComments(attemptNumber: number): AttemptReviewLineComment[] {
+function buildComments(
+  attemptNumber: AttemptNumber
+): AttemptReviewLineComment[] {
   if (attemptNumber === 4) {
     return [];
   }

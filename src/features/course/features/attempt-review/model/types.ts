@@ -1,4 +1,5 @@
 import type { FileDiffMetadata } from '@pierre/diffs';
+import type { AttemptNumber } from '@/features/course/model/identity';
 
 export type AttemptReviewMode = 'editable' | 'readonly';
 export type AttemptReviewDiffViewMode = 'unified' | 'split';
@@ -9,7 +10,7 @@ export type AttemptReviewRouteParams = {
   courseSlug: string;
   taskId: string;
   studentUsername: string;
-  attemptId: number;
+  attemptNumber: AttemptNumber;
 };
 
 export type AttemptReviewTask = {
@@ -34,7 +35,7 @@ export type AttemptReviewGrade = {
 
 export type AttemptReviewAttemptDetail = {
   id: string;
-  attemptNumber: number;
+  attemptNumber: AttemptNumber;
   task: AttemptReviewTask;
   student: AttemptReviewStudent;
   submittedAt: string;
@@ -101,7 +102,7 @@ export type AttemptReviewRichFeedback = {
 };
 
 export type AttemptReviewHistoryItem = {
-  attemptNumber: number;
+  attemptNumber: AttemptNumber;
   submittedAt: string;
   score: number | null;
   maxScore: number;
@@ -112,7 +113,7 @@ export type AttemptReviewHistoryItem = {
 
 export type AttemptReviewAggregate = {
   courseSlug: string;
-  baselineAttemptNumber: number | null;
+  baselineAttemptNumber: AttemptNumber | null;
   current: AttemptReviewAttemptDetail;
   attempts: AttemptReviewHistoryItem[];
   history: AttemptReviewHistoryItem[];

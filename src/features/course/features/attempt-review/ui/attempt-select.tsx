@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { ChevronsUpDown, MessageSquare } from 'lucide-react';
+import type { AttemptNumber } from '@/features/course/model/identity';
 
 import {
   Popover,
@@ -97,13 +98,13 @@ export function AttemptReviewAttemptSelect({
                       void navigate({
                         to:
                           mode === 'editable'
-                            ? '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
-                            : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/',
+                            ? '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
+                            : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/',
                         params: {
                           courseSlug: review.courseSlug,
                           taskId: review.current.task.id,
                           studentUsername: review.current.student.username,
-                          attemptId: String(attempt.attemptNumber),
+                          attemptNumber: String(attempt.attemptNumber),
                         },
                       });
                     }}
@@ -125,7 +126,7 @@ export function AttemptReviewAttemptSelect({
 }
 
 type AttemptSelectOption = {
-  attemptNumber: number;
+  attemptNumber: AttemptNumber;
   submittedAt: string;
   score: number | null;
   maxScore: number;
@@ -249,7 +250,7 @@ function AttemptOptionCard({
 }
 
 function getAttemptOptions(review: AttemptReviewAggregate) {
-  const attempts = new Map<number, AttemptSelectOption>();
+  const attempts = new Map<AttemptNumber, AttemptSelectOption>();
 
   const addAttempt = (attempt: AttemptSelectOption) => {
     attempts.set(attempt.attemptNumber, attempt);

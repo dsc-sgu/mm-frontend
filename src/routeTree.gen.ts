@@ -31,9 +31,9 @@ import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdIndexRouteImport } fr
 import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdEditRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/edit'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/index'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsCommitIdRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/$commitId'
-import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/route'
-import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/index'
-import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
+import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/route'
+import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/index'
+import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
@@ -175,30 +175,30 @@ const AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsCommitIdRo
         AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRoute,
     } as any,
   )
-const AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRoute =
-  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteImport.update(
+const AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRoute =
+  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteImport.update(
     {
-      id: '/attempts/$studentUsername/$attemptId',
-      path: '/attempts/$studentUsername/$attemptId',
+      id: '/attempts/$studentUsername/$attemptNumber',
+      path: '/attempts/$studentUsername/$attemptNumber',
       getParentRoute: () => AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute,
     } as any,
   )
-const AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRoute =
-  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRouteImport.update(
+const AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRoute =
+  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRouteImport.update(
     {
       id: '/',
       path: '/',
       getParentRoute: () =>
-        AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRoute,
+        AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRoute,
     } as any,
   )
-const AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRoute =
-  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRouteImport.update(
+const AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRoute =
+  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRouteImport.update(
     {
       id: '/review',
       path: '/review',
       getParentRoute: () =>
-        AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRoute,
+        AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRoute,
     } as any,
   )
 
@@ -223,9 +223,9 @@ export interface FileRoutesByFullPath {
   '/courses/$courseSlug/tasks/$taskId/': typeof AuthenticatedCoursesCourseSlugTasksTaskIdIndexRoute
   '/courses/$courseSlug/repositories/$studentUsername/commits/$commitId': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsCommitIdRoute
   '/courses/$courseSlug/repositories/$studentUsername/commits/': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsIndexRoute
-  '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteWithChildren
-  '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRoute
-  '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRoute
+  '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteWithChildren
+  '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRoute
+  '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
@@ -243,8 +243,8 @@ export interface FileRoutesByTo {
   '/courses/$courseSlug/tasks/$taskId': typeof AuthenticatedCoursesCourseSlugTasksTaskIdIndexRoute
   '/courses/$courseSlug/repositories/$studentUsername/commits/$commitId': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsCommitIdRoute
   '/courses/$courseSlug/repositories/$studentUsername/commits': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsIndexRoute
-  '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRoute
-  '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRoute
+  '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRoute
+  '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -270,9 +270,9 @@ export interface FileRoutesById {
   '/_authenticated/courses/$courseSlug/tasks/$taskId/': typeof AuthenticatedCoursesCourseSlugTasksTaskIdIndexRoute
   '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/$commitId': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsCommitIdRoute
   '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsIndexRoute
-  '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteWithChildren
-  '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRoute
-  '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRoute
+  '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteWithChildren
+  '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRoute
+  '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/': typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -297,9 +297,9 @@ export interface FileRouteTypes {
     | '/courses/$courseSlug/tasks/$taskId/'
     | '/courses/$courseSlug/repositories/$studentUsername/commits/$commitId'
     | '/courses/$courseSlug/repositories/$studentUsername/commits/'
-    | '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId'
-    | '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
-    | '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/'
+    | '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber'
+    | '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
+    | '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -317,8 +317,8 @@ export interface FileRouteTypes {
     | '/courses/$courseSlug/tasks/$taskId'
     | '/courses/$courseSlug/repositories/$studentUsername/commits/$commitId'
     | '/courses/$courseSlug/repositories/$studentUsername/commits'
-    | '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
-    | '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId'
+    | '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
+    | '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber'
   id:
     | '__root__'
     | '/_auth'
@@ -343,9 +343,9 @@ export interface FileRouteTypes {
     | '/_authenticated/courses/$courseSlug/tasks/$taskId/'
     | '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/$commitId'
     | '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/'
-    | '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId'
-    | '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
-    | '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/'
+    | '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber'
+    | '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
+    | '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -509,26 +509,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsCommitIdRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRoute
     }
-    '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId': {
-      id: '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId'
-      path: '/attempts/$studentUsername/$attemptId'
-      fullPath: '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId'
-      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteImport
+    '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber': {
+      id: '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber'
+      path: '/attempts/$studentUsername/$attemptNumber'
+      fullPath: '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute
     }
-    '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/': {
-      id: '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/'
+    '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/': {
+      id: '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/'
       path: '/'
-      fullPath: '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/'
-      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRouteImport
-      parentRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRoute
+      fullPath: '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRouteImport
+      parentRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRoute
     }
-    '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review': {
-      id: '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
+    '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review': {
+      id: '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
       path: '/review'
-      fullPath: '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptId/review'
-      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRouteImport
-      parentRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRoute
+      fullPath: '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRouteImport
+      parentRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRoute
     }
   }
 }
@@ -599,28 +599,28 @@ const AuthenticatedCoursesCourseSlugRepositoriesRouteRouteWithChildren =
     AuthenticatedCoursesCourseSlugRepositoriesRouteRouteChildren,
   )
 
-interface AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteChildren {
-  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRoute
-  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRoute
+interface AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteChildren {
+  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRoute
+  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRoute
 }
 
-const AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteChildren: AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteChildren =
+const AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteChildren: AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteChildren =
   {
-    AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRoute:
-      AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdReviewRoute,
-    AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRoute:
-      AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdIndexRoute,
+    AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRoute:
+      AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberReviewRoute,
+    AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRoute:
+      AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberIndexRoute,
   }
 
-const AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteWithChildren =
-  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRoute._addFileChildren(
-    AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteChildren,
+const AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteWithChildren =
+  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRoute._addFileChildren(
+    AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteChildren,
   )
 
 interface AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteChildren {
   AuthenticatedCoursesCourseSlugTasksTaskIdEditRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdEditRoute
   AuthenticatedCoursesCourseSlugTasksTaskIdIndexRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdIndexRoute
-  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteWithChildren
+  AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteWithChildren
 }
 
 const AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteChildren: AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteChildren =
@@ -629,8 +629,8 @@ const AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteChildren: Authenticated
       AuthenticatedCoursesCourseSlugTasksTaskIdEditRoute,
     AuthenticatedCoursesCourseSlugTasksTaskIdIndexRoute:
       AuthenticatedCoursesCourseSlugTasksTaskIdIndexRoute,
-    AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRoute:
-      AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptIdRouteRouteWithChildren,
+    AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRoute:
+      AuthenticatedCoursesCourseSlugTasksTaskIdAttemptsStudentUsernameAttemptNumberRouteRouteWithChildren,
   }
 
 const AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteWithChildren =

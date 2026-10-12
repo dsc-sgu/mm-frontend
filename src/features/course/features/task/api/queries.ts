@@ -80,7 +80,7 @@ export function useMarkTaskAttemptUpdatesSeenMutation() {
           task: {
             ...currentData.task,
             attempts: currentData.task.attempts.map((attempt) =>
-              attempt.number === variables.attemptNumber &&
+              attempt.attemptNumber === variables.attemptNumber &&
               attempt.studentUsername === variables.studentUsername
                 ? { ...attempt, attention: { status: 'seen' } }
                 : attempt
