@@ -22,13 +22,15 @@ const attemptNumberParamSchema = v.pipe(
   AttemptNumberSchema
 );
 
-export function requireCourseSlug(courseSlug: string) {
+export function parseCourseSlug(courseSlug: string) {
   const result = v.safeParse(courseSlugParamSchema, courseSlug);
-  if (!result.success) {
-    throw notFound();
-  }
+  return result.success ? result.output : null;
+}
 
-  return result.output;
+export function requireCourseSlug(courseSlug: string) {
+  const parsed = parseCourseSlug(courseSlug);
+  if (parsed === null) throw notFound();
+  return parsed;
 }
 
 export function requireUsername(studentUsername: string) {

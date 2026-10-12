@@ -22,13 +22,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shadcn/components/ui/dropdown-menu';
-import { Link, useMatches, useRouterState } from '@tanstack/react-router';
+import { Link, useMatches } from '@tanstack/react-router';
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { sessionOptions } from '@/features/auth/api/queries';
 import { useLogOut } from '@/features/auth/hooks/use-log-out';
 import type { Session } from '@/features/auth/model/types';
 import type { LoadCourseResult } from '@/features/course/features/access/api/load-course';
 import { courseContextKeys } from '@/features/course/features/access/api/queries';
+import { useRequestedCourseSlug } from '@/features/course/routing/requested-slug';
 import { HeaderBreadcrumbs } from '@/app/header/ui/breadcrumbs';
 import { HeaderSectionNav } from '@/app/header/ui/section-nav';
 import { getHeaderState } from '@/app/header/model/state';
@@ -36,9 +37,7 @@ import { cn } from '@/shadcn/lib/utils';
 
 export function Header() {
   const matches = useMatches();
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
-  });
+  const requestedCourseSlug = useRequestedCourseSlug();
   const { data: sessionData } = useQuery(sessionOptions);
   const courseMatch = matches.find(
     (match) => match.routeId === '/_authenticated/courses/$courseSlug'
@@ -60,8 +59,7 @@ export function Header() {
     courseContext.session.userId === sessionData.session.userId &&
     !lookupFailed &&
     lookup?.status === 'found' &&
-    (pathname === `/courses/${courseContext.courseSlug}` ||
-      pathname.startsWith(`/courses/${courseContext.courseSlug}/`));
+    requestedCourseSlug === courseContext.courseSlug;
   // Background lookup updates must reach breadcrumbs even before a route
   // transition replaces its original beforeLoad context.
   const headerMatches =

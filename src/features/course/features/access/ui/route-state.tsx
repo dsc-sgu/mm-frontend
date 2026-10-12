@@ -1,5 +1,21 @@
-import { Link, useParams, useRouter } from '@tanstack/react-router';
-import type { CourseAccessRouteState } from '@/features/course/features/access/model/route-state';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Link,
+  useParams,
+  useRouteContext,
+  useRouter,
+  useRouterState,
+} from '@tanstack/react-router';
+import {
+  courseAccessRouteState,
+  type CourseAccessRouteState,
+} from '@/features/course/features/access/model/route-state';
+import { courseContextOptions } from '@/features/course/features/access/api/queries';
+import type { UserId } from '@/features/auth/model/identity';
+import type { CourseSlug } from '@/features/course/model/identity';
+import { parseCourseSlug } from '@/features/course/routing/params';
+import { useRequestedCourseSlug } from '@/features/course/routing/requested-slug';
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 
@@ -74,12 +90,63 @@ export function CourseResourceNotFound() {
   );
 }
 
-export function CourseLookupFailure() {
-  const router = useRouter();
+export function CourseRouteOutcome() {
+  const { session } = useRouteContext({ from: '/_authenticated' });
+  const { courseSlug: rawSlug } = useParams({
+    from: '/_authenticated/courses/$courseSlug',
+  });
+  const requestedSlug = useRequestedCourseSlug();
+  const courseSlug = parseCourseSlug(rawSlug);
+  if (requestedSlug !== rawSlug) return <CourseContextLoading />;
+  if (!courseSlug) return <CourseAccessState state="course-not-found" />;
   return (
-    <CourseAccessState
-      state="check-failed"
-      onRetry={() => void router.invalidate()}
-    />
+    <CourseLocatorOutcome userId={session.userId} courseSlug={courseSlug} />
+  );
+}
+
+function CourseLocatorOutcome({
+  userId,
+  courseSlug,
+}: {
+  userId: UserId;
+  courseSlug: CourseSlug;
+}) {
+  const router = useRouter();
+  const requestedSlug = useRequestedCourseSlug();
+  const isLoading = useRouterState({ select: (state) => state.isLoading });
+  const query = useQuery({
+    ...courseContextOptions(userId, courseSlug),
+    // beforeLoad already performed the first attempt.
+    refetchOnMount: false,
+    retryOnMount: false,
+  });
+
+  useEffect(() => {
+    if (
+      requestedSlug === courseSlug &&
+      !isLoading &&
+      !query.isError &&
+      query.data?.status === 'found'
+    ) {
+      // Reconcile the newly confirmed identity into Router context so its
+      // child guards run before protected content can mount.
+      void router.invalidate();
+    }
+  }, [requestedSlug, courseSlug, isLoading, query.isError, query.data, router]);
+
+  if (requestedSlug !== courseSlug) return <CourseContextLoading />;
+  if (query.isError) {
+    return (
+      <CourseAccessState
+        state="check-failed"
+        onRetry={() => void router.invalidate()}
+      />
+    );
+  }
+  if (!query.data || query.data.status === 'found') {
+    return <CourseContextLoading />;
+  }
+  return (
+    <CourseAccessState state={courseAccessRouteState(query.data.status)} />
   );
 }

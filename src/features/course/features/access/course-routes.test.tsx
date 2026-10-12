@@ -9,7 +9,11 @@ import {
 import userEvent from '@testing-library/user-event';
 import { http } from 'msw';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { QueryClientProvider } from '@tanstack/react-query';
+import {
+  focusManager,
+  onlineManager,
+  QueryClientProvider,
+} from '@tanstack/react-query';
 import {
   coursePageQueryOptions,
   useSaveCoursePageMutation,
@@ -260,4 +264,96 @@ test('saved Course metadata replaces the confirmed Header title without changing
   });
   await within(breadcrumbs).findByText('Базы данных — обновлённое название');
   expect(router.history.location.href).toBe(DATABASES_PATH);
+});
+
+test('case-insensitive static route segments do not hide a valid confirmed Course', async () => {
+  const path = '/Courses/databases';
+  const { router } = renderRoutes([], path, { appRoutes: true });
+  await screen.findByRole('heading', { name: 'Базы данных' });
+  expect(
+    screen.getByRole('navigation', { name: 'Разделы страницы' })
+  ).toBeDefined();
+  expect(screen.getByRole('link', { name: 'Редактирование' })).toBeDefined();
+  expect(router.history.location.href).toBe(path);
+});
+
+test('reconnect rechecks an initially failed lookup and confirms Course context', async () => {
+  let requests = 0;
+  server.use(
+    http.get(LOOKUP_URL, (args) => {
+      requests += 1;
+      if (requests === 1) return networkFailure(args);
+    })
+  );
+  const { router } = renderRoutes([], ALGORITHMS_PATH, { appRoutes: true });
+  await screen.findByRole('heading', { name: 'Не удалось проверить доступ' });
+
+  try {
+    await act(async () => {
+      onlineManager.setOnline(false);
+      onlineManager.setOnline(true);
+    });
+    await screen.findByRole('heading', { name: 'Алгоритмы' });
+    expect(router.history.location.href).toBe(ALGORITHMS_PATH);
+    expect(
+      screen.getByRole('link', { name: 'Репозиторий' }).getAttribute('href')
+    ).toBe('/courses/algorithms/repositories/vera');
+  } finally {
+    onlineManager.setOnline(true);
+  }
+});
+
+test('focus rechecks an initial denial and establishes the newly confirmed Membership', async () => {
+  const membership = mockBackend.state.memberships.find(
+    ({ courseId, userId }) =>
+      courseId === accessWorld.courses.algorithms.id &&
+      userId === accessWorld.users.vera.id
+  );
+  if (!membership) throw new Error('The fixture has no Vera Membership');
+  mockBackend.state.memberships = mockBackend.state.memberships.filter(
+    (candidate) => candidate !== membership
+  );
+  const { router } = renderRoutes([], ALGORITHMS_PATH, { appRoutes: true });
+  await screen.findByRole('heading', { name: 'Страница не найдена' });
+  expectNeutralCourseShell();
+
+  try {
+    mockBackend.state.memberships.push(membership);
+    await act(async () => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await screen.findByRole('heading', { name: 'Алгоритмы' });
+    expect(router.history.location.href).toBe(ALGORITHMS_PATH);
+    expect(
+      screen.getByRole('link', { name: 'Репозиторий' }).getAttribute('href')
+    ).toBe('/courses/algorithms/repositories/vera');
+  } finally {
+    focusManager.setFocused(undefined);
+  }
+});
+
+test('manual retry rechecks a cached context after its background lookup failed', async () => {
+  let requests = 0;
+  server.use(
+    http.get(LOOKUP_URL, (args) => {
+      requests += 1;
+      if (requests === 2) return networkFailure(args);
+    })
+  );
+  const { router } = renderRoutes([], ALGORITHMS_PATH, { appRoutes: true });
+  await screen.findByRole('heading', { name: 'Алгоритмы' });
+  try {
+    await act(async () => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await screen.findByRole('heading', { name: 'Не удалось проверить доступ' });
+    expectNeutralCourseShell();
+    await userEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+    await screen.findByRole('heading', { name: 'Алгоритмы' });
+    expect(router.history.location.href).toBe(ALGORITHMS_PATH);
+  } finally {
+    focusManager.setFocused(undefined);
+  }
 });
