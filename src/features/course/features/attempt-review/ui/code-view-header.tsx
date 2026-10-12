@@ -1,6 +1,10 @@
 import { cva } from 'class-variance-authority';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
+import {
+  MarkdownViewToggle,
+  type MarkdownFileView,
+} from '@/features/course/features/attempt-review/features/rendered-markdown';
 import { getAttemptReviewFileStatusGlyph } from '@/features/course/features/attempt-review/model/file-status';
 import type {
   AttemptReviewChangedFile,
@@ -12,6 +16,11 @@ type AttemptReviewCodeViewHeaderProps = {
   file: AttemptReviewChangedFile;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  // Present only for a Markdown file, which can also be shown rendered.
+  markdownView?: {
+    value: MarkdownFileView;
+    onChange: (value: MarkdownFileView) => void;
+  };
 };
 
 type FileStatusIconVariant = 'added' | 'deleted' | 'modified';
@@ -50,6 +59,7 @@ export function AttemptReviewCodeViewHeader({
   file,
   collapsed,
   onToggleCollapsed,
+  markdownView,
 }: AttemptReviewCodeViewHeaderProps) {
   return (
     <div
@@ -100,6 +110,12 @@ export function AttemptReviewCodeViewHeader({
         <span className="min-w-0 truncate">{file.path}</span>
       </div>
       <div className="flex shrink-0 items-center gap-2 text-xs font-semibold">
+        {markdownView ? (
+          <MarkdownViewToggle
+            value={markdownView.value}
+            onChange={markdownView.onChange}
+          />
+        ) : null}
         {file.deletedLines > 0 || file.addedLines === 0 ? (
           <span className="text-rose-500">−{file.deletedLines}</span>
         ) : null}

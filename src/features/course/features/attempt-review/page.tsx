@@ -6,7 +6,7 @@ import { sessionOptions } from '@/features/auth/api/queries';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import type { AttemptReviewLineCommentAnnotation } from './model/comment-annotation';
+import type { AttemptReviewCodeViewAnnotation } from './model/code-view-annotation';
 import { prepareLineCommentsForSave } from './model/comment-save';
 import { AttemptReviewDiff } from './ui/diff';
 import {
@@ -15,6 +15,8 @@ import {
 } from './model/diff-view-mode-storage';
 import { useAttemptReviewDraft } from './model/draft';
 import { useAttemptReviewFileScroll } from './hooks/use-file-scroll';
+import { UnsentCommentTextContext } from './hooks/use-unsent-comment-text';
+import { createUnsentCommentTextStore } from './model/unsent-comment-text';
 import { AttemptReviewFileTree } from './ui/file-tree';
 import { AttemptReviewHeader } from './ui/header';
 import { AttemptReviewMobileDrawer } from './ui/mobile-drawer';
@@ -112,8 +114,9 @@ function AttemptReviewPageLoaded({
   const [diffViewMode, setDiffViewMode] = useState<AttemptReviewDiffViewMode>(
     getStoredDiffViewMode
   );
+  const [unsentCommentText] = useState(createUnsentCommentTextStore);
   const diffViewerRef =
-    useRef<CodeViewHandle<AttemptReviewLineCommentAnnotation> | null>(null);
+    useRef<CodeViewHandle<AttemptReviewCodeViewAnnotation> | null>(null);
   const isDesktopReviewLayout = useMediaQuery('(min-width: 1024px)');
   const currentReviewer = useMemo(() => {
     if (sessionData?.status !== 'authorized') {
@@ -138,7 +141,7 @@ function AttemptReviewPageLoaded({
     resetToReview,
   } = useAttemptReviewDraft(review);
   const handleDiffViewerChange = useCallback(
-    (viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null) => {
+    (viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation> | null) => {
       diffViewerRef.current = viewer;
     },
     []
@@ -301,25 +304,27 @@ function AttemptReviewPageLoaded({
         </aside>
 
         <div className="relative flex min-h-0 min-w-0 flex-col overflow-hidden">
-          <AttemptReviewDiff
-            files={review.changedFiles}
-            comments={draft.lineComments}
-            savedComments={review.lineComments}
-            mode={mode}
-            currentReviewer={currentReviewer}
-            canReplyToComments={canReplyToComments}
-            viewMode={diffViewMode}
-            onViewerChange={handleDiffViewerChange}
-            className="min-h-0 min-w-0 flex-1 bg-card"
-            onCommentsChange={(lineComments) => {
-              if (mode === 'editable' || canReplyToComments) {
-                setLineComments(lineComments);
-              }
-            }}
-            onReplySubmit={submitCommentReply}
-            onReplyUpdate={updateCommentReply}
-            onReplyDelete={deleteCommentReply}
-          />
+          <UnsentCommentTextContext value={unsentCommentText}>
+            <AttemptReviewDiff
+              files={review.changedFiles}
+              comments={draft.lineComments}
+              savedComments={review.lineComments}
+              mode={mode}
+              currentReviewer={currentReviewer}
+              canReplyToComments={canReplyToComments}
+              viewMode={diffViewMode}
+              onViewerChange={handleDiffViewerChange}
+              className="min-h-0 min-w-0 flex-1 bg-card"
+              onCommentsChange={(lineComments) => {
+                if (mode === 'editable' || canReplyToComments) {
+                  setLineComments(lineComments);
+                }
+              }}
+              onReplySubmit={submitCommentReply}
+              onReplyUpdate={updateCommentReply}
+              onReplyDelete={deleteCommentReply}
+            />
+          </UnsentCommentTextContext>
 
           {isDesktopReviewLayout ? (
             <div

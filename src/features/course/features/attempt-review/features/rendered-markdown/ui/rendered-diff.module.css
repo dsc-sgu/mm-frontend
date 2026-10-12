@@ -1,0 +1,122 @@
+/* Typography for sanitized student Markdown, which carries no classes. */
+
+.document {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.block > :first-child {
+  margin-top: 0;
+}
+
+.block > :last-child {
+  margin-bottom: 0;
+}
+
+.block :is(p, ul, ol, dl, blockquote, pre, table, details, hr) {
+  margin-block: 0.5rem;
+}
+
+.block :is(h1, h2, h3, h4, h5, h6) {
+  margin-block: 0.75rem 0.5rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.block h1 {
+  font-size: 1.6em;
+}
+
+.block h2 {
+  font-size: 1.35em;
+}
+
+.block h3 {
+  font-size: 1.15em;
+}
+
+.block :is(h1, h2) {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3em;
+}
+
+.block ul {
+  list-style: disc;
+  padding-inline-start: 1.5rem;
+}
+
+.block ol {
+  list-style: decimal;
+  padding-inline-start: 1.5rem;
+}
+
+.block li:has(> input[type='checkbox']) {
+  list-style: none;
+}
+
+.block li > input[type='checkbox'] {
+  margin-inline: -1.25rem 0.4rem;
+  vertical-align: middle;
+}
+
+.block blockquote {
+  border-inline-start: 0.25rem solid var(--border);
+  padding-inline-start: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.block code {
+  border-radius: 0.35rem;
+  background: color-mix(in oklch, var(--muted) 80%, var(--background));
+  padding: 0.1rem 0.3rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.9em;
+}
+
+.block pre {
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background: color-mix(in oklch, var(--muted) 72%, var(--background));
+  padding: 0.75rem;
+}
+
+.block pre code {
+  background: none;
+  padding: 0;
+}
+
+.block table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.block :is(th, td) {
+  border: 1px solid var(--border);
+  padding: 0.3rem 0.6rem;
+}
+
+.block th {
+  font-weight: 600;
+}
+
+.block hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.block img {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.block a[href] {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.block summary {
+  cursor: pointer;
+}

@@ -3,10 +3,15 @@ import type { CodeViewOptions } from '@pierre/diffs';
 import { CodeView, type CodeViewHandle } from '@pierre/diffs/react';
 import { AttemptReviewCodeViewHeader } from './code-view-header';
 import {
+  RenderedMarkdownDiffView,
+  isMarkdownFile,
+  type MarkdownFileView,
+} from '@/features/course/features/attempt-review/features/rendered-markdown';
+import {
   createAttemptReviewCodeViewItems,
   groupAttemptReviewCommentsByFile,
 } from '@/features/course/features/attempt-review/model/code-view-item';
-import type { AttemptReviewLineCommentAnnotation } from '@/features/course/features/attempt-review/model/comment-annotation';
+import type { AttemptReviewCodeViewAnnotation } from '@/features/course/features/attempt-review/model/code-view-annotation';
 import { getLineCommentStatus } from '@/features/course/features/attempt-review/model/comment-lifecycle';
 import {
   addLineComment,
@@ -56,7 +61,7 @@ type AttemptReviewDiffProps = {
   ) => Promise<AttemptReviewLineCommentReply>;
   onReplyDelete?: (commentId: string, replyId: string) => Promise<void>;
   onViewerChange?: (
-    viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null
+    viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation> | null
   ) => void;
 };
 
@@ -81,6 +86,13 @@ const CODE_VIEW_UNSAFE_CSS = `
   [data-diffs-header][data-sticky] {
     z-index: 2;
   }
+
+  /* File items only host the rendered Markdown view: hide their placeholder
+     line and gutter, so the view's annotation spans the whole row. */
+  pre[data-file] [data-gutter],
+  pre[data-file] [data-line] {
+    display: none;
+  }
 `;
 
 export function AttemptReviewDiff({
@@ -102,8 +114,11 @@ export function AttemptReviewDiff({
   const htmlThemeType = useHtmlThemeType();
   const codeViewContainerRef = useRef<HTMLDivElement | null>(null);
   const codeViewHandleRef =
-    useRef<CodeViewHandle<AttemptReviewLineCommentAnnotation> | null>(null);
+    useRef<CodeViewHandle<AttemptReviewCodeViewAnnotation> | null>(null);
   const [collapsedFilePaths, setCollapsedFilePaths] = useState<Set<string>>(
+    () => new Set()
+  );
+  const [renderedFilePaths, setRenderedFilePaths] = useState<Set<string>>(
     () => new Set()
   );
   const commentsByFile = useMemo(
@@ -125,11 +140,12 @@ export function AttemptReviewDiff({
         files,
         commentsByFile,
         collapsedFilePaths,
+        renderedFilePaths,
       }),
-    [collapsedFilePaths, commentsByFile, files]
+    [collapsedFilePaths, commentsByFile, files, renderedFilePaths]
   );
 
-  const options = useMemo<CodeViewOptions<AttemptReviewLineCommentAnnotation>>(
+  const options = useMemo<CodeViewOptions<AttemptReviewCodeViewAnnotation>>(
     () => ({
       layout: CODE_VIEW_LAYOUT,
       itemMetrics: CODE_VIEW_ITEM_METRICS,
@@ -163,7 +179,7 @@ export function AttemptReviewDiff({
   );
 
   const handleViewerChange = useCallback(
-    (viewer: CodeViewHandle<AttemptReviewLineCommentAnnotation> | null) => {
+    (viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation> | null) => {
       codeViewHandleRef.current = viewer;
       onViewerChange?.(viewer);
     },
@@ -248,6 +264,20 @@ export function AttemptReviewDiff({
     applyComments(deleteLineCommentReply({ comments, commentId, replyId }));
   }
 
+  function changeFileView(filePath: string, view: MarkdownFileView) {
+    setRenderedFilePaths((current) => {
+      const next = new Set(current);
+
+      if (view === 'rendered') {
+        next.add(filePath);
+      } else {
+        next.delete(filePath);
+      }
+
+      return next;
+    });
+  }
+
   function toggleFileCollapsed(filePath: string) {
     setCollapsedFilePaths((current) => {
       const next = new Set(current);
@@ -264,7 +294,7 @@ export function AttemptReviewDiff({
 
   return (
     <div className={['relative', className].filter(Boolean).join(' ')}>
-      <CodeView<AttemptReviewLineCommentAnnotation>
+      <CodeView<AttemptReviewCodeViewAnnotation>
         ref={handleViewerChange}
         containerRef={codeViewContainerRef}
         items={items}
@@ -276,10 +306,6 @@ export function AttemptReviewDiff({
         )}
         options={options}
         renderCustomHeader={(item) => {
-          if (item.type !== 'diff') {
-            return null;
-          }
-
           const file = filesByPath.get(item.id);
 
           if (!file) {
@@ -291,10 +317,33 @@ export function AttemptReviewDiff({
               file={file}
               collapsed={item.collapsed === true}
               onToggleCollapsed={() => toggleFileCollapsed(item.id)}
+              markdownView={
+                isMarkdownFile(file.path)
+                  ? {
+                      value: renderedFilePaths.has(file.path)
+                        ? 'rendered'
+                        : 'source',
+                      onChange: (view) => changeFileView(file.path, view),
+                    }
+                  : undefined
+              }
             />
           );
         }}
         renderAnnotation={(annotation) => {
+          if (annotation.metadata.type === 'rendered-markdown') {
+            const { file } = annotation.metadata;
+
+            return (
+              <RenderedMarkdownDiffView
+                oldText={file.contents.oldText}
+                newText={file.contents.newText}
+                lineCommentCount={commentsByFile.get(file.path)?.length ?? 0}
+                onShowSource={() => changeFileView(file.path, 'source')}
+              />
+            );
+          }
+
           const comment = annotation.metadata.comment;
 
           return (

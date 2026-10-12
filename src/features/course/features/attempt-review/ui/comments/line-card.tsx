@@ -23,6 +23,8 @@ import {
   RichTextEditor,
 } from '@/features/course/features/attempt-review/ui/rich-text/editor';
 import { isRichTextHtmlEmpty } from '@/features/course/features/attempt-review/ui/rich-text/empty';
+import { useUnsentCommentText } from '@/features/course/features/attempt-review/hooks/use-unsent-comment-text';
+import { unsentCommentTextKeys } from '@/features/course/features/attempt-review/model/unsent-comment-text';
 import type {
   AttemptReviewLineComment,
   AttemptReviewMode,
@@ -73,12 +75,19 @@ export function AttemptReviewLineCommentCard({
   const isPendingDelete = commentStatus === 'pending-delete';
   const isPendingComment = isPendingLineComment(comment);
   const isEditableComment = isEditableLineComment({ comment, mode });
+  const unsentText = useUnsentCommentText();
+  const commentTextKey = unsentCommentTextKeys.comment(comment.id);
+  const replyTextKey = unsentCommentTextKeys.reply(comment.id);
   const [draftState, setDraftState] = useState(() => ({
     sourceHtml: comment.html,
-    html: comment.html,
+    html: unsentText.read(commentTextKey, comment.html) ?? comment.html,
   }));
-  const [replyComposer, setReplyComposer] = useState<ReplyComposerState>({
-    status: 'idle',
+  const [replyComposer, setReplyComposer] = useState<ReplyComposerState>(() => {
+    const html = unsentText.read(replyTextKey, EMPTY_REPLY_HTML);
+
+    return html === undefined
+      ? { status: 'idle' }
+      : { status: 'editing', html };
   });
   const draftHtml =
     draftState.sourceHtml === comment.html ? draftState.html : comment.html;
@@ -93,6 +102,23 @@ export function AttemptReviewLineCommentCard({
 
   function changeDraftHtml(html: string) {
     setDraftState({ sourceHtml: comment.html, html });
+    unsentText.write(commentTextKey, { sourceHtml: comment.html, html });
+  }
+
+  function submitComment(html: string) {
+    unsentText.clear(commentTextKey);
+    onSubmit(html);
+  }
+
+  function cancelComment() {
+    unsentText.clear(commentTextKey);
+    onCancel();
+  }
+
+  function editComment() {
+    // A new edit starts from the saved text, not from an abandoned one.
+    unsentText.clear(commentTextKey);
+    onEdit();
   }
 
   async function submitReply() {
@@ -108,6 +134,7 @@ export function AttemptReviewLineCommentCard({
 
     try {
       await onReplySubmit(submittedHtml);
+      unsentText.clear(replyTextKey);
       setReplyComposer({ status: 'idle' });
     } catch (error) {
       setReplyComposer({ status: 'editing', html: submittedHtml });
@@ -123,16 +150,21 @@ export function AttemptReviewLineCommentCard({
 
       return { status: 'editing', html };
     });
+    unsentText.write(replyTextKey, { sourceHtml: EMPTY_REPLY_HTML, html });
   }
 
   function startReply() {
+    unsentText.clear(replyTextKey);
     setReplyComposer({ status: 'editing', html: EMPTY_REPLY_HTML });
   }
 
   function cancelReply() {
-    setReplyComposer((current) =>
-      current.status === 'submitting' ? current : { status: 'idle' }
-    );
+    if (replyComposer.status === 'submitting') {
+      return;
+    }
+
+    unsentText.clear(replyTextKey);
+    setReplyComposer({ status: 'idle' });
   }
 
   return (
@@ -197,7 +229,7 @@ export function AttemptReviewLineCommentCard({
                 size="icon-xs"
                 aria-label="Редактировать комментарий"
                 title="Редактировать комментарий"
-                onClick={onEdit}
+                onClick={editComment}
               >
                 <Pencil className="size-3.5" />
               </Button>
@@ -245,10 +277,10 @@ export function AttemptReviewLineCommentCard({
             onChange={changeDraftHtml}
             onSubmitShortcut={() => {
               if (!isSubmitDisabled) {
-                onSubmit(draftHtml);
+                submitComment(draftHtml);
               }
             }}
-            onCancelShortcut={onCancel}
+            onCancelShortcut={cancelComment}
           />
           <div className="flex flex-wrap justify-start gap-2">
             <Button
@@ -256,7 +288,7 @@ export function AttemptReviewLineCommentCard({
               size="sm"
               className="rounded-xl"
               disabled={isSubmitDisabled}
-              onClick={() => onSubmit(draftHtml)}
+              onClick={() => submitComment(draftHtml)}
             >
               <Check className="size-4" />
               Отправить
@@ -271,7 +303,7 @@ export function AttemptReviewLineCommentCard({
               variant="outline"
               size="sm"
               className="rounded-xl"
-              onClick={onCancel}
+              onClick={cancelComment}
             >
               {comment.status === 'draft' ? (
                 <X className="size-4" />
