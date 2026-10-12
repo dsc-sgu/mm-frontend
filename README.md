@@ -121,6 +121,8 @@ Note: This will impact Vite dev & build performances.
 
 `eslint-plugin-prettier/recommended` is the last entry in `eslint.config.js`. It enables Prettier checks and disables conflicting ESLint formatting rules through `eslint-config-prettier`.
 
+Schema ownership and placement are defined in [AGENTS.md](AGENTS.md#valibot-schemas). ESLint's built-in `no-restricted-syntax` guard keeps runtime Valibot out of UI/hooks/application routes while allowing whole-declaration `import type`/`export type` and model-owned schemas passed to form resolvers. Feature `api/model/routing`, the transport validator, mock backend and test harnesses own runtime validation. The guard does not infer whether a schema is a DTO or a domain contract; that remains a review responsibility.
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:

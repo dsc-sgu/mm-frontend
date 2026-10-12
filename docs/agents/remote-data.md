@@ -52,6 +52,7 @@
 5. Raw bytes, blobs, streams и text ДОЛЖНЫ проверяться согласно контракту, по которому приложение их интерпретирует. Object schema не требуется только потому, что данные пришли из внешней системы.
 6. Payload, нарушающий контракт, ДОЛЖЕН отклонять Promise отказом `invalid-response` и НЕ ДОЛЖЕН попадать в domain state или query cache.
 7. Runtime validation ДОЛЖНА предшествовать преобразованию DTO в domain model. DTO МОЖЕТ быть преобразован в domain model только после успешной проверки.
+8. DTO schemas ДОЛЖНЫ принадлежать `api/` feature-владельца операции; schema одного ответа СЛЕДУЕТ держать рядом с операцией, а shared DTO schema — в том же API-слое. Доменные schemas МОГУТ переиспользоваться при проверке DTO, но domain model НЕ ДОЛЖНА зависеть от transport schemas. Полные правила размещения и границы статической проверки — в [`AGENTS.md`](../../AGENTS.md#valibot-schemas).
 
 Обязательный переход доверия:
 
