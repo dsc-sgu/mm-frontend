@@ -1,5 +1,6 @@
 import { redirect } from '@tanstack/react-router';
 import * as v from 'valibot';
+import { UsernameSchema } from '@/features/auth/model/identity';
 
 const slugLikeSchema = v.pipe(
   v.string(),
@@ -7,7 +8,7 @@ const slugLikeSchema = v.pipe(
 );
 
 export const courseSlugParamSchema = slugLikeSchema;
-export const usernameParamSchema = slugLikeSchema;
+export const usernameParamSchema = UsernameSchema;
 
 export const positiveIntegerParamSchema = v.pipe(
   v.string(),
