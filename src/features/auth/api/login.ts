@@ -1,7 +1,7 @@
 import {
   jsonBody,
   runHttpOperation,
-  unexpectedHttp,
+  unexpectedHttpStatus,
 } from '@/app/remote-data/http';
 
 export type LoginInput = {
@@ -26,7 +26,7 @@ export function login(input: LoginInput): Promise<LoginOutcome> {
       if (context.response.status === 400) {
         return { status: 'invalid-credentials' };
       }
-      if (context.response.status !== 200) throw unexpectedHttp(context);
+      if (context.response.status !== 200) throw unexpectedHttpStatus(context);
 
       // The body is not read: the session check reports who signed in.
       return { status: 'signed-in' };
