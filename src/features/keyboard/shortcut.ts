@@ -1,5 +1,8 @@
-// Letters are bound to the physical key (`KeyboardEvent.code`), so shortcuts
-// keep working in the Russian layout and with Option on macOS.
+// A letter matches the character it types in a Latin layout, the way the
+// shortcuts of the OS do, so the label is right in Dvorak or AZERTY too. When
+// the key types no Latin letter (the Russian layout, an Option symbol or a
+// dead key on macOS), the physical key (`KeyboardEvent.code`) decides. The
+// rule and its sources are recorded in #147.
 type Letter =
   | 'A'
   | 'B'
@@ -56,12 +59,18 @@ export function matchesShortcut(event: ShortcutEvent, shortcut: Shortcut) {
   );
 }
 
+const LATIN_LETTER = /^[a-z]$/i;
+
 function matchesKey(event: ShortcutEvent, key: ShortcutKey) {
-  if (isLetter(key)) {
-    return event.code === `Key${key}`;
+  if (!isLetter(key)) {
+    return event.key === key;
   }
 
-  return event.key === key;
+  if (LATIN_LETTER.test(event.key)) {
+    return event.key.toUpperCase() === key;
+  }
+
+  return event.code === `Key${key}`;
 }
 
 function isLetter(key: ShortcutKey): key is Letter {
