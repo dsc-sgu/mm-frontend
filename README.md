@@ -63,6 +63,8 @@ Course entry calls `loadCourseBySlug` at `GET /api/v1/courses/by-slug/:courseSlu
 
 Course Page metadata saves invalidate Course-context entries for every User at the affected old/new locators, including title-only saves. Header breadcrumbs consume the newest validated lookup metadata rather than the route's original cached title.
 
+Failure and denial surfaces retain a lookup observer for focus/reconnect; successful rechecks establish Router context before child guards run. Transition guards use Router-matched Course locators, preserving case-insensitive static route segments while validating the slug itself.
+
 Course Page, Task Page, Attempts, Review and deadlines still use RAM operations. Page and deadline mocks read metadata from canonical Courses. Teacher routes no longer require a client-side Student roster; backend participant-resource authorization follows in ACC2.2. Review replies use the current User's identity and the confirmed Course role. Production builds never include MSW or the test control channel.
 
 The dev server serves MSW's `mockServiceWorker.js` from `node_modules` with one change: the service worker leaves Web Worker scripts to the browser. Firefox never runs a module worker whose script a service worker answered ([mswjs/msw#2654](https://github.com/mswjs/msw/issues/2654)), so the Attempt review diff never loaded there. `playwright/attempt-review/page.spec.ts` guards it in all three engines.
