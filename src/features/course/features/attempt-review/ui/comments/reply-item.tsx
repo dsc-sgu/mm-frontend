@@ -57,8 +57,8 @@ export function AttemptReviewCommentReplyItem({
       ? state.draftHtml
       : reply.html;
   const isSubmitDisabled = isPending || isRichTextHtmlEmpty(draftHtml);
-  const submitShortcutKeys = getShortcutLabels(commentSubmitShortcut);
-  const cancelShortcutKeys = getShortcutLabels(commentCancelShortcut);
+  const submitShortcutLabels = getShortcutLabels(commentSubmitShortcut);
+  const cancelShortcutLabels = getShortcutLabels(commentCancelShortcut);
 
   function startEdit() {
     setState({
@@ -174,8 +174,8 @@ export function AttemptReviewCommentReplyItem({
             <Check className="size-4" />
             Сохранить
             <KbdGroup className="ml-1 hidden sm:inline-flex">
-              {submitShortcutKeys.map((key) => (
-                <Kbd key={key}>{key}</Kbd>
+              {submitShortcutLabels.map((label) => (
+                <Kbd key={label}>{label}</Kbd>
               ))}
             </KbdGroup>
           </Button>
@@ -190,8 +190,8 @@ export function AttemptReviewCommentReplyItem({
             <RotateCcw className="size-4" />
             Отмена
             <KbdGroup className="ml-1 hidden sm:inline-flex">
-              {cancelShortcutKeys.map((key) => (
-                <Kbd key={key}>{key}</Kbd>
+              {cancelShortcutLabels.map((label) => (
+                <Kbd key={label}>{label}</Kbd>
               ))}
             </KbdGroup>
           </Button>
