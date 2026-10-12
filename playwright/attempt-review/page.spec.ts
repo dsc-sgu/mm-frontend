@@ -7,14 +7,17 @@ import { expect, test } from '@playwright/test';
 test('страница проверки попытки открывается с mock backend', async ({
   page,
 }) => {
+  test.slow();
   await page.goto(
     '/courses/modern-information-technologies/tasks/1/attempts/student/1/review'
   );
 
+  // The first visit makes the dev server build the worker module graph and
+  // Shiki; on a cold CI runner that takes longer than the default 5 s.
   await expect(
     page.getByRole('heading', {
       name: 'Попытка #1: Вводное практическое задание',
     })
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText('Загружаем страницу проверки…')).toBeHidden();
 });
