@@ -90,7 +90,7 @@ export function CourseResourceNotFound() {
   );
 }
 
-export function CourseRouteOutcome() {
+export function CourseRouteOutcome({ kind }: { kind: 'lookup' | 'resource' }) {
   const { session } = useRouteContext({ from: '/_authenticated' });
   const { courseSlug: rawSlug } = useParams({
     from: '/_authenticated/courses/$courseSlug',
@@ -100,14 +100,20 @@ export function CourseRouteOutcome() {
   if (requestedSlug !== rawSlug) return <CourseContextLoading />;
   if (!courseSlug) return <CourseAccessState state="course-not-found" />;
   return (
-    <CourseLocatorOutcome userId={session.userId} courseSlug={courseSlug} />
+    <CourseLocatorOutcome
+      kind={kind}
+      userId={session.userId}
+      courseSlug={courseSlug}
+    />
   );
 }
 
 function CourseLocatorOutcome({
+  kind,
   userId,
   courseSlug,
 }: {
+  kind: 'lookup' | 'resource';
   userId: UserId;
   courseSlug: CourseSlug;
 }) {
@@ -123,6 +129,7 @@ function CourseLocatorOutcome({
 
   useEffect(() => {
     if (
+      kind === 'lookup' &&
       requestedSlug === courseSlug &&
       !isLoading &&
       !query.isError &&
@@ -132,7 +139,15 @@ function CourseLocatorOutcome({
       // child guards run before protected content can mount.
       void router.invalidate();
     }
-  }, [requestedSlug, courseSlug, isLoading, query.isError, query.data, router]);
+  }, [
+    kind,
+    requestedSlug,
+    courseSlug,
+    isLoading,
+    query.isError,
+    query.data,
+    router,
+  ]);
 
   if (requestedSlug !== courseSlug) return <CourseContextLoading />;
   if (query.isError) {
@@ -142,6 +157,9 @@ function CourseLocatorOutcome({
         onRetry={() => void router.invalidate()}
       />
     );
+  }
+  if (kind === 'resource' && query.data?.status === 'found') {
+    return <CourseResourceNotFound />;
   }
   if (!query.data || query.data.status === 'found') {
     return <CourseContextLoading />;

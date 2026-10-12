@@ -357,3 +357,73 @@ test('manual retry rechecks a cached context after its background lookup failed'
     focusManager.setFocused(undefined);
   }
 });
+
+test('returning directly from another Course rechecks cached context in the background', async () => {
+  const { router } = renderRoutes([], ALGORITHMS_PATH, { appRoutes: true });
+  await screen.findByRole('heading', { name: 'Алгоритмы' });
+  await act(async () => {
+    await router.navigate({ to: DATABASES_PATH });
+  });
+  await screen.findByRole('heading', { name: 'Базы данных' });
+  const held = holdResponse();
+  let requested = false;
+  server.use(
+    http.get('/api/v1/courses/by-slug/algorithms', (args) => {
+      requested = true;
+      return held.resolver(args);
+    })
+  );
+  try {
+    await act(async () => {
+      void router.navigate({ to: ALGORITHMS_PATH });
+    });
+    await screen.findByRole('heading', { name: 'Алгоритмы' });
+    expect(screen.queryByRole('status', { name: 'Загрузка курса' })).toBeNull();
+    await waitFor(() => expect(requested).toBe(true));
+    expect(router.history.location.href).toBe(ALGORITHMS_PATH);
+  } finally {
+    held.release();
+  }
+});
+
+test('cached Course entry rechecks after another Course denied access', async () => {
+  mockBackend.state.memberships = mockBackend.state.memberships.filter(
+    ({ courseId }) => courseId !== accessWorld.courses.databases.id
+  );
+  const { router } = renderRoutes([], ALGORITHMS_PATH, { appRoutes: true });
+  await screen.findByRole('heading', { name: 'Алгоритмы' });
+  await act(async () => {
+    await router.navigate({ to: DATABASES_PATH });
+  });
+  await screen.findByRole('heading', { name: 'Страница не найдена' });
+  const held = holdResponse();
+  let requested = false;
+  server.use(
+    http.get('/api/v1/courses/by-slug/algorithms', (args) => {
+      requested = true;
+      return held.resolver(args);
+    })
+  );
+  try {
+    await act(async () => {
+      void router.navigate({ to: ALGORITHMS_PATH });
+    });
+    await screen.findByRole('heading', { name: 'Алгоритмы' });
+    expect(screen.queryByRole('status', { name: 'Загрузка курса' })).toBeNull();
+    await waitFor(() => expect(requested).toBe(true));
+    expect(router.history.location.href).toBe(ALGORITHMS_PATH);
+  } finally {
+    held.release();
+  }
+});
+
+test('an unmatched nested route remains a resource 404 inside the confirmed Course shell', async () => {
+  const path = '/courses/databases/not-a-route';
+  const { router } = renderRoutes([], path, { appRoutes: true });
+  await screen.findByRole('heading', { name: 'Страница не найдена' });
+  expect(
+    screen.getByRole('link', { name: 'На страницу курса' }).getAttribute('href')
+  ).toBe(DATABASES_PATH);
+  expect(screen.getByRole('link', { name: 'Редактирование' })).toBeDefined();
+  expect(router.history.location.href).toBe(path);
+});
