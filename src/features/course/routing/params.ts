@@ -29,7 +29,7 @@ export function parseCourseSlug(courseSlug: string) {
 
 export function requireCourseSlug(courseSlug: string) {
   const parsed = parseCourseSlug(courseSlug);
-  if (parsed === null) throw notFound();
+  if (parsed === null) throw notFound({ data: 'course-lookup' });
   return parsed;
 }
 

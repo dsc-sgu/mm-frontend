@@ -19,10 +19,14 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
     const courseSlug = requireCourseSlug(params.courseSlug);
     const options = courseContextOptions(context.session.userId, courseSlug);
     const cached = context.queryClient.getQueryData(options.queryKey);
-    const queryState = context.queryClient.getQueryState(options.queryKey);
+    const query = context.queryClient.getQueryCache().find({
+      queryKey: options.queryKey,
+      exact: true,
+    });
     const result =
-      cached?.status === 'found' && queryState?.status === 'success'
-        ? cause === 'stay'
+      cached?.status === 'found' && query?.state.status === 'success'
+        ? // Only an observed, exact identity/locator can be a reconciliation.
+          cause === 'stay' && query.isActive()
           ? cached
           : await context.queryClient.ensureQueryData({
               ...options,
@@ -31,15 +35,19 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
         : await context.queryClient.fetchQuery(options);
 
     if (result.status !== 'found') {
-      throw notFound();
+      throw notFound({ data: 'course-lookup' });
     }
     return { courseSlug, course: result.course, courseRole: result.role };
   },
   pendingMs: 0,
   pendingMinMs: 0,
   pendingComponent: CourseContextLoading,
-  notFoundComponent: CourseRouteOutcome,
-  errorComponent: CourseRouteOutcome,
+  notFoundComponent: ({ data }) => (
+    <CourseRouteOutcome
+      kind={data === 'course-lookup' ? 'lookup' : 'resource'}
+    />
+  ),
+  errorComponent: () => <CourseRouteOutcome kind="lookup" />,
   staticData: {
     header: {
       getBreadcrumb: getCourseRootBreadcrumb,
@@ -61,7 +69,7 @@ function RouteComponent() {
   if (requestedCourseSlug !== courseSlug) {
     return <CourseContextLoading />;
   }
-  if (query.isError) return <CourseRouteOutcome />;
+  if (query.isError) return <CourseRouteOutcome kind="lookup" />;
   if (!query.data) return <CourseContextLoading />;
   if (query.data.status !== 'found') {
     return (
