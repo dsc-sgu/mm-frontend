@@ -11,6 +11,8 @@ export const Route = createFileRoute('/_authenticated')({
         to: '/login',
       });
     }
+
+    return { session: session.session };
   },
   component: AuthenticatedRouteComponent,
 });

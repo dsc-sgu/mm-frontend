@@ -1,4 +1,6 @@
 import dynamicIconImports from 'lucide-react/dynamicIconImports';
+import type { Username } from '@/features/auth/model/identity';
+import type { CourseId, CourseSlug } from '@/features/course/model/identity';
 
 export type CourseColor =
   | 'blue'
@@ -15,13 +17,14 @@ export type Teacher = {
   firstName: string;
   lastName: string;
   patronymic?: string | null;
-  username: string;
+  username: Username;
 };
 
 export type CourseSummary = {
   title: string;
   shortTitle: string;
-  courseId: string;
+  id: CourseId;
+  slug: CourseSlug;
   teachers: Teacher[];
   iconName: LucideIconName;
   color: CourseColor;

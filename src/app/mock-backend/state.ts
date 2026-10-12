@@ -1,10 +1,24 @@
-// The single stateful mock backend shared by every MSW handler. Handlers live
-// with their features and read or change this state; the state itself always
-// starts from the same deterministic seed.
+import * as v from 'valibot';
+import { seededCourses } from '@/app/mock-backend/courses';
+import {
+  UserIdSchema,
+  UsernameSchema,
+  type UserId,
+  type Username,
+} from '@/features/auth/model/identity';
+import type { CourseRole } from '@/features/course/features/access/model/types';
+import {
+  CourseIdSchema,
+  CourseSlugSchema,
+  type CourseId,
+} from '@/features/course/model/identity';
+import type { CourseSummary, Teacher } from '@/features/course/model/types';
 
+// Stateful backend shared by the feature MSW handlers. Each reset clones a
+// deterministic world, keeping exported fixtures independent of mutations.
 export type MockUser = {
-  id: string;
-  username: string;
+  id: UserId;
+  username: Username;
   email: string;
   password: string;
   firstName: string;
@@ -15,12 +29,24 @@ export type MockUser = {
 };
 
 export type MockSession = {
-  userId: string;
+  userId: UserId;
   expiresAt: string;
+};
+
+export type MockCourse = CourseSummary & {
+  accessState: 'draft' | 'open';
+};
+
+export type MockCourseMembership = {
+  courseId: CourseId;
+  userId: UserId;
+  role: CourseRole;
 };
 
 export type MockBackendState = {
   users: MockUser[];
+  courses: MockCourse[];
+  memberships: MockCourseMembership[];
   /** The browser's sign-in session; MSW serves one client at a time. */
   session: MockSession | null;
   /** Sequence for identities created at runtime, so they repeat across runs. */
@@ -29,16 +55,19 @@ export type MockBackendState = {
 
 export const SESSION_EXPIRES_AT = '2099-12-31T23:59:59.999Z';
 
-export function mockUserId(sequence: number) {
-  return `00000000-0000-4000-8000-${String(sequence).padStart(12, '0')}`;
+export function mockUserId(sequence: number): UserId {
+  return v.parse(
+    UserIdSchema,
+    `00000000-0000-4000-8000-${String(sequence).padStart(12, '0')}`
+  );
 }
 
-// Usernames match the course mocks: mit-teacher teaches «Современные
-// информационные технологии» and studies in every other mock course.
+// mit-teacher teaches «Современные информационные технологии» and studies in
+// every other dev course. mit-student belongs only to that course.
 export const seededUsers = {
   mitTeacher: {
     id: mockUserId(1),
-    username: 'mit-teacher',
+    username: v.parse(UsernameSchema, 'mit-teacher'),
     email: 'mit-teacher@example.com',
     password: 'Teacher123',
     firstName: 'Преподаватель',
@@ -49,7 +78,7 @@ export const seededUsers = {
   },
   mitStudent: {
     id: mockUserId(2),
-    username: 'mit-student',
+    username: v.parse(UsernameSchema, 'mit-student'),
     email: 'mit-student@example.com',
     password: 'Student123',
     firstName: 'Студент',
@@ -60,25 +89,154 @@ export const seededUsers = {
   },
 } satisfies Record<string, MockUser>;
 
-function seed(): MockBackendState {
+function accessUser(
+  sequence: number,
+  username: string,
+  firstName: string,
+  role = 'student'
+): MockUser {
   return {
-    users: Object.values(seededUsers).map((user) => ({ ...user })),
-    session: {
-      userId: seededUsers.mitTeacher.id,
-      expiresAt: SESSION_EXPIRES_AT,
-    },
-    nextUserNumber: Object.keys(seededUsers).length + 1,
+    id: mockUserId(sequence),
+    username: v.parse(UsernameSchema, username),
+    email: `${username}@example.com`,
+    password: 'Access123',
+    firstName,
+    lastName: '',
+    patronymic: '',
+    role,
+    avatarURL: '',
   };
 }
 
-let state = seed();
+function teacherProfile(user: MockUser): Teacher {
+  return {
+    username: user.username,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    patronymic: user.patronymic,
+  };
+}
+
+const accessUsers = {
+  anna: accessUser(1, 'anna', 'Анна', 'teacher'),
+  boris: accessUser(2, 'boris', 'Борис', 'teacher'),
+  sasha: accessUser(3, 'sasha', 'Саша'),
+  petya: accessUser(4, 'petya', 'Петя'),
+  vera: accessUser(5, 'vera', 'Вера'),
+  guest: accessUser(6, 'guest', 'Гость'),
+};
+
+export const accessWorld = {
+  users: accessUsers,
+  courses: {
+    algorithms: {
+      id: v.parse(CourseIdSchema, '20000000-0000-4000-8000-000000000001'),
+      slug: v.parse(CourseSlugSchema, 'algorithms'),
+      accessState: 'open',
+      title: 'Алгоритмы',
+      shortTitle: 'Алгоритмы',
+      color: 'teal',
+      iconName: 'code-xml',
+      teachers: [
+        teacherProfile(accessUsers.anna),
+        teacherProfile(accessUsers.boris),
+      ],
+    },
+    databases: {
+      id: v.parse(CourseIdSchema, '20000000-0000-4000-8000-000000000002'),
+      slug: v.parse(CourseSlugSchema, 'databases'),
+      accessState: 'open',
+      title: 'Базы данных',
+      shortTitle: 'БД',
+      color: 'blue',
+      iconName: 'database',
+      teachers: [teacherProfile(accessUsers.vera)],
+    },
+  } satisfies Record<string, MockCourse>,
+  missingSlug: v.parse(CourseSlugSchema, 'missing-course'),
+};
+
+const devMemberships: MockCourseMembership[] = seededCourses.flatMap(
+  (course) => {
+    const isMit = course.slug === 'modern-information-technologies';
+    const teacherMembership: MockCourseMembership = {
+      courseId: course.id,
+      userId: seededUsers.mitTeacher.id,
+      role: isMit ? 'teacher' : 'student',
+    };
+    return isMit
+      ? [
+          teacherMembership,
+          {
+            courseId: course.id,
+            userId: seededUsers.mitStudent.id,
+            role: 'student',
+          },
+        ]
+      : [teacherMembership];
+  }
+);
+
+const accessMemberships: MockCourseMembership[] = [
+  {
+    courseId: accessWorld.courses.algorithms.id,
+    userId: accessUsers.anna.id,
+    role: 'teacher',
+  },
+  {
+    courseId: accessWorld.courses.algorithms.id,
+    userId: accessUsers.boris.id,
+    role: 'teacher',
+  },
+  {
+    courseId: accessWorld.courses.algorithms.id,
+    userId: accessUsers.sasha.id,
+    role: 'student',
+  },
+  {
+    courseId: accessWorld.courses.algorithms.id,
+    userId: accessUsers.petya.id,
+    role: 'student',
+  },
+  {
+    courseId: accessWorld.courses.algorithms.id,
+    userId: accessUsers.vera.id,
+    role: 'student',
+  },
+  {
+    courseId: accessWorld.courses.databases.id,
+    userId: accessUsers.vera.id,
+    role: 'teacher',
+  },
+];
+
+type MockWorld = 'dev' | 'world:access';
+
+function seed(world: MockWorld): MockBackendState {
+  const isAccessWorld = world === 'world:access';
+  const users = isAccessWorld
+    ? Object.values(accessUsers)
+    : Object.values(seededUsers);
+  return structuredClone({
+    users,
+    courses: isAccessWorld ? Object.values(accessWorld.courses) : seededCourses,
+    memberships: isAccessWorld ? accessMemberships : devMemberships,
+    session: {
+      userId: isAccessWorld ? accessUsers.anna.id : seededUsers.mitTeacher.id,
+      expiresAt: SESSION_EXPIRES_AT,
+    },
+    nextUserNumber: users.length + 1,
+  });
+}
+
+let state = seed('dev');
 
 export const mockBackend = {
   get state(): MockBackendState {
     return state;
   },
-  /** Returns to the seed: between tests, and on every page load in dev. */
-  reset() {
-    state = seed();
+  /** Returns to a cloned world; the normal development world is the default. */
+  reset(world: MockWorld = 'dev') {
+    state = seed(world);
   },
 };

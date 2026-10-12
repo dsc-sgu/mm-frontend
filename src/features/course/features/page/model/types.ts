@@ -125,7 +125,12 @@ export type CourseContentBlockItem =
   | CourseFilesBlock
   | CourseAssignmentBlock;
 
-export type CoursePage = CourseSummary & {
+export type CoursePage = Pick<
+  CourseSummary,
+  'title' | 'shortTitle' | 'teachers' | 'iconName' | 'color'
+> & {
+  // The Page/editor contract still uses a route slug in courseId.
+  courseId: string;
   description: string;
   resources: CoursePageResources;
   content: CourseContentBlockItem[];

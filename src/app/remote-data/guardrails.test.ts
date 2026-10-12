@@ -68,14 +68,12 @@ describe('TR-06: remote-data guardrails', () => {
     );
   });
 
-  test('listed RAM-mock importers may import mocks but not MSW', async () => {
-    const file = 'src/features/course/api/queries.ts';
-
+  test.each([
+    "import { courseHandlers } from '@/features/course/api/mock';",
+    "import { http } from 'msw';",
+  ])('course list queries cannot `%s`', async (code) => {
     expect(
-      await violations("import { x } from '@/features/course/api/mock';", file)
-    ).toEqual([]);
-    expect(await violations("import { http } from 'msw';", file)).toEqual([
-      'no-restricted-imports',
-    ]);
+      await violations(code, 'src/features/course/api/queries.ts')
+    ).toEqual(['no-restricted-imports']);
   });
 });

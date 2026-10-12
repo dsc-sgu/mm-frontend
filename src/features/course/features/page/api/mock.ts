@@ -1,7 +1,5 @@
-import {
-  MOCK_COURSES,
-  updateMockCourseSummary,
-} from '@/features/course/api/mock';
+import * as v from 'valibot';
+import { mockBackend, type MockCourse } from '@/app/mock-backend/state';
 import { renameMockCourseAccessSlug } from '@/features/course/features/access/api/mock';
 import type {
   CourseContentBlockItem,
@@ -9,7 +7,12 @@ import type {
   CoursePageResources,
   SaveCoursePageInput,
 } from '@/features/course/features/page/model/types';
-import type { CourseSummary } from '@/features/course/model/types';
+import { CourseSlugSchema } from '@/features/course/model/identity';
+
+type CoursePageSummary = Omit<
+  CoursePage,
+  'description' | 'resources' | 'content'
+>;
 
 const COURSE_DESCRIPTIONS: Record<string, string> = {
   'algorithms-and-data-structures':
@@ -28,45 +31,52 @@ const COURSE_DESCRIPTIONS: Record<string, string> = {
     'Обзор современных технологий разработки: командная работа, веб-платформы, облачная инфраструктура и безопасная доставка изменений.',
 };
 
-const COURSE_PAGE_STORE: Record<string, CoursePage> = {};
+// Keyed by canonical Course objects: resetting the backend also resets these
+// lazily generated RAM pages, and renaming a slug keeps the same Course.
+const COURSE_PAGE_STORE = new WeakMap<MockCourse, CoursePage>();
 
 function cloneCoursePage(course: CoursePage): CoursePage {
   return structuredClone(course);
 }
 
-function findCourseSummary(courseSlug: string) {
-  return MOCK_COURSES.find((item) => item.courseId === courseSlug) ?? null;
-}
-
-function createCoursePage(course: CourseSummary): CoursePage {
+function createCoursePage(course: MockCourse): CoursePage {
+  const summary: CoursePageSummary = {
+    courseId: course.slug,
+    title: course.title,
+    shortTitle: course.shortTitle,
+    color: course.color,
+    iconName: course.iconName,
+    teachers: course.teachers,
+  };
   return {
-    ...course,
+    ...summary,
     description:
-      COURSE_DESCRIPTIONS[course.courseId] ??
+      COURSE_DESCRIPTIONS[course.slug] ??
       'Материалы курса, задания и полезные ссылки собраны в одном месте.',
-    resources: buildCourseResources(course),
-    content: buildCourseContent(course),
+    resources: buildCourseResources(summary),
+    content: buildCourseContent(summary),
   };
 }
 
 function ensureCoursePage(courseSlug: string): CoursePage | null {
-  if (COURSE_PAGE_STORE[courseSlug]) {
-    return COURSE_PAGE_STORE[courseSlug];
-  }
-
-  const course = findCourseSummary(courseSlug);
-
+  const course = mockBackend.state.courses.find(
+    (item) => item.slug === courseSlug
+  );
   if (!course) {
     return null;
   }
 
-  const page = createCoursePage(course);
-  COURSE_PAGE_STORE[courseSlug] = page;
+  const storedPage = COURSE_PAGE_STORE.get(course);
+  if (storedPage) {
+    return storedPage;
+  }
 
+  const page = createCoursePage(course);
+  COURSE_PAGE_STORE.set(course, page);
   return page;
 }
 
-function buildCourseResources(course: CourseSummary): CoursePageResources {
+function buildCourseResources(course: CoursePageSummary): CoursePageResources {
   return {
     images: [
       {
@@ -116,7 +126,9 @@ function buildCourseResources(course: CourseSummary): CoursePageResources {
   };
 }
 
-function buildCourseContent(course: CourseSummary): CourseContentBlockItem[] {
+function buildCourseContent(
+  course: CoursePageSummary
+): CourseContentBlockItem[] {
   return [
     {
       id: `${course.courseId}:intro`,
@@ -403,12 +415,15 @@ export async function saveCoursePage(
   await new Promise((resolve) => setTimeout(resolve, 250));
 
   const currentPage = ensureCoursePage(input.courseSlug);
+  const currentCourse = mockBackend.state.courses.find(
+    (course) => course.slug === input.courseSlug
+  );
 
-  if (!currentPage) {
+  if (!currentPage || !currentCourse) {
     throw new Error(`Course page not found: ${input.courseSlug}`);
   }
 
-  const nextCourseSummary: CourseSummary = {
+  const nextCourseSummary: CoursePageSummary = {
     courseId: input.courseId,
     title: input.title,
     shortTitle: input.shortTitle,
@@ -425,13 +440,16 @@ export async function saveCoursePage(
     content: input.content,
   };
 
-  delete COURSE_PAGE_STORE[input.courseSlug];
-  COURSE_PAGE_STORE[nextPage.courseId] = cloneCoursePage(nextPage);
-
-  updateMockCourseSummary({
-    courseSlug: input.courseSlug,
-    summary: nextCourseSummary,
+  // Only card metadata and the route slug change. Stable Course identity and
+  // every membership remain attached to the same canonical Course.
+  Object.assign(currentCourse, {
+    slug: v.parse(CourseSlugSchema, input.courseId),
+    title: input.title,
+    shortTitle: input.shortTitle,
+    color: input.color,
+    iconName: input.iconName,
   });
+  COURSE_PAGE_STORE.set(currentCourse, cloneCoursePage(nextPage));
   renameMockCourseAccessSlug({
     oldSlug: input.courseSlug,
     newSlug: nextPage.courseId,
