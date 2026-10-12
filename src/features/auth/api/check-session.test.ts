@@ -4,65 +4,81 @@ import { invalidBody, undeclaredStatus } from '@/app/mock-backend/failures';
 import { server } from '@/app/mock-backend/node';
 import { mockBackend, seededUsers } from '@/app/mock-backend/state';
 import { createQueryClient } from '@/app/remote-data/query-client';
+import { reply } from '@/app/testing/reply';
 import { checkSession } from '@/features/auth/api/check-session';
 import { sessionKeys, sessionOptions } from '@/features/auth/api/queries';
 
 const SESSION_URL = '/api/v1/auth/session';
 
-describe('TR-05: check-session', () => {
-  test('200 → authorized with the validated session', async () => {
-    const { mitTeacher } = seededUsers;
+const SESSION_DTO = {
+  userID: '00000000-0000-4000-8000-0000000000aa',
+  firstName: 'Анна',
+  lastName: 'Иванова',
+  patronymic: '',
+  username: 'anna',
+  email: 'anna@example.com',
+  role: 'teacher',
+  avatarURL: '',
+  sessionExpiresAt: '2099-12-31T23:59:59.999Z',
+};
 
-    await expect(checkSession()).resolves.toEqual({
-      status: 'authorized',
-      session: {
-        userId: mitTeacher.id,
-        username: mitTeacher.username,
-        email: mitTeacher.email,
-        firstName: mitTeacher.firstName,
-        lastName: mitTeacher.lastName,
-        patronymic: mitTeacher.patronymic,
-        avatarURL: mitTeacher.avatarURL,
-        role: mitTeacher.role,
-        sessionExpiresAt: '2099-12-31T23:59:59.999Z',
-      },
-    });
+const { userID, ...sessionFields } = SESSION_DTO;
+const SESSION = { userId: userID, ...sessionFields };
+
+describe('TR-05: check-session statuses', () => {
+  test.each([
+    {
+      status: 200,
+      body: SESSION_DTO,
+      outcome: { status: 'authorized', session: SESSION },
+    },
+    { status: 401, body: undefined, outcome: { status: 'not-authorized' } },
+  ])('$status → $outcome.status', async ({ status, body, outcome }) => {
+    server.use(http.get(SESSION_URL, reply(status, body)));
+
+    await expect(checkSession()).resolves.toEqual(outcome);
   });
 
-  test('401 → not-authorized, as data rather than a failure', async () => {
-    mockBackend.state.session = null;
+  test.each([204, 403, 404, 500])(
+    'undeclared %i → unexpected-http-status',
+    async (status) => {
+      server.use(http.get(SESSION_URL, undeclaredStatus(status)));
 
-    await expect(checkSession()).resolves.toEqual({
-      status: 'not-authorized',
-    });
-  });
+      await expect(checkSession()).rejects.toMatchObject({
+        name: 'OperationFailure',
+        operation: 'check-session',
+        reason: { kind: 'unexpected-http-status', status },
+      });
+    }
+  );
 
-  test('an undeclared status → unexpected-http-status', async () => {
-    server.use(http.get(SESSION_URL, undeclaredStatus(500)));
-
-    await expect(checkSession()).rejects.toMatchObject({
-      name: 'OperationFailure',
-      operation: 'check-session',
-      reason: { kind: 'unexpected-http-status', status: 500 },
-    });
-  });
-
-  test('a session without a valid userID → invalid-response', async () => {
-    const { id, ...withoutId } = seededUsers.mitTeacher;
+  test('200 with an invalid userID → invalid-response', async () => {
     server.use(
-      http.get(
-        SESSION_URL,
-        invalidBody({
-          ...withoutId,
-          userID: id.slice(1),
-          sessionExpiresAt: '2099-12-31T23:59:59.999Z',
-        })
-      )
+      http.get(SESSION_URL, invalidBody({ ...SESSION_DTO, userID: 'anna' }))
     );
 
     await expect(checkSession()).rejects.toMatchObject({
       operation: 'check-session',
       reason: { kind: 'invalid-response', explanation: 'userID' },
+    });
+  });
+});
+
+describe('check-session against the mock backend', () => {
+  test('a signed-in user gets their session', async () => {
+    const { mitTeacher } = seededUsers;
+
+    await expect(checkSession()).resolves.toMatchObject({
+      status: 'authorized',
+      session: { userId: mitTeacher.id, username: mitTeacher.username },
+    });
+  });
+
+  test('without a session the user is not authorized', async () => {
+    mockBackend.state.session = null;
+
+    await expect(checkSession()).resolves.toEqual({
+      status: 'not-authorized',
     });
   });
 });
