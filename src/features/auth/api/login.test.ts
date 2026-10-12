@@ -24,7 +24,7 @@ describe('TR-05: login', () => {
     expect(mockBackend.state.session).toBeNull();
   });
 
-  test('an undeclared status → unexpected-http', async () => {
+  test('an undeclared status → unexpected-http-status', async () => {
     server.use(http.post('/api/v1/auth/login', undeclaredStatus(500)));
 
     await expect(
@@ -32,7 +32,7 @@ describe('TR-05: login', () => {
     ).rejects.toMatchObject({
       name: 'OperationFailure',
       operation: 'login',
-      reason: { kind: 'unexpected-http', status: 500 },
+      reason: { kind: 'unexpected-http-status', status: 500 },
     });
   });
 });

@@ -21,13 +21,13 @@ describe('TR-05: logout', () => {
     await expect(logout()).resolves.toBeUndefined();
   });
 
-  test('an undeclared status → unexpected-http', async () => {
+  test('an undeclared status → unexpected-http-status', async () => {
     server.use(http.post('/api/v1/auth/logout', undeclaredStatus(500)));
 
     await expect(logout()).rejects.toMatchObject({
       name: 'OperationFailure',
       operation: 'logout',
-      reason: { kind: 'unexpected-http', status: 500 },
+      reason: { kind: 'unexpected-http-status', status: 500 },
     });
   });
 });

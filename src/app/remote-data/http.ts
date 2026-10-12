@@ -6,7 +6,7 @@ import * as v from 'valibot';
 
 type OperationFailureReason =
   | { kind: 'network'; cause: unknown }
-  | { kind: 'unexpected-http'; status: number }
+  | { kind: 'unexpected-http-status'; status: number }
   | { kind: 'unreadable-body'; cause: unknown }
   | { kind: 'invalid-response'; explanation: string };
 
@@ -41,7 +41,7 @@ function buildDiagnosticMessage(reason: OperationFailureReason) {
   switch (reason.kind) {
     case 'network':
       return 'Fetch did not return a Response';
-    case 'unexpected-http':
+    case 'unexpected-http-status':
       return `unexpected HTTP status ${reason.status}`;
     case 'unreadable-body':
       return 'response body could not be read or decoded';
@@ -143,12 +143,12 @@ export async function readJson<TSchema extends v.GenericSchema>(
 }
 
 /**
- * Creates an `unexpected-http` failure for a status the operation does not
+ * Creates an `unexpected-http-status` failure for a status the operation does not
  * declare. Use as `throw unexpectedHttpStatus(context)`.
  */
 export function unexpectedHttpStatus(context: HttpResponseContext) {
   return new OperationFailure(context.operation, {
-    kind: 'unexpected-http',
+    kind: 'unexpected-http-status',
     status: context.response.status,
   });
 }

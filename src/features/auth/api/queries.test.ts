@@ -11,7 +11,7 @@ const SESSION_URL = '/api/v1/auth/session';
 describe('TR-04: session check retry policy', () => {
   test.each([
     ['a network failure', networkFailure, 'network'],
-    ['HTTP 503', undeclaredStatus(503), 'unexpected-http'],
+    ['HTTP 503', undeclaredStatus(503), 'unexpected-http-status'],
   ])('%s is retried exactly once', async (_, failure, kind) => {
     const requests = countRequests(failure);
     server.use(http.get(SESSION_URL, requests.resolver));
@@ -28,7 +28,7 @@ describe('TR-04: session check retry policy', () => {
 
     await expect(
       createQueryClient().query(sessionOptions)
-    ).rejects.toMatchObject({ kind: 'unexpected-http' });
+    ).rejects.toMatchObject({ kind: 'unexpected-http-status' });
     expect(requests.count).toBe(1);
   });
 });

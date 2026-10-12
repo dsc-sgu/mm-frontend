@@ -37,13 +37,13 @@ describe('TR-05: check-session', () => {
     });
   });
 
-  test('an undeclared status → unexpected-http', async () => {
+  test('an undeclared status → unexpected-http-status', async () => {
     server.use(http.get(SESSION_URL, undeclaredStatus(500)));
 
     await expect(checkSession()).rejects.toMatchObject({
       name: 'OperationFailure',
       operation: 'check-session',
-      reason: { kind: 'unexpected-http', status: 500 },
+      reason: { kind: 'unexpected-http-status', status: 500 },
     });
   });
 
