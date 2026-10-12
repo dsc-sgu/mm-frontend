@@ -62,10 +62,23 @@ export function Header() {
     lookup?.status === 'found' &&
     (pathname === `/courses/${courseContext.courseSlug}` ||
       pathname.startsWith(`/courses/${courseContext.courseSlug}/`));
+  // Background lookup updates must reach breadcrumbs even before a route
+  // transition replaces its original beforeLoad context.
+  const headerMatches =
+    confirmed && lookup?.status === 'found'
+      ? matches.map((match) =>
+          match.routeId === '/_authenticated/courses/$courseSlug'
+            ? {
+                ...match,
+                context: { ...match.context, course: lookup.course },
+              }
+            : match
+        )
+      : matches;
   const { breadcrumbs, navItems } =
     courseMatch && !confirmed
       ? { breadcrumbs: [], navItems: [] }
-      : getHeaderState(matches);
+      : getHeaderState(headerMatches);
   const logOut = useLogOut();
 
   return (

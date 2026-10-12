@@ -22,6 +22,19 @@ export function courseContextOptions(userId: UserId, courseSlug: CourseSlug) {
   });
 }
 
+/** Shell metadata is shared by all Users at the old/new Page locators. */
+export function invalidateCourseContextsAfterMetadataSave(
+  queryClient: QueryClient,
+  courseSlug: string,
+  savedCourseSlug: string
+) {
+  return queryClient.invalidateQueries({
+    queryKey: courseContextKeys.all,
+    predicate: ({ queryKey }) =>
+      queryKey[2] === courseSlug || queryKey[2] === savedCourseSlug,
+  });
+}
+
 /**
  * A protected operation's access denial makes even inactive context suspect.
  * Discard a lookup started before that denial, invalidate only this identity

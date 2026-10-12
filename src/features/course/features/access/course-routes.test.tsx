@@ -1,7 +1,19 @@
-import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  renderHook,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http } from 'msw';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { QueryClientProvider } from '@tanstack/react-query';
+import {
+  coursePageQueryOptions,
+  useSaveCoursePageMutation,
+} from '@/features/course/features/page/api/queries';
 import { holdResponse, networkFailure } from '@/app/mock-backend/failures';
 import { server } from '@/app/mock-backend/node';
 import {
@@ -217,4 +229,35 @@ describe('participant-bound resource denials keep the confirmed Course shell', (
     expect(router.state.location.pathname).toBe(path);
     expect(screen.getByRole('link', { name: 'Редактирование' })).toBeDefined();
   });
+});
+
+test('saved Course metadata replaces the confirmed Header title without changing the slug', async () => {
+  const { queryClient, router } = renderRoutes([], DATABASES_PATH, {
+    appRoutes: true,
+  });
+  await screen.findByRole('heading', { name: 'Базы данных' });
+  const page = await queryClient.ensureQueryData(
+    coursePageQueryOptions('databases')
+  );
+  if (!page) throw new Error('The Course fixture has no published Page');
+  const mutation = renderHook(() => useSaveCoursePageMutation(), {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    ),
+  });
+
+  await act(async () => {
+    await mutation.result.current.mutateAsync({
+      ...page,
+      courseSlug: 'databases',
+      title: 'Базы данных — обновлённое название',
+    });
+    await router.invalidate();
+  });
+
+  const breadcrumbs = screen.getByRole('navigation', {
+    name: 'Навигационная цепочка',
+  });
+  await within(breadcrumbs).findByText('Базы данных — обновлённое название');
+  expect(router.history.location.href).toBe(DATABASES_PATH);
 });

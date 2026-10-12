@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-query';
 
 import { coursesKeys } from '@/features/course/api/queries';
-import { courseContextKeys } from '@/features/course/features/access/api/queries';
+import { invalidateCourseContextsAfterMetadataSave } from '@/features/course/features/access/api/queries';
 import type { SaveCoursePageInput } from '@/features/course/features/page/model/types';
 import { DEADLINES_QUERY_KEY } from '@/features/deadlines-calendar/api/queries';
 import { fetchCoursePage, saveCoursePage } from './mock';
@@ -36,11 +36,11 @@ export function useSaveCoursePageMutation() {
         queryClient.invalidateQueries({ queryKey: [COURSE_PAGE_QUERY_KEY] }),
         queryClient.invalidateQueries({ queryKey: coursesKeys.all }),
         queryClient.invalidateQueries({ queryKey: DEADLINES_QUERY_KEY }),
-        variables.courseSlug === savedCourse.courseId
-          ? Promise.resolve()
-          : queryClient.invalidateQueries({
-              queryKey: courseContextKeys.all,
-            }),
+        invalidateCourseContextsAfterMetadataSave(
+          queryClient,
+          variables.courseSlug,
+          savedCourse.courseId
+        ),
       ]);
     },
   });
