@@ -285,6 +285,23 @@ Do not add FSM libraries such as `xstate` or `robot` by default. Consider them o
 
 Before adding or modifying code that performs HTTP requests, consumes external response data, defines API DTO schemas, configures TanStack Query queries or mutations, handles request failures or cancellation, implements retry or idempotency behavior, or defines MSW handlers, MUST read [`docs/agents/remote-data.md`](docs/agents/remote-data.md).
 
+### Valibot schemas
+
+Place schemas by the owner of the contract, not by the validation library:
+
+- Domain values, identities and shared domain invariants belong in the owning feature's `model/`.
+- HTTP request/response DTO schemas belong in the owning feature's `api/`. Keep an operation-specific schema private next to its operation; extract an API-local file named by responsibility only when several operations share it.
+- Form schemas belong with the form's model/validation logic in the owning feature's `model/`. Compose shared domain schemas instead of copying their constraints.
+- Route parameter parsing belongs in the feature's `routing/`; reuse domain schemas for domain locators.
+
+Schema-bearing feature modules use these layer directories even when the rest of a small feature remains flat. Do not create a global `src/schemas/` or a `schemas/` directory in every feature.
+
+Keep schema-derived types next to the schema. Use `InferOutput` for validated values and `InferInput` where the raw input differs, such as transformed form fields. Do not duplicate the validated shape with a manually maintained DTO type.
+
+UI, hooks and application routes consume feature-owned operations, validation interfaces or form resolvers; they do not define schemas or depend on runtime Valibot. They may import a model-owned schema to pass to a resolver and may use type-only Valibot imports. A domain model must not depend on an API DTO schema, and a DTO schema must not be moved into `model/` merely because multiple API operations use it.
+
+ESLint enforces the direct runtime Valibot dependency boundary: static imports/re-exports, literal dynamic imports and `require('valibot')` are allowed only in feature `api/`, `model/` and `routing/`. Exceptions are the generic transport validator (`src/app/remote-data/http.ts`), `src/app/mock-backend/`, and test files/harnesses (`src/**/*.test.{ts,tsx}`, `src/app/testing/`, `playwright/`). Whole-declaration `import type`/`export type` is allowed elsewhere. Per-specifier `import/export { type T }` retains a runtime module dependency under `verbatimModuleSyntax` and is not exempt. Semantic ownership, copied constraints, computed module names and schemas hidden behind other modules still require review.
+
 ### `types.ts`
 
 Do not create `types.ts` automatically in every feature.

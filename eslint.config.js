@@ -68,6 +68,26 @@ const MOCK_AND_TEST_FILES = [
   'src/**/*.test.{ts,tsx}',
 ];
 
+const VALIBOT_RUNTIME_FILES = [
+  'src/features/**/api/**',
+  'src/features/**/model/**',
+  'src/features/**/routing/**',
+  TRANSPORT_MODULE,
+  ...MOCK_AND_TEST_FILES,
+  'playwright/**',
+];
+
+// Orthogonal to the mock-import exceptions: a RAM hook still cannot own schemas.
+// `verbatimModuleSyntax` retains empty imports/exports, including per-specifier
+// `type` forms. Only whole `import type`/`export type` declarations are erased.
+const valibotRuntimeSelectors = [
+  "ImportDeclaration[source.value='valibot'][importKind!='type']",
+  "ExportNamedDeclaration[source.value='valibot'][exportKind!='type']",
+  "ExportAllDeclaration[source.value='valibot'][exportKind!='type']",
+  "ImportExpression[source.value='valibot']",
+  "CallExpression[callee.name='require'][arguments.0.value='valibot']",
+];
+
 export default defineConfig([
   globalIgnores([
     'dist',
@@ -123,6 +143,20 @@ export default defineConfig([
     rules: {
       'no-restricted-globals': 'off',
       'no-restricted-properties': 'off',
+    },
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    ignores: VALIBOT_RUNTIME_FILES,
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...valibotRuntimeSelectors.map((selector) => ({
+          selector,
+          message:
+            'Runtime Valibot belongs in feature api/model/routing. Consume an owned validation interface here; use whole-declaration import type/export type for erased type dependencies.',
+        })),
+      ],
     },
   },
   {
