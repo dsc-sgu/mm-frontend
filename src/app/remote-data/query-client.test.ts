@@ -33,7 +33,7 @@ describe('TR-04: QueryClient defaults', () => {
         queryKey: ['probe'],
         queryFn: ({ signal }) => probe({ signal }),
       })
-    ).rejects.toMatchObject({ kind: 'unexpected-http' });
+    ).rejects.toMatchObject({ kind: 'unexpected-http-status' });
     expect(requests.count).toBe(1);
   });
 
@@ -45,7 +45,7 @@ describe('TR-04: QueryClient defaults', () => {
     });
 
     await expect(mutation.mutate()).rejects.toMatchObject({
-      kind: 'unexpected-http',
+      kind: 'unexpected-http-status',
     });
     expect(requests.count).toBe(1);
   });

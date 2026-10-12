@@ -144,14 +144,14 @@ describe('TR-03: cancellation', () => {
 });
 
 describe('decoder', () => {
-  test('an undeclared status rejects with unexpected-http and the status', async () => {
+  test('an undeclared status rejects with unexpected-http-status and the status', async () => {
     server.use(http.get(PAGE_URL, undeclaredStatus(503)));
 
     const error = await rejectionOf(readPage());
 
     expect(error).toBeInstanceOf(OperationFailure);
     expect((error as OperationFailure).reason).toEqual({
-      kind: 'unexpected-http',
+      kind: 'unexpected-http-status',
       status: 503,
     });
   });

@@ -21,13 +21,13 @@ describe('TR-05: register', () => {
     ).resolves.toEqual({ status: 'signed-in' });
   });
 
-  test('a taken username → the backend 500 stays unexpected-http', async () => {
+  test('a taken username → the backend 500 stays unexpected-http-status', async () => {
     await expect(
       register({ ...newUser, username: seededUsers.mitStudent.username })
     ).rejects.toMatchObject({
       name: 'OperationFailure',
       operation: 'register',
-      reason: { kind: 'unexpected-http', status: 500 },
+      reason: { kind: 'unexpected-http-status', status: 500 },
     });
   });
 });

@@ -26,7 +26,7 @@ function canRetrySessionCheck(failureCount: number, error: Error) {
   const { reason } = error;
   return (
     reason.kind === 'network' ||
-    (reason.kind === 'unexpected-http' &&
+    (reason.kind === 'unexpected-http-status' &&
       [502, 503, 504].includes(reason.status))
   );
 }
