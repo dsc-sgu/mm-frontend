@@ -11,10 +11,10 @@ export const Route = createFileRoute(
       getBreadcrumb: getAttemptReviewBreadcrumb,
     },
   },
-  async beforeLoad({ context, params }) {
-    await requireCourseRole({
-      queryClient: context.queryClient,
-      courseSlug: params.courseSlug,
+  beforeLoad({ context }) {
+    requireCourseRole({
+      courseRole: context.courseRole,
+      courseSlug: context.courseSlug,
       roles: ['teacher'],
     });
   },
@@ -23,11 +23,13 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const params = Route.useParams();
-  const { studentUsername, attemptNumber } = Route.useRouteContext();
+  const { studentUsername, attemptNumber, courseRole } =
+    Route.useRouteContext();
 
   return (
     <AttemptReviewPage
       mode="editable"
+      courseRole={courseRole}
       courseSlug={params.courseSlug}
       taskId={params.taskId}
       studentUsername={studentUsername}

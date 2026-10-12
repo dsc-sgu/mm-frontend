@@ -3,6 +3,7 @@ import {
   AttemptNumberSchema,
   type AttemptNumber,
 } from '@/features/course/model/identity';
+import { mockBackend } from '@/app/mock-backend/state';
 import {
   applyReviewLockUpdatesToAttempts,
   type CourseAttemptReviewLockUpdate,
@@ -318,6 +319,10 @@ export async function saveQuickGrades({
   updates,
 }: SaveQuickGradesInput): Promise<CourseAttempt[]> {
   await new Promise((resolve) => setTimeout(resolve, 220));
+  const user = mockBackend.state.users.find(
+    ({ id }) => id === mockBackend.state.session?.userId
+  );
+  if (!user) throw new Error('No signed-in User to save grades');
 
   const now = new Date().toISOString();
   const updateById = new Map(
@@ -336,7 +341,9 @@ export async function saveQuickGrades({
         score: update.score,
         maxScore: attempt.task.maxScore,
         gradedAt: now,
-        gradedBy: 'Текущий преподаватель',
+        gradedBy: [user.lastName, user.firstName, user.patronymic]
+          .filter(Boolean)
+          .join(' '),
       },
     };
   });

@@ -8,7 +8,5 @@ export type Session = {
   lastName: string;
   patronymic: string;
   avatarURL: string;
-  // TODO: Remove with course-local roles (ACC1).
-  role: string;
   sessionExpiresAt: string;
 };

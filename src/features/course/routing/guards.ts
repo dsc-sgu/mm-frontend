@@ -1,77 +1,21 @@
-import { sessionOptions } from '@/features/auth/api/queries';
-import type { QueryClient } from '@tanstack/react-query';
 import { redirect } from '@tanstack/react-router';
 import type { CourseRole } from '@/features/course/features/access/model/types';
-import { courseAccessOptions } from '@/features/course/features/access/api/queries';
+import type { CourseSlug } from '@/features/course/model/identity';
 
-// NOTE: In real code, this should not return username.
-// For now, though, this is fine.
-async function requireAuthenticatedUsername(queryClient: QueryClient) {
-  const session = await queryClient.ensureQueryData(sessionOptions);
-  if (session.status === 'not-authorized') {
-    throw redirect({ to: '/login' });
-  }
-
-  return session.session.username;
-}
-
-// TODO: `participant` currently means either a student or a teacher. Replace this
-// with a more precise model once students, teams, and teachers are represented by
-// the backend course access API.
-export async function requireCourseParticipant({
-  queryClient,
+// Section policy remains a redirect until ACC1.3; identity and membership
+// have already been confirmed by the Course root.
+export function requireCourseRole({
   courseSlug,
-}: {
-  queryClient: QueryClient;
-  courseSlug: string;
-}) {
-  const username = await requireAuthenticatedUsername(queryClient);
-  const access = await queryClient.ensureQueryData(
-    courseAccessOptions({ courseSlug, username })
-  );
-
-  if (access.status !== 'allowed') {
-    throw redirect({ to: '/' });
-  }
-
-  return access;
-}
-
-export async function requireCourseRole({
-  queryClient,
-  courseSlug,
+  courseRole,
   roles,
   redirectTo = '/courses/$courseSlug',
 }: {
-  queryClient: QueryClient;
-  courseSlug: string;
+  courseSlug: CourseSlug;
+  courseRole: CourseRole;
   roles: CourseRole[];
   redirectTo?: '/courses/$courseSlug' | '/courses/$courseSlug/repositories';
 }) {
-  const access = await requireCourseParticipant({ queryClient, courseSlug });
-
-  if (!roles.includes(access.role)) {
-    throw redirect({
-      to: redirectTo,
-      params: { courseSlug },
-    });
-  }
-
-  return access;
-}
-
-export function requireKnownCourseStudent({
-  courseSlug,
-  access,
-  studentUsername,
-  redirectTo = '/courses/$courseSlug',
-}: {
-  courseSlug: string;
-  access: { studentUsernames: string[] };
-  studentUsername: string;
-  redirectTo?: '/courses/$courseSlug' | '/courses/$courseSlug/repositories';
-}) {
-  if (!access.studentUsernames.includes(studentUsername)) {
+  if (!roles.includes(courseRole)) {
     throw redirect({
       to: redirectTo,
       params: { courseSlug },

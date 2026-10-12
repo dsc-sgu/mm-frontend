@@ -1,3 +1,4 @@
+import type { Session } from '@/features/auth/model/types';
 import type { CourseRouteContext } from '@/features/course/routing/context';
 import type {
   HeaderBreadcrumbItem,
@@ -9,11 +10,11 @@ import type {
 export const getCourseRootBreadcrumb: HeaderDataGetter<
   HeaderBreadcrumbItem[]
 > = (context) => {
-  const { courseSlug } = getCourseData(context);
+  const { courseSlug, course } = getCourseData(context);
 
   return [
     {
-      label: getCourseTitle(context),
+      label: course.title,
       to: '/courses/$courseSlug',
       params: { courseSlug },
     },
@@ -23,10 +24,10 @@ export const getCourseRootBreadcrumb: HeaderDataGetter<
 export const getCourseNavItems: HeaderDataGetter<HeaderNavItem[]> = (
   context
 ) => {
-  const { courseSlug, courseAccess } = getCourseData(context);
+  const { courseSlug, courseRole, session } = getCourseData(context);
   const params = { courseSlug };
 
-  if (courseAccess.role === 'student') {
+  if (courseRole === 'student') {
     return [
       {
         label: 'Курс',
@@ -37,7 +38,7 @@ export const getCourseNavItems: HeaderDataGetter<HeaderNavItem[]> = (
       {
         label: 'Репозиторий',
         to: '/courses/$courseSlug/repositories/$studentUsername',
-        params: { courseSlug, studentUsername: courseAccess.username },
+        params: { courseSlug, studentUsername: session.username },
       },
     ];
   }
@@ -102,9 +103,9 @@ export function createCourseSectionBreadcrumb(
 export const getCourseRepositoriesBreadcrumb: HeaderDataGetter<
   HeaderBreadcrumbItem[]
 > = (context) => {
-  const { courseSlug, courseAccess } = getCourseData(context);
+  const { courseSlug, courseRole, session } = getCourseData(context);
 
-  if (courseAccess.role === 'teacher') {
+  if (courseRole === 'teacher') {
     return [
       {
         label: 'Репозитории',
@@ -118,7 +119,7 @@ export const getCourseRepositoriesBreadcrumb: HeaderDataGetter<
     {
       label: 'Репозиторий',
       to: '/courses/$courseSlug/repositories/$studentUsername',
-      params: { courseSlug, studentUsername: courseAccess.username },
+      params: { courseSlug, studentUsername: session.username },
     },
   ];
 };
@@ -126,9 +127,9 @@ export const getCourseRepositoriesBreadcrumb: HeaderDataGetter<
 export const getStudentRepositoryBreadcrumb: HeaderDataGetter<
   HeaderBreadcrumbItem[]
 > = (context) => {
-  const { courseSlug, courseAccess } = getCourseData(context);
+  const { courseSlug, courseRole } = getCourseData(context);
 
-  if (courseAccess.role === 'student') {
+  if (courseRole === 'student') {
     return [];
   }
 
@@ -165,11 +166,11 @@ export const getRepositoryCommitDetailBreadcrumb: HeaderDataGetter<
 export const getTaskBreadcrumb: HeaderDataGetter<HeaderBreadcrumbItem[]> = (
   context
 ) => {
-  const { courseSlug, courseAccess } = getCourseData(context);
+  const { courseSlug, courseRole } = getCourseData(context);
   const taskId = getParam(context, 'taskId');
   const isAttemptRoute = context.currentMatch.pathname.includes('/attempts/');
 
-  if (courseAccess.role === 'teacher' && isAttemptRoute) {
+  if (courseRole === 'teacher' && isAttemptRoute) {
     return [];
   }
 
@@ -179,7 +180,7 @@ export const getTaskBreadcrumb: HeaderDataGetter<HeaderBreadcrumbItem[]> = (
     params: { courseSlug, taskId },
   };
 
-  if (courseAccess.role === 'teacher') {
+  if (courseRole === 'teacher') {
     return [{ label: 'Задания' }, taskItem];
   }
 
@@ -193,10 +194,10 @@ export const getTaskEditBreadcrumb: HeaderDataGetter<
 export const getAttemptDiffBreadcrumb: HeaderDataGetter<
   HeaderBreadcrumbItem[]
 > = (context) => {
-  const { courseSlug, courseAccess } = getCourseData(context);
+  const { courseSlug, courseRole } = getCourseData(context);
   const attemptNumber = getParam(context, 'attemptNumber');
 
-  if (courseAccess.role === 'teacher') {
+  if (courseRole === 'teacher') {
     return [
       {
         label: 'Попытки',
@@ -226,49 +227,19 @@ export const getAttemptReviewBreadcrumb: HeaderDataGetter<
   ];
 };
 
-function getCourseData(context: HeaderDataContext): CourseRouteContext {
+function getCourseData(
+  context: HeaderDataContext
+): CourseRouteContext & { session: Session } {
   for (const match of context.matches) {
-    if (isCourseRouteContext(match.loaderData)) {
-      return match.loaderData;
-    }
-
-    if (isCourseRouteContext(match.context)) {
+    if (
+      match.routeId === '/_authenticated/courses/$courseSlug' &&
+      match.context.course
+    ) {
       return match.context;
     }
   }
-
-  const courseSlug = getParam(context, 'courseSlug');
-
-  return {
-    courseSlug,
-    courseAccess: {
-      status: 'allowed',
-      courseSlug,
-      username: '',
-      role: 'student',
-      studentUsernames: [],
-    },
-  };
-}
-
-function isCourseRouteContext(value: unknown): value is CourseRouteContext {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-
-  const data = value as Partial<CourseRouteContext>;
-
-  return (
-    typeof data.courseSlug === 'string' &&
-    data.courseAccess?.status === 'allowed' &&
-    (data.courseAccess.role === 'student' ||
-      data.courseAccess.role === 'teacher')
-  );
-}
-
-function getCourseTitle(context: HeaderDataContext) {
-  const { course, courseSlug } = getCourseData(context);
-  return course?.title ?? getStubCourseTitle(courseSlug);
+  // Header only evaluates Course getters after confirming the root context.
+  throw new Error('Course header requires a confirmed Course context');
 }
 
 function getParam(context: HeaderDataContext, key: string) {
@@ -294,8 +265,7 @@ export function formatAttemptReviewLabel(attemptNumber: string) {
   return `Оценка попытки #${attemptNumber}`;
 }
 
-// Temporary route label stubs used until task/student/course detail APIs
-// provide real display data. Remove these functions when real data is wired.
+// Temporary task/student labels until their detail operations provide names.
 
 export function getStubTaskTitle(taskId: string) {
   return `Задание №${taskId}`;
@@ -303,8 +273,4 @@ export function getStubTaskTitle(taskId: string) {
 
 export function getStubStudentName(username: string) {
   return username;
-}
-
-export function getStubCourseTitle(courseSlug: string) {
-  return courseSlug;
 }

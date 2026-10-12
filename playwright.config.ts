@@ -41,9 +41,10 @@ export default defineConfig({
     { name: 'webkit', use: WEBKIT },
   ],
   webServer: {
-    command: `bun run dev --port ${PORT} --strictPort`,
+    command: `bun run dev --mode e2e --port ${PORT} --strictPort`,
     url: BASE_URL,
-    reuseExistingServer: !IS_CI,
+    // A normal dev server has no test control channel; never silently reuse it.
+    reuseExistingServer: false,
     timeout: 120_000,
     // The app runs on the in-memory mocks and the MSW mock backend.
     env: { VITE_MOCK_BACKEND: 'true' },

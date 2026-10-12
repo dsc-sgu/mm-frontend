@@ -1,110 +1,35 @@
-import { MOCK_STUDENTS } from '@/features/course/features/attempts/api/mock';
-import type { CourseAccessResult } from '@/features/course/features/access/model/types';
+import { http, HttpResponse } from 'msw';
+import { mockBackend } from '@/app/mock-backend/state';
 
-type MockCourseAccess = {
-  teachers: string[];
-  students: string[];
-};
+// Working wire assumption pending backend confirmation (#113):
+// https://github.com/dsc-sgu/mm-frontend/issues/113
+// GET by slug returns 200 { status: 'found', course: shell metadata, role }.
+// Both access denials use 404 with a validated discriminator, but no metadata.
+// An unauthenticated request returns 401, an undeclared operation failure.
+export const courseContextHandlers = [
+  http.get('/api/v1/courses/by-slug/:courseSlug', ({ params }) => {
+    const { users, session, courses, memberships } = mockBackend.state;
+    if (!session || !users.some((user) => user.id === session.userId)) {
+      return new HttpResponse(null, { status: 401 });
+    }
 
-const MOCK_COURSE_ACCESS: Record<string, MockCourseAccess> = {
-  'algorithms-and-data-structures': {
-    teachers: ['inna_batraeva', 'maria_safronchik', 'teacher'],
-    students: [
-      't3m8ch',
-      'mit-teacher',
-      'student',
-      'alice',
-      'bob',
-      'ivan-ivanov',
-    ],
-  },
-  databases: {
-    teachers: ['pavel_kovalev', 'teacher'],
-    students: ['t3m8ch', 'mit-teacher', 'student', 'alice', 'petr-petrov'],
-  },
-  'programming-languages': {
-    teachers: ['anna_levchenko', 'egor_titov', 'teacher'],
-    students: ['t3m8ch', 'mit-teacher', 'student', 'bob', 'maria-ivanova'],
-  },
-  'frontend-engineering': {
-    teachers: ['elizaveta_gromova', 'teacher'],
-    students: ['t3m8ch', 'mit-teacher', 'student', 'alice', 'frontend-student'],
-  },
-  'operating-systems': {
-    teachers: ['andrey_morozov', 'teacher'],
-    students: ['t3m8ch', 'mit-teacher', 'student', 'os-student', 'bob'],
-  },
-  'computer-networks': {
-    teachers: ['daria_semenova', 'teacher'],
-    students: ['t3m8ch', 'mit-teacher', 'student', 'network-student', 'alice'],
-  },
-  'modern-information-technologies': {
-    teachers: ['gohy279', 't3m8ch', 'teacher', 'mit-teacher'],
-    students: ['student', 'mit-student', 'bob'],
-  },
-};
+    const course = courses.find(({ slug }) => slug === params.courseSlug);
+    if (!course) {
+      return HttpResponse.json({ status: 'course-not-found' }, { status: 404 });
+    }
+    const membership = memberships.find(
+      ({ courseId, userId }) =>
+        courseId === course.id && userId === session.userId
+    );
+    if (!membership) {
+      return HttpResponse.json({ status: 'not-member' }, { status: 404 });
+    }
 
-const attemptStudentUsernames = MOCK_STUDENTS.map(
-  (student) => student.username
-);
-
-for (const course of Object.values(MOCK_COURSE_ACCESS)) {
-  course.students = [
-    ...new Set([...course.students, ...attemptStudentUsernames]),
-  ];
-}
-
-export function renameMockCourseAccessSlug({
-  oldSlug,
-  newSlug,
-}: {
-  oldSlug: string;
-  newSlug: string;
-}) {
-  if (oldSlug === newSlug || !MOCK_COURSE_ACCESS[oldSlug]) {
-    return;
-  }
-
-  MOCK_COURSE_ACCESS[newSlug] = MOCK_COURSE_ACCESS[oldSlug];
-  delete MOCK_COURSE_ACCESS[oldSlug];
-}
-
-// NOTE: In real code, this should not accept username as an input;
-// instead, it should get the current user from the session.
-// For now, though, this is fine.
-export async function fetchCourseAccess({
-  courseSlug,
-  username,
-}: {
-  courseSlug: string;
-  username: string;
-}): Promise<CourseAccessResult> {
-  await new Promise((resolve) => setTimeout(resolve, 100));
-
-  const course = MOCK_COURSE_ACCESS[courseSlug];
-  if (!course) {
-    return { status: 'course-not-found', courseSlug, username };
-  }
-
-  if (course.teachers.includes(username)) {
-    return {
-      status: 'allowed',
-      courseSlug,
-      username,
-      role: 'teacher',
-      studentUsernames: course.students,
-    };
-  }
-
-  if (course.students.includes(username)) {
-    return {
-      status: 'allowed',
-      courseSlug,
-      username,
-      role: 'student',
-      studentUsernames: course.students,
-    };
-  }
-
-  return { status: 'not-course-participant', courseSlug, username };
-}
+    const { id, title, shortTitle, iconName, color } = course;
+    return HttpResponse.json({
+      status: 'found',
+      course: { id, title, shortTitle, iconName, color },
+      role: membership.role,
+    });
+  }),
+];

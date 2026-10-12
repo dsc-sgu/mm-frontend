@@ -15,11 +15,13 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const params = Route.useParams();
-  const { studentUsername, attemptNumber } = Route.useRouteContext();
+  const { studentUsername, attemptNumber, courseRole } =
+    Route.useRouteContext();
 
   return (
     <AttemptReviewPage
       mode="readonly"
+      courseRole={courseRole}
       courseSlug={params.courseSlug}
       taskId={params.taskId}
       studentUsername={studentUsername}

@@ -1,17 +1,24 @@
 import dynamicIconImports from 'lucide-react/dynamicIconImports';
+import * as v from 'valibot';
 import type { Username } from '@/features/auth/model/identity';
 import type { CourseId, CourseSlug } from '@/features/course/model/identity';
 
-export type CourseColor =
-  | 'blue'
-  | 'teal'
-  | 'violet'
-  | 'pink'
-  | 'red'
-  | 'orange'
-  | 'green';
+export const CourseColorSchema = v.picklist([
+  'blue',
+  'teal',
+  'violet',
+  'pink',
+  'red',
+  'orange',
+  'green',
+]);
+export type CourseColor = v.InferOutput<typeof CourseColorSchema>;
 
-export type LucideIconName = keyof typeof dynamicIconImports;
+export const CourseIconNameSchema = v.custom<keyof typeof dynamicIconImports>(
+  (input) =>
+    typeof input === 'string' && Object.hasOwn(dynamicIconImports, input)
+);
+export type LucideIconName = v.InferOutput<typeof CourseIconNameSchema>;
 
 export type Teacher = {
   firstName: string;

@@ -1,5 +1,4 @@
 import * as v from 'valibot';
-import dynamicIconImports from 'lucide-react/dynamicIconImports';
 import {
   readJson,
   runHttpOperation,
@@ -10,9 +9,10 @@ import {
   CourseIdSchema,
   CourseSlugSchema,
 } from '@/features/course/model/identity';
-import type {
-  CourseSummary,
-  LucideIconName,
+import {
+  CourseColorSchema,
+  CourseIconNameSchema,
+  type CourseSummary,
 } from '@/features/course/model/types';
 
 const CourseDtoSchema = v.object({
@@ -20,19 +20,8 @@ const CourseDtoSchema = v.object({
   slug: CourseSlugSchema,
   title: v.string(),
   shortTitle: v.string(),
-  iconName: v.custom<LucideIconName>(
-    (input) =>
-      typeof input === 'string' && Object.hasOwn(dynamicIconImports, input)
-  ),
-  color: v.picklist([
-    'blue',
-    'teal',
-    'violet',
-    'pink',
-    'red',
-    'orange',
-    'green',
-  ]),
+  iconName: CourseIconNameSchema,
+  color: CourseColorSchema,
   teachers: v.array(
     v.object({
       firstName: v.string(),

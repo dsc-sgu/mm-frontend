@@ -1,20 +1,20 @@
-import { redirect } from '@tanstack/react-router';
+import { notFound } from '@tanstack/react-router';
 import * as v from 'valibot';
 import { UsernameSchema } from '@/features/auth/model/identity';
-import { AttemptNumberSchema } from '@/features/course/model/identity';
+import {
+  AttemptNumberSchema,
+  CourseSlugSchema,
+} from '@/features/course/model/identity';
 
-const slugLikeSchema = v.pipe(
-  v.string(),
-  v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
-);
-
-export const courseSlugParamSchema = slugLikeSchema;
+export const courseSlugParamSchema = CourseSlugSchema;
 export const usernameParamSchema = UsernameSchema;
 
 export const positiveIntegerParamSchema = v.pipe(
   v.string(),
   v.regex(/^[1-9]\d*$/),
-  v.transform(Number)
+  v.transform(Number),
+  v.integer(),
+  v.maxValue(Number.MAX_SAFE_INTEGER)
 );
 
 const attemptNumberParamSchema = v.pipe(
@@ -22,64 +22,37 @@ const attemptNumberParamSchema = v.pipe(
   AttemptNumberSchema
 );
 
-export function ensureValidCourseSlugOrRedirect(courseSlug: string) {
+export function requireCourseSlug(courseSlug: string) {
   const result = v.safeParse(courseSlugParamSchema, courseSlug);
   if (!result.success) {
-    throw redirect({ to: '/' });
+    throw notFound();
   }
 
   return result.output;
 }
 
-export function ensureValidUsernameOrRedirect({
-  studentUsername,
-  courseSlug,
-}: {
-  studentUsername: string;
-  courseSlug: string;
-}) {
+export function requireUsername(studentUsername: string) {
   const result = v.safeParse(usernameParamSchema, studentUsername);
   if (!result.success) {
-    throw redirect({
-      to: '/courses/$courseSlug',
-      params: { courseSlug },
-    });
+    throw notFound();
   }
 
   return result.output;
 }
 
-export function ensurePositiveIntegerOrRedirect({
-  value,
-  courseSlug,
-}: {
-  value: string;
-  courseSlug: string;
-}) {
+export function requirePositiveInteger(value: string) {
   const result = v.safeParse(positiveIntegerParamSchema, value);
   if (!result.success) {
-    throw redirect({
-      to: '/courses/$courseSlug',
-      params: { courseSlug },
-    });
+    throw notFound();
   }
 
   return result.output;
 }
 
-export function ensureValidAttemptNumberOrRedirect({
-  attemptNumber,
-  courseSlug,
-}: {
-  attemptNumber: string;
-  courseSlug: string;
-}) {
+export function requireAttemptNumber(attemptNumber: string) {
   const result = v.safeParse(attemptNumberParamSchema, attemptNumber);
   if (!result.success) {
-    throw redirect({
-      to: '/courses/$courseSlug',
-      params: { courseSlug },
-    });
+    throw notFound();
   }
 
   return result.output;

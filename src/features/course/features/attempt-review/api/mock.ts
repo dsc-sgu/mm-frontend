@@ -5,6 +5,8 @@ import {
   type AttemptNumber,
 } from '@/features/course/model/identity';
 
+import { mockBackend } from '@/app/mock-backend/state';
+
 import {
   findMockCourseAttempt,
   upsertMockCourseAttemptGrade,
@@ -51,10 +53,20 @@ const EMPTY_FEEDBACK: AttemptReviewRichFeedback = {
   updatedBy: null,
 };
 
-const MOCK_REPLY_AUTHOR = {
-  username: 'mit-teacher',
-  name: 'Текущий преподаватель',
-};
+function currentUserAuthor() {
+  const { session, users } = mockBackend.state;
+  const user = session && users.find(({ id }) => id === session.userId);
+  if (!user) {
+    throw new Error('A signed-in user is required to author review feedback');
+  }
+
+  return {
+    username: user.username,
+    name: [user.firstName, user.lastName, user.patronymic]
+      .filter(Boolean)
+      .join(' '),
+  };
+}
 
 export async function fetchAttemptReview(
   params: AttemptReviewRouteParams
@@ -99,7 +111,8 @@ export async function saveAttemptReview(
   const series = getReviewSeries(input);
   const current = findAttemptOrThrow(series, input.attemptNumber);
   const now = new Date().toISOString();
-  const gradedBy = 'Текущий преподаватель';
+  const author = currentUserAuthor();
+  const gradedBy = author.name;
 
   if (input.score === null) {
     current.grade = null;
@@ -129,14 +142,14 @@ export async function saveAttemptReview(
     endLineNumber: comment.endLineNumber,
     html: comment.html,
     authorName: comment.authorName || gradedBy,
-    authorUsername: comment.authorUsername || 'mit-teacher',
+    authorUsername: comment.authorUsername || author.username,
     createdAt: comment.createdAt || comment.updatedAt || now,
     updatedAt: comment.updatedAt || now,
     replies: comment.replies?.map((reply) => ({
       id: reply.id,
       html: reply.html,
       authorName: reply.authorName || gradedBy,
-      authorUsername: reply.authorUsername || 'mit-teacher',
+      authorUsername: reply.authorUsername || author.username,
       createdAt: reply.createdAt || reply.updatedAt || now,
       updatedAt: reply.updatedAt || now,
     })),
@@ -164,11 +177,12 @@ export async function createAttemptReviewCommentReply(
 
   const comment = findLineCommentOrThrow(input);
   const now = new Date().toISOString();
+  const author = currentUserAuthor();
   const reply: AttemptReviewLineCommentReply = {
     id: `reply-${input.commentId}-${Date.now()}`,
     html: input.html,
-    authorName: MOCK_REPLY_AUTHOR.name,
-    authorUsername: MOCK_REPLY_AUTHOR.username,
+    authorName: author.name,
+    authorUsername: author.username,
     createdAt: now,
     updatedAt: now,
   };

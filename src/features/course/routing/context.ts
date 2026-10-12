@@ -1,13 +1,10 @@
-import type { CourseAccessResult } from '@/features/course/features/access/model/types';
-import type { CourseSummary } from '@/features/course/model/types';
+import type { LoadCourseResult } from '@/features/course/features/access/api/load-course';
+import type { CourseSlug } from '@/features/course/model/identity';
 
-export type AllowedCourseAccess = Extract<
-  CourseAccessResult,
-  { status: 'allowed' }
->;
+type FoundCourse = Extract<LoadCourseResult, { status: 'found' }>;
 
 export type CourseRouteContext = {
-  courseSlug: string;
-  courseAccess: AllowedCourseAccess;
-  course?: CourseSummary;
+  courseSlug: CourseSlug;
+  course: FoundCourse['course'];
+  courseRole: FoundCourse['role'];
 };

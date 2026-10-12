@@ -10,10 +10,10 @@ export const Route = createFileRoute(
       getBreadcrumb: getTaskEditBreadcrumb,
     },
   },
-  async beforeLoad({ context, params }) {
-    await requireCourseRole({
-      queryClient: context.queryClient,
-      courseSlug: params.courseSlug,
+  beforeLoad({ context }) {
+    requireCourseRole({
+      courseRole: context.courseRole,
+      courseSlug: context.courseSlug,
       roles: ['teacher'],
     });
   },

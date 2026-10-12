@@ -22,11 +22,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shadcn/components/ui/dropdown-menu';
-import { Link, useMatches } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { Link, useMatches, useRouterState } from '@tanstack/react-router';
+import { skipToken, useQuery } from '@tanstack/react-query';
 import { sessionOptions } from '@/features/auth/api/queries';
 import { useLogOut } from '@/features/auth/hooks/use-log-out';
 import type { Session } from '@/features/auth/model/types';
+import type { LoadCourseResult } from '@/features/course/features/access/api/load-course';
+import { courseContextKeys } from '@/features/course/features/access/api/queries';
 import { HeaderBreadcrumbs } from '@/app/header/ui/breadcrumbs';
 import { HeaderSectionNav } from '@/app/header/ui/section-nav';
 import { getHeaderState } from '@/app/header/model/state';
@@ -34,8 +36,36 @@ import { cn } from '@/shadcn/lib/utils';
 
 export function Header() {
   const matches = useMatches();
-  const { breadcrumbs, navItems } = getHeaderState(matches);
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
   const { data: sessionData } = useQuery(sessionOptions);
+  const courseMatch = matches.find(
+    (match) => match.routeId === '/_authenticated/courses/$courseSlug'
+  );
+  const courseContext = courseMatch?.context;
+  const { data: lookup, isError: lookupFailed } = useQuery<LoadCourseResult>({
+    queryKey:
+      courseContext?.course && sessionData?.status === 'authorized'
+        ? courseContextKeys.bySlug(
+            sessionData.session.userId,
+            courseContext.courseSlug
+          )
+        : courseContextKeys.all,
+    queryFn: skipToken,
+  });
+  const confirmed =
+    courseContext?.course &&
+    sessionData?.status === 'authorized' &&
+    courseContext.session.userId === sessionData.session.userId &&
+    !lookupFailed &&
+    lookup?.status === 'found' &&
+    (pathname === `/courses/${courseContext.courseSlug}` ||
+      pathname.startsWith(`/courses/${courseContext.courseSlug}/`));
+  const { breadcrumbs, navItems } =
+    courseMatch && !confirmed
+      ? { breadcrumbs: [], navItems: [] }
+      : getHeaderState(matches);
   const logOut = useLogOut();
 
   return (

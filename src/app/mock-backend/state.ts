@@ -24,7 +24,6 @@ export type MockUser = {
   firstName: string;
   lastName: string;
   patronymic: string;
-  role: string;
   avatarURL: string;
 };
 
@@ -73,7 +72,6 @@ export const seededUsers = {
     firstName: 'Преподаватель',
     lastName: 'СИТ',
     patronymic: '',
-    role: 'teacher',
     avatarURL: '',
   },
   mitStudent: {
@@ -84,7 +82,6 @@ export const seededUsers = {
     firstName: 'Студент',
     lastName: 'СИТ',
     patronymic: '',
-    role: 'student',
     avatarURL: '',
   },
 } satisfies Record<string, MockUser>;
@@ -92,8 +89,7 @@ export const seededUsers = {
 function accessUser(
   sequence: number,
   username: string,
-  firstName: string,
-  role = 'student'
+  firstName: string
 ): MockUser {
   return {
     id: mockUserId(sequence),
@@ -103,7 +99,6 @@ function accessUser(
     firstName,
     lastName: '',
     patronymic: '',
-    role,
     avatarURL: '',
   };
 }
@@ -118,8 +113,8 @@ function teacherProfile(user: MockUser): Teacher {
 }
 
 const accessUsers = {
-  anna: accessUser(1, 'anna', 'Анна', 'teacher'),
-  boris: accessUser(2, 'boris', 'Борис', 'teacher'),
+  anna: accessUser(1, 'anna', 'Анна'),
+  boris: accessUser(2, 'boris', 'Борис'),
   sasha: accessUser(3, 'sasha', 'Саша'),
   petya: accessUser(4, 'petya', 'Петя'),
   vera: accessUser(5, 'vera', 'Вера'),
