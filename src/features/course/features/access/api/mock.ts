@@ -1,3 +1,4 @@
+import { MOCK_STUDENTS } from '@/features/course/features/attempts/api/mock';
 import type { CourseAccessResult } from '@/features/course/features/access/model/types';
 
 type MockCourseAccess = {
@@ -42,6 +43,16 @@ const MOCK_COURSE_ACCESS: Record<string, MockCourseAccess> = {
     students: ['student', 'mit-student', 'bob'],
   },
 };
+
+const attemptStudentUsernames = MOCK_STUDENTS.map(
+  (student) => student.username
+);
+
+for (const course of Object.values(MOCK_COURSE_ACCESS)) {
+  course.students = [
+    ...new Set([...course.students, ...attemptStudentUsernames]),
+  ];
+}
 
 export function renameMockCourseAccessSlug({
   oldSlug,
