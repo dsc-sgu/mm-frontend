@@ -22,6 +22,19 @@ After installing the updated dependencies:
 2. Run `bunx tsc -b` after generation to check route loading contexts, navigation parameters/search, and the `StaticDataRouteOption` augmentation against the new tree.
 3. Run `bun run lint`, then smoke-check the production bundle with `bun run preview`: login, course list, Course Page, Course Attempts, Attempt review, and browser Back/Forward. Use a teacher session for the attempts and review routes. Mock authorization bypasses the login form, so disable it when checking login.
 
+### Plate updates
+
+Update `platejs` and every direct `@platejs/*` dependency, including `@platejs/playwright`, as one compatible major-53 cohort. Packages have independent release versions: the current cohort uses `platejs` / core / slate / utils `53.3.15`, link `53.3.5`, list `53.3.13`, selection `53.1.6`, and the remaining plugins / Playwright adapter `53.0.0`.
+
+The exact selection `53.0.0` pin introduced with marquee selection in `b6344c4` had no documented compatibility reason. It is now a caret range, like the other plugins; keep marquee selection and structural-command focus in the upgrade checks.
+
+1. Before updating, run `bun run test:browser playwright/course-page-editor/lists.spec.ts playwright/course-page-editor/focus.spec.ts` in all three configured engines. These protect DOC-14 (list numbering) and DOC-18 (focus after structural commands); existing expected failures belong to DOC1, DOC4 and DOC5, not to dependency updates.
+2. Update the cohort and `bun.lock` together, then run `bun install --frozen-lockfile`, `bun run lint`, `bun run build`, and the full `bun run test:browser` suite. Do not update TipTap as part of this cohort.
+3. With mock authorization enabled, open `/courses/modern-information-technologies/edit`. Insert a block through the slash menu; marquee-select adjacent blocks and check the selection count; drag a single block by its handle and check the resulting order.
+4. Select text and create a link, collapse and expand a spoiler, and edit a code block's language and filename. Apply, open the read-only Course Page, then reopen the editor; check the link destination, block order, code language and filename survive.
+
+`queueMicrotask` and `editor.meta._forceFocus` in `page-edit/model/block-operations.ts` remain unchanged. Any upgrade regression must preserve the visible DOC-18 caret outcome without introducing `BlockCommands`.
+
 ## Course grading
 
 Attempts and attempt review import grading helpers and score fields directly from `@/features/course/features/grading`.
