@@ -42,6 +42,10 @@ describe('TR-05: load-courses statuses', () => {
     ['iconName', 'not-a-lucide-icon'],
     ['color', 'not-a-course-color'],
     ['teachers', [{ firstName: 'Анна', lastName: 'Иванова', username: 42 }]],
+    [
+      'teachers',
+      [{ firstName: 'Анна', lastName: 'Иванова', username: 'anna ivanova' }],
+    ],
   ])('200 with an invalid %s rejects the entire list', async (field, value) => {
     server.use(
       http.get(COURSES_URL, invalidBody([{ ...COURSE_DTO, [field]: value }]))

@@ -17,13 +17,18 @@ import {
   type RegistrationFormData,
 } from '@/features/auth/model/schema';
 import { authFailureText } from '@/features/auth/ui/failure-text';
+import type { InferInput } from 'valibot';
 
 export function RegistrationForm() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegistrationFormData>({
+  } = useForm<
+    InferInput<typeof registrationSchema>,
+    unknown,
+    RegistrationFormData
+  >({
     resolver: valibotResolver(registrationSchema),
   });
 

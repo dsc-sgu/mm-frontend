@@ -62,6 +62,31 @@ describe('TR-05: check-session statuses', () => {
       reason: { kind: 'invalid-response', explanation: 'userID' },
     });
   });
+
+  test('session usernames use the canonical lowercase locator', async () => {
+    server.use(
+      http.get(SESSION_URL, reply(200, { ...SESSION_DTO, username: 'ANNA_1' }))
+    );
+
+    await expect(checkSession()).resolves.toMatchObject({
+      status: 'authorized',
+      session: { username: 'anna_1' },
+    });
+  });
+
+  test('a session with an invalid username is an invalid response', async () => {
+    server.use(
+      http.get(
+        SESSION_URL,
+        invalidBody({ ...SESSION_DTO, username: 'anna ivanova' })
+      )
+    );
+
+    await expect(checkSession()).rejects.toMatchObject({
+      operation: 'check-session',
+      kind: 'invalid-response',
+    });
+  });
 });
 
 describe('check-session against the mock backend', () => {

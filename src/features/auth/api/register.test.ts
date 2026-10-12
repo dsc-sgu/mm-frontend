@@ -4,6 +4,7 @@ import { undeclaredStatus } from '@/app/mock-backend/failures';
 import { server } from '@/app/mock-backend/node';
 import { seededUsers } from '@/app/mock-backend/state';
 import { reply } from '@/app/testing/reply';
+import { checkSession } from '@/features/auth/api/check-session';
 import { login } from '@/features/auth/api/login';
 import { register, type RegisterInput } from '@/features/auth/api/register';
 
@@ -53,11 +54,38 @@ describe('register against the mock backend', () => {
     ).resolves.toEqual({ status: 'signed-in' });
   });
 
-  test('a taken username fails as the backend does, with 500', async () => {
+  test('registration stores mixed-case usernames in their canonical lowercase form', async () => {
+    await register({ ...newUser, username: 'New_Student-1' });
+    await login({ email: newUser.email, password: newUser.password });
+
+    await expect(checkSession()).resolves.toMatchObject({
+      status: 'authorized',
+      session: { username: 'new_student-1' },
+    });
+  });
+
+  test('a username differing only in case is already taken', async () => {
     await expect(
-      register({ ...newUser, username: seededUsers.mitStudent.username })
+      register({
+        ...newUser,
+        username: seededUsers.mitStudent.username.toUpperCase(),
+      })
     ).rejects.toMatchObject({
       reason: { kind: 'unexpected-http-status', status: 500 },
+    });
+  });
+
+  test.each([
+    'ab',
+    'anna ivanova',
+    'анна',
+    'anna/ivanova',
+    'anna?admin',
+    'anna#admin',
+    ' anna ',
+  ])('registration rejects an invalid username %j', async (username) => {
+    await expect(register({ ...newUser, username })).rejects.toMatchObject({
+      reason: { kind: 'unexpected-http-status', status: 422 },
     });
   });
 });

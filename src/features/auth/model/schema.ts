@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { UsernameSchema } from '@/features/auth/model/identity';
 
 export const loginSchema = v.object({
   email: v.pipe(
@@ -20,11 +21,7 @@ export const registrationSchema = v.pipe(
       v.minLength(2, 'Минимум 2 символа')
     ),
     patronymic: v.optional(v.string()),
-    username: v.pipe(
-      v.string('Имя пользователя обязательно'),
-      v.minLength(3, 'Минимум 3 символа'),
-      v.regex(/^[a-zA-Z0-9_]+$/, 'Только латиница, цифры и подчеркивание')
-    ),
+    username: UsernameSchema,
     email: v.pipe(
       v.string('Email обязателен'),
       v.email('Введите корректный email')

@@ -16,6 +16,8 @@ const LoginBodySchema = v.object({
   password: v.string(),
 });
 
+// Username validation and lowercase storage follow the frontend requirement:
+// https://github.com/dsc-sgu/mm-frontend/issues/113
 const RegisterBodySchema = v.object({
   firstName: v.string(),
   lastName: v.string(),
