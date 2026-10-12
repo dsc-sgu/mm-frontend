@@ -76,7 +76,7 @@ const TEACHERS = [
   'Инна Батраева',
 ];
 
-const MOCK_STUDENTS = buildMockStudents();
+export const MOCK_STUDENTS = buildMockStudents();
 const attemptsByCourse = new Map<string, CourseAttempt[]>();
 
 function buildMockStudents(): CourseAttemptStudent[] {
