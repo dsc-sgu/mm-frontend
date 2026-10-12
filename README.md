@@ -51,6 +51,8 @@ The mock backend runs in the browser and starts from a deterministic seed; every
 
 So far only auth goes through MSW; other features still use in-memory mocks with or without the flag. Production builds never include MSW.
 
+The dev server serves MSW's `mockServiceWorker.js` from `node_modules` with one change: the service worker leaves Web Worker scripts to the browser. Firefox never runs a module worker whose script a service worker answered ([mswjs/msw#2654](https://github.com/mswjs/msw/issues/2654)), so the Attempt review diff never loaded there. `playwright/attempt-review/page.spec.ts` guards it in all three engines.
+
 ## Tests
 
 `bun run test` runs Vitest: `*.test.ts` in Node and `*.test.tsx` in jsdom with React Testing Library. Both use the MSW handlers of the mock backend. After each test, handlers and the mock backend state return to the seed. Failure profiles for `server.use(...)` (`fail:network`, `fail:http-500`, `fail:invalid`, `fail:held`) are in `src/app/mock-backend/failures.ts`.

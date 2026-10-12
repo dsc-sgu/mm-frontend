@@ -8,6 +8,18 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite';
 
 const profiling = process.env.PROFILING === 'true';
 
+const FETCH_LISTENER = "addEventListener('fetch', function (event) {";
+
+// Firefox never runs a module Web Worker whose script a service worker
+// answered (mswjs/msw#2654), and MSW answers every request of the pages it
+// controls. Worker scripts are left to the browser; requests made by workers
+// still reach MSW.
+const BYPASS_WORKER_SCRIPTS = `
+  if (event.request.destination === 'worker') {
+    return
+  }
+`;
+
 // Serves the MSW worker from the dev server only: production builds ship no
 // mock service worker, and the worker always matches the installed msw.
 function mockServiceWorker(): Plugin {
@@ -15,13 +27,30 @@ function mockServiceWorker(): Plugin {
     'msw/mockServiceWorker.js'
   );
 
+  function readWorkerScript() {
+    const script = readFileSync(workerPath, 'utf8');
+    if (!script.includes(FETCH_LISTENER)) {
+      throw new Error(
+        `${workerPath} has no \`${FETCH_LISTENER}\`: update the Firefox ` +
+          'worker bypass in vite.config.ts for the installed msw.'
+      );
+    }
+
+    return script.replace(
+      FETCH_LISTENER,
+      FETCH_LISTENER + BYPASS_WORKER_SCRIPTS
+    );
+  }
+
   return {
     name: 'mock-service-worker',
     apply: 'serve',
     configureServer(server) {
+      const workerScript = readWorkerScript();
+
       server.middlewares.use('/mockServiceWorker.js', (_request, response) => {
         response.setHeader('Content-Type', 'text/javascript');
-        response.end(readFileSync(workerPath));
+        response.end(workerScript);
       });
     },
   };
