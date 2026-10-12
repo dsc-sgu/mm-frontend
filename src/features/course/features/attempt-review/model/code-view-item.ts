@@ -1,6 +1,7 @@
 import type { CodeViewItem } from '@pierre/diffs';
 
-import type { AttemptReviewLineCommentAnnotation } from './comment-annotation';
+import { isMarkdownFile } from '@/features/course/features/attempt-review/features/rendered-markdown/model/markdown-file';
+import type { AttemptReviewCodeViewAnnotation } from './code-view-annotation';
 import type {
   AttemptReviewChangedFile,
   AttemptReviewLineComment,
@@ -10,14 +11,21 @@ export function createAttemptReviewCodeViewItems({
   files,
   commentsByFile,
   collapsedFilePaths,
+  renderedFilePaths,
 }: {
   files: AttemptReviewChangedFile[];
   commentsByFile: Map<string, AttemptReviewLineComment[]>;
   collapsedFilePaths: Set<string>;
-}): CodeViewItem<AttemptReviewLineCommentAnnotation>[] {
+  renderedFilePaths: Set<string>;
+}): CodeViewItem<AttemptReviewCodeViewAnnotation>[] {
   return files.map((file) => {
-    const fileComments = commentsByFile.get(file.path) ?? [];
     const collapsed = collapsedFilePaths.has(file.path);
+
+    if (renderedFilePaths.has(file.path) && isMarkdownFile(file.path)) {
+      return createRenderedMarkdownItem(file, collapsed);
+    }
+
+    const fileComments = commentsByFile.get(file.path) ?? [];
 
     return {
       id: file.path,
@@ -32,10 +40,33 @@ export function createAttemptReviewCodeViewItems({
       annotations: fileComments.map((comment) => ({
         side: comment.endSide ?? comment.side,
         lineNumber: comment.endLineNumber ?? comment.lineNumber,
-        metadata: { comment },
+        metadata: { type: 'line-comment', comment },
       })),
     };
   });
+}
+
+// CodeView has no item for arbitrary content, so the rendered view is the
+// annotation of a one-line file whose line the view's CSS hides.
+function createRenderedMarkdownItem(
+  file: AttemptReviewChangedFile,
+  collapsed: boolean
+): CodeViewItem<AttemptReviewCodeViewAnnotation> {
+  return {
+    id: file.path,
+    type: 'file',
+    file: {
+      name: file.path,
+      contents: ' ',
+      lang: 'text',
+      cacheKey: `${file.path}:rendered-markdown`,
+    },
+    collapsed,
+    version: hashText(JSON.stringify({ filePath: file.path, collapsed })),
+    annotations: [
+      { lineNumber: 1, metadata: { type: 'rendered-markdown', file } },
+    ],
+  };
 }
 
 export function groupAttemptReviewCommentsByFile(

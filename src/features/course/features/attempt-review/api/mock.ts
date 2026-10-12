@@ -444,7 +444,19 @@ function cloneLineComment(
 function buildSnapshot(attemptNumber: AttemptNumber): Record<string, string> {
   const snapshots: Record<number, Record<string, string>> = {
     1: {
-      'README.md': '# Практика\n\nПервое решение задачи.\n',
+      'README.md': [
+        '# Практика',
+        '',
+        'Первое решение задачи.',
+        '',
+        '## Что сделано',
+        '',
+        '- [x] Функция `calculateTotal`',
+        '- [ ] Обработка пустого списка',
+        '',
+        'Подробности в [описании задания](https://example.com/task).',
+        '',
+      ].join('\n'),
       'src/main.ts': [
         'export function calculateTotal(items: number[]) {',
         '  let total = 0;',
@@ -457,7 +469,20 @@ function buildSnapshot(attemptNumber: AttemptNumber): Record<string, string> {
       ].join('\n'),
     },
     2: {
-      'README.md': '# Практика\n\nДобавлена обработка пустого списка.\n',
+      'README.md': [
+        '# Практика',
+        '',
+        'Добавлена обработка **пустого** списка.',
+        '',
+        '## Что сделано',
+        '',
+        '- [x] Функция `calculateTotal`',
+        '- [x] Обработка пустого списка',
+        '- [x] Форматирование итога',
+        '',
+        'Подробности в [описании задания](https://example.com/task).',
+        '',
+      ].join('\n'),
       'src/main.ts': [
         'import { formatTotal } from "./utils/format";',
         '',

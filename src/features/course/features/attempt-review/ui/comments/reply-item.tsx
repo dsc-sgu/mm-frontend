@@ -13,6 +13,8 @@ import {
   RichTextEditor,
 } from '@/features/course/features/attempt-review/ui/rich-text/editor';
 import { isRichTextHtmlEmpty } from '@/features/course/features/attempt-review/ui/rich-text/empty';
+import { useUnsentCommentText } from '@/features/course/features/attempt-review/hooks/use-unsent-comment-text';
+import { unsentCommentTextKeys } from '@/features/course/features/attempt-review/model/unsent-comment-text';
 import { AttemptReviewCommentTimestamp } from './timestamp';
 import type { AttemptReviewLineCommentReply } from '@/features/course/features/attempt-review/model/types';
 import { cn } from '@/shadcn/lib/utils';
@@ -46,9 +48,19 @@ export function AttemptReviewCommentReplyItem({
   onUpdate,
   onDelete,
 }: AttemptReviewCommentReplyItemProps) {
-  const [state, setState] = useState<ReplyItemState>({
-    mode: 'view',
-    pending: false,
+  const unsentText = useUnsentCommentText();
+  const textKey = unsentCommentTextKeys.replyEdit(reply.id);
+  const [state, setState] = useState<ReplyItemState>(() => {
+    const unsentHtml = unsentText.read(textKey, reply.html);
+
+    return unsentHtml === undefined
+      ? { mode: 'view', pending: false }
+      : {
+          mode: 'editing',
+          draftHtml: unsentHtml,
+          sourceHtml: reply.html,
+          pending: false,
+        };
   });
   const isEditing = state.mode === 'editing';
   const isPending = state.pending !== false;
@@ -61,6 +73,7 @@ export function AttemptReviewCommentReplyItem({
   const cancelShortcutLabels = getShortcutLabels(commentCancelShortcut);
 
   function startEdit() {
+    unsentText.clear(textKey);
     setState({
       mode: 'editing',
       draftHtml: reply.html,
@@ -82,6 +95,7 @@ export function AttemptReviewCommentReplyItem({
         pending: false,
       };
     });
+    unsentText.write(textKey, { sourceHtml: reply.html, html: nextDraftHtml });
   }
 
   async function submitEdit() {
@@ -99,6 +113,7 @@ export function AttemptReviewCommentReplyItem({
 
     try {
       await onUpdate(reply.id, submittedHtml);
+      unsentText.clear(textKey);
       setState({ mode: 'view', pending: false });
     } catch (error) {
       setState({
@@ -112,9 +127,12 @@ export function AttemptReviewCommentReplyItem({
   }
 
   function cancelEdit() {
-    setState((current) =>
-      current.pending === 'update' ? current : { mode: 'view', pending: false }
-    );
+    if (state.pending === 'update') {
+      return;
+    }
+
+    unsentText.clear(textKey);
+    setState({ mode: 'view', pending: false });
   }
 
   async function deleteReply() {
