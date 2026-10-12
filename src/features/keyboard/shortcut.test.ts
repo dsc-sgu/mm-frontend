@@ -26,8 +26,16 @@ describe('matchesShortcut', () => {
     ['Ctrl+S', keydown({ key: 's', code: 'KeyS', ctrlKey: true })],
     ['Cmd+S', keydown({ key: 's', code: 'KeyS', metaKey: true })],
     [
-      'Ctrl+S in the Russian layout',
+      'Ctrl+S with Caps Lock on',
+      keydown({ key: 'S', code: 'KeyS', ctrlKey: true }),
+    ],
+    [
+      'Ctrl+S in the Russian layout, on the key that types "ы"',
       keydown({ key: 'ы', code: 'KeyS', ctrlKey: true }),
+    ],
+    [
+      'Ctrl+S in Dvorak, on the key that types "s"',
+      keydown({ key: 's', code: 'Semicolon', ctrlKey: true }),
     ],
   ])('Mod+S matches %s', (_name, event) => {
     expect(matchesShortcut(event, save)).toBe(true);
@@ -44,8 +52,8 @@ describe('matchesShortcut', () => {
       keydown({ key: 'S', code: 'KeyS', ctrlKey: true, shiftKey: true }),
     ],
     [
-      'Ctrl on another physical key that types "s"',
-      keydown({ key: 's', code: 'Semicolon', ctrlKey: true }),
+      'Ctrl in Dvorak on the QWERTY S position, which types "o"',
+      keydown({ key: 'o', code: 'KeyS', ctrlKey: true }),
     ],
     [
       'Ctrl+S during IME composition',
@@ -101,6 +109,12 @@ describe('matchesShortcut', () => {
     ],
   ])('Alt+G against %s', (_name, event, matches) => {
     expect(matchesShortcut(event, { alt: true, key: 'G' })).toBe(matches);
+  });
+
+  test('Alt+E matches Option+E on macOS, which is a dead key', () => {
+    const event = keydown({ key: 'Dead', code: 'KeyE', altKey: true });
+
+    expect(matchesShortcut(event, { alt: true, key: 'E' })).toBe(true);
   });
 });
 
