@@ -21,6 +21,8 @@ import {
   getCodeLanguageOptionFromOptions,
   loadCodeLanguageOptions,
 } from '@/features/code-block/model/languages';
+import { matchesShortcut } from '@/features/keyboard/shortcut';
+import { saveShortcut } from '@/features/course/features/page-edit/model/shortcuts';
 
 type CodeLanguageSelectProps = {
   language?: string;
@@ -28,13 +30,7 @@ type CodeLanguageSelectProps = {
 };
 
 function stopEditorHotkeys(event: KeyboardEvent) {
-  const isSaveShortcut =
-    (event.metaKey || event.ctrlKey) &&
-    !event.altKey &&
-    !event.shiftKey &&
-    event.key.toLowerCase() === 's';
-
-  if (!isSaveShortcut) {
+  if (!matchesShortcut(event.nativeEvent, saveShortcut)) {
     event.stopPropagation();
   }
 }

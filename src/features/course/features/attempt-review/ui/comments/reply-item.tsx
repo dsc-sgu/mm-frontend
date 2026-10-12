@@ -3,10 +3,11 @@ import { Check, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
+import { getShortcutLabels } from '@/features/keyboard/shortcut';
 import {
-  getAttemptReviewCancelShortcutKeys,
-  getAttemptReviewSubmitShortcutKeys,
-} from '@/features/course/features/attempt-review/model/keyboard-shortcuts';
+  commentCancelShortcut,
+  commentSubmitShortcut,
+} from '@/features/course/features/attempt-review/model/shortcuts';
 import {
   RichTextContent,
   RichTextEditor,
@@ -56,8 +57,8 @@ export function AttemptReviewCommentReplyItem({
       ? state.draftHtml
       : reply.html;
   const isSubmitDisabled = isPending || isRichTextHtmlEmpty(draftHtml);
-  const submitShortcutKeys = getAttemptReviewSubmitShortcutKeys();
-  const cancelShortcutKeys = getAttemptReviewCancelShortcutKeys();
+  const submitShortcutKeys = getShortcutLabels(commentSubmitShortcut);
+  const cancelShortcutKeys = getShortcutLabels(commentCancelShortcut);
 
   function startEdit() {
     setState({

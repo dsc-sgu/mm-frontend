@@ -10,6 +10,11 @@ import {
   TooltipTrigger,
 } from '@/shadcn/components/ui/tooltip';
 import { cn } from '@/shadcn/lib/utils';
+import {
+  getShortcutLabels,
+  matchesShortcut,
+  type Shortcut,
+} from '@/features/keyboard/shortcut';
 import { FilterMultiSelect } from './filter-multi-select';
 import {
   areCourseAttemptsFiltersEqual,
@@ -29,6 +34,8 @@ const GRADED_FILTER_OPTIONS: Array<{
   { value: 'no', label: 'Нет' },
   { value: 'yes', label: 'Да' },
 ];
+
+const applyShortcut: Shortcut = { mod: true, key: 'Enter' };
 
 export function AttemptsFiltersContent({
   idPrefix,
@@ -142,10 +149,7 @@ export function AttemptsFiltersContent({
   return (
     <div
       onKeyDownCapture={(event) => {
-        const isApplyShortcut =
-          event.key === 'Enter' && (event.metaKey || event.ctrlKey);
-
-        if (!isApplyShortcut) {
+        if (!matchesShortcut(event.nativeEvent, applyShortcut)) {
           return;
         }
 
@@ -493,7 +497,7 @@ function AttemptsFiltersActions({
   onReset: () => void;
 }) {
   const isDrawer = variant === 'drawer';
-  const applyShortcutModifier = getApplyShortcutModifier();
+  const applyShortcutLabels = getShortcutLabels(applyShortcut);
 
   return (
     <TooltipProvider>
@@ -513,10 +517,14 @@ function AttemptsFiltersActions({
                 <Button type="button" disabled className="w-full px-1">
                   <span>Применить</span>
                   <KbdGroup className="gap-1">
-                    <Kbd className="h-6 min-w-6 rounded-md px-1.5">
-                      {applyShortcutModifier}
-                    </Kbd>
-                    <Kbd className="h-6 min-w-6 rounded-md px-1.5">↵</Kbd>
+                    {applyShortcutLabels.map((label) => (
+                      <Kbd
+                        key={label}
+                        className="h-6 min-w-6 rounded-md px-1.5"
+                      >
+                        {label}
+                      </Kbd>
+                    ))}
                   </KbdGroup>
                 </Button>
               </span>
@@ -532,10 +540,11 @@ function AttemptsFiltersActions({
           >
             <span>Применить</span>
             <KbdGroup className="gap-1">
-              <Kbd className="h-6 min-w-6 rounded-md px-1.5">
-                {applyShortcutModifier}
-              </Kbd>
-              <Kbd className="h-6 min-w-6 rounded-md px-1.5">↵</Kbd>
+              {applyShortcutLabels.map((label) => (
+                <Kbd key={label} className="h-6 min-w-6 rounded-md px-1.5">
+                  {label}
+                </Kbd>
+              ))}
             </KbdGroup>
           </Button>
         )}
@@ -569,14 +578,6 @@ function AttemptsFiltersActions({
       </div>
     </TooltipProvider>
   );
-}
-
-function getApplyShortcutModifier() {
-  if (typeof navigator === 'undefined') {
-    return 'Ctrl';
-  }
-
-  return /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? '⌘' : 'Ctrl';
 }
 
 type AttemptsFiltersPanel = {

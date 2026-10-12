@@ -13,7 +13,8 @@ import {
   CoursePageEditStoreProvider,
   useCoursePageEditStore,
 } from '@/features/course/features/page-edit/hooks/use-editor-store';
-import { isModShortcut } from '@/features/course/features/page-edit/model/shortcuts';
+import { matchesShortcut } from '@/features/keyboard/shortcut';
+import { saveShortcut } from '@/features/course/features/page-edit/model/shortcuts';
 import { CoursePageEditApplyBar } from '@/features/course/features/page-edit/ui/apply-bar';
 import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui/content-editor';
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
@@ -118,7 +119,7 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (!isModShortcut(event, 's')) {
+      if (!matchesShortcut(event, saveShortcut)) {
         return;
       }
 

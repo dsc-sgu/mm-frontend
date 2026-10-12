@@ -20,6 +20,8 @@ import { CourseRichText } from '@/features/course/ui/rich-text';
 import type { RichTextNode } from '@/features/course/features/page/model/types';
 import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { CodeLanguageSelect } from '@/features/course/features/page-edit/ui/plate/code-language-select';
+import { matchesShortcut } from '@/features/keyboard/shortcut';
+import { saveShortcut } from '@/features/course/features/page-edit/model/shortcuts';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
 import { CoursePageBlockFrame } from '@/features/course/features/page-edit/ui/block-frame';
 
@@ -274,13 +276,7 @@ export function CodeBlockElement({ children, ...props }: PlateElementProps) {
             );
           }}
           onKeyDown={(event) => {
-            const isSaveShortcut =
-              (event.metaKey || event.ctrlKey) &&
-              !event.altKey &&
-              !event.shiftKey &&
-              event.key.toLowerCase() === 's';
-
-            if (!isSaveShortcut) {
+            if (!matchesShortcut(event.nativeEvent, saveShortcut)) {
               event.stopPropagation();
             }
           }}
@@ -436,13 +432,7 @@ export function CourseImageElement({ children, ...props }: PlateElementProps) {
                 value={captionText}
                 onChange={(event) => updateCaption(event.target.value)}
                 onKeyDown={(event) => {
-                  const isSaveShortcut =
-                    (event.metaKey || event.ctrlKey) &&
-                    !event.altKey &&
-                    !event.shiftKey &&
-                    event.key.toLowerCase() === 's';
-
-                  if (!isSaveShortcut) {
+                  if (!matchesShortcut(event.nativeEvent, saveShortcut)) {
                     event.stopPropagation();
                   }
                 }}

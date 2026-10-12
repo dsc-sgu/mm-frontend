@@ -35,7 +35,7 @@ import {
 } from '@/shadcn/components/ui/command';
 import { Kbd } from '@/shadcn/components/ui/kbd';
 import { cn } from '@/shadcn/lib/utils';
-import { isSingleKeyShortcut } from '@/features/course/features/page-edit/model/shortcuts';
+import { matchesShortcut } from '@/features/keyboard/shortcut';
 import {
   applyCoursePageSlashMenuItem,
   filterCoursePageSlashMenuItems,
@@ -220,21 +220,14 @@ function useSlashMenuController({
         return;
       }
 
-      if (isSingleKeyShortcut(event, 'Enter') && activeItem) {
+      if (matchesShortcut(event, { key: 'Enter' }) && activeItem) {
         event.preventDefault();
         event.stopPropagation();
         applyItem(activeItem);
         return;
       }
 
-      if (
-        event.key === 'Escape' &&
-        triggerId &&
-        !event.altKey &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey
-      ) {
+      if (matchesShortcut(event, { key: 'Escape' }) && triggerId) {
         event.preventDefault();
         event.stopPropagation();
         dismissMenu();
