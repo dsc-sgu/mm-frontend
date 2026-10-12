@@ -23,8 +23,8 @@ A User participating in a particular Course with the Student role.
 A User participating in a particular Course with the Teacher role.
 
 **Student Group**:
-An academic grouping of Students inside a Course.
-_Avoid_: Group, when Task Group could also be meant
+An academic grouping of Students inside a Course. A Course's Student Groups are flat: a lab subgroup is simply another Student Group of that Course. Every Course has at least one Student Group, starting with a single one, and every Student belongs to exactly one Student Group of the Course.
+_Avoid_: Group, when Task Group could also be meant; subgroup as a separate level inside a Student Group; a Course or Student without a Student Group
 
 ## Course structure and editing
 
@@ -68,6 +68,20 @@ _Avoid_: using the Task statement as its summary
 
 **Student Task Access**:
 The monotonic fact that a Task has been opened to a particular Student. A locked Task can expose its Task Summary and prerequisite without exposing its content or accepting an Attempt.
+
+## Deadlines
+
+**Deadline**:
+The moment by which a Student is expected to submit an Attempt for a Task. It does not close the Task: an Attempt submitted later is still accepted and counts as late. A Task may have no Deadline.
+_Avoid_: treating the Deadline as a cut-off after which Attempts are refused
+
+**Deadline Override**:
+A Deadline set for one Student Group or one Student that replaces the Task's Deadline for them. It may be later or earlier than the Deadline it replaces, or state that there is no Deadline at all. A value set explicitly stays an override even when it equals the value it replaces, so later changes to that value do not move it. It may carry a reason, visible to Teachers and to the Students it applies to.
+_Avoid_: Extension, since an override can also be stricter
+
+**Effective Deadline**:
+The Deadline that applies to a particular Student for a Task: their own Deadline Override if there is one, otherwise their Student Group's, otherwise the Task's. It may be the absence of a Deadline. Whether an Attempt is late is always judged against the Student's current Effective Deadline, so changing a Deadline, a Deadline Override, or the Student's Student Group can change it for Attempts already submitted.
+_Avoid_: showing a Student the Task's Deadline when a Deadline Override applies to them
 
 ## Attempts and review
 
