@@ -1,10 +1,7 @@
-import { ensureValidUsernameOrRedirect } from '@/features/course/routing/params';
-import {
-  requireCourseParticipant,
-  requireKnownCourseStudent,
-} from '@/features/course/routing/guards';
+import { requireUsername } from '@/features/course/routing/params';
+import { CourseResourceNotFound } from '@/features/course/features/access/ui/route-state';
 import { getStudentRepositoryBreadcrumb } from '@/features/course/routing/header';
-import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
+import { Outlet, createFileRoute, notFound } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/repositories/$studentUsername'
@@ -14,38 +11,19 @@ export const Route = createFileRoute(
       getBreadcrumb: getStudentRepositoryBreadcrumb,
     },
   },
-  async beforeLoad({ context, params }) {
-    const studentUsername = ensureValidUsernameOrRedirect({
-      studentUsername: params.studentUsername,
-      courseSlug: params.courseSlug,
-    });
-    const courseAccess = await requireCourseParticipant({
-      queryClient: context.queryClient,
-      courseSlug: params.courseSlug,
-    });
-
-    if (courseAccess.role === 'teacher') {
-      requireKnownCourseStudent({
-        courseSlug: params.courseSlug,
-        access: courseAccess,
-        studentUsername,
-        redirectTo: '/courses/$courseSlug/repositories',
-      });
-    }
-
+  beforeLoad({ context, params }) {
+    const studentUsername = requireUsername(params.studentUsername);
     if (
-      courseAccess.role === 'student' &&
-      courseAccess.username !== studentUsername
+      context.courseRole === 'student' &&
+      context.session.username !== studentUsername
     ) {
-      throw redirect({
-        to: '/courses/$courseSlug',
-        params: { courseSlug: params.courseSlug },
-      });
+      throw notFound();
     }
 
     return { studentUsername };
   },
   component: RouteComponent,
+  notFoundComponent: CourseResourceNotFound,
 });
 
 function RouteComponent() {

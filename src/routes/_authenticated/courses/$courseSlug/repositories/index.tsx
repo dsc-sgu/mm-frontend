@@ -4,10 +4,10 @@ import { createFileRoute } from '@tanstack/react-router';
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/repositories/'
 )({
-  async beforeLoad({ context, params }) {
-    await requireCourseRole({
-      queryClient: context.queryClient,
-      courseSlug: params.courseSlug,
+  beforeLoad({ context }) {
+    requireCourseRole({
+      courseRole: context.courseRole,
+      courseSlug: context.courseSlug,
       roles: ['teacher'],
     });
   },

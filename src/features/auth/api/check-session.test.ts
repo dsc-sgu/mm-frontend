@@ -17,7 +17,6 @@ const SESSION_DTO = {
   patronymic: '',
   username: 'anna',
   email: 'anna@example.com',
-  role: 'teacher',
   avatarURL: '',
   sessionExpiresAt: '2099-12-31T23:59:59.999Z',
 };
@@ -37,6 +36,17 @@ describe('TR-05: check-session statuses', () => {
     server.use(http.get(SESSION_URL, reply(status, body)));
 
     await expect(checkSession()).resolves.toEqual(outcome);
+  });
+
+  test('session exposes identity without a global role', async () => {
+    server.use(
+      http.get(SESSION_URL, reply(200, { ...SESSION_DTO, role: 'teacher' }))
+    );
+
+    await expect(checkSession()).resolves.toEqual({
+      status: 'authorized',
+      session: SESSION,
+    });
   });
 
   test.each([204, 403, 404, 500])(

@@ -1,6 +1,5 @@
 import * as v from 'valibot';
 import { mockBackend, type MockCourse } from '@/app/mock-backend/state';
-import { renameMockCourseAccessSlug } from '@/features/course/features/access/api/mock';
 import type {
   CourseContentBlockItem,
   CoursePage,
@@ -450,10 +449,6 @@ export async function saveCoursePage(
     iconName: input.iconName,
   });
   COURSE_PAGE_STORE.set(currentCourse, cloneCoursePage(nextPage));
-  renameMockCourseAccessSlug({
-    oldSlug: input.courseSlug,
-    newSlug: nextPage.courseId,
-  });
 
   return cloneCoursePage(nextPage);
 }

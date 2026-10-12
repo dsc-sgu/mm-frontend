@@ -1,30 +1,46 @@
-import { coursesQueryOptions } from '@/features/course/api/queries';
-import { ensureValidCourseSlugOrRedirect } from '@/features/course/routing/params';
-import { requireCourseParticipant } from '@/features/course/routing/guards';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Outlet,
+  createFileRoute,
+  notFound,
+  useRouterState,
+} from '@tanstack/react-router';
+import { courseContextOptions } from '@/features/course/features/access/api/queries';
+import { courseAccessRouteState } from '@/features/course/features/access/model/route-state';
+import {
+  CourseAccessState,
+  CourseContextLoading,
+  CourseLookupFailure,
+} from '@/features/course/features/access/ui/route-state';
+import { requireCourseSlug } from '@/features/course/routing/params';
 import {
   getCourseNavItems,
   getCourseRootBreadcrumb,
 } from '@/features/course/routing/header';
-import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
   async beforeLoad({ context, params }) {
-    const courseSlug = ensureValidCourseSlugOrRedirect(params.courseSlug);
-    const courseAccess = await requireCourseParticipant({
-      queryClient: context.queryClient,
-      courseSlug,
-    });
-    const courses = await context.queryClient.ensureQueryData(
-      coursesQueryOptions(context.session.userId)
-    );
-    const course = courses.find((item) => item.slug === courseSlug);
+    const courseSlug = requireCourseSlug(params.courseSlug);
+    const options = courseContextOptions(context.session.userId, courseSlug);
+    const cached = context.queryClient.getQueryData(options.queryKey);
+    const result =
+      cached?.status === 'found'
+        ? await context.queryClient.ensureQueryData({
+            ...options,
+            revalidateIfStale: true,
+          })
+        : await context.queryClient.fetchQuery(options);
 
-    if (!course) {
-      throw redirect({ to: '/' });
+    if (result.status !== 'found') {
+      throw notFound();
     }
-
-    return { courseSlug, courseAccess, course };
+    return { courseSlug, course: result.course, courseRole: result.role };
   },
+  pendingMs: 0,
+  pendingMinMs: 0,
+  pendingComponent: CourseContextLoading,
+  notFoundComponent: () => <CourseAccessState state="course-not-found" />,
+  errorComponent: CourseLookupFailure,
   staticData: {
     header: {
       getBreadcrumb: getCourseRootBreadcrumb,
@@ -35,5 +51,28 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
 });
 
 function RouteComponent() {
+  const { courseSlug, session } = Route.useRouteContext();
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+  const query = useQuery({
+    ...courseContextOptions(session.userId, courseSlug),
+    // beforeLoad owns the entry recheck, including cached confirmation.
+    refetchOnMount: false,
+  });
+
+  if (
+    pathname !== `/courses/${courseSlug}` &&
+    !pathname.startsWith(`/courses/${courseSlug}/`)
+  ) {
+    return <CourseContextLoading />;
+  }
+  if (query.isError) return <CourseLookupFailure />;
+  if (!query.data) return <CourseContextLoading />;
+  if (query.data.status !== 'found') {
+    return (
+      <CourseAccessState state={courseAccessRouteState(query.data.status)} />
+    );
+  }
   return <Outlet />;
 }

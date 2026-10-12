@@ -6,6 +6,11 @@ const setup = './src/app/testing/setup.ts';
 export default defineConfig({
   resolve: {
     alias: {
+      '@/features/course/features/attempt-review/providers/worker-pool':
+        path.resolve(
+          __dirname,
+          './src/app/testing/attempt-review-worker-pool.tsx'
+        ),
       '@': path.resolve(__dirname, './src'),
     },
   },

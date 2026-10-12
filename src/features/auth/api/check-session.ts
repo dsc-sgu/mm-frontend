@@ -17,7 +17,6 @@ const SessionDtoSchema = v.object({
   lastName: v.string(),
   patronymic: v.string(),
   username: UsernameSchema,
-  role: v.string(),
   sessionExpiresAt: v.string(), // TODO: change to date object
 });
 

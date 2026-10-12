@@ -3,6 +3,7 @@ import type { CodeViewHandle } from '@pierre/diffs/react';
 import { useQuery } from '@tanstack/react-query';
 
 import { sessionOptions } from '@/features/auth/api/queries';
+import type { CourseRole } from '@/features/course/features/access/model/types';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -40,6 +41,7 @@ import type {
 
 type AttemptReviewPageProps = {
   mode: AttemptReviewMode;
+  courseRole: CourseRole;
 } & AttemptReviewRouteParams;
 
 type AttemptReviewPageLoadedProps = {
@@ -92,6 +94,7 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
 
 function AttemptReviewPageLoaded({
   mode,
+  courseRole,
   courseSlug,
   taskId,
   studentUsername,
@@ -169,8 +172,9 @@ function AttemptReviewPageLoaded({
 
   const canReplyToComments =
     sessionData?.status === 'authorized' &&
-    (sessionData.session.role === 'teacher' ||
-      sessionData.session.username === studentUsername);
+    (courseRole === 'teacher' ||
+      (courseRole === 'student' &&
+        sessionData.session.username === studentUsername));
   const canSave =
     mode === 'editable' && hasChanges && !scoreError && !saveMutation.isPending;
   const totalAdded = review.changedFiles.reduce(

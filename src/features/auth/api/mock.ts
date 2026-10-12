@@ -43,7 +43,6 @@ export const authHandlers = [
       patronymic: user.patronymic,
       username: user.username,
       email: user.email,
-      role: user.role,
       avatarURL: user.avatarURL,
       sessionExpiresAt: session.expiresAt,
     });
@@ -94,7 +93,6 @@ export const authHandlers = [
     const user: MockUser = {
       ...body.output,
       id: mockUserId(state.nextUserNumber),
-      role: 'student',
       avatarURL: '',
     };
     state.users.push(user);

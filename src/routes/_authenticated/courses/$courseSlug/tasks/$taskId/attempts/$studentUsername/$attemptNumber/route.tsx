@@ -1,51 +1,27 @@
 import {
-  ensureValidAttemptNumberOrRedirect,
-  ensureValidUsernameOrRedirect,
+  requireAttemptNumber,
+  requireUsername,
 } from '@/features/course/routing/params';
-import {
-  requireCourseParticipant,
-  requireKnownCourseStudent,
-} from '@/features/course/routing/guards';
-import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
+import { CourseResourceNotFound } from '@/features/course/features/access/ui/route-state';
+import { Outlet, createFileRoute, notFound } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber'
 )({
-  async beforeLoad({ context, params }) {
-    const studentUsername = ensureValidUsernameOrRedirect({
-      studentUsername: params.studentUsername,
-      courseSlug: params.courseSlug,
-    });
-    const attemptNumber = ensureValidAttemptNumberOrRedirect({
-      attemptNumber: params.attemptNumber,
-      courseSlug: params.courseSlug,
-    });
-    const courseAccess = await requireCourseParticipant({
-      queryClient: context.queryClient,
-      courseSlug: params.courseSlug,
-    });
-
-    if (courseAccess.role === 'teacher') {
-      requireKnownCourseStudent({
-        courseSlug: params.courseSlug,
-        access: courseAccess,
-        studentUsername,
-      });
-    }
-
+  beforeLoad({ context, params }) {
+    const studentUsername = requireUsername(params.studentUsername);
+    const attemptNumber = requireAttemptNumber(params.attemptNumber);
     if (
-      courseAccess.role === 'student' &&
-      courseAccess.username !== studentUsername
+      context.courseRole === 'student' &&
+      context.session.username !== studentUsername
     ) {
-      throw redirect({
-        to: '/courses/$courseSlug',
-        params: { courseSlug: params.courseSlug },
-      });
+      throw notFound();
     }
 
     return { attemptNumber, studentUsername };
   },
   component: RouteComponent,
+  notFoundComponent: CourseResourceNotFound,
 });
 
 function RouteComponent() {
