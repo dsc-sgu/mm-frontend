@@ -17,6 +17,7 @@ import {
   ListOrdered,
   Quote,
   X,
+  Trophy,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -73,6 +74,8 @@ const ICON_BY_SLASH_MENU_ITEM_ID: Record<string, LucideIcon> = {
   'ordered-list': ListOrdered,
   code: Code2,
   spoiler: ListCollapse,
+  // PROTOTYPE (#181): «/Task» inserts a Task Reference.
+  task: Trophy,
 };
 
 function useSlashMenuEditorFocus(
