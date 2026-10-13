@@ -1,7 +1,8 @@
 // PROTOTYPE (#181): shift window «Вопрос», refined after review. Kinds of
 // deadlines are ticked independently (no «всё вместе»), Student Groups are
 // picked by buttons in the window, days come from buttons as in «Сразу».
-// Nothing appears or disappears while ticking, so the window stays put.
+// Nothing appears or disappears while ticking, so the window stays put;
+// «Что изменится» lists the result in a block of fixed height.
 import { Fragment, type ReactNode } from 'react';
 import { ChevronDown, LoaderCircle, TriangleAlert } from 'lucide-react';
 
@@ -21,10 +22,16 @@ import {
   TooltipTrigger,
 } from '@/shadcn/components/ui/tooltip';
 import { cn } from '@/shadcn/lib/utils';
-import { findOverride } from '@/features/course/prototype/task-and-deadline-settings/schedule';
+import { studentName } from '@/features/course/prototype/task-and-deadline-settings/fixture';
+import {
+  findOverride,
+  type DeadlineValue,
+  type ShiftRow,
+} from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import {
   STUDENT_GROUPS,
+  STUDENTS,
   useSandbox,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
 import {
@@ -34,12 +41,22 @@ import {
 import { useKindsDraft, type KindsDraft, type ShiftKinds } from './kinds';
 import {
   daysLabel,
+  groupName,
   plural,
   taskSummary,
   toggleIn,
   type ShiftPreset,
 } from './model';
 import { DaysPicker, Section, TaskPicker, VariantSwitch } from './parts';
+import {
+  BeforeAfter,
+  ChangeLine,
+  ChangesBox,
+  ChangesTask,
+  Unchanged,
+} from './preview';
+
+const studentsById = new Map(STUDENTS.map((student) => [student.id, student]));
 
 function KindRow({
   draft,
@@ -231,6 +248,104 @@ function GroupButtons({ draft }: { draft: KindsDraft }) {
   );
 }
 
+function valueText(value: DeadlineValue, defaultTime: string) {
+  return value.kind === 'at'
+    ? formatCompactMoment(value.at, defaultTime)
+    : 'без дедлайна';
+}
+
+function ShiftLine({ row, follows }: { row: ShiftRow; follows: string[] }) {
+  const time = row.level === 'opening' ? '00:00' : '23:59';
+  const change =
+    row.kind === 'no-deadline' ? (
+      <Unchanged>без дедлайна, не сдвигается</Unchanged>
+    ) : (
+      <BeforeAfter
+        before={valueText(row.before, time)}
+        after={valueText(row.after, time)}
+      />
+    );
+
+  if (row.level === 'task') {
+    return (
+      <ChangeLine
+        who="Общий"
+        note={
+          follows.length === STUDENT_GROUPS.length
+            ? 'и все подгруппы'
+            : follows.length
+              ? `и ${follows.join(', ')}`
+              : undefined
+        }
+      >
+        {change}
+      </ChangeLine>
+    );
+  }
+  if (row.level === 'opening') {
+    return <ChangeLine who="Открытие">{change}</ChangeLine>;
+  }
+  if (row.target?.kind === 'group') {
+    return (
+      <ChangeLine
+        who={groupName(row.target.groupId)}
+        note={row.kind === 'create-override' ? 'получит свой' : undefined}
+      >
+        {change}
+      </ChangeLine>
+    );
+  }
+  if (row.target?.kind === 'student') {
+    const student = studentsById.get(row.target.studentId)!;
+    return (
+      <ChangeLine who={studentName(student)} note={groupName(student.groupId)}>
+        {change}
+      </ChangeLine>
+    );
+  }
+  return null;
+}
+
+/**
+ * The same block as in «Продлить дедлайны». Subgroups that only follow the
+ * general deadline are named next to it instead of taking a line each.
+ */
+function ShiftPreview({ draft }: { draft: KindsDraft }) {
+  const tasks = useSandbox((state) => state.tasks);
+  const rows = draft.plan.rows;
+
+  return (
+    <ChangesBox
+      empty={
+        rows.length === 0
+          ? 'Выберите Task и что сдвинуть, здесь появятся новые дедлайны'
+          : null
+      }
+    >
+      {draft.orderedTaskIds.map((taskId) => {
+        const own = rows.filter((row) => row.taskId === taskId);
+        if (own.length === 0) {
+          return null;
+        }
+        const follows = own.flatMap((row) =>
+          row.kind === 'follows' && row.target?.kind === 'group'
+            ? [groupName(row.target.groupId)]
+            : []
+        );
+        return (
+          <ChangesTask key={taskId} title={tasks[taskId]?.title ?? taskId}>
+            {own
+              .filter((row) => row.kind !== 'follows')
+              .map((row) => (
+                <ShiftLine key={row.key} row={row} follows={follows} />
+              ))}
+          </ChangesTask>
+        );
+      })}
+    </ChangesBox>
+  );
+}
+
 export function QuestionBody({
   preset,
   onClose,
@@ -341,6 +456,10 @@ export function QuestionBody({
               />
             ) : null}
           </div>
+        </Section>
+
+        <Section title="Что изменится">
+          <ShiftPreview draft={draft} />
         </Section>
       </div>
 
