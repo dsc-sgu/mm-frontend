@@ -4,7 +4,6 @@
 // «индивидуальные дедлайны студентов».
 import { useMemo, useState } from 'react';
 
-import { studentName } from '@/features/course/prototype/task-and-deadline-settings/fixture';
 import {
   applyCommands,
   findOverride,
@@ -21,21 +20,15 @@ import {
   STUDENT_GROUPS,
   STUDENTS,
   useOrderedTasks,
-  useSandbox,
   useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
-import {
-  formatCompactMoment,
-  shiftDays,
-} from '@/features/course/prototype/task-and-deadline-settings/time';
+import { shiftDays } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
 import {
   daysLabel,
   flipsSentence,
-  groupName,
   inverseOf,
   movingRows,
-  plural,
   type ShiftPreset,
 } from './model';
 
@@ -45,8 +38,6 @@ export type ShiftKinds = {
   students: boolean;
   opening: boolean;
 };
-
-const studentsById = new Map(STUDENTS.map((student) => [student.id, student]));
 
 function moved(value: DeadlineValue, days: number): DeadlineValue {
   return value.kind === 'at'
@@ -210,159 +201,9 @@ export function planKinds(
   return { rows, commands };
 }
 
-function joinRu(items: string[]) {
-  if (items.length <= 1) {
-    return items.join('');
-  }
-  return `${items.slice(0, -1).join(', ')} и ${items.at(-1)}`;
-}
-
-/** The read-only «Фраза»: what the chosen settings will do, in words. */
-export function describePlan({
-  rows,
-  kinds,
-  days,
-  taskTitles,
-  flips,
-  schedule,
-  taskIds,
-  groupIds,
-}: {
-  rows: ShiftRow[];
-  kinds: ShiftKinds;
-  days: number;
-  taskTitles: string[];
-  flips: string | null;
-  schedule: Schedule;
-  taskIds: readonly string[];
-  groupIds: ReadonlySet<string>;
-}) {
-  const sentences: string[] = [];
-  const how = daysLabel(days);
-  const single = taskTitles.length === 1;
-  const has = (level: ShiftRow['level'], kind: ShiftRow['kind']) =>
-    rows.filter((item) => item.level === level && item.kind === kind);
-
-  const generalMoves = has('task', 'shift');
-  if (kinds.general && generalMoves.length > 0) {
-    const first = generalMoves[0]!;
-    sentences.push(
-      single && first.before.kind === 'at' && first.after.kind === 'at'
-        ? `Общий дедлайн «${taskTitles[0]}» сдвинется ${how}: с ${formatCompactMoment(first.before.at)} на ${formatCompactMoment(first.after.at)}.`
-        : `Общие дедлайны ${generalMoves.length} Task сдвинутся ${how}.`
-    );
-    const followers = [
-      ...new Set(
-        has('group', 'follows').map((item) =>
-          item.target?.kind === 'group' ? groupName(item.target.groupId) : ''
-        )
-      ),
-    ];
-    if (followers.length > 0) {
-      sentences.push(
-        followers.length === 1
-          ? `Подгруппа ${followers[0]} без своего дедлайна сдвинется вместе с ним.`
-          : `Подгруппы ${joinRu(followers)} без своего дедлайна сдвинутся вместе с ним.`
-      );
-    }
-  } else if (taskIds.some((id) => schedule.tasks[id]?.deadline.kind === 'at')) {
-    sentences.push('Общий дедлайн не изменится.');
-  }
-
-  const groupNames = (kind: ShiftRow['kind']) => [
-    ...new Set(
-      has('group', kind).map((item) =>
-        item.target?.kind === 'group' ? groupName(item.target.groupId) : ''
-      )
-    ),
-  ];
-  const ownGroups = groupNames('shift');
-  if (ownGroups.length > 0) {
-    sentences.push(
-      `Свои дедлайны ${ownGroups.length === 1 ? 'подгруппы' : 'подгрупп'} ${joinRu(ownGroups)} сдвинутся ${how}.`
-    );
-  }
-  const newGroups = groupNames('create-override');
-  if (newGroups.length > 0) {
-    sentences.push(
-      `${newGroups.length === 1 ? 'Подгруппа' : 'Подгруппы'} ${joinRu(newGroups)} ${newGroups.length === 1 ? 'получит' : 'получат'} свой дедлайн ${how} общего.`
-    );
-  }
-  const groupOverrides = schedule.overrides.some(
-    (item) =>
-      taskIds.includes(item.taskId) &&
-      item.target.kind === 'group' &&
-      item.value.kind === 'at'
-  );
-  if (!kinds.groups && groupOverrides) {
-    sentences.push('Свои дедлайны подгрупп останутся как есть.');
-  }
-  if (kinds.groups) {
-    // Unticked groups stay, unless they inherit a general deadline that moves.
-    const staying = STUDENT_GROUPS.filter(
-      (group) =>
-        !groupIds.has(group.id) &&
-        !(
-          kinds.general &&
-          taskIds.every(
-            (taskId) =>
-              schedule.tasks[taskId]?.deadline.kind === 'at' &&
-              !findOverride(schedule, taskId, {
-                kind: 'group',
-                groupId: group.id,
-              })
-          )
-        )
-    ).map((group) => group.name);
-    if (staying.length > 0) {
-      sentences.push(
-        `${staying.length === 1 ? 'Подгруппа' : 'Подгруппы'} ${joinRu(staying)} ${staying.length === 1 ? 'останется' : 'останутся'} как есть.`
-      );
-    }
-  }
-
-  const studentMoves = has('student', 'shift');
-  if (studentMoves.length > 0) {
-    const names = studentMoves.map((item) =>
-      item.target?.kind === 'student'
-        ? studentName(studentsById.get(item.target.studentId)!)
-        : ''
-    );
-    sentences.push(
-      names.length <= 3
-        ? `Индивидуальные дедлайны студентов (${joinRu(names)}) тоже сдвинутся ${how}.`
-        : `Индивидуальные дедлайны ${names.length} ${plural(names.length, 'студента', 'студентов', 'студентов')} сдвинутся ${how}.`
-    );
-  }
-  const personal = schedule.overrides.some(
-    (item) =>
-      taskIds.includes(item.taskId) &&
-      item.target.kind === 'student' &&
-      item.value.kind === 'at'
-  );
-  if (!kinds.students && personal) {
-    sentences.push('Индивидуальные дедлайны студентов останутся как есть.');
-  }
-
-  if (kinds.opening && has('opening', 'shift').length > 0) {
-    sentences.push(`Время открытия тоже сдвинется ${how}.`);
-  }
-
-  if (rows.some((item) => item.kind === 'no-deadline')) {
-    sentences.push('Значения «без дедлайна» не меняются.');
-  }
-
-  if (flips) {
-    sentences.push(`${flips[0]!.toUpperCase()}${flips.slice(1)}.`);
-  }
-
-  return sentences;
-}
-
 export function useKindsDraft(preset: ShiftPreset) {
   const schedule = useViewSchedule();
   const groups = useOrderedTasks();
-  const tasks = useSandbox((state) => state.tasks);
   const edit = useScheduleEdit();
 
   const [taskIds, setTaskIds] = useState<ReadonlySet<string>>(
@@ -408,17 +249,6 @@ export function useKindsDraft(preset: ShiftPreset) {
       ),
     [schedule, plan.commands, taskIds]
   );
-
-  const summary = describePlan({
-    rows: plan.rows,
-    kinds,
-    days,
-    taskTitles: orderedTaskIds.map((id) => tasks[id]?.title ?? id),
-    flips,
-    schedule,
-    taskIds: orderedTaskIds,
-    groupIds,
-  });
 
   const counts = {
     groups: movingRows(plan.rows).filter((item) => item.level === 'group')
@@ -470,7 +300,7 @@ export function useKindsDraft(preset: ShiftPreset) {
     groupIds,
     setGroupIds,
     plan,
-    summary,
+    flips,
     counts,
     hasOpening,
     blocked,

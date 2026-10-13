@@ -1,9 +1,9 @@
 // PROTOTYPE (#181): shift window «Вопрос», refined after review. Kinds of
 // deadlines are ticked independently (no «всё вместе»), Student Groups are
-// picked right in the window, days come from buttons as in «Сразу», and a
-// read-only sentence from «Фраза» says what will happen.
+// picked by buttons in the window, days come from buttons as in «Сразу».
+// Nothing appears or disappears while ticking, so the window stays put.
 import type { ReactNode } from 'react';
-import { LoaderCircle } from 'lucide-react';
+import { ChevronDown, LoaderCircle, TriangleAlert } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
@@ -26,8 +26,8 @@ import {
   shiftDays,
 } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useKindsDraft, type KindsDraft, type ShiftKinds } from './kinds';
-import { plural, toggleIn, type ShiftPreset } from './model';
-import { DaysPicker, TaskChooser, VariantSwitch } from './parts';
+import { plural, taskSummary, toggleIn, type ShiftPreset } from './model';
+import { DaysPicker, TaskPicker, VariantSwitch } from './parts';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -75,7 +75,17 @@ function KindRow({
           </span>
         ) : null}
       </label>
-      {checked && children ? <div className="pl-6.5">{children}</div> : null}
+      {children ? (
+        <div
+          aria-disabled={!checked}
+          className={cn(
+            'pl-6.5 transition-opacity',
+            !checked && 'pointer-events-none opacity-40'
+          )}
+        >
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -188,10 +198,22 @@ export function QuestionBody({
 
       <div className="grid min-h-0 gap-5 overflow-y-auto px-6 pb-5">
         <Section title="Task">
-          <TaskChooser
-            groups={draft.groups}
-            taskIds={draft.taskIds}
-            onChange={draft.setTaskIds}
+          <TaskPicker
+            draft={draft}
+            trigger={
+              <button
+                type="button"
+                className={cn(
+                  'inline-flex h-9 w-fit max-w-full items-center gap-2 rounded-md border px-3 text-sm hover:bg-muted',
+                  ids.length === 0 && 'text-muted-foreground'
+                )}
+              >
+                <span className="truncate">
+                  {ids.length === 0 ? 'Выберите Task' : taskSummary(draft)}
+                </span>
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+              </button>
+            }
           />
         </Section>
 
@@ -246,19 +268,27 @@ export function QuestionBody({
             ) : null}
           </div>
         </Section>
-
-        {ids.length > 0 ? (
-          <p
-            aria-live="polite"
-            className="rounded-lg bg-muted/60 px-4 py-3 text-sm leading-6"
-          >
-            {draft.summary.join(' ')}
-          </p>
-        ) : null}
       </div>
 
       <DialogFooter className="items-center gap-3 border-t px-6 py-3 sm:justify-between">
-        <span className="text-sm text-muted-foreground">{draft.blocked}</span>
+        <span
+          aria-live="polite"
+          className={cn(
+            // Two lines reserved, so a wrapping line does not resize the window.
+            'flex min-h-10 items-center gap-1.5 text-sm',
+            draft.blocked
+              ? 'text-muted-foreground'
+              : 'text-amber-800 dark:text-amber-300'
+          )}
+        >
+          {draft.blocked ??
+            (draft.flips ? (
+              <>
+                <TriangleAlert className="size-4 shrink-0" />
+                {draft.flips[0]!.toUpperCase() + draft.flips.slice(1)}
+              </>
+            ) : null)}
+        </span>
         <div className="flex gap-2">
           <Button variant="ghost" onClick={onClose}>
             Отмена
