@@ -5,7 +5,7 @@ import { selectAccessSession } from './control';
 test('ACC-12 / A11Y-01: Review editor 403 has no forbidden breadcrumb links', async ({
   page,
 }) => {
-  await selectAccessSession(page, 'sasha');
+  await selectAccessSession(page, 'sasha', 'world:review');
   const path = '/courses/algorithms/tasks/1/attempts/sasha/1/review';
   await page.goto(path);
   await expect(

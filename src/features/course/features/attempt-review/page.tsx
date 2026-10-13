@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import { sessionOptions } from '@/features/auth/api/queries';
 import type { CourseRole } from '@/features/course/features/access/model/types';
+import type { UserId } from '@/features/auth/model/identity';
+import { canReplyToAttempt } from './model/permissions';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -36,13 +38,14 @@ import type {
   AttemptReviewDiffViewMode,
   AttemptReviewLineCommentReply,
   AttemptReviewMode,
-  AttemptReviewRouteParams,
+  AttemptReviewIdentity,
 } from './model/types';
 
 type AttemptReviewPageProps = {
   mode: AttemptReviewMode;
   courseRole: CourseRole;
-} & AttemptReviewRouteParams;
+  viewerId: UserId;
+} & AttemptReviewIdentity;
 
 type AttemptReviewPageLoadedProps = {
   review: AttemptReviewAggregate;
@@ -53,7 +56,7 @@ type AttemptReviewMobileDrawerState = 'none' | 'file-tree' | 'review-panel';
 const REVIEW_PANEL_ID = 'attempt-review-review-panel';
 
 export function AttemptReviewPage(props: AttemptReviewPageProps) {
-  const reviewQuery = useAttemptReviewQuery(props);
+  const reviewQuery = useAttemptReviewQuery(props.viewerId, props);
   const isWorkerPoolReady = useAttemptReviewWorkerPoolReady();
 
   if (reviewQuery.isLoading || !isWorkerPoolReady) {
@@ -85,7 +88,7 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
 
   return (
     <AttemptReviewPageLoaded
-      key={`${props.courseSlug}:${props.taskId}:${props.studentUsername}:${props.attemptNumber}`}
+      key={`${props.viewerId}:${props.attemptId}`}
       {...props}
       review={reviewQuery.data}
     />
@@ -95,13 +98,13 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
 function AttemptReviewPageLoaded({
   mode,
   courseRole,
-  courseSlug,
-  taskId,
-  studentUsername,
-  attemptNumber,
+  courseId,
+  studentId,
+  attemptId,
   review,
 }: AttemptReviewPageLoadedProps) {
-  const params = { courseSlug, taskId, studentUsername, attemptNumber };
+  const params = { courseId, studentId, attemptId };
+  const attemptNumber = review.current.attemptNumber;
   const saveMutation = useSaveAttemptReviewMutation();
   const createReplyMutation = useCreateAttemptReviewCommentReplyMutation();
   const updateReplyMutation = useUpdateAttemptReviewCommentReplyMutation();
@@ -172,9 +175,7 @@ function AttemptReviewPageLoaded({
 
   const canReplyToComments =
     sessionData?.status === 'authorized' &&
-    (courseRole === 'teacher' ||
-      (courseRole === 'student' &&
-        sessionData.session.username === studentUsername));
+    canReplyToAttempt(courseRole, sessionData.session.userId, studentId);
   const canSave =
     mode === 'editable' && hasChanges && !scoreError && !saveMutation.isPending;
   const totalAdded = review.changedFiles.reduce(

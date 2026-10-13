@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { createMockReviewLockUpdates } from '@/features/course/features/attempts/api/mock';
-import { COURSE_ATTEMPTS_QUERY_KEY } from '@/features/course/features/attempts/api/queries';
+import { courseAttemptsKeys } from '@/features/course/features/attempts/api/queries';
 import {
   applyReviewLockUpdatesToAttempts,
   type CourseAttemptReviewLockUpdate,
@@ -35,7 +35,7 @@ export function useCourseAttemptReviewLockUpdates({
       }
 
       queryClient.setQueriesData<CourseAttemptsListResult>(
-        { queryKey: [COURSE_ATTEMPTS_QUERY_KEY, courseSlug] },
+        { queryKey: courseAttemptsKeys.course(courseSlug) },
         (current) => {
           if (!current) {
             return current;

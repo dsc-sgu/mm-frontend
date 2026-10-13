@@ -10,6 +10,10 @@ import type { CourseRole } from '@/features/course/features/access/model/types';
 import {
   CourseIdSchema,
   CourseSlugSchema,
+  AttemptIdSchema,
+  AttemptNumberSchema,
+  type AttemptId,
+  type AttemptNumber,
   type CourseId,
 } from '@/features/course/model/identity';
 import type { CourseSummary, Teacher } from '@/features/course/model/types';
@@ -42,10 +46,26 @@ export type MockCourseMembership = {
   role: CourseRole;
 };
 
+export type MockTask = {
+  courseId: CourseId;
+  id: string;
+  title: string;
+};
+
+export type MockAttempt = {
+  id: AttemptId;
+  courseId: CourseId;
+  taskId: string;
+  studentId: UserId;
+  attemptNumber: AttemptNumber;
+};
+
 export type MockBackendState = {
   users: MockUser[];
   courses: MockCourse[];
   memberships: MockCourseMembership[];
+  tasks: MockTask[];
+  attempts: MockAttempt[];
   /** The browser's sign-in session; MSW serves one client at a time. */
   session: MockSession | null;
   /** Sequence for identities created at runtime, so they repeat across runs. */
@@ -81,6 +101,17 @@ export const seededUsers = {
     password: 'Student123',
     firstName: 'Студент',
     lastName: 'СИТ',
+    patronymic: '',
+    avatarURL: '',
+  },
+  // The existing Review demos link to this Student's immutable submissions.
+  student: {
+    id: mockUserId(3),
+    username: v.parse(UsernameSchema, 'student'),
+    email: 'student@example.com',
+    password: 'Student123',
+    firstName: 'Сергей',
+    lastName: 'Студентов',
     patronymic: '',
     avatarURL: '',
   },
@@ -167,6 +198,11 @@ const devMemberships: MockCourseMembership[] = seededCourses.flatMap(
             userId: seededUsers.mitStudent.id,
             role: 'student',
           },
+          {
+            courseId: course.id,
+            userId: seededUsers.student.id,
+            role: 'student',
+          },
         ]
       : [teacherMembership];
   }
@@ -205,10 +241,42 @@ const accessMemberships: MockCourseMembership[] = [
   },
 ];
 
-type MockWorld = 'dev' | 'world:access';
+function mockAttempt(
+  sequence: number,
+  courseId: CourseId,
+  studentId: UserId,
+  attemptNumber: number
+): MockAttempt {
+  return {
+    id: v.parse(
+      AttemptIdSchema,
+      `30000000-0000-4000-8000-${String(sequence).padStart(12, '0')}`
+    ),
+    courseId,
+    taskId: '1',
+    studentId,
+    attemptNumber: v.parse(AttemptNumberSchema, attemptNumber),
+  };
+}
+
+export const reviewWorld = {
+  ...accessWorld,
+  task: {
+    courseId: accessWorld.courses.algorithms.id,
+    id: '1',
+    title: 'Сортировки',
+  },
+  attempts: [
+    mockAttempt(1, accessWorld.courses.algorithms.id, accessUsers.sasha.id, 1),
+    mockAttempt(2, accessWorld.courses.algorithms.id, accessUsers.sasha.id, 2),
+    mockAttempt(3, accessWorld.courses.algorithms.id, accessUsers.petya.id, 1),
+  ],
+};
+
+type MockWorld = 'dev' | 'world:access' | 'world:review';
 
 function seed(world: MockWorld): MockBackendState {
-  const isAccessWorld = world === 'world:access';
+  const isAccessWorld = world !== 'dev';
   const users = isAccessWorld
     ? Object.values(accessUsers)
     : Object.values(seededUsers);
@@ -216,6 +284,31 @@ function seed(world: MockWorld): MockBackendState {
     users,
     courses: isAccessWorld ? Object.values(accessWorld.courses) : seededCourses,
     memberships: isAccessWorld ? accessMemberships : devMemberships,
+    tasks: isAccessWorld
+      ? world === 'world:review'
+        ? [reviewWorld.task]
+        : []
+      : seededCourses.map(({ id }) => ({
+          courseId: id,
+          id: '1',
+          title: 'Вводное практическое задание',
+        })),
+    attempts: isAccessWorld
+      ? world === 'world:review'
+        ? reviewWorld.attempts
+        : []
+      : devMemberships
+          .filter(({ role }) => role === 'student')
+          .flatMap(({ courseId, userId }, index) =>
+            Array.from({ length: 4 }, (_, number) =>
+              mockAttempt(
+                100 + index * 4 + number,
+                courseId,
+                userId,
+                number + 1
+              )
+            )
+          ),
     session: {
       userId: isAccessWorld ? accessUsers.anna.id : seededUsers.mitTeacher.id,
       expiresAt: SESSION_EXPIRES_AT,

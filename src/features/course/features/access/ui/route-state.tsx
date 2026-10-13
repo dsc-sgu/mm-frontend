@@ -85,6 +85,16 @@ export function CourseResourceNotFound() {
   );
 }
 
+export function CourseResourceCheckFailed() {
+  const router = useRouter();
+  return (
+    <CourseAccessState
+      state="check-failed"
+      onRetry={() => void router.invalidate()}
+    />
+  );
+}
+
 export function CourseRouteOutcome({ kind }: { kind: 'lookup' | 'resource' }) {
   const { session } = useRouteContext({ from: '/_authenticated' });
   const { courseSlug: rawSlug } = useParams({

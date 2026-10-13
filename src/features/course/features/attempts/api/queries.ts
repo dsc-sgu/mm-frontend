@@ -10,7 +10,13 @@ import type {
   SaveQuickGradesInput,
 } from '@/features/course/features/attempts/model/types';
 
-export const COURSE_ATTEMPTS_QUERY_KEY = 'course-attempts';
+export const courseAttemptsKeys = {
+  all: ['course-attempts'] as const,
+  course: (courseSlug: string) =>
+    [...courseAttemptsKeys.all, courseSlug] as const,
+  list: (courseSlug: string, filters: CourseAttemptsFilters) =>
+    [...courseAttemptsKeys.course(courseSlug), filters] as const,
+};
 
 export function courseAttemptsQueryOptions({
   courseSlug,
@@ -20,7 +26,7 @@ export function courseAttemptsQueryOptions({
   filters: CourseAttemptsFilters;
 }) {
   return queryOptions({
-    queryKey: [COURSE_ATTEMPTS_QUERY_KEY, courseSlug, filters],
+    queryKey: courseAttemptsKeys.list(courseSlug, filters),
     queryFn: () => fetchCourseAttemptsList({ courseSlug, filters }),
     staleTime: 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -52,7 +58,7 @@ export function useSaveQuickGradesMutation() {
     mutationFn: (input: SaveQuickGradesInput) => saveQuickGrades(input),
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({
-        queryKey: [COURSE_ATTEMPTS_QUERY_KEY, variables.courseSlug],
+        queryKey: courseAttemptsKeys.course(variables.courseSlug),
       });
     },
   });

@@ -36,6 +36,13 @@ describe('ACC-12: every Teacher-only route denies a Student in the Course shell'
     '/tasks/1/edit',
     '/tasks/1/attempts/sasha/1/review',
   ])('%s preserves its URL and offers the Course Page', async (sectionPath) => {
+    if (sectionPath.endsWith('/review')) {
+      mockBackend.reset('world:review');
+      mockBackend.state.session = {
+        userId: accessWorld.users.sasha.id,
+        expiresAt: SESSION_EXPIRES_AT,
+      };
+    }
     const path = `${ALGORITHMS_PATH}${sectionPath}`;
     const { router } = renderRoutes([], path, { appRoutes: true });
 

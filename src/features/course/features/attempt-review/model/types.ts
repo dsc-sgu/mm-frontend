@@ -1,16 +1,20 @@
 import type { FileDiffMetadata } from '@pierre/diffs';
-import type { AttemptNumber } from '@/features/course/model/identity';
+import type {
+  AttemptId,
+  AttemptNumber,
+  CourseId,
+} from '@/features/course/model/identity';
+import type { UserId } from '@/features/auth/model/identity';
 
 export type AttemptReviewMode = 'editable' | 'readonly';
 export type AttemptReviewDiffViewMode = 'unified' | 'split';
 export type AttemptReviewFileStatus = 'added' | 'deleted' | 'changed';
 export type AttemptReviewCommentSide = 'deletions' | 'additions';
 
-export type AttemptReviewRouteParams = {
-  courseSlug: string;
-  taskId: string;
-  studentUsername: string;
-  attemptNumber: AttemptNumber;
+export type AttemptReviewIdentity = {
+  courseId: CourseId;
+  studentId: UserId;
+  attemptId: AttemptId;
 };
 
 export type AttemptReviewTask = {
@@ -34,7 +38,7 @@ export type AttemptReviewGrade = {
 };
 
 export type AttemptReviewAttemptDetail = {
-  id: string;
+  id: AttemptId;
   attemptNumber: AttemptNumber;
   task: AttemptReviewTask;
   student: AttemptReviewStudent;
@@ -126,20 +130,20 @@ export type SaveAttemptReviewInput = {
   score: number | null;
   overallFeedbackHtml: string;
   lineComments: AttemptReviewLineComment[];
-} & AttemptReviewRouteParams;
+} & AttemptReviewIdentity;
 
 export type CreateAttemptReviewCommentReplyInput = {
   commentId: string;
   html: string;
-} & AttemptReviewRouteParams;
+} & AttemptReviewIdentity;
 
 export type UpdateAttemptReviewCommentReplyInput = {
   commentId: string;
   replyId: string;
   html: string;
-} & AttemptReviewRouteParams;
+} & AttemptReviewIdentity;
 
 export type DeleteAttemptReviewCommentReplyInput = {
   commentId: string;
   replyId: string;
-} & AttemptReviewRouteParams;
+} & AttemptReviewIdentity;

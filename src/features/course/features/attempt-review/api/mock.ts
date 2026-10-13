@@ -1,5 +1,7 @@
 import { parseDiffFromFile, type FileDiffMetadata } from '@pierre/diffs';
 import * as v from 'valibot';
+import { http, HttpResponse } from 'msw';
+import { resolveStudentAccess } from '@/app/mock-backend/participant-access';
 import {
   AttemptNumberSchema,
   type AttemptNumber,
@@ -20,7 +22,7 @@ import type {
   AttemptReviewLineComment,
   AttemptReviewLineCommentReply,
   AttemptReviewRichFeedback,
-  AttemptReviewRouteParams,
+  AttemptReviewIdentity,
   AttemptReviewStudent,
   AttemptReviewTask,
   CreateAttemptReviewCommentReplyInput,
@@ -28,6 +30,43 @@ import type {
   SaveAttemptReviewInput,
   UpdateAttemptReviewCommentReplyInput,
 } from '@/features/course/features/attempt-review/model/types';
+
+// Working participant-resource wire contract pending backend confirmation #113.
+export const attemptLocatorHandlers = [
+  http.get(
+    '/api/v1/courses/:courseId/tasks/:taskId/attempts/:studentUsername/:attemptNumber',
+    ({ params }) => {
+      const result = resolveStudentAccess(
+        String(params.courseId),
+        String(params.studentUsername)
+      );
+      switch (result.status) {
+        case 'unauthenticated':
+          return new HttpResponse(null, { status: 401 });
+        case 'not-found':
+          return HttpResponse.json({ status: 'not-found' }, { status: 404 });
+        case 'forbidden':
+          return HttpResponse.json({ status: 'forbidden' }, { status: 403 });
+      }
+      // Working AttemptNumber -> AttemptId mapping pending the backend's #85:
+      // the number is scoped to Course + Task + Student, never a global identity.
+      const attempt = mockBackend.state.attempts.find(
+        (attempt) =>
+          attempt.courseId === params.courseId &&
+          attempt.taskId === params.taskId &&
+          attempt.studentId === result.studentId &&
+          String(attempt.attemptNumber) === params.attemptNumber
+      );
+      if (!attempt)
+        return HttpResponse.json({ status: 'not-found' }, { status: 404 });
+      const { id, studentId, taskId, attemptNumber } = attempt;
+      return HttpResponse.json({
+        status: 'found',
+        attempt: { id, studentId, taskId, attemptNumber },
+      });
+    }
+  ),
+];
 
 type StoredAttemptReview = {
   attemptNumber: AttemptNumber;
@@ -69,10 +108,11 @@ function currentUserAuthor() {
 }
 
 export async function fetchAttemptReview(
-  params: AttemptReviewRouteParams
+  identity: AttemptReviewIdentity
 ): Promise<AttemptReviewAggregate> {
   await new Promise((resolve) => setTimeout(resolve, 180));
 
+  const params = resolveLegacyParams(identity);
   const series = getReviewSeries(params);
   const current = findAttemptOrThrow(series, params.attemptNumber);
   const previous = findPreviousAttempt(series, params.attemptNumber);
@@ -82,7 +122,7 @@ export async function fetchAttemptReview(
     courseSlug: params.courseSlug,
     baselineAttemptNumber: previous?.attemptNumber ?? null,
     current: {
-      id: `${seriesKey(params)}:${current.attemptNumber}`,
+      id: identity.attemptId,
       attemptNumber: current.attemptNumber,
       task: series.task,
       student: series.student,
@@ -108,8 +148,9 @@ export async function saveAttemptReview(
 ): Promise<AttemptReviewAggregate> {
   await new Promise((resolve) => setTimeout(resolve, 220));
 
-  const series = getReviewSeries(input);
-  const current = findAttemptOrThrow(series, input.attemptNumber);
+  const params = resolveLegacyParams(input);
+  const series = getReviewSeries(params);
+  const current = findAttemptOrThrow(series, params.attemptNumber);
   const now = new Date().toISOString();
   const author = currentUserAuthor();
   const gradedBy = author.name;
@@ -157,10 +198,10 @@ export async function saveAttemptReview(
 
   if (current.grade) {
     upsertMockCourseAttemptGrade({
-      courseSlug: input.courseSlug,
-      taskId: input.taskId,
-      studentUsername: input.studentUsername,
-      attemptNumber: input.attemptNumber,
+      courseSlug: params.courseSlug,
+      taskId: params.taskId,
+      studentUsername: params.studentUsername,
+      attemptNumber: params.attemptNumber,
       score: current.grade.score,
       gradedAt: current.grade.gradedAt,
       gradedBy: current.grade.gradedBy,
@@ -229,7 +270,42 @@ export async function deleteAttemptReviewCommentReply(
   comment.replies = replies.filter((reply) => reply.id !== input.replyId);
 }
 
-function getReviewSeries(params: AttemptReviewRouteParams): ReviewSeries {
+// Temporary adapter to the existing content source until REV2. Its public
+// operations accept only resolved identities; locators stay inside this mock.
+function resolveLegacyParams(identity: AttemptReviewIdentity) {
+  const { attempts, users, courses, tasks } = mockBackend.state;
+  const attempt = attempts.find(
+    ({ id, courseId, studentId }) =>
+      id === identity.attemptId &&
+      courseId === identity.courseId &&
+      studentId === identity.studentId
+  );
+  const student = users.find(({ id }) => id === identity.studentId);
+  const course = courses.find(({ id }) => id === identity.courseId);
+  const task =
+    attempt &&
+    tasks.find(
+      ({ courseId, id }) =>
+        courseId === attempt.courseId && id === attempt.taskId
+    );
+  if (!attempt || !student || !course || !task)
+    throw new Error('Resolved Attempt is unavailable');
+  return {
+    ...identity,
+    courseSlug: course.slug,
+    taskId: attempt.taskId,
+    taskTitle: task.title,
+    studentUsername: student.username,
+    studentName: [student.firstName, student.lastName, student.patronymic]
+      .filter(Boolean)
+      .join(' '),
+    attemptNumber: attempt.attemptNumber,
+  };
+}
+
+type LegacyParams = ReturnType<typeof resolveLegacyParams>;
+
+function getReviewSeries(params: LegacyParams): ReviewSeries {
   const key = seriesKey(params);
   const existing = reviewSeriesByKey.get(key);
 
@@ -245,12 +321,12 @@ function getReviewSeries(params: AttemptReviewRouteParams): ReviewSeries {
   });
   const task: AttemptReviewTask = listAttempt?.task ?? {
     id: params.taskId,
-    title: `Задание #${params.taskId}`,
+    title: params.taskTitle,
     maxScore: 10,
   };
   const student: AttemptReviewStudent = listAttempt?.student ?? {
     username: params.studentUsername,
-    fullName: params.studentUsername,
+    fullName: params.studentName,
     group: 'БПИ-231',
     subgroup: '1',
   };
@@ -297,12 +373,8 @@ function getReviewSeries(params: AttemptReviewRouteParams): ReviewSeries {
   return series;
 }
 
-function seriesKey({
-  courseSlug,
-  taskId,
-  studentUsername,
-}: AttemptReviewRouteParams): string {
-  return `${courseSlug}:${taskId}:${studentUsername}`;
+function seriesKey({ courseId, taskId, studentId }: LegacyParams): string {
+  return `${courseId}:${taskId}:${studentId}`;
 }
 
 function findAttemptOrThrow(
@@ -334,17 +406,18 @@ function findPreviousAttempt(
 }
 
 function findLineCommentOrThrow(
-  params: AttemptReviewRouteParams & { commentId: string }
+  identity: AttemptReviewIdentity & { commentId: string }
 ): AttemptReviewLineComment {
+  const params = resolveLegacyParams(identity);
   const series = getReviewSeries(params);
   const current = findAttemptOrThrow(series, params.attemptNumber);
   const comment = current.lineComments.find(
-    (item) => item.id === params.commentId
+    (item) => item.id === identity.commentId
   );
 
   if (!comment) {
     throw new Error(
-      `Comment ${params.commentId} is not available in mock review data`
+      `Comment ${identity.commentId} is not available in mock review data`
     );
   }
 

@@ -6,7 +6,9 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 
-import { COURSE_ATTEMPTS_QUERY_KEY } from '@/features/course/features/attempts/api/queries';
+import { courseAttemptsKeys } from '@/features/course/features/attempts/api/queries';
+import type { UserId } from '@/features/auth/model/identity';
+import type { CourseId } from '@/features/course/model/identity';
 import {
   createAttemptReviewCommentReply,
   deleteAttemptReviewCommentReply,
@@ -15,26 +17,43 @@ import {
   updateAttemptReviewCommentReply,
 } from './mock';
 import type {
-  AttemptReviewRouteParams,
+  AttemptReviewIdentity,
   CreateAttemptReviewCommentReplyInput,
   DeleteAttemptReviewCommentReplyInput,
   SaveAttemptReviewInput,
   UpdateAttemptReviewCommentReplyInput,
 } from '@/features/course/features/attempt-review/model/types';
 
-export const ATTEMPT_REVIEW_QUERY_KEY = 'attempt-review';
+export const attemptReviewKeys = {
+  all: ['attempt-review'] as const,
+  course: (courseId: CourseId) => [...attemptReviewKeys.all, courseId] as const,
+  attempt: (params: AttemptReviewIdentity) =>
+    [
+      ...attemptReviewKeys.course(params.courseId),
+      params.studentId,
+      params.attemptId,
+    ] as const,
+  detail: (viewerId: UserId, params: AttemptReviewIdentity) =>
+    [...attemptReviewKeys.attempt(params), viewerId] as const,
+};
 
-export function attemptReviewQueryOptions(params: AttemptReviewRouteParams) {
+export function attemptReviewQueryOptions(
+  viewerId: UserId,
+  params: AttemptReviewIdentity
+) {
   return queryOptions({
-    queryKey: getAttemptReviewQueryKey(params),
+    queryKey: attemptReviewKeys.detail(viewerId, params),
     queryFn: () => fetchAttemptReview(params),
     staleTime: 30 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-export function useAttemptReviewQuery(params: AttemptReviewRouteParams) {
-  return useQuery(attemptReviewQueryOptions(params));
+export function useAttemptReviewQuery(
+  viewerId: UserId,
+  params: AttemptReviewIdentity
+) {
+  return useQuery(attemptReviewQueryOptions(viewerId, params));
 }
 
 export function useSaveAttemptReviewMutation() {
@@ -42,11 +61,11 @@ export function useSaveAttemptReviewMutation() {
 
   return useMutation({
     mutationFn: (input: SaveAttemptReviewInput) => saveAttemptReview(input),
-    onSuccess: async (_data, variables) => {
+    onSuccess: async (data, variables) => {
       await Promise.all([
         invalidateAttemptReviewQuery(queryClient, variables),
         queryClient.invalidateQueries({
-          queryKey: [COURSE_ATTEMPTS_QUERY_KEY, variables.courseSlug],
+          queryKey: courseAttemptsKeys.course(data.courseSlug),
         }),
       ]);
     },
@@ -89,21 +108,11 @@ export function useDeleteAttemptReviewCommentReplyMutation() {
   });
 }
 
-function getAttemptReviewQueryKey(params: AttemptReviewRouteParams) {
-  return [
-    ATTEMPT_REVIEW_QUERY_KEY,
-    params.courseSlug,
-    params.taskId,
-    params.studentUsername,
-    params.attemptNumber,
-  ];
-}
-
 function invalidateAttemptReviewQuery(
   queryClient: QueryClient,
-  params: AttemptReviewRouteParams
+  params: AttemptReviewIdentity
 ) {
   return queryClient.invalidateQueries({
-    queryKey: getAttemptReviewQueryKey(params),
+    queryKey: attemptReviewKeys.attempt(params),
   });
 }
