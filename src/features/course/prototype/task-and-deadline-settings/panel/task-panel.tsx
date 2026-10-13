@@ -14,6 +14,7 @@ import { formatClock } from '@/features/course/prototype/task-and-deadline-setti
 import {
   AnnotationRow,
   AttachmentsBlock,
+  Block,
   GradeRow,
   GroupRow,
   KeyRow,
@@ -43,7 +44,7 @@ export function TaskPanel({
   onRevealInDocument?: () => void;
   onCreateAnother?: () => void;
 }) {
-  const { taskApply, statement } = usePrototypeSettings();
+  const { taskApply, statement, panelLook } = usePrototypeSettings();
   const courseAccess = useSandbox((state) => state.courseAccess);
   const { lease, sameTask } = useEffectiveLease();
   const taskGroups = useSandbox((state) => state.taskGroups);
@@ -99,7 +100,12 @@ export function TaskPanel({
   const expanded = statement === 'expanded' && session.expanded;
 
   const body = (
-    <div className="min-h-0 flex-1 overflow-y-auto">
+    <div
+      className={cn(
+        'min-h-0 flex-1 overflow-y-auto',
+        panelLook === 'cards' && 'grid content-start gap-3 pb-3'
+      )}
+    >
       {readOnly ? (
         <div className="flex gap-2 border-b bg-muted/60 px-5 py-2.5 text-sm">
           <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
@@ -114,22 +120,26 @@ export function TaskPanel({
           </span>
         </div>
       ) : null}
-      <div className="grid gap-3 px-5 pt-4 pb-4">
+      {/* Title on top of everything, as in Linear / Asana task panels. */}
+      <div className={cn('px-5 pt-5', panelLook === 'cards' ? 'pb-3' : 'pb-1')}>
         <TitleInput {...fieldProps} />
-        <div className="grid gap-0.5">
-          <KeyRow {...fieldProps} />
-          <GroupRow {...fieldProps} />
-          <GradeRow {...fieldProps} />
-          <ScheduleRows session={session} courseSlug={courseSlug} />
-          <PatternsRow {...fieldProps} />
-          <AnnotationRow {...fieldProps} />
-        </div>
+      </div>
+      <Block
+        title={panelLook === 'cards' ? 'Свойства' : undefined}
+        divided={false}
+      >
+        <KeyRow {...fieldProps} />
+        <GroupRow {...fieldProps} />
+        <GradeRow {...fieldProps} />
+        <ScheduleRows session={session} courseSlug={courseSlug} />
+        <PatternsRow {...fieldProps} />
+        <AnnotationRow {...fieldProps} />
         {locked ? (
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Lock className="size-3" /> не меняется после открытия курса
           </p>
         ) : null}
-      </div>
+      </Block>
       <OverridesBlock session={session} courseSlug={courseSlug} />
       <StatementBlock {...fieldProps} onRevealInDocument={onRevealInDocument} />
       <AttachmentsBlock {...fieldProps} />
@@ -141,13 +151,13 @@ export function TaskPanel({
       <header className="flex h-12 shrink-0 items-center gap-2 border-b px-5">
         <p className="flex min-w-0 flex-1 items-center gap-1 text-sm text-muted-foreground">
           <span className="truncate">{group?.title ?? 'Без группы'}</span>
-          <ChevronRight className="size-3.5 shrink-0" />
-          <span className="truncate font-mono text-foreground">
+          <ChevronRight className="size-3.5 shrink-0 opacity-60" />
+          <span className="truncate font-mono text-[0.8125rem] text-foreground">
             {form.key || 'новая'}
           </span>
         </p>
-        <span className="inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-          <span className={cn('size-2 rounded-full', status.tone)} />
+        <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full border px-2 text-xs text-muted-foreground">
+          <span className={cn('size-1.5 rounded-full', status.tone)} />
           {status.label}
         </span>
         <Button

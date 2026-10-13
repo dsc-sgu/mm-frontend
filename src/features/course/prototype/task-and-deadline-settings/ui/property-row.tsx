@@ -1,9 +1,13 @@
 // PROTOTYPE (#181): label + value row, as the property lists of Linear,
-// Twenty and Asana task panels.
+// Twenty and Asana task panels. Every row is at least 32 px tall and the
+// label column is the same everywhere, so values line up in one column.
 import type { ReactNode } from 'react';
 import { Lock } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
+
+/** Label column plus the gap; nested content aligns with the values. */
+export const VALUE_INDENT = 'ml-[8.75rem]';
 
 export function PropertyRow({
   label,
@@ -23,28 +27,36 @@ export function PropertyRow({
   return (
     <div
       className={cn(
-        'grid grid-cols-[8.5rem_minmax(0,1fr)] items-start gap-x-3',
+        'grid grid-cols-[8rem_minmax(0,1fr)] items-start gap-x-3',
         className
       )}
     >
-      <span className="flex min-h-8 items-center gap-1.5 text-sm text-muted-foreground">
-        {label}
+      <span className="flex min-h-8 min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+        <span className="truncate">{label}</span>
         {locked ? (
           <span title="Меняется, только пока курс в подготовке">
-            <Lock className="size-3 shrink-0" aria-hidden="true" />
+            <Lock
+              className="size-3 shrink-0 text-muted-foreground/60"
+              aria-hidden="true"
+            />
           </span>
         ) : null}
       </span>
-      <div className="grid min-w-0 gap-1">
+      <div className="grid min-w-0">
         <div className="flex min-h-8 min-w-0 items-center">{children}</div>
-        {error ? <p className="text-xs text-destructive">{error}</p> : null}
-        {!error && note ? note : null}
+        {error ? (
+          <p className="pb-1 text-xs text-destructive">{error}</p>
+        ) : null}
+        {/* A note may render nothing; then it takes no room. */}
+        {!error && note ? (
+          <div className="pb-1 empty:hidden">{note}</div>
+        ) : null}
       </div>
     </div>
   );
 }
 
-/** A quiet sentence-case heading between groups of rows. */
+/** A small caption between groups of rows inside one section. */
 export function RowsHeading({
   children,
   action,
@@ -53,8 +65,8 @@ export function RowsHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="mt-2 flex min-h-8 items-center justify-between gap-2">
-      <h3 className="text-sm font-medium">{children}</h3>
+    <div className="mt-3 flex h-7 items-center justify-between gap-2 first:mt-0">
+      <h4 className="text-xs font-medium text-muted-foreground">{children}</h4>
       {action}
     </div>
   );

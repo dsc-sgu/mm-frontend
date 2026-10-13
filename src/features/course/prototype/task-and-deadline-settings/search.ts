@@ -8,6 +8,7 @@ export type DeadlineFieldMode = 'counter' | 'full';
 export type StatementMode = 'panel' | 'inline' | 'expanded';
 export type ShiftVariant = 'question' | 'sentence' | 'undo' | 'table';
 export type PickerLayout = 'stack' | 'split';
+export type PanelLook = 'list' | 'cards';
 
 export const SHIFT_VARIANTS: ReadonlyArray<{
   value: ShiftVariant;
@@ -29,6 +30,8 @@ export type PrototypeSearch = {
   shift?: ShiftVariant;
   /** How the date popover of a deadline or an opening time is laid out. */
   picker?: PickerLayout;
+  /** Task panel sections: divided by lines or as cards. */
+  panelLook?: PanelLook;
   /** The Task whose panel is open. */
   task?: string;
 };
@@ -88,6 +91,10 @@ export function validatePrototypeSearch(
     ),
     ...withValue('picker', pick(search.picker, ['stack', 'split'] as const)),
     ...withValue(
+      'panelLook',
+      pick(search.panelLook, ['list', 'cards'] as const)
+    ),
+    ...withValue(
       'task',
       typeof search.task === 'string' ? search.task : undefined
     ),
@@ -106,6 +113,7 @@ export type PrototypeSettings = {
   statement: StatementMode;
   shift: ShiftVariant;
   picker: PickerLayout;
+  panelLook: PanelLook;
   task: string | undefined;
 };
 
@@ -122,6 +130,8 @@ export function usePrototypeSettings(): PrototypeSettings {
     shift: search.shift ?? 'question',
     // Verdict 13.10.2026: the two-column date popover.
     picker: search.picker ?? 'split',
+    // Verdict 13.10.2026: panel sections divided by lines.
+    panelLook: search.panelLook ?? 'list',
     task: search.task,
   };
 }
@@ -177,6 +187,7 @@ export function useOpenVariant(courseSlug: string) {
           ...(previous.statement ? { statement: previous.statement } : {}),
           ...(previous.shift ? { shift: previous.shift } : {}),
           ...(previous.picker ? { picker: previous.picker } : {}),
+          ...(previous.panelLook ? { panelLook: previous.panelLook } : {}),
           // The same Task stays selected across variants.
           ...(previous.task ? { task: previous.task } : {}),
           ...extra,
