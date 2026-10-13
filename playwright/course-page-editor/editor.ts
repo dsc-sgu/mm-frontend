@@ -173,6 +173,8 @@ export async function dragBlockOnto(block: Locator, target: Locator) {
     throw new Error('dragBlockOnto: block, handle or target is not visible');
   }
 
+  const targetRank = await readScreenRank(target);
+
   const startX = handleBox.x + handleBox.width / 2;
   const startY = handleBox.y + handleBox.height / 2;
   const deltaY =
@@ -184,7 +186,11 @@ export async function dragBlockOnto(block: Locator, target: Locator) {
   await page.mouse.move(startX, startY + Math.sign(deltaY) * 12, {
     steps: 4,
   });
+  await expect(handle).toHaveAttribute('aria-pressed', 'true');
   await page.mouse.move(startX, startY + deltaY, { steps: 12 });
+  // Pointer delivery can finish before dnd-kit's collision state updates.
+  // Drop only after the block visibly reaches the target's original place.
+  await expect.poll(() => readScreenRank(block)).toBe(targetRank);
   await page.mouse.up();
 }
 
