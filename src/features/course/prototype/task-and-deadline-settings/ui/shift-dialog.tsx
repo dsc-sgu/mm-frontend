@@ -260,7 +260,8 @@ function ShiftDialogBody({
 
       <div className="grid gap-3 border-y bg-muted/30 px-5 py-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Popover>
+          {/* Modal, so the portaled list scrolls inside the Dialog. */}
+          <Popover modal>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="max-w-72">
                 <span className="truncate">{taskSummary}</span>

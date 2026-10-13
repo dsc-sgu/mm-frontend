@@ -52,7 +52,9 @@ export function StudentPicker({
   const [open, setOpen] = useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    // Modal: inside a Dialog, wheel scroll works only in the latest modal
+    // layer, and the list is portaled out of the Dialog.
+    <Popover modal open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent align={align} className="w-80 p-0">
         <Command filter={matchByWordStart}>
