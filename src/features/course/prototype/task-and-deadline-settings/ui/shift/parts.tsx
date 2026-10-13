@@ -1,5 +1,5 @@
 // PROTOTYPE (#181): small pieces shared by the mass-shift windows.
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { ChevronDown, Minus, Plus, Undo2, X } from 'lucide-react';
 
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
@@ -21,7 +21,7 @@ import {
   useUpdatePrototypeSearch,
 } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
-import { toggleIn, type ShiftDraft } from './model';
+import { plural, toggleIn, type ShiftDraft } from './model';
 import { useShiftToast } from './toast-store';
 
 /** Prototype chrome: flip the window variant without closing it. */
@@ -101,31 +101,213 @@ export function DaysStepper({
   onChange: (days: number) => void;
 }) {
   return (
-    <span className="inline-flex items-center rounded-md border bg-background align-middle">
-      <button
-        type="button"
-        aria-label="На день раньше"
-        onClick={() => onChange(days - 1)}
-        className="grid size-7 place-items-center hover:bg-muted"
-      >
-        <Minus className="size-3.5" />
-      </button>
-      <input
-        type="number"
-        value={days}
-        aria-label="Дней"
-        onChange={(event) => onChange(Number(event.target.value) || 0)}
-        className="h-7 w-10 border-x bg-transparent text-center text-sm tabular-nums outline-none"
-      />
-      <button
-        type="button"
-        aria-label="На день позже"
-        onClick={() => onChange(days + 1)}
-        className="grid size-7 place-items-center hover:bg-muted"
-      >
-        <Plus className="size-3.5" />
-      </button>
+    <span className="inline-flex items-center gap-1.5 align-middle">
+      <span className="inline-flex items-center rounded-md border bg-background">
+        <button
+          type="button"
+          aria-label="На день раньше"
+          onClick={() => onChange(days - 1)}
+          className="grid size-7 place-items-center hover:bg-muted"
+        >
+          <Minus className="size-3.5" />
+        </button>
+        <DaysInput days={days} onChange={onChange} className="w-10 border-x" />
+        <button
+          type="button"
+          aria-label="На день позже"
+          onClick={() => onChange(days + 1)}
+          className="grid size-7 place-items-center hover:bg-muted"
+        >
+          <Plus className="size-3.5" />
+        </button>
+      </span>
+      <span className="text-sm text-muted-foreground">
+        {plural(days, 'день', 'дня', 'дней')}
+      </span>
     </span>
+  );
+}
+
+/** A signed number of days as plain text: no browser spin arrows. */
+function DaysInput({
+  days,
+  onChange,
+  className,
+}: {
+  days: number;
+  onChange: (days: number) => void;
+  className?: string;
+}) {
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      value={days === 0 ? '' : String(days)}
+      placeholder="0"
+      aria-label="Сколько дней"
+      onChange={(event) => {
+        const parsed = Number.parseInt(
+          event.target.value.replace('−', '-'),
+          10
+        );
+        onChange(Number.isNaN(parsed) ? 0 : parsed);
+      }}
+      className={cn(
+        'h-7 bg-transparent text-center text-sm tabular-nums outline-none',
+        className
+      )}
+    />
+  );
+}
+
+const DAY_STEPS = [-7, -1, 1, 2, 7, 14];
+
+/** Shift buttons from «Сразу» plus a labelled field for any other value. */
+export function DaysPicker({
+  days,
+  onChange,
+}: {
+  days: number;
+  onChange: (days: number) => void;
+}) {
+  const custom = !DAY_STEPS.includes(days);
+
+  return (
+    <div className="grid gap-2">
+      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+        {DAY_STEPS.map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={value === days}
+            onClick={() => onChange(value)}
+            className={cn(
+              'h-9 rounded-md border px-2 text-sm whitespace-nowrap tabular-nums transition-colors',
+              value === days
+                ? 'border-foreground bg-foreground text-background'
+                : 'hover:bg-muted',
+              value < 0 && value !== days && 'text-muted-foreground'
+            )}
+          >
+            {value > 0 ? `+${value}` : `−${-value}`}{' '}
+            {plural(value, 'день', 'дня', 'дней')}
+          </button>
+        ))}
+      </div>
+      <label className="flex items-center gap-2 text-sm text-muted-foreground">
+        Или своё:
+        <span
+          className={cn(
+            'inline-flex items-center rounded-md border bg-background px-1',
+            custom && days !== 0 && 'border-foreground'
+          )}
+        >
+          <DaysInput days={days} onChange={onChange} className="w-12" />
+        </span>
+        <span>
+          {plural(days, 'день', 'дня', 'дней')} {days < 0 ? 'раньше' : 'позже'}
+        </span>
+        <span className="text-xs">(минус — раньше)</span>
+      </label>
+    </div>
+  );
+}
+
+/** Tasks picked right in the window, no popover. */
+export function TaskChooser({
+  groups,
+  taskIds,
+  onChange,
+}: {
+  groups: ReadonlyArray<{
+    group: { id: string; title: string };
+    tasks: ReadonlyArray<{ id: string; title: string }>;
+  }>;
+  taskIds: ReadonlySet<string>;
+  onChange: (taskIds: ReadonlySet<string>) => void;
+}) {
+  const [open, setOpen] = useState(taskIds.size === 0);
+  const titles = new Map(
+    groups.flatMap(({ tasks }) => tasks.map((task) => [task.id, task.title]))
+  );
+
+  return (
+    <div className="grid gap-2">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {[...taskIds].map((taskId) => (
+          <span
+            key={taskId}
+            className="inline-flex h-7 items-center gap-1 rounded-md border bg-muted/40 pr-1 pl-2 text-sm"
+          >
+            <span className="max-w-56 truncate">{titles.get(taskId)}</span>
+            <button
+              type="button"
+              aria-label={`Убрать ${titles.get(taskId)}`}
+              onClick={() => onChange(toggleIn(taskIds, taskId))}
+              className="grid size-5 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <X className="size-3.5" />
+            </button>
+          </span>
+        ))}
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+          className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          {taskIds.size === 0 ? 'Выбрать Task' : 'Другие Task'}
+          <ChevronDown
+            className={cn(
+              'size-3.5 transition-transform',
+              open && 'rotate-180'
+            )}
+          />
+        </button>
+      </div>
+      {open ? (
+        <div className="grid max-h-56 gap-3 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">
+          {groups.map(({ group, tasks }) => {
+            const all = tasks.every((task) => taskIds.has(task.id));
+            return (
+              <div key={group.id} className="grid content-start gap-1">
+                <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <Checkbox
+                    checked={all}
+                    onCheckedChange={() => {
+                      const next = new Set(taskIds);
+                      for (const task of tasks) {
+                        if (all) {
+                          next.delete(task.id);
+                        } else {
+                          next.add(task.id);
+                        }
+                      }
+                      onChange(next);
+                    }}
+                  />
+                  {group.title}
+                </label>
+                {tasks.map((task) => (
+                  <label
+                    key={task.id}
+                    className="flex min-w-0 items-center gap-2 pl-6 text-sm"
+                  >
+                    <Checkbox
+                      checked={taskIds.has(task.id)}
+                      onCheckedChange={() =>
+                        onChange(toggleIn(taskIds, task.id))
+                      }
+                    />
+                    <span className="truncate">{task.title}</span>
+                  </label>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
