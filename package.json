@@ -25,6 +25,7 @@
     "@platejs/indent": "^53.0.0",
     "@platejs/link": "^53.3.5",
     "@platejs/list": "^53.3.13",
+    "@platejs/markdown": "^53",
     "@platejs/selection": "^53.1.6",
     "@platejs/toggle": "^53.0.0",
     "@shikijs/themes": "^4.0.2",

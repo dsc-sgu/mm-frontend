@@ -17,6 +17,7 @@ import {
 
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
+import { StatementEditor } from '@/features/course/prototype/task-and-deadline-settings/panel/statement/editor';
 import type { TaskGroup } from '@/features/course/prototype/task-and-deadline-settings/fixture';
 import { overrideCounts } from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import {
@@ -578,48 +579,13 @@ export function StatementBlock({
 
   return (
     <Block title="Условие">
-      <StatementTextarea
+      <StatementEditor
         value={session.form.statement}
         disabled={readOnly}
-        rows={long ? 14 : 5}
+        contentClassName={long ? 'min-h-80' : undefined}
         onChange={(value) => session.setField('statement', value)}
       />
     </Block>
-  );
-}
-
-export function StatementTextarea({
-  value,
-  onChange,
-  disabled,
-  rows = 8,
-  className,
-  autoFocus,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-  rows?: number;
-  className?: string;
-  autoFocus?: boolean;
-}) {
-  return (
-    <textarea
-      value={value}
-      rows={rows}
-      disabled={disabled}
-      autoFocus={autoFocus}
-      aria-label="Условие"
-      placeholder="Что сделать, как сдать, как будем проверять. Markdown"
-      onChange={(event) => onChange(event.target.value)}
-      className={cn(
-        'w-full resize-y rounded-lg border border-transparent bg-muted/50 px-3 py-2',
-        'text-sm leading-6 outline-none focus-visible:border-ring',
-        'focus-visible:bg-background focus-visible:ring-[3px] focus-visible:ring-ring/30',
-        'disabled:cursor-not-allowed disabled:opacity-60',
-        className
-      )}
-    />
   );
 }
 
