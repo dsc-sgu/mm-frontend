@@ -58,8 +58,12 @@ describe('ACC-12: every Teacher-only route denies a Student in the Course shell'
     expect(
       within(navigation).getByRole('link', { name: 'Журнал' })
     ).toBeDefined();
+    const breadcrumbs = screen.getByRole('navigation', {
+      name: 'Навигационная цепочка',
+    });
     for (const name of TEACHER_LINKS) {
       expect(within(navigation).queryByRole('link', { name })).toBeNull();
+      expect(within(breadcrumbs).queryByRole('link', { name })).toBeNull();
     }
     expect(within(screen.getByRole('main')).queryByRole('button')).toBeNull();
   });
