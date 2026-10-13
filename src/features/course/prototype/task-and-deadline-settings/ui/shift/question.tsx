@@ -2,7 +2,7 @@
 // deadlines are ticked independently (no «всё вместе»), Student Groups are
 // picked by buttons in the window, days come from buttons as in «Сразу».
 // Nothing appears or disappears while ticking, so the window stays put.
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { ChevronDown, LoaderCircle, TriangleAlert } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -14,6 +14,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shadcn/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/shadcn/components/ui/tooltip';
 import { cn } from '@/shadcn/lib/utils';
 import { findOverride } from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
@@ -26,7 +32,13 @@ import {
   shiftDays,
 } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useKindsDraft, type KindsDraft, type ShiftKinds } from './kinds';
-import { plural, taskSummary, toggleIn, type ShiftPreset } from './model';
+import {
+  daysLabel,
+  plural,
+  taskSummary,
+  toggleIn,
+  type ShiftPreset,
+} from './model';
 import { DaysPicker, TaskPicker, VariantSwitch } from './parts';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -90,73 +102,141 @@ function KindRow({
   );
 }
 
+/** What an inheriting or empty subgroup will do, said on hover. */
+function groupExplanation(state: string | null, days: number) {
+  switch (state) {
+    case 'как общий':
+      return 'У подгруппы нет своего дедлайна, действует общий. Отметьте, чтобы сдвинуть её отдельно: у неё появится свой дедлайн, а общий останется как есть.';
+    case 'получит свой':
+      return `Сейчас у подгруппы нет своего дедлайна. После сдвига у неё появится свой — ${daysLabel(days)} общего, а общий не изменится.`;
+    case 'вместе с общим':
+      return 'У подгруппы нет своего дедлайна, действует общий. Общий сдвигается, поэтому её дедлайн сдвинется вместе с ним.';
+    case 'без дедлайна':
+      return 'У подгруппы явно задано «без дедлайна». Такие значения не сдвигаются.';
+    default:
+      return null;
+  }
+}
+
+function groupState(draft: KindsDraft, single: string | null, groupId: string) {
+  const override = single
+    ? findOverride(draft.schedule, single, { kind: 'group', groupId })
+    : undefined;
+  const inherits = Boolean(single) && !override;
+  const none = override?.value.kind === 'none';
+  // With the general deadline moving, an inheriting group moves anyway.
+  const follows = inherits && draft.kinds.general;
+  return { override, inherits, none, follows, locked: none || follows };
+}
+
 function GroupButtons({ draft }: { draft: KindsDraft }) {
   const single =
     draft.orderedTaskIds.length === 1 ? draft.orderedTaskIds[0]! : null;
-  const task = single ? draft.schedule.tasks[single] : undefined;
+  const toggleable = STUDENT_GROUPS.filter(
+    (group) => !groupState(draft, single, group.id).locked
+  ).map((group) => group.id);
+
+  function toggle(groupId: string) {
+    const next = toggleIn(draft.groupIds, groupId);
+    // Nothing left to move: untick «Дедлайны подгрупп» instead of leaving
+    // a ticked box that moves nothing.
+    if (toggleable.every((id) => !next.has(id))) {
+      draft.setGroupIds(new Set());
+      draft.setKind('groups', false);
+      return;
+    }
+    draft.setGroupIds(next);
+  }
 
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {STUDENT_GROUPS.map((group) => {
-        const override = single
-          ? findOverride(draft.schedule, single, {
-              kind: 'group',
-              groupId: group.id,
-            })
-          : undefined;
-        const inherits = Boolean(single) && !override;
-        const none = override?.value.kind === 'none';
-        // With the general deadline moving, an inheriting group moves anyway.
-        const follows = inherits && draft.kinds.general;
-        const selected = draft.groupIds.has(group.id) && !none;
-        const hint = !single
-          ? null
-          : none
-            ? 'без дедлайна'
-            : follows
-              ? 'вместе с общим'
-              : inherits
-                ? selected
-                  ? 'получит свой'
-                  : 'как общий'
-                : override?.value.kind === 'at'
-                  ? formatCompactMoment(override.value.at)
-                  : null;
+    // Inside a modal the «move onto the tooltip» grace area never ends, so
+    // the tooltip closes as soon as the pointer leaves the button.
+    <TooltipProvider delayDuration={150} disableHoverableContent>
+      <div className="flex flex-wrap gap-1.5">
+        {STUDENT_GROUPS.map((group) => {
+          // Locked groups are not toggled but still show their explanation.
+          const { override, inherits, none, follows, locked } = groupState(
+            draft,
+            single,
+            group.id
+          );
+          const selected = draft.groupIds.has(group.id) && !none;
+          const hint = !single
+            ? null
+            : none
+              ? 'без дедлайна'
+              : follows
+                ? 'вместе с общим'
+                : inherits
+                  ? selected
+                    ? 'получит свой'
+                    : 'как общий'
+                  : override?.value.kind === 'at'
+                    ? formatCompactMoment(override.value.at)
+                    : null;
+          const explanation = groupExplanation(hint, draft.days);
 
-        return (
-          <button
-            key={group.id}
-            type="button"
-            disabled={none || follows}
-            aria-pressed={selected || follows}
-            onClick={() =>
-              draft.setGroupIds(toggleIn(draft.groupIds, group.id))
-            }
-            className={cn(
-              'inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-sm',
-              'disabled:cursor-default',
-              follows
-                ? 'border-dashed text-muted-foreground'
-                : none
-                  ? 'border-dashed text-muted-foreground/60'
+          const button = (
+            <button
+              type="button"
+              aria-disabled={locked}
+              aria-pressed={selected || follows}
+              onClick={() => {
+                if (!locked) {
+                  toggle(group.id);
+                }
+              }}
+              className={cn(
+                'inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-sm transition-colors',
+                locked
+                  ? cn(
+                      'cursor-help border-dashed text-muted-foreground',
+                      none && 'text-muted-foreground/60'
+                    )
                   : selected
-                    ? 'border-sky-500/50 bg-sky-500/10 text-sky-950 dark:text-sky-100'
-                    : 'text-muted-foreground hover:bg-muted'
-            )}
-          >
-            {group.name}
-            {hint ? (
-              <span className="text-xs text-muted-foreground">{hint}</span>
-            ) : null}
-          </button>
-        );
-      })}
-      {task === undefined && single === null ? (
-        <span className="self-center text-xs text-muted-foreground">
-          Отмеченные подгруппы сдвинутся во всех выбранных Task
-        </span>
-      ) : null}
-    </div>
+                    ? cn(
+                        'cursor-pointer border-sky-500/50 bg-sky-500/10 text-sky-950',
+                        'hover:border-sky-500/80 hover:bg-sky-500/20 dark:text-sky-100'
+                      )
+                    : cn(
+                        'cursor-pointer text-muted-foreground',
+                        'hover:border-foreground/30 hover:bg-muted hover:text-foreground'
+                      )
+              )}
+            >
+              {group.name}
+              {hint ? (
+                <span
+                  className={cn(
+                    'text-xs text-muted-foreground',
+                    explanation &&
+                      'underline decoration-dotted underline-offset-2'
+                  )}
+                >
+                  {hint}
+                </span>
+              ) : null}
+            </button>
+          );
+
+          return explanation ? (
+            <Tooltip key={group.id}>
+              <TooltipTrigger asChild>{button}</TooltipTrigger>
+              <TooltipContent side="top" className="max-w-64 text-left">
+                {explanation}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Fragment key={group.id}>{button}</Fragment>
+          );
+        })}
+        {single === null ? (
+          <span className="self-center text-xs text-muted-foreground">
+            Отмеченные подгруппы сдвинутся во всех выбранных Task
+          </span>
+        ) : null}
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -204,7 +284,7 @@ export function QuestionBody({
               <button
                 type="button"
                 className={cn(
-                  'inline-flex h-9 w-fit max-w-full items-center gap-2 rounded-md border px-3 text-sm hover:bg-muted',
+                  'inline-flex h-9 w-fit max-w-full cursor-pointer items-center gap-2 rounded-md border px-3 text-sm hover:bg-muted',
                   ids.length === 0 && 'text-muted-foreground'
                 )}
               >
