@@ -2,9 +2,7 @@
 // Tasks — a sibling of the «Вопрос» shift window built from the same parts.
 // A shift changes the schedule for everyone; an extension is an exception
 // for some people, so it starts with them and asks for a reason they see.
-import { Fragment } from 'react';
 import {
-  ArrowRight,
   ChevronDown,
   CircleCheck,
   LoaderCircle,
@@ -42,6 +40,13 @@ import {
   TaskPicker,
   UntilCell,
 } from '@/features/course/prototype/task-and-deadline-settings/ui/shift/parts';
+import {
+  BeforeAfter,
+  ChangeLine,
+  ChangesBox,
+  ChangesTask,
+  Unchanged,
+} from '@/features/course/prototype/task-and-deadline-settings/ui/shift/preview';
 import { StudentPicker } from '@/features/course/prototype/task-and-deadline-settings/ui/student-picker';
 import {
   useExtendDraft,
@@ -190,27 +195,16 @@ function RowOutcome({ row }: { row: ExtendRow }) {
   switch (row.outcome.kind) {
     case 'extend':
       return (
-        <span className="inline-flex items-center gap-1.5 tabular-nums">
-          <span className="text-muted-foreground">{before}</span>
-          <SourceBadge source={row.before.source} />
-          <ArrowRight className="size-3.5 text-muted-foreground" />
-          <span className="font-medium">
-            {formatCompactMoment(row.outcome.after)}
-          </span>
-        </span>
+        <BeforeAfter
+          before={before}
+          after={formatCompactMoment(row.outcome.after)}
+          badge={<SourceBadge source={row.before.source} />}
+        />
       );
     case 'no-deadline':
-      return (
-        <span className="text-muted-foreground">
-          без дедлайна, не продлевается
-        </span>
-      );
+      return <Unchanged>без дедлайна, не продлевается</Unchanged>;
     case 'already-later':
-      return (
-        <span className="text-muted-foreground tabular-nums">
-          {before}, уже позже
-        </span>
-      );
+      return <Unchanged>{before}, уже позже</Unchanged>;
   }
 }
 
@@ -220,44 +214,32 @@ function Preview({ draft }: { draft: ExtendDraft }) {
   const rows = draft.plan.rows;
 
   return (
-    <div className="h-32 overflow-y-auto rounded-md border bg-muted/30 px-3 py-2 text-sm">
-      {rows.length === 0 ? (
-        <p className="grid h-full place-items-center text-center text-muted-foreground">
-          Выберите студентов и Task, здесь появятся их новые дедлайны
-        </p>
-      ) : (
-        <div className="grid gap-2">
-          {draft.orderedTaskIds.map((taskId) => (
-            <Fragment key={taskId}>
-              <div className="grid gap-1">
-                <span className="truncate text-xs text-muted-foreground">
-                  {tasks[taskId]?.title}
-                </span>
-                {rows
-                  .filter((row) => row.taskId === taskId)
-                  .map((row) => {
-                    const student = studentsById.get(row.studentId)!;
-                    return (
-                      <div
-                        key={row.key}
-                        className="flex flex-wrap items-center justify-between gap-x-3"
-                      >
-                        <span className="truncate">
-                          {studentName(student)}{' '}
-                          <span className="text-xs text-muted-foreground">
-                            {groupName(student.groupId)}
-                          </span>
-                        </span>
-                        <RowOutcome row={row} />
-                      </div>
-                    );
-                  })}
-              </div>
-            </Fragment>
-          ))}
-        </div>
-      )}
-    </div>
+    <ChangesBox
+      empty={
+        rows.length === 0
+          ? 'Выберите студентов и Task, здесь появятся их новые дедлайны'
+          : null
+      }
+    >
+      {draft.orderedTaskIds.map((taskId) => (
+        <ChangesTask key={taskId} title={tasks[taskId]?.title ?? taskId}>
+          {rows
+            .filter((row) => row.taskId === taskId)
+            .map((row) => {
+              const student = studentsById.get(row.studentId)!;
+              return (
+                <ChangeLine
+                  key={row.key}
+                  who={studentName(student)}
+                  note={groupName(student.groupId)}
+                >
+                  <RowOutcome row={row} />
+                </ChangeLine>
+              );
+            })}
+        </ChangesTask>
+      ))}
+    </ChangesBox>
   );
 }
 
