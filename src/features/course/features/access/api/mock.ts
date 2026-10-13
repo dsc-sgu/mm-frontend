@@ -19,11 +19,12 @@ export const courseContextHandlers = [
     }
 
     const parsedId = v.safeParse(CourseIdSchema, params.locator);
+    const courseId = parsedId.success ? parsedId.output.toLowerCase() : null;
     const slug = parsedId.success
       ? null
       : v.safeParse(CourseSlugSchema, params.locator);
     const course = parsedId.success
-      ? courses.find((course) => course.id === parsedId.output)
+      ? courses.find((course) => course.id.toLowerCase() === courseId)
       : slug?.success
         ? courses.find((course) => course.slug === slug.output)
         : undefined;

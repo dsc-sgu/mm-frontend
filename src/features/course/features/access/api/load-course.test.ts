@@ -72,6 +72,42 @@ describe('ACC-04: course lookup against canonical memberships', () => {
     });
   });
 
+  test('UUID letter casing preserves Course identity and its membership outcome', async () => {
+    signInAs(accessWorld.users.vera.id);
+    const course = mockBackend.state.courses.find(
+      ({ id }) => id === accessWorld.courses.algorithms.id
+    );
+    if (!course) throw new Error('The fixture has no Algorithms Course');
+    const canonicalId = v.parse(
+      CourseIdSchema,
+      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+    );
+    course.id = canonicalId;
+    mockBackend.state.memberships = mockBackend.state.memberships.map(
+      (membership) =>
+        membership.courseId === accessWorld.courses.algorithms.id
+          ? { ...membership, courseId: canonicalId }
+          : membership
+    );
+    const locator = v.parse(
+      CourseIdSchema,
+      'AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA'
+    );
+
+    await expect(loadCourse(locator)).resolves.toEqual({
+      status: 'found',
+      course: { ...ALGORITHMS, id: canonicalId },
+      role: 'student',
+    });
+    mockBackend.state.session = {
+      userId: accessWorld.users.guest.id,
+      expiresAt: SESSION_EXPIRES_AT,
+    };
+    await expect(loadCourse(locator)).resolves.toEqual({
+      status: 'not-member',
+    });
+  });
+
   test.each([
     {
       kind: 'slug',
