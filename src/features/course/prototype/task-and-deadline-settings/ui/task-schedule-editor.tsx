@@ -1,28 +1,39 @@
-// PROTOTYPE (#181): every schedule value of one Task — opening time, Task
-// Deadline, each Student Group and personal Deadline Overrides.
-import { useState } from 'react';
-import { ChevronDown, Pencil, Plus, Trash2, UserRound } from 'lucide-react';
+// PROTOTYPE (#181): every schedule value of one Task as property rows —
+// opening time, Task Deadline, each Student Group and personal Deadline
+// Overrides (the latter as a list, like Lyssna's date overrides).
+import { Plus, Trash2 } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
-import { cn } from '@/shadcn/lib/utils';
 import { studentName } from '@/features/course/prototype/task-and-deadline-settings/fixture';
 import {
   effectiveDeadline,
   findOverride,
   groupDeadline,
+  overrideKey,
+  type DeadlineCommand,
   type OverrideTarget,
 } from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import {
   STUDENT_GROUPS,
   STUDENTS,
+  useSandbox,
   useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
+import { formatMoment } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
 import { usePendingChanges } from '@/features/course/prototype/task-and-deadline-settings/use-pending';
 import { DeadlineText } from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
 import { LevelEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/level-editor';
-import { OpeningTimeField } from '@/features/course/prototype/task-and-deadline-settings/ui/opening-time-field';
+import {
+  OpeningEditor,
+  OpeningNotes,
+} from '@/features/course/prototype/task-and-deadline-settings/ui/opening-time-field';
+import {
+  PropertyRow,
+  RowsHeading,
+} from '@/features/course/prototype/task-and-deadline-settings/ui/property-row';
 import { StudentPicker } from '@/features/course/prototype/task-and-deadline-settings/ui/student-picker';
+import { ValuePopover } from '@/features/course/prototype/task-and-deadline-settings/ui/value-popover';
 
 const studentsById = new Map(STUDENTS.map((student) => [student.id, student]));
 const groupName = (groupId: string) =>
@@ -37,116 +48,163 @@ export function PendingDot({ show }: { show: boolean }) {
   ) : null;
 }
 
+/** Opening time row, shared by the Task panel and the schedule editor. */
+export function OpeningRow({
+  taskId,
+  label,
+  onCommands,
+}: {
+  taskId: string;
+  label: string;
+  onCommands: (commands: DeadlineCommand[]) => void;
+}) {
+  const schedule = useViewSchedule();
+  const { keys } = usePendingChanges();
+  const dropPending = useSandbox((state) => state.dropPending);
+  const opening = schedule.tasks[taskId]?.openingTime ?? null;
+  const key = `${taskId}|opening`;
+
+  return (
+    <PropertyRow
+      label="Открытие"
+      note={<OpeningNotes taskId={taskId} quietWhenFine />}
+    >
+      <ValuePopover
+        title={`${label}: Task Opening Time`}
+        pending={keys.has(key)}
+        onRevert={() => dropPending(new Set([key]))}
+        trigger={
+          opening === null ? (
+            <span className="text-muted-foreground">Сразу</span>
+          ) : (
+            <span className="tabular-nums">{formatMoment(opening)}</span>
+          )
+        }
+      >
+        <OpeningEditor taskId={taskId} onCommands={onCommands} />
+      </ValuePopover>
+    </PropertyRow>
+  );
+}
+
+/** Task Deadline row. */
+export function DeadlineRow({
+  taskId,
+  label,
+  onCommands,
+}: {
+  taskId: string;
+  label: string;
+  onCommands: (commands: DeadlineCommand[]) => void;
+}) {
+  const schedule = useViewSchedule();
+  const { keys } = usePendingChanges();
+  const dropPending = useSandbox((state) => state.dropPending);
+  const deadline = schedule.tasks[taskId]?.deadline;
+  const key = `${taskId}|task`;
+
+  if (!deadline) {
+    return null;
+  }
+
+  return (
+    <PropertyRow label="Общий срок">
+      <ValuePopover
+        title={`${label}: общий срок`}
+        pending={keys.has(key)}
+        onRevert={() => dropPending(new Set([key]))}
+        trigger={<DeadlineText value={deadline} />}
+      >
+        <LevelEditor taskId={taskId} value={deadline} onCommands={onCommands} />
+      </ValuePopover>
+    </PropertyRow>
+  );
+}
+
 export function TaskScheduleEditor({
   taskId,
   taskTitle,
   showOpening = true,
+  showTaskDeadline = true,
 }: {
   taskId: string;
   taskTitle: string;
   showOpening?: boolean;
+  showTaskDeadline?: boolean;
 }) {
   const schedule = useViewSchedule();
   const edit = useScheduleEdit();
   const { keys } = usePendingChanges();
-  const [editing, setEditing] = useState<string | null>(null);
+  const dropPending = useSandbox((state) => state.dropPending);
   const task = schedule.tasks[taskId]!;
   const personal = schedule.overrides.filter(
     (item) => item.taskId === taskId && item.target.kind === 'student'
   );
 
-  const emit = (label: string) => (commands: Parameters<typeof edit>[0]) =>
-    edit(commands, `${taskTitle}: ${label}`);
+  const emit = (what: string) => (commands: DeadlineCommand[]) =>
+    edit(commands, `${taskTitle}: ${what}`);
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
+    <div className="grid gap-1">
       {showOpening ? (
-        <section className="grid grid-cols-[minmax(0,1fr)] gap-1.5">
-          <h4 className="flex items-center gap-2 text-sm font-semibold">
-            Task Opening Time
-            <PendingDot show={keys.has(`${taskId}|opening`)} />
-          </h4>
-          <OpeningTimeField taskId={taskId} onCommands={emit('открытие')} />
-        </section>
-      ) : null}
-
-      <section className="grid grid-cols-[minmax(0,1fr)] gap-1.5">
-        <h4 className="flex items-center gap-2 text-sm font-semibold">
-          Общий срок
-          <PendingDot show={keys.has(`${taskId}|task`)} />
-        </h4>
-        <LevelEditor
+        <OpeningRow
           taskId={taskId}
-          value={task.deadline}
+          label={taskTitle}
+          onCommands={emit('открытие')}
+        />
+      ) : null}
+      {showTaskDeadline ? (
+        <DeadlineRow
+          taskId={taskId}
+          label={taskTitle}
           onCommands={emit('общий срок')}
         />
-      </section>
+      ) : null}
 
-      <section className="grid grid-cols-[minmax(0,1fr)] gap-1">
-        <h4 className="text-sm font-semibold">Student Groups</h4>
-        <ul className="divide-y divide-border rounded-lg border border-border">
-          {STUDENT_GROUPS.map((group) => {
-            const target: OverrideTarget = {
-              kind: 'group',
-              groupId: group.id,
-            };
-            const override = findOverride(schedule, taskId, target);
-            const key = `g:${group.id}`;
-            const open = editing === key;
+      <RowsHeading>Student Groups</RowsHeading>
+      {STUDENT_GROUPS.map((group) => {
+        const target: OverrideTarget = { kind: 'group', groupId: group.id };
+        const override = findOverride(schedule, taskId, target);
+        const key = overrideKey(taskId, target);
 
-            return (
-              <li key={group.id} className="px-3 py-2">
-                <button
-                  type="button"
-                  onClick={() => setEditing(open ? null : key)}
-                  className="flex w-full items-center gap-2 text-left text-sm"
-                >
-                  <span className="w-16 shrink-0 font-medium">
-                    {group.name}
-                  </span>
-                  <PendingDot show={keys.has(`${taskId}|g:${group.id}`)} />
-                  <span className="min-w-0 flex-1 truncate">
-                    <DeadlineText
-                      value={override?.value ?? { kind: 'inherit' }}
-                      inherited={task.deadline}
-                    />
-                    {override?.reason ? (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {override.reason}
-                      </span>
-                    ) : null}
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      'size-4 shrink-0 text-muted-foreground transition-transform',
-                      open && 'rotate-180'
-                    )}
-                  />
-                </button>
-                {open ? (
-                  <div className="mt-2 pb-1">
-                    <LevelEditor
-                      taskId={taskId}
-                      target={target}
-                      value={override?.value ?? { kind: 'inherit' }}
-                      inherited={task.deadline}
-                      reason={override?.reason}
-                      inheritLabel="Общий срок"
-                      onCommands={emit(`группа ${group.name}`)}
-                    />
-                  </div>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+        return (
+          <PropertyRow
+            key={group.id}
+            label={group.name}
+            note={
+              override?.reason ? (
+                <p className="truncate text-xs text-muted-foreground">
+                  {override.reason}
+                </p>
+              ) : null
+            }
+          >
+            <ValuePopover
+              title={`${taskTitle}: ${group.name}`}
+              pending={keys.has(key)}
+              onRevert={() => dropPending(new Set([key]))}
+              trigger={
+                <DeadlineText
+                  value={override?.value ?? { kind: 'inherit' }}
+                  inherited={task.deadline}
+                />
+              }
+            >
+              <LevelEditor
+                taskId={taskId}
+                target={target}
+                value={override?.value ?? { kind: 'inherit' }}
+                inherited={task.deadline}
+                reason={override?.reason}
+                onCommands={emit(`группа ${group.name}`)}
+              />
+            </ValuePopover>
+          </PropertyRow>
+        );
+      })}
 
-      <section className="grid grid-cols-[minmax(0,1fr)] gap-1">
-        <div className="flex items-center justify-between gap-2">
-          <h4 className="text-sm font-semibold">
-            Личные переопределения · {personal.length}
-          </h4>
+      <RowsHeading
+        action={
           <StudentPicker
             align="end"
             excludeIds={personal.map((item) =>
@@ -164,99 +222,87 @@ export function TaskScheduleEditor({
                   reason: '',
                 },
               ]);
-              setEditing(`s:${studentId}`);
             }}
             trigger={
-              <Button variant="outline" size="xs">
-                <Plus /> Student
+              <Button variant="ghost" size="xs">
+                <Plus /> Добавить
               </Button>
             }
           />
-        </div>
-        {personal.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
-            Нет. Все Students получают срок своей группы.
-          </p>
-        ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border">
-            {personal.map((item) => {
-              if (item.target.kind !== 'student') {
-                return null;
-              }
+        }
+      >
+        Личные переопределения
+      </RowsHeading>
+      {personal.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Нет. Каждый Student получает срок своей группы.
+        </p>
+      ) : (
+        <ul className="grid gap-1">
+          {personal.map((item) => {
+            if (item.target.kind !== 'student') {
+              return null;
+            }
 
-              const student = studentsById.get(item.target.studentId)!;
-              const key = `s:${student.id}`;
-              const open = editing === key;
-              const group = groupDeadline(schedule, taskId, student.groupId);
+            const student = studentsById.get(item.target.studentId)!;
+            const key = overrideKey(taskId, item.target);
+            const label = `личное, ${studentName(student)}`;
 
-              return (
-                <li key={student.id} className="px-3 py-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <UserRound
-                      className="size-4 shrink-0 text-violet-600"
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="font-medium">
-                        {studentName(student)}
-                      </span>{' '}
-                      <span className="text-xs text-muted-foreground">
-                        {groupName(student.groupId)}
-                      </span>
-                      <span className="flex flex-wrap items-center gap-x-2">
-                        <DeadlineText value={item.value} />
-                        {item.reason ? (
-                          <span className="text-xs text-muted-foreground">
-                            {item.reason}
-                          </span>
-                        ) : null}
-                      </span>
-                    </span>
-                    <PendingDot show={keys.has(`${taskId}|${key}`)} />
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      aria-label="Изменить"
-                      onClick={() => setEditing(open ? null : key)}
-                    >
-                      <Pencil />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      aria-label="Снять личное переопределение"
-                      onClick={() =>
-                        emit(`снято личное, ${studentName(student)}`)([
-                          {
-                            type: 'reset-override',
-                            taskId,
-                            target: item.target,
-                          },
-                        ])
+            return (
+              <li
+                key={student.id}
+                className="grid grid-cols-[8.5rem_minmax(0,1fr)_auto] items-start gap-x-3"
+              >
+                <span className="grid min-h-8 content-center">
+                  <span className="truncate text-sm">
+                    {studentName(student)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {groupName(student.groupId)}
+                  </span>
+                </span>
+                <span className="grid min-w-0 gap-0.5">
+                  <ValuePopover
+                    title={`${taskTitle}: ${studentName(student)}`}
+                    pending={keys.has(key)}
+                    onRevert={() => dropPending(new Set([key]))}
+                    trigger={<DeadlineText value={item.value} />}
+                  >
+                    <LevelEditor
+                      taskId={taskId}
+                      target={item.target}
+                      value={item.value}
+                      inherited={
+                        groupDeadline(schedule, taskId, student.groupId).value
                       }
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                  {open ? (
-                    <div className="mt-2 pb-1">
-                      <LevelEditor
-                        taskId={taskId}
-                        target={item.target}
-                        value={item.value}
-                        inherited={group.value}
-                        reason={item.reason}
-                        inheritLabel="Срок группы"
-                        onCommands={emit(`личное, ${studentName(student)}`)}
-                      />
-                    </div>
+                      reason={item.reason}
+                      inheritLabel="Как у группы"
+                      onCommands={emit(label)}
+                    />
+                  </ValuePopover>
+                  {item.reason ? (
+                    <span className="truncate text-xs text-muted-foreground">
+                      {item.reason}
+                    </span>
                   ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Снять личное переопределение: ${studentName(student)}`}
+                  onClick={() =>
+                    emit(`снято ${label}`)([
+                      { type: 'reset-override', taskId, target: item.target },
+                    ])
+                  }
+                >
+                  <Trash2 />
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

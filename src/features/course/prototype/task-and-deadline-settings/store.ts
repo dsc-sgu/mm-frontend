@@ -91,6 +91,8 @@ type SandboxActions = {
   ) => Promise<boolean>;
   /** Applies the whole batch, or only one Task's part of it. */
   applyPending: (taskId?: string) => Promise<boolean>;
+  /** Applies only the reviewed changes; the rest stays pending. */
+  applyPendingKeys: (keys: ReadonlySet<string>) => Promise<boolean>;
   retrySave: () => Promise<boolean>;
 
   writeTaskToDraft: (taskId: string, edits: Partial<TaskProps>) => void;
@@ -298,6 +300,28 @@ export const useSandbox = create<Sandbox>()((set, get) => {
 
       // Applied commands leave the batch only after a successful save.
       const ok = await runSave(commands, `${commands.length} правок`);
+
+      if (ok) {
+        set((state) => ({
+          pending: state.pending.filter(
+            (command) => !commands.includes(command)
+          ),
+        }));
+      }
+
+      return ok;
+    },
+
+    applyPendingKeys: async (keys) => {
+      const commands = get().pending.filter((command) =>
+        keys.has(commandKey(command))
+      );
+
+      if (commands.length === 0) {
+        return true;
+      }
+
+      const ok = await runSave(commands, `${keys.size} правок`);
 
       if (ok) {
         set((state) => ({

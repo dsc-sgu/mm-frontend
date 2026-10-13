@@ -1,16 +1,12 @@
 // PROTOTYPE (#181): variant A — section «Сроки» as a matrix «Task × Student
-// Group». Personal overrides fold out of a counter; a Student search adds a
-// column with their Effective Deadline and its source.
-import { Fragment, useEffect, useState, type ReactNode } from 'react';
-import { ChevronRight, Plus, Search, Trash2, UserRound, X } from 'lucide-react';
+// Group», styled after Airtable / Vanta grids: hairline cells edited in
+// popovers, collapsible Task Groups, personal overrides folding out of a
+// counter, and a Student column with Effective Deadline and its source.
+import { Fragment, useEffect, useState } from 'react';
+import { ChevronRight, Info, Plus, Search, Trash2, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shadcn/components/ui/popover';
 import { cn } from '@/shadcn/lib/utils';
 import {
   studentName,
@@ -21,7 +17,10 @@ import {
   findOverride,
   groupDeadline,
   lateness,
+  overrideKey,
+  type DeadlineCommand,
   type OverrideTarget,
+  type Schedule,
   type Student,
 } from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
@@ -30,6 +29,7 @@ import {
   STUDENT_GROUPS,
   STUDENTS,
   useOrderedTasks,
+  useSandbox,
   useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
 import {
@@ -40,66 +40,27 @@ import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-s
 import { usePendingChanges } from '@/features/course/prototype/task-and-deadline-settings/use-pending';
 import {
   DeadlineText,
-  NoDeadline,
   SourceBadge,
 } from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
 import { LevelEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/level-editor';
-import { OpeningTimeField } from '@/features/course/prototype/task-and-deadline-settings/ui/opening-time-field';
+import { OpeningEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/opening-time-field';
 import { StudentPicker } from '@/features/course/prototype/task-and-deadline-settings/ui/student-picker';
+import { ValuePopover } from '@/features/course/prototype/task-and-deadline-settings/ui/value-popover';
 import type { DeadlinesViewProps } from './page';
 
 const studentsById = new Map(STUDENTS.map((student) => [student.id, student]));
 const groupName = (groupId: string) =>
   STUDENT_GROUPS.find((group) => group.id === groupId)?.name ?? groupId;
 
-function CellPopover({
-  trigger,
-  title,
-  children,
-  pending,
-  className,
-}: {
-  trigger: ReactNode;
-  title: string;
-  children: ReactNode;
-  pending: boolean;
-  className?: string;
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            'relative flex h-full min-h-9 w-full items-center rounded-md px-2 py-1 text-left text-sm',
-            'hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
-            pending && 'bg-amber-500/10 ring-1 ring-amber-500/60',
-            className
-          )}
-        >
-          {trigger}
-          {pending ? (
-            <span className="absolute top-1 right-1 size-1.5 rounded-full bg-amber-500" />
-          ) : null}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-80">
-        <p className="mb-2 text-sm font-semibold">{title}</p>
-        {children}
-      </PopoverContent>
-    </Popover>
-  );
-}
+type Emit = (label: string) => (commands: DeadlineCommand[]) => void;
 
 export function MatrixView({ selection, setSelection }: DeadlinesViewProps) {
   const { task: focusTaskId } = usePrototypeSettings();
-  const schedule = useViewSchedule();
   const groups = useOrderedTasks();
-  const edit = useScheduleEdit();
-  const { keys } = usePendingChanges();
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(
     () => new Set(focusTaskId ? [focusTaskId] : [])
   );
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [studentId, setStudentId] = useState<string | null>(null);
   const student = studentId ? studentsById.get(studentId) : undefined;
 
@@ -113,17 +74,17 @@ export function MatrixView({ selection, setSelection }: DeadlinesViewProps) {
 
   const columns = 6 + STUDENT_GROUPS.length + (student ? 1 : 0);
 
-  function toggleExpanded(taskId: string) {
-    const next = new Set(expanded);
-    if (next.has(taskId)) {
-      next.delete(taskId);
+  function toggleIn(set: ReadonlySet<string>, id: string) {
+    const next = new Set(set);
+    if (next.has(id)) {
+      next.delete(id);
     } else {
-      next.add(taskId);
+      next.add(id);
     }
-    setExpanded(next);
+    return next;
   }
 
-  function toggleSelected(taskIds: string[], on: boolean) {
+  function select(taskIds: string[], on: boolean) {
     const next = new Set(selection);
     for (const taskId of taskIds) {
       if (on) {
@@ -138,104 +99,126 @@ export function MatrixView({ selection, setSelection }: DeadlinesViewProps) {
   return (
     <div className="grid gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <StudentPicker
-          onPick={setStudentId}
-          trigger={
-            <Button variant="outline" size="sm">
-              <Search /> Найти Student
-            </Button>
-          }
-        />
         {student ? (
-          <span className="inline-flex items-center gap-2 rounded-md bg-violet-500/10 px-2 py-1 text-sm">
-            <UserRound className="size-4 text-violet-600" />
-            {studentName(student)} · {groupName(student.groupId)}
+          <span className="inline-flex h-8 items-center gap-2 rounded-md border border-violet-500/40 bg-violet-500/10 pr-1 pl-2.5 text-sm">
+            {studentName(student)}, {groupName(student.groupId)}
             <button
               type="button"
-              aria-label="Убрать Student"
+              aria-label="Убрать колонку Student"
               onClick={() => setStudentId(null)}
+              className="grid size-6 place-items-center rounded hover:bg-violet-500/15"
             >
-              <X className="size-4" />
+              <X className="size-3.5" />
             </button>
           </span>
         ) : (
-          <span className="text-xs text-muted-foreground">
-            покажет его Effective Deadline по всем Task и откуда взялся каждый
-            срок
-          </span>
+          <StudentPicker
+            onPick={setStudentId}
+            trigger={
+              <Button variant="outline" size="sm">
+                <Search /> Сроки Student
+              </Button>
+            }
+          />
         )}
+        {student ? (
+          <span className="text-xs text-muted-foreground">
+            Колонка справа: его срок по каждой Task и откуда он взялся
+          </span>
+        ) : null}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
-        <table className="w-full min-w-[64rem] border-collapse text-sm">
-          <thead className="sticky top-0 z-10 bg-card">
-            <tr className="border-b text-left text-xs text-muted-foreground">
-              <th className="w-8 px-2 py-2" />
-              <th className="sticky left-0 z-10 min-w-56 bg-card px-2 py-2 font-medium">
+      <div className="overflow-x-auto rounded-xl border bg-card">
+        <table className="w-full min-w-[66rem] border-collapse text-sm">
+          <thead>
+            <tr className="border-b bg-muted text-left text-xs text-muted-foreground">
+              <th className="w-10 py-2.5 pl-3" />
+              <th className="sticky left-0 z-10 min-w-60 bg-muted py-2.5 pr-3 font-medium">
                 Task
               </th>
-              <th className="px-2 py-2 font-medium">Открытие</th>
-              <th className="px-2 py-2 font-medium text-foreground">
+              <th className="border-l px-2.5 py-2.5 font-medium">Открытие</th>
+              <th className="border-l px-2.5 py-2.5 font-medium text-foreground">
                 Общий срок
               </th>
               {STUDENT_GROUPS.map((group) => (
-                <th key={group.id} className="px-2 py-2 font-medium">
+                <th
+                  key={group.id}
+                  className="border-l px-2.5 py-2.5 font-medium"
+                >
                   {group.name}
                 </th>
               ))}
-              <th className="px-2 py-2 font-medium">Личные</th>
+              <th className="border-l px-2.5 py-2.5 font-medium">Личные</th>
               {student ? (
-                <th className="bg-violet-500/5 px-2 py-2 font-medium text-violet-700 dark:text-violet-300">
+                <th className="border-l bg-violet-500/5 px-2.5 py-2.5 font-medium text-violet-800 dark:text-violet-300">
                   {studentName(student)}
                 </th>
               ) : null}
-              <th className="w-2" />
+              <th className="w-px" />
             </tr>
           </thead>
           <tbody>
-            {groups.map(({ group, tasks }) => (
-              <Fragment key={group.id}>
-                <tr className="border-b bg-muted/40">
-                  <td className="px-2 py-1.5">
-                    <Checkbox
-                      aria-label={`Выбрать все Task группы ${group.title}`}
-                      checked={tasks.every((task) => selection.has(task.id))}
-                      onCheckedChange={(value) =>
-                        toggleSelected(
-                          tasks.map((task) => task.id),
-                          value === true
-                        )
-                      }
-                    />
-                  </td>
-                  <td
-                    colSpan={columns - 1}
-                    className="sticky left-0 px-2 py-1.5 text-xs font-semibold tracking-wide uppercase"
-                  >
-                    {group.title}{' '}
-                    <span className="font-mono font-normal tracking-normal text-muted-foreground normal-case">
-                      · {group.key} · порядок выполнения
-                    </span>
-                  </td>
-                </tr>
-                {tasks.map((task) => (
-                  <TaskRows
-                    key={task.id}
-                    task={task}
-                    student={student}
-                    focused={task.id === focusTaskId}
-                    selected={selection.has(task.id)}
-                    onSelect={(on) => toggleSelected([task.id], on)}
-                    expanded={expanded.has(task.id)}
-                    onToggleExpanded={() => toggleExpanded(task.id)}
-                    pendingKeys={keys}
-                    schedule={schedule}
-                    edit={edit}
-                    columns={columns}
-                  />
-                ))}
-              </Fragment>
-            ))}
+            {groups.map(({ group, tasks }) => {
+              const isCollapsed = collapsed.has(group.id);
+              const allSelected = tasks.every((task) => selection.has(task.id));
+
+              return (
+                <Fragment key={group.id}>
+                  <tr className="border-b bg-muted/20">
+                    <td className="py-2 pl-3">
+                      <Checkbox
+                        aria-label={`Выбрать все Task группы ${group.title}`}
+                        checked={allSelected}
+                        onCheckedChange={() =>
+                          select(
+                            tasks.map((task) => task.id),
+                            !allSelected
+                          )
+                        }
+                      />
+                    </td>
+                    <td colSpan={columns - 1} className="sticky left-0 py-1">
+                      <button
+                        type="button"
+                        aria-expanded={!isCollapsed}
+                        onClick={() =>
+                          setCollapsed(toggleIn(collapsed, group.id))
+                        }
+                        className="inline-flex h-8 items-center gap-1.5 rounded-md pr-2 font-medium hover:bg-muted"
+                      >
+                        <ChevronRight
+                          className={cn(
+                            'size-4 text-muted-foreground transition-transform',
+                            !isCollapsed && 'rotate-90'
+                          )}
+                        />
+                        {group.title}
+                        <span className="font-normal text-muted-foreground">
+                          {tasks.length} Task в порядке выполнения
+                        </span>
+                      </button>
+                    </td>
+                  </tr>
+                  {isCollapsed
+                    ? null
+                    : tasks.map((task) => (
+                        <TaskRows
+                          key={task.id}
+                          task={task}
+                          student={student}
+                          focused={task.id === focusTaskId}
+                          selected={selection.has(task.id)}
+                          onSelect={(on) => select([task.id], on)}
+                          expanded={expanded.has(task.id)}
+                          onToggleExpanded={() =>
+                            setExpanded(toggleIn(expanded, task.id))
+                          }
+                          columns={columns}
+                        />
+                      ))}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -251,9 +234,6 @@ function TaskRows({
   onSelect,
   expanded,
   onToggleExpanded,
-  pendingKeys,
-  schedule,
-  edit,
   columns,
 }: {
   task: Task;
@@ -263,48 +243,57 @@ function TaskRows({
   onSelect: (on: boolean) => void;
   expanded: boolean;
   onToggleExpanded: () => void;
-  pendingKeys: ReadonlySet<string>;
-  schedule: ReturnType<typeof useViewSchedule>;
-  edit: ReturnType<typeof useScheduleEdit>;
   columns: number;
 }) {
+  const schedule = useViewSchedule();
+  const edit = useScheduleEdit();
+  const { keys } = usePendingChanges();
+  const dropPending = useSandbox((state) => state.dropPending);
   const taskSchedule = schedule.tasks[task.id]!;
   const personal = schedule.overrides.filter(
     (item) => item.taskId === task.id && item.target.kind === 'student'
   );
-  const emit = (label: string) => (commands: Parameters<typeof edit>[0]) =>
+  const emit: Emit = (label) => (commands) =>
     edit(commands, `${task.title}: ${label}`);
+  const revert = (key: string) => () => dropPending(new Set([key]));
+  const personalPending = personal.some((item) =>
+    keys.has(overrideKey(task.id, item.target))
+  );
+  // Opaque tints: the sticky Task cell must hide what scrolls under it.
+  const rowTone = focused
+    ? 'bg-[color-mix(in_oklab,var(--color-sky-500)_8%,var(--card))]'
+    : selected
+      ? 'bg-[color-mix(in_oklab,var(--primary)_5%,var(--card))]'
+      : 'bg-card';
 
   return (
     <>
       <tr
         id={`matrix-row-${task.id}`}
-        className={cn(
-          'border-b align-middle',
-          selected && 'bg-primary/5',
-          focused && 'bg-sky-500/10'
-        )}
+        className={cn('group/row border-b', rowTone)}
       >
-        <td className="px-2">
+        <td className="pl-3">
           <Checkbox
             aria-label={`Выбрать ${task.title}`}
             checked={selected}
             onCheckedChange={(value) => onSelect(value === true)}
           />
         </td>
-        <td className="sticky left-0 bg-inherit px-2 py-1">
-          <div className="max-w-64 truncate font-medium">{task.title}</div>
+        <td className={cn('sticky left-0 z-[1] py-1.5 pr-3', rowTone)}>
+          <div className="max-w-64 truncate">{task.title}</div>
           <div className="font-mono text-xs text-muted-foreground">
             {task.key}
           </div>
         </td>
-        <td className="px-0.5">
-          <CellPopover
-            title={`${task.title}: Task Opening Time`}
-            pending={pendingKeys.has(`${task.id}|opening`)}
+        <td className="h-px border-l p-0">
+          <ValuePopover
+            variant="cell"
+            title={`${task.title}: время открытия`}
+            pending={keys.has(`${task.id}|opening`)}
+            onRevert={revert(`${task.id}|opening`)}
             trigger={
               taskSchedule.openingTime === null ? (
-                <span className="text-muted-foreground/60">—</span>
+                <span className="text-muted-foreground/60">сразу</span>
               ) : (
                 <span className="text-muted-foreground tabular-nums">
                   {formatCompactMoment(taskSchedule.openingTime, '00:00')}
@@ -312,13 +301,15 @@ function TaskRows({
               )
             }
           >
-            <OpeningTimeField taskId={task.id} onCommands={emit('открытие')} />
-          </CellPopover>
+            <OpeningEditor taskId={task.id} onCommands={emit('открытие')} />
+          </ValuePopover>
         </td>
-        <td className="px-0.5">
-          <CellPopover
+        <td className="h-px border-l p-0">
+          <ValuePopover
+            variant="cell"
             title={`${task.title}: общий срок`}
-            pending={pendingKeys.has(`${task.id}|task`)}
+            pending={keys.has(`${task.id}|task`)}
+            onRevert={revert(`${task.id}|task`)}
             trigger={<DeadlineText value={taskSchedule.deadline} compact />}
           >
             <LevelEditor
@@ -326,33 +317,33 @@ function TaskRows({
               value={taskSchedule.deadline}
               onCommands={emit('общий срок')}
             />
-          </CellPopover>
+          </ValuePopover>
         </td>
         {STUDENT_GROUPS.map((group) => {
           const target: OverrideTarget = { kind: 'group', groupId: group.id };
           const override = findOverride(schedule, task.id, target);
+          const key = overrideKey(task.id, target);
 
           return (
-            <td key={group.id} className="px-0.5">
-              <CellPopover
+            <td key={group.id} className="h-px border-l p-0">
+              <ValuePopover
+                variant="cell"
                 title={`${task.title}: ${group.name}`}
-                pending={pendingKeys.has(`${task.id}|g:${group.id}`)}
+                pending={keys.has(key)}
+                onRevert={revert(key)}
                 trigger={
-                  <span
-                    className="grid min-w-0"
-                    title={override?.reason || undefined}
-                  >
+                  <>
                     <DeadlineText
                       value={override?.value ?? { kind: 'inherit' }}
                       inherited={taskSchedule.deadline}
                       compact
                     />
                     {override?.reason ? (
-                      <span className="truncate text-[11px] text-muted-foreground">
-                        {override.reason}
+                      <span title={override.reason}>
+                        <Info className="size-3.5 text-muted-foreground" />
                       </span>
                     ) : null}
-                  </span>
+                  </>
                 }
               >
                 <LevelEditor
@@ -361,41 +352,35 @@ function TaskRows({
                   value={override?.value ?? { kind: 'inherit' }}
                   inherited={taskSchedule.deadline}
                   reason={override?.reason}
-                  inheritLabel="Общий срок"
                   onCommands={emit(`группа ${group.name}`)}
                 />
-              </CellPopover>
+              </ValuePopover>
             </td>
           );
         })}
-        <td className="px-0.5">
+        <td className="h-px border-l p-0">
           <button
             type="button"
+            aria-expanded={expanded}
             onClick={onToggleExpanded}
             className={cn(
-              'flex h-9 w-full items-center gap-1 rounded-md px-2 text-sm hover:bg-muted',
-              personal.length === 0 && 'text-muted-foreground/60'
+              'flex h-full min-h-10 w-full items-center gap-1 px-2.5 text-sm hover:bg-muted',
+              personal.length === 0 && 'text-muted-foreground/60',
+              personalPending &&
+                'bg-amber-500/10 shadow-[inset_2px_0_0_#f59e0b]'
             )}
           >
             <ChevronRight
               className={cn(
-                'size-3.5 transition-transform',
+                'size-3.5 text-muted-foreground transition-transform',
                 expanded && 'rotate-90'
               )}
             />
-            <UserRound className="size-3.5" />
-            {personal.length}
-            {personal.some((item) =>
-              pendingKeys.has(
-                `${task.id}|s:${(item.target as { studentId: string }).studentId}`
-              )
-            ) ? (
-              <span className="ml-1 size-1.5 rounded-full bg-amber-500" />
-            ) : null}
+            {personal.length === 0 ? 'нет' : personal.length}
           </button>
         </td>
         {student ? (
-          <td className="bg-violet-500/5 px-2">
+          <td className="border-l bg-violet-500/5 px-2.5">
             <StudentCell
               taskId={task.id}
               student={student}
@@ -406,15 +391,14 @@ function TaskRows({
         <td />
       </tr>
       {expanded ? (
-        <tr className="border-b bg-muted/20">
+        <tr className="border-b bg-muted/30">
           <td />
-          <td colSpan={columns - 1} className="px-2 py-2">
+          <td colSpan={columns - 1} className="py-3 pr-3">
             <PersonalList
               taskId={task.id}
               taskTitle={task.title}
               schedule={schedule}
-              pendingKeys={pendingKeys}
-              onCommands={emit}
+              emit={emit}
             />
           </td>
         </tr>
@@ -430,7 +414,7 @@ function StudentCell({
 }: {
   taskId: string;
   student: Student;
-  schedule: ReturnType<typeof useViewSchedule>;
+  schedule: Schedule;
 }) {
   const resolved = effectiveDeadline(schedule, taskId, student);
   const attempt = ATTEMPTS.find(
@@ -439,28 +423,23 @@ function StudentCell({
   const status = attempt ? lateness(attempt.submittedAt, resolved.value) : null;
 
   return (
-    <span className="grid gap-0.5 py-1" title={resolved.reason || undefined}>
+    <span className="grid gap-0.5 py-1.5" title={resolved.reason || undefined}>
       <span className="flex items-center gap-1.5">
         <DeadlineText value={resolved.value} compact />
         <SourceBadge source={resolved.source} />
       </span>
-      {resolved.reason ? (
-        <span className="max-w-48 truncate text-[11px] text-muted-foreground">
-          {resolved.reason}
-        </span>
-      ) : null}
       {status ? (
         <span
           className={cn(
-            'text-[11px]',
+            'text-xs',
             status.kind === 'late'
               ? 'text-red-700 dark:text-red-300'
-              : 'text-emerald-700 dark:text-emerald-300'
+              : 'text-muted-foreground'
           )}
         >
           {status.kind === 'late'
-            ? `сдано с опозданием ${formatDuration(status.by)}`
-            : 'сдано вовремя'}
+            ? `Сдано с опозданием ${formatDuration(status.by)}`
+            : 'Сдано вовремя'}
         </span>
       ) : null}
     </span>
@@ -471,118 +450,90 @@ function PersonalList({
   taskId,
   taskTitle,
   schedule,
-  pendingKeys,
-  onCommands,
+  emit,
 }: {
   taskId: string;
   taskTitle: string;
-  schedule: ReturnType<typeof useViewSchedule>;
-  pendingKeys: ReadonlySet<string>;
-  onCommands: (
-    label: string
-  ) => (commands: Parameters<ReturnType<typeof useScheduleEdit>>[0]) => void;
+  schedule: Schedule;
+  emit: Emit;
 }) {
+  const { keys } = usePendingChanges();
+  const dropPending = useSandbox((state) => state.dropPending);
   const personal = schedule.overrides.filter(
     (item) => item.taskId === taskId && item.target.kind === 'student'
   );
 
   return (
-    <div className="grid gap-2">
+    <div className="grid max-w-3xl gap-1">
       {personal.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Личных переопределений нет.
+          Личных переопределений нет: каждый Student получает срок своей группы.
         </p>
-      ) : (
-        <ul className="grid gap-1 sm:grid-cols-2 xl:grid-cols-3">
-          {personal.map((item) => {
-            if (item.target.kind !== 'student') {
-              return null;
-            }
+      ) : null}
+      {personal.map((item) => {
+        if (item.target.kind !== 'student') {
+          return null;
+        }
 
-            const student = studentsById.get(item.target.studentId)!;
-            const group = groupDeadline(schedule, taskId, student.groupId);
-            const label = `личное, ${studentName(student)}`;
+        const student = studentsById.get(item.target.studentId)!;
+        const group = groupDeadline(schedule, taskId, student.groupId);
+        const key = overrideKey(taskId, item.target);
+        const label = `личное, ${studentName(student)}`;
 
-            return (
-              <li
-                key={student.id}
-                className={cn(
-                  'flex items-start gap-2 rounded-lg border bg-background px-2.5 py-1.5',
-                  pendingKeys.has(`${taskId}|s:${student.id}`) &&
-                    'border-amber-500/60'
-                )}
-              >
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      className="grid min-w-0 flex-1 gap-0.5 text-left text-sm"
-                    >
-                      <span className="truncate">
-                        <span className="font-medium">
-                          {studentName(student)}
-                        </span>{' '}
-                        <span className="text-xs text-muted-foreground">
-                          {groupName(student.groupId)}
-                        </span>
-                      </span>
-                      <span className="flex flex-wrap items-center gap-x-2">
-                        <DeadlineText value={item.value} compact />
-                        <span className="text-[11px] text-muted-foreground">
-                          группа:{' '}
-                          {group.value.kind === 'at'
-                            ? formatCompactMoment(group.value.at)
-                            : 'без срока'}
-                        </span>
-                      </span>
-                      {item.reason ? (
-                        <span className="text-xs text-muted-foreground">
-                          {item.reason}
-                        </span>
-                      ) : null}
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent align="start" className="w-80">
-                    <p className="mb-2 text-sm font-semibold">
-                      {taskTitle}: {studentName(student)}
-                    </p>
-                    <LevelEditor
-                      taskId={taskId}
-                      target={item.target}
-                      value={item.value}
-                      inherited={group.value}
-                      reason={item.reason}
-                      inheritLabel="Срок группы"
-                      onCommands={onCommands(label)}
-                    />
-                  </PopoverContent>
-                </Popover>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label="Снять личное переопределение"
-                  onClick={() =>
-                    onCommands(`снято ${label}`)([
-                      { type: 'reset-override', taskId, target: item.target },
-                    ])
-                  }
-                >
-                  <Trash2 />
-                </Button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <div className="flex items-center gap-2">
+        return (
+          <div
+            key={student.id}
+            className="grid grid-cols-[12rem_10rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg bg-background px-3 py-1"
+          >
+            <span className="truncate">
+              {studentName(student)}{' '}
+              <span className="text-xs text-muted-foreground">
+                {groupName(student.groupId)}
+              </span>
+            </span>
+            <ValuePopover
+              title={`${taskTitle}: ${studentName(student)}`}
+              pending={keys.has(key)}
+              onRevert={() => dropPending(new Set([key]))}
+              trigger={<DeadlineText value={item.value} compact />}
+            >
+              <LevelEditor
+                taskId={taskId}
+                target={item.target}
+                value={item.value}
+                inherited={group.value}
+                reason={item.reason}
+                inheritLabel="Как у группы"
+                onCommands={emit(label)}
+              />
+            </ValuePopover>
+            <span className="truncate text-xs text-muted-foreground">
+              {item.reason || 'Без причины'}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Снять: ${studentName(student)}`}
+              onClick={() =>
+                emit(`снято ${label}`)([
+                  { type: 'reset-override', taskId, target: item.target },
+                ])
+              }
+            >
+              <Trash2 />
+            </Button>
+          </div>
+        );
+      })}
+      <div>
         <StudentPicker
           excludeIds={personal.map((item) =>
             item.target.kind === 'student' ? item.target.studentId : ''
           )}
           onPick={(studentId) => {
-            const student = studentsById.get(studentId)!;
-            const current = effectiveDeadline(schedule, taskId, student);
-            onCommands(`личное, ${studentName(student)}`)([
+            const picked = studentsById.get(studentId)!;
+            const current = effectiveDeadline(schedule, taskId, picked);
+            emit(`личное, ${studentName(picked)}`)([
               {
                 type: 'set-override',
                 taskId,
@@ -593,15 +544,11 @@ function PersonalList({
             ]);
           }}
           trigger={
-            <Button variant="outline" size="xs">
+            <Button variant="ghost" size="sm">
               <Plus /> Личное переопределение
             </Button>
           }
         />
-        <span className="text-xs text-muted-foreground">
-          начнётся с текущего срока Student; <NoDeadline className="ml-1" />{' '}
-          тоже значение
-        </span>
       </div>
     </div>
   );

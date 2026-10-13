@@ -85,20 +85,20 @@ export function TaskReferenceCard({
       >
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
-            <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold tracking-wide text-primary uppercase md:text-sm">
-              <Trophy className="size-4" aria-hidden="true" />
-              Задание
-              <span className="font-normal tracking-normal text-muted-foreground normal-case">
-                {group?.title} · <span className="font-mono">{task.key}</span>
+            <div className="mb-1.5 flex flex-wrap items-center gap-2 text-sm">
+              <span className="inline-flex items-center gap-1.5 font-medium text-primary">
+                <Trophy className="size-4" aria-hidden="true" />
+                Задание
               </span>
+              <span className="text-muted-foreground">{group?.title}</span>
               {draftEdits && taskApply === 'course' ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/15 px-2 py-0.5 text-[11px] font-medium tracking-normal text-violet-700 normal-case dark:text-violet-300">
-                  <FileStack className="size-3" /> правки в черновике
+                <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-0.5 text-xs text-violet-800 dark:text-violet-300">
+                  <FileStack className="size-3" /> есть правки в черновике
                 </span>
               ) : null}
               {recentlyApplied ? (
-                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium tracking-normal text-emerald-700 normal-case dark:text-emerald-300">
-                  обновлено {formatClock(lastApplied!.at)}
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-800 dark:text-emerald-300">
+                  Обновлено в {formatClock(lastApplied!.at)}
                 </span>
               ) : null}
             </div>
@@ -120,10 +120,10 @@ export function TaskReferenceCard({
             ) : (
               <NoDeadline />
             )}
-            <span className="text-[11px]">{timeZoneLabel()}</span>
+            <span className="text-xs">{timeZoneLabel()}</span>
             {counts.total > 0 ? (
               <span className="text-xs">
-                свой срок: групп {counts.groups}, Students {counts.students}
+                У части Students свой срок ({counts.total})
               </span>
             ) : null}
             {taskSchedule?.openingTime && taskSchedule.openingTime > NOW ? (
@@ -138,21 +138,17 @@ export function TaskReferenceCard({
           </div>
         </div>
       </button>
-      <span
-        className={cn(
-          'pointer-events-none absolute top-3 right-3 hidden items-center gap-1 rounded-md bg-background/90 px-2 py-1 text-xs font-medium shadow-sm',
-          'group-hover/card:inline-flex',
-          selected && 'hidden!'
-        )}
-      >
-        <Settings2 className="size-3.5" /> Настроить
-      </span>
+      {!selected ? (
+        <span className="pointer-events-none absolute right-3 bottom-3 hidden items-center gap-1 rounded-md bg-background px-2 py-1 text-xs font-medium shadow-sm group-hover/card:inline-flex">
+          <Settings2 className="size-3.5" /> Настроить
+        </span>
+      ) : null}
       {inline ? (
         <div className="grid gap-2 border-t border-primary/30 p-4 md:p-5">
           <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="font-medium">Условие — правка в документе</span>
+            <span className="font-medium">Условие</span>
             <span className="text-xs text-muted-foreground">
-              применяется кнопкой в панели
+              Сохраняется кнопкой в панели
             </span>
           </div>
           <StatementTextarea

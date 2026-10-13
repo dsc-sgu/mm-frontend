@@ -1,6 +1,6 @@
 // PROTOTYPE (#181): one keyboard control for date and time. «22.09» means
 // 22.09 23:59 for a deadline and 00:00 for an opening time; ↑/↓ move a day,
-// Shift+↑/↓ a week. The time zone is always labelled.
+// Shift+↑/↓ a week. The host labels the time zone once.
 import { useState, type KeyboardEvent } from 'react';
 import { CalendarClock } from 'lucide-react';
 
@@ -10,19 +10,17 @@ import {
   formatMomentLong,
   parseMomentInput,
   shiftDays,
-  timeZoneLabel,
 } from '@/features/course/prototype/task-and-deadline-settings/time';
 
 export function MomentField({
   value,
   onCommit,
   defaultTime,
-  placeholder = '22.09 или 22.09.2026 18:00',
+  placeholder = 'Например, 22.09 или 22.09 18:00',
   allowEmpty = false,
   disabled = false,
   autoFocus = false,
   id,
-  compact = false,
 }: {
   value: number | null;
   onCommit: (at: number | null) => void;
@@ -32,13 +30,12 @@ export function MomentField({
   disabled?: boolean;
   autoFocus?: boolean;
   id?: string;
-  compact?: boolean;
 }) {
   const formatted = value === null ? '' : formatInputValue(value);
   const [text, setText] = useState(formatted);
   const [seen, setSeen] = useState(formatted);
 
-  // Follow outside changes (applied batch, other variant) while not typing.
+  // Follow outside changes (shortcuts, applied batch) while not typing.
   if (seen !== formatted) {
     setSeen(formatted);
     setText(formatted);
@@ -46,6 +43,7 @@ export function MomentField({
 
   const parsed = parseMomentInput(text, defaultTime);
   const dirty = text.trim() !== formatted;
+  const invalid = dirty && parsed.status === 'invalid';
 
   function commit() {
     if (!dirty) {
@@ -85,17 +83,13 @@ export function MomentField({
     }
   }
 
-  const invalid =
-    parsed.status === 'invalid' || (parsed.status === 'empty' && !allowEmpty);
-
   return (
     <div className="grid gap-1">
       <div
         className={cn(
-          'flex items-center gap-2 rounded-md border bg-background px-2.5',
-          'focus-within:ring-[3px] focus-within:ring-ring/50',
-          compact ? 'h-8' : 'h-9',
-          invalid && dirty
+          'flex h-9 items-center gap-2 rounded-md border bg-background px-2.5',
+          'focus-within:ring-[3px] focus-within:ring-ring/40',
+          invalid
             ? 'border-destructive focus-within:ring-destructive/20'
             : 'border-input',
           disabled && 'cursor-not-allowed opacity-60'
@@ -111,35 +105,28 @@ export function MomentField({
           disabled={disabled}
           autoFocus={autoFocus}
           placeholder={placeholder}
+          aria-invalid={invalid}
           onChange={(event) => setText(event.target.value)}
           onBlur={commit}
           onKeyDown={handleKeyDown}
-          className={cn(
-            'min-w-0 flex-1 bg-transparent font-mono text-sm tabular-nums',
-            'outline-none placeholder:font-sans placeholder:text-muted-foreground'
-          )}
+          className="min-w-0 flex-1 bg-transparent text-sm tabular-nums outline-none placeholder:text-muted-foreground"
         />
-        <span className="shrink-0 text-[11px] text-muted-foreground">
-          {timeZoneLabel()}
-        </span>
       </div>
-      {dirty || !compact ? (
+      {dirty ? (
         <p
           className={cn(
-            'min-h-4 text-xs',
-            invalid && dirty ? 'text-destructive' : 'text-muted-foreground'
+            'text-xs',
+            invalid ? 'text-destructive' : 'text-muted-foreground'
           )}
         >
           {parsed.status === 'valid'
             ? `${formatMomentLong(parsed.at)}${
-                parsed.usedDefaultTime
-                  ? ` · время по умолчанию ${defaultTime}`
-                  : ''
-              }${dirty ? ' · Enter — применить, Esc — отменить' : ''}`
+                parsed.usedDefaultTime ? ` (время по умолчанию)` : ''
+              }. Enter — применить`
             : parsed.status === 'invalid'
               ? parsed.message
               : allowEmpty
-                ? 'Пусто — время не задано'
+                ? 'Enter — убрать время'
                 : 'Введите дату'}
         </p>
       ) : null}

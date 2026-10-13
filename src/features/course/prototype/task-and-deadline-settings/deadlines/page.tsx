@@ -1,19 +1,24 @@
 // PROTOTYPE (#181): deadline screen variants. A — matrix «Task × Student
 // Group» and D — timeline at `/deadlines`; B — Task list with a side panel at
-// `/tasks`. All share the store, the save bar and the mass shift dialog.
+// `/tasks`. All share the store, the save flow and the mass shift dialog.
 import { useState, type ReactNode } from 'react';
 import { CalendarArrowUp } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
+import { dockPadding } from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
 import { SandboxBar } from '@/features/course/prototype/task-and-deadline-settings/sandbox-bar';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { timeZoneLabel } from '@/features/course/prototype/task-and-deadline-settings/time';
+import { BulkBar } from '@/features/course/prototype/task-and-deadline-settings/ui/bulk-bar';
 import {
   DeadlineText,
   NoDeadline,
 } from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
-import { ScheduleSaveBar } from '@/features/course/prototype/task-and-deadline-settings/ui/schedule-save-bar';
+import {
+  ScheduleDock,
+  ScheduleStatus,
+} from '@/features/course/prototype/task-and-deadline-settings/ui/schedule-save-bar';
 import {
   ShiftDialog,
   type ShiftPreset,
@@ -30,7 +35,8 @@ export type DeadlinesViewProps = {
 };
 
 export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
-  const { variant } = usePrototypeSettings();
+  const { variant, task } = usePrototypeSettings();
+  const panelOpen = variant === 'B' && Boolean(task);
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   const [shift, setShift] = useState<ShiftPreset | null>(null);
 
@@ -44,48 +50,47 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
   return (
     <main
       className={cn(
-        'mx-auto flex w-full flex-col gap-4 px-4 pt-6 pb-40',
-        variant === 'B' ? 'max-w-5xl' : 'max-w-[96rem]'
+        'mx-auto flex w-full flex-col gap-4 px-4 pt-6 pb-44 sm:px-6',
+        'max-w-[96rem]',
+        dockPadding(panelOpen, 'dock')
       )}
     >
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="grid gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {variant === 'B' ? 'Задания и сроки' : 'Сроки'}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Время — {timeZoneLabel()}. Сроки и Task Opening Time применяются
-            отдельно от публикации курса.
+            Время в поясе {timeZoneLabel()}. Сроки применяются отдельно от
+            публикации курса.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {selection.size > 0 ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelection(new Set())}
-            >
-              Снять выбор · {selection.size}
-            </Button>
-          ) : null}
+        <div className="flex items-center gap-3">
+          <ScheduleStatus />
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShift({ taskIds: [...selection] })}
           >
             <CalendarArrowUp />
-            Сдвинуть сроки{selection.size ? ` · ${selection.size} Task` : '…'}
+            Сдвинуть сроки
           </Button>
         </div>
       </header>
 
-      <Legend />
+      {variant === 'B' ? null : <Legend />}
 
       {variant === 'A' ? <MatrixView {...viewProps} /> : null}
       {variant === 'B' ? <TaskListView {...viewProps} /> : null}
       {variant === 'D' ? <TimelineView {...viewProps} /> : null}
 
-      <ScheduleSaveBar />
+      <ScheduleDock>
+        <BulkBar
+          count={selection.size}
+          onClear={() => setSelection(new Set())}
+          onShift={() => setShift({ taskIds: [...selection] })}
+        />
+      </ScheduleDock>
       <ShiftDialog preset={shift} onClose={() => setShift(null)} />
       <SandboxBar courseSlug={courseSlug} />
     </main>
@@ -98,7 +103,7 @@ function LegendItem({ children }: { children: ReactNode }) {
 
 function Legend() {
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+    <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
       <LegendItem>
         <DeadlineText
           value={{ kind: 'inherit' }}
@@ -118,7 +123,8 @@ function Legend() {
         <NoDeadline /> явно без срока
       </LegendItem>
       <LegendItem>
-        <span className="size-2 rounded-full bg-amber-500" /> не применено
+        <span className="h-3.5 w-1 rounded-sm bg-amber-500" />
+        не применено
       </LegendItem>
     </div>
   );

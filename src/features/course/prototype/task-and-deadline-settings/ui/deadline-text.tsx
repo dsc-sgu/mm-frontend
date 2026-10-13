@@ -24,10 +24,10 @@ export function NoDeadline({
     <span
       className={cn(
         'inline-flex items-center gap-1 rounded-full border border-dashed px-1.5',
-        'text-xs font-medium whitespace-nowrap',
+        'text-xs whitespace-nowrap',
         pale
-          ? 'border-border text-muted-foreground/70'
-          : 'border-amber-500/60 bg-amber-500/10 text-amber-800 dark:text-amber-300',
+          ? 'border-border text-muted-foreground/60'
+          : 'border-muted-foreground/40 font-medium text-foreground/80',
         className
       )}
     >

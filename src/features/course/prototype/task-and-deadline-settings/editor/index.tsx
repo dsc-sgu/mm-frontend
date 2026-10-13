@@ -20,7 +20,7 @@ import {
   useUpdatePrototypeSearch,
 } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
-import { ScheduleSaveBar } from '@/features/course/prototype/task-and-deadline-settings/ui/schedule-save-bar';
+import { ScheduleDock } from '@/features/course/prototype/task-and-deadline-settings/ui/schedule-save-bar';
 import { insertAfterTask, setCarry } from './new-task';
 import { EditorTaskReference } from './task-reference';
 
@@ -87,11 +87,11 @@ export function PrototypeEditor({
             />
           </PanelFrame>
         ) : null}
-        <div className="pointer-events-none fixed top-16 left-1/2 z-30 grid w-[calc(100%-1rem)] max-w-3xl -translate-x-1/2 justify-items-center gap-2 *:pointer-events-auto">
+        <div className="pointer-events-none fixed top-16 left-1/2 z-30 grid w-[calc(100%-1rem)] max-w-2xl -translate-x-1/2 justify-items-center gap-2">
           <DraftStrip />
-          <ScheduleSaveBar
+          <ScheduleDock
             floating={false}
-            note="сроки применяются отдельно от черновика курса"
+            note="Сроки применяются отдельно от черновика курса"
           />
         </div>
         <SandboxBar courseSlug={courseSlug} />
@@ -114,7 +114,7 @@ function DraftStrip() {
   }
 
   return (
-    <div className="flex w-full flex-wrap items-center gap-3 rounded-xl border border-violet-500/40 bg-background/95 px-4 py-2 text-sm shadow-lg backdrop-blur">
+    <div className="pointer-events-auto flex w-full flex-wrap items-center gap-3 rounded-xl border bg-background px-4 py-2.5 text-sm shadow-lg">
       <FileStack className="size-4 text-violet-600" />
       <span className="min-w-0 flex-1">
         В черновике курса правки Task:{' '}

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import {
   CalendarClock,
   Check,
+  ChevronRight,
   CircleAlert,
   CopyPlus,
   FileStack,
@@ -21,10 +22,7 @@ import {
   useSandbox,
   useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
-import {
-  formatClock,
-  formatMoment,
-} from '@/features/course/prototype/task-and-deadline-settings/time';
+import { formatClock } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { usePendingChanges } from '@/features/course/prototype/task-and-deadline-settings/use-pending';
 import { ChangesList } from '@/features/course/prototype/task-and-deadline-settings/ui/changes-list';
 import {
@@ -47,16 +45,47 @@ function Note({
   return (
     <div
       className={cn(
-        'flex gap-2 rounded-md px-3 py-2 text-xs leading-5',
-        tone === 'muted' && 'bg-muted text-muted-foreground',
+        'flex gap-2 text-xs leading-5',
+        tone === 'muted' && 'text-muted-foreground',
+        tone === 'ok' && 'text-emerald-700 dark:text-emerald-300',
+        (tone === 'warn' || tone === 'danger') && 'rounded-lg px-3 py-2',
         tone === 'warn' && 'bg-amber-500/10 text-amber-900 dark:text-amber-200',
-        tone === 'danger' && 'bg-red-500/10 text-red-800 dark:text-red-200',
-        tone === 'ok' &&
-          'bg-emerald-500/10 text-emerald-800 dark:text-emerald-200'
+        tone === 'danger' && 'bg-red-500/10 text-red-800 dark:text-red-200'
       )}
     >
       {icon ? <span className="mt-0.5 shrink-0">{icon}</span> : null}
       <div className="grid min-w-0 gap-1">{children}</div>
+    </div>
+  );
+}
+
+/** One summary line; details on demand. */
+function Disclosure({
+  summary,
+  children,
+}: {
+  summary: ReactNode;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="grid gap-1.5 text-xs">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+        className="flex items-start gap-1.5 text-left text-muted-foreground hover:text-foreground"
+      >
+        <ChevronRight
+          className={cn(
+            'mt-0.5 size-3.5 shrink-0 transition-transform',
+            open && 'rotate-90'
+          )}
+        />
+        <span>{summary}</span>
+      </button>
+      {open ? <div className="pl-5">{children}</div> : null}
     </div>
   );
 }
@@ -106,17 +135,22 @@ export function PublishFooter({
   const fieldList = fields.map((key) => FIELD_LABEL[key]).join(', ');
 
   const scheduleBox = scheduleDirty ? (
-    <div className="rounded-md border border-amber-500/40">
-      <p className="flex items-center gap-1.5 border-b border-amber-500/30 px-3 py-1.5 text-xs font-medium">
-        <CalendarClock className="size-3.5" />
-        Сроки применяются отдельно от публикации (#42)
-      </p>
+    <Disclosure
+      summary={
+        <>
+          <CalendarClock className="mr-1 inline size-3.5 align-[-2px]" />
+          Сроки этой Task применятся отдельно от публикации:{' '}
+          {scheduleChanges.length}
+        </>
+      }
+    >
       <ChangesList
         changes={scheduleChanges}
         before={sandbox.schedule}
         after={view}
+        showTask={false}
       />
-    </div>
+    </Disclosure>
   ) : null;
 
   const result =
@@ -189,9 +223,9 @@ export function PublishFooter({
       return (
         <FooterShell>
           {result}
-          <Note icon={<FileStack className="size-3.5" />}>
-            Правки Task попадут в ваш черновик курса и опубликуются общей
-            кнопкой «Применить» редактора вместе со страницей.
+          <Note>
+            Правки Task попадут в черновик курса. Опубликует их кнопка
+            «Применить» редактора вместе со страницей.
           </Note>
           {scheduleBox}
           <Buttons>
@@ -297,14 +331,23 @@ export function PublishFooter({
           </Note>
         ) : null}
         {somethingToPublish ? (
-          <div className="rounded-md border border-border">
-            <p className="border-b px-3 py-1.5 text-xs font-medium">
-              Опубликуется весь черновик курса
-            </p>
-            <ul className="grid gap-0.5 px-3 py-2 text-xs">
+          <Disclosure
+            summary={
+              alsoPublished.length > 0 ? (
+                <span className="text-amber-800 dark:text-amber-300">
+                  Вместе с этой правкой опубликуется весь черновик курса: ещё{' '}
+                  {alsoPublished.length}{' '}
+                  {alsoPublished.length === 1 ? 'правка' : 'правки'}
+                </span>
+              ) : (
+                'Опубликуется весь черновик курса, сейчас в нём только эта Task'
+              )
+            }
+          >
+            <ul className="grid gap-0.5 text-muted-foreground">
               {dirty || ownDraftEdits ? (
                 <li>
-                  <b>Эта Task:</b>{' '}
+                  Эта Task:{' '}
                   {[
                     ...new Set([
                       ...fields,
@@ -316,18 +359,18 @@ export function PublishFooter({
                 </li>
               ) : null}
               {alsoPublished.map((item) => (
-                <li key={item} className="text-amber-800 dark:text-amber-300">
-                  + {item}
+                <li key={item} className="text-foreground">
+                  {item}
                 </li>
               ))}
+              <li>
+                {sandbox.lease.holder === 'me'
+                  ? 'Course Editing Lease у вас.'
+                  : 'На время правки берётся Course Editing Lease.'}{' '}
+                Students увидят всё сразу после публикации.
+              </li>
             </ul>
-            <p className="border-t px-3 py-1.5 text-[11px] text-muted-foreground">
-              {sandbox.lease.holder === 'me'
-                ? 'Course Editing Lease у вас.'
-                : 'Возьмёт Course Editing Lease на время правки.'}{' '}
-              Студенты увидят всё сразу после публикации.
-            </p>
-          </div>
+          </Disclosure>
         ) : null}
         {scheduleBox}
         <Buttons>
@@ -457,30 +500,23 @@ export function PublishFooter({
       ) : null}
       {sandbox.lease.holder === 'other' ? (
         <Note>
-          Курс редактирует {OTHER_TEACHER.shortName}, но Task публикуется
-          отдельно от черновика курса — правка доступна.
+          Курс редактирует {OTHER_TEACHER.shortName}. Task публикуется отдельно
+          от черновика курса, поэтому её можно править.
         </Note>
       ) : null}
       {sandbox.draft ? (
         <Note>
-          Ваш черновик курса не затрагивается: Task публикуется отдельно
-          {sandbox.draft.stale ? ', даже если черновик устарел' : ''}.
+          Ваш черновик курса останется как был
+          {sandbox.draft.stale ? ', хоть он и устарел' : ''}.
         </Note>
       ) : null}
-      {dirty && scheduleDirty ? (
-        <Note icon={<CalendarClock className="size-3.5" />}>
-          <p>Две отдельные операции за одной кнопкой:</p>
-          <ol className="list-decimal pl-4">
-            <li>
-              публикация Task: версия {version} → {version + 1} ({fieldList});
-            </li>
-            <li>применение сроков: {scheduleChanges.length} правок.</li>
-          </ol>
-        </Note>
-      ) : dirty ? (
+      {dirty ? (
         <Note>
-          Опубликуется только эта Task: {fieldList}. Версия {version} →{' '}
+          Опубликуется только эта Task ({fieldList}), версия {version} →{' '}
           {version + 1}.
+          {scheduleDirty
+            ? ' Сроки уйдут второй операцией за той же кнопкой.'
+            : ''}
         </Note>
       ) : null}
       {scheduleBox}
@@ -504,20 +540,13 @@ export function PublishFooter({
             : 'Применить сроки'}
         </Button>
       </Buttons>
-      <p className="text-[11px] text-muted-foreground">
-        Последняя публикация Task — версия {session.baseVersion}
-        {sandbox.lastApplied?.taskIds.includes(session.taskId)
-          ? `, ${formatMoment(sandbox.lastApplied.at)}`
-          : ''}
-        .
-      </p>
     </FooterShell>
   );
 }
 
 function FooterShell({ children }: { children: ReactNode }) {
   return (
-    <div className="grid max-h-[55%] shrink-0 gap-2 overflow-y-auto border-t border-border bg-background px-5 py-3 max-md:pb-16">
+    <div className="grid max-h-[55%] shrink-0 gap-2.5 overflow-y-auto border-t border-border bg-background px-5 py-3 max-md:pb-16">
       {children}
     </div>
   );
