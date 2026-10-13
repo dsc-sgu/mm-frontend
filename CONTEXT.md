@@ -29,7 +29,7 @@ _Avoid_: Group, when Task Group could also be meant; subgroup as a separate leve
 ## Course structure and editing
 
 **Course Page**:
-The visually ordered document shown at the Course route. A Task can be referenced from this document through a Task Reference, but its visual placement does not define its execution order.
+The visually ordered document shown at the Course route. Every Task of the Course appears in it through exactly one Task Reference, but its visual placement does not define its execution order.
 _Avoid_: Assignment as the name of a referenced Task
 
 **Course Snapshot**:
@@ -51,16 +51,24 @@ _Avoid_: treating the Working Copy as authoritative server state
 The Course is either `draft` or `open`. Opening permits Student access; returning to `draft` is allowed only while the Course has no Student memberships.
 
 **Task Group**:
-A group of Tasks with one linear execution order and one repository per Student. Different Task Groups can progress independently.
-_Avoid_: Group
+A group of Tasks with one linear execution order and one repository per Student. Different Task Groups can progress independently. A Task Group exists only while it has Tasks: it appears with its first Task and disappears with its last.
+_Avoid_: Group; an empty Task Group
+
+**Task Group Key**:
+A short identifier of a Task Group, unique within the Course, that appears in the address of every Student's repository for that Task Group. It is separate from the Task Group's title and can change only while the Course is `draft`.
+_Avoid_: name, when either the title or the key could be meant; using the Task Group Key as Task Group identity
 
 **Task**:
-A course activity with a stable identity and a position within one Task Group. Its execution position is independent of where references to it appear on the Course Page.
+A course activity with a stable identity and a position within one Task Group. Its execution position is independent of where references to it appear on the Course Page. Tasks are added and removed only while the Course is `draft`; once it is open, every Task keeps its Task Group and its position there.
 _Avoid_: Assignment
 
+**Task Key**:
+A short identifier of a Task, unique within its Task Group, by which a Student names the Task when submitting an Attempt through Git. It is separate from the Task's title and can change only while the Course is `draft`, so a key Students may have used never comes to mean another Task.
+_Avoid_: name, when either the title or the key could be meant; using the Task Key as Task identity
+
 **Task Reference**:
-A place on the Course Page that refers to one Task. Its position on the page is presentational and does not define the Task's execution order; the Task's properties belong to the Task, not to the reference.
-_Avoid_: Assignment, assignment block
+A place on the Course Page that refers to one Task; every Task has exactly one, so a Task without a Task Reference does not exist. Its position on the page is presentational and does not define the Task's execution order; the Task's properties belong to the Task, not to the reference. Removing a Task Reference removes its Task, so it is possible only while the Course is `draft`; afterwards the reference can only be moved.
+_Avoid_: Assignment, assignment block; a Task hidden from the Course Page or referenced twice; copying a Task Reference
 
 **Task Summary**:
 The part of a Task that can be shown without access to its content: its title, deadline, maximum Grade, and an optional annotation written by a Teacher.
@@ -68,6 +76,10 @@ _Avoid_: using the Task statement as its summary
 
 **Student Task Access**:
 The monotonic fact that a Task has been opened to a particular Student. A locked Task can expose its Task Summary and prerequisite without exposing its content or accepting an Attempt.
+
+**Task Opening Time**:
+The earliest moment at which a Task can be opened to Students. A Task may have none and then is not held back by time. Moving it later does not take back Student Task Access already given.
+_Avoid_: treating a later Task Opening Time as closing a Task again
 
 ## Deadlines
 
