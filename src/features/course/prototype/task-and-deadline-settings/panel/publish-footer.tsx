@@ -11,7 +11,6 @@ import {
   Check,
   ChevronRight,
   CircleAlert,
-  CopyPlus,
   FileStack,
   GitCompareArrows,
   LoaderCircle,
@@ -38,6 +37,7 @@ import {
   pickProps,
   type PanelSession,
 } from './session';
+import { CreateAnotherButton } from './create-another';
 
 function Note({
   tone = 'muted',
@@ -256,9 +256,7 @@ export function PublishFooter({
           {scheduleBox}
           <Buttons>
             {onCreateAnother ? (
-              <Button variant="outline" onClick={onCreateAnother}>
-                <CopyPlus /> Создать ещё
-              </Button>
+              <CreateAnotherButton onClick={onCreateAnother} />
             ) : null}
             <Button
               disabled={busy || (!dirty && !scheduleDirty)}
@@ -457,9 +455,7 @@ export function PublishFooter({
         ) : null}
         {onCreateAnother ? (
           <Buttons>
-            <Button variant="outline" onClick={onCreateAnother}>
-              <CopyPlus /> Создать ещё
-            </Button>
+            <CreateAnotherButton onClick={onCreateAnother} />
           </Buttons>
         ) : null}
       </FooterShell>
@@ -631,9 +627,7 @@ export function PublishFooter({
       {scheduleBox}
       <Buttons>
         {onCreateAnother ? (
-          <Button variant="outline" onClick={onCreateAnother}>
-            <CopyPlus /> Создать ещё
-          </Button>
+          <CreateAnotherButton onClick={onCreateAnother} />
         ) : null}
         <Button
           disabled={

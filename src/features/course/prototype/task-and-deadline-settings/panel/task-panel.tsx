@@ -210,7 +210,7 @@ export function TaskPanel({
         hasErrors={hasErrors}
         onAttempt={() => setAttempted(true)}
         onCreateAnother={
-          onCreateAnother && courseAccess === 'draft'
+          onCreateAnother
             ? () => {
                 setAttempted(true);
                 if (hasErrors) {
