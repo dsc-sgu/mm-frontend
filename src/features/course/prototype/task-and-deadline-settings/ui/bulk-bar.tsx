@@ -18,7 +18,7 @@ export function BulkBar({
 
   return (
     <div className="pointer-events-auto flex items-center gap-1 rounded-lg bg-foreground p-1 text-sm text-background shadow-lg">
-      <span className="px-2">Выбрано Task: {count}</span>
+      <span className="px-2">Выбрано заданий: {count}</span>
       <button
         type="button"
         aria-label="Снять выбор"

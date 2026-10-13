@@ -239,8 +239,8 @@ export function useShiftDraft(preset: ShiftPreset) {
         ? [...groupIds].map(groupName).join(', ')
         : scope === 'general-only'
           ? 'только общий дедлайн'
-          : 'весь Course';
-    return `сдвиг ${daysLabel(days)}: ${orderedTaskIds.length} Task, ${who}`;
+          : 'весь курс';
+    return `сдвиг ${daysLabel(days)}: ${taskCount(orderedTaskIds.length)}, ${who}`;
   }
 
   /** Applies the plan; returns the commands that undo it. */
@@ -277,19 +277,24 @@ export function useShiftDraft(preset: ShiftPreset) {
 
 export type ShiftDraft = ReturnType<typeof useShiftDraft>;
 
+/** «1 задание», «3 задания», «9 заданий». */
+export function taskCount(count: number) {
+  return `${count} ${plural(count, 'задание', 'задания', 'заданий')}`;
+}
+
 export function taskSummary(draft: { orderedTaskIds: readonly string[] }) {
   const tasks = useSandbox.getState().tasks;
   const ids = draft.orderedTaskIds;
 
   if (ids.length === 0) {
-    return 'выберите Task';
+    return 'выберите задания';
   }
 
   if (ids.length === 1) {
     return `«${tasks[ids[0]!]?.title}»`;
   }
 
-  return `${ids.length} Task`;
+  return taskCount(ids.length);
 }
 
 /** One sentence about Attempts whose lateness flips, or nothing. */

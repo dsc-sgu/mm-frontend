@@ -163,7 +163,7 @@ function PeriodField({
 function PeriodFields({ draft }: { draft: ExtendDraft }) {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-      <span>или все Task с дедлайном студента</span>
+      <span>или все задания с дедлайном студента</span>
       <span className="inline-flex items-center gap-2">
         с
         <PeriodField
@@ -217,7 +217,7 @@ function Preview({ draft }: { draft: ExtendDraft }) {
     <ChangesBox
       empty={
         rows.length === 0
-          ? 'Выберите студентов и Task, здесь появятся их новые дедлайны'
+          ? 'Выберите студентов и задания, здесь появятся их новые дедлайны'
           : null
       }
     >
@@ -263,7 +263,8 @@ function ExtendBody({
       <DialogHeader className="gap-1 px-6 pt-5 pb-4">
         <DialogTitle className="text-lg">Продлить дедлайны</DialogTitle>
         <DialogDescription>
-          Отдельным студентам: каждый получит свой дедлайн по выбранным Task.
+          Отдельным студентам: каждый получит свой дедлайн по выбранным
+          заданиям.
         </DialogDescription>
       </DialogHeader>
 
@@ -272,7 +273,7 @@ function ExtendBody({
           <StudentField draft={draft} />
         </Section>
 
-        <Section title="Task">
+        <Section title="Задания">
           <TaskPicker
             draft={draft}
             trigger={
@@ -284,7 +285,7 @@ function ExtendBody({
                 )}
               >
                 <span className="truncate">
-                  {ids.length === 0 ? 'Выберите Task' : taskSummary(draft)}
+                  {ids.length === 0 ? 'Выберите задания' : taskSummary(draft)}
                 </span>
                 <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
               </button>

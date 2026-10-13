@@ -49,7 +49,7 @@ export function TaskReferenceCard({
   if (!task) {
     return (
       <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-        Task недоступна: {taskId}
+        Задание недоступно: {taskId}
       </div>
     );
   }
@@ -123,7 +123,7 @@ export function TaskReferenceCard({
             <span className="text-xs">{timeZoneLabel()}</span>
             {counts.total > 0 ? (
               <span className="text-xs">
-                У части Students свой дедлайн ({counts.total})
+                У части студентов свой дедлайн ({counts.total})
               </span>
             ) : null}
             {taskSchedule?.openingTime && taskSchedule.openingTime > NOW ? (

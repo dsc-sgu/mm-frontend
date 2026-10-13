@@ -169,14 +169,14 @@ export function EditorTaskReference({
       <div className="flex gap-2 rounded-xl border border-dashed border-destructive/50 bg-destructive/5 p-4 text-sm">
         <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
         {courseAccess === 'open'
-          ? 'Course открыт, новые Task не создаются (#180). Удалите блок или переведите Course в draft в «Песочнице».'
-          : 'Task создаётся…'}
+          ? 'Курс открыт, новые задания не создаются (#180). Удалите блок или верните курс в подготовку в «Песочнице».'
+          : 'Задание создаётся…'}
       </div>
     );
   }
 
   const taskSchedule = schedule.tasks[resolvedId]!;
-  const label = task.title || 'Новая Task';
+  const label = task.title || 'Новое задание';
   const emit = (what: string) => (commands: DeadlineCommand[]) =>
     edit(commands, `${label}: ${what}`);
   const revert = (key: string) => () => dropPending(new Set([key]));
@@ -315,7 +315,7 @@ export function EditorTaskReference({
           {personal.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Личных переопределений нет. Добавить их можно на экране дедлайнов
-              или в панели Task.
+              или в панели задания.
             </p>
           ) : (
             <ul className="-mx-1 grid">
@@ -335,7 +335,7 @@ export function EditorTaskReference({
                 );
               })}
               <li className="px-1 pt-1 text-xs text-muted-foreground">
-                Правка — в панели Task или на экране дедлайнов
+                Правка — в панели задания или на экране дедлайнов
               </li>
             </ul>
           )}

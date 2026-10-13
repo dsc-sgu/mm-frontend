@@ -80,7 +80,7 @@ export function TitleInput({ session, readOnly, errors }: FieldProps) {
       <input
         value={session.form.title}
         disabled={readOnly}
-        placeholder="Название Task"
+        placeholder="Название задания"
         aria-label="Название"
         aria-invalid={Boolean(errors.title)}
         onChange={(event) => {
@@ -104,7 +104,7 @@ export function TitleInput({ session, readOnly, errors }: FieldProps) {
 export function KeyRow({ session, readOnly, locked, errors }: FieldProps) {
   return (
     <PropertyRow
-      label="Task Key"
+      label="Ключ задания"
       locked={locked}
       error={errors.key}
       note={
@@ -120,7 +120,7 @@ export function KeyRow({ session, readOnly, locked, errors }: FieldProps) {
           value={session.form.key}
           disabled={readOnly}
           placeholder="Появится по названию"
-          aria-label="Task Key"
+          aria-label="Ключ задания"
           aria-invalid={Boolean(errors.key)}
           onChange={(event) => {
             session.setKeyTouched(true);
@@ -142,14 +142,14 @@ export function GroupRow({ session, readOnly, locked }: FieldProps) {
 
   return (
     <>
-      <PropertyRow label="Task Group" locked={locked}>
+      <PropertyRow label="Группа заданий" locked={locked}>
         {locked ? (
           <span className="truncate text-sm">{group?.title}</span>
         ) : (
           <select
             value={session.form.groupId}
             disabled={readOnly}
-            aria-label="Task Group"
+            aria-label="Группа заданий"
             onChange={(event) =>
               session.setField('groupId', event.target.value)
             }
@@ -184,7 +184,7 @@ export function GroupRow({ session, readOnly, locked }: FieldProps) {
           currentTaskId={session.taskId}
           taskTitle={(taskId) =>
             taskId === session.taskId
-              ? session.form.title || 'Новая Task'
+              ? session.form.title || 'Новое задание'
               : (tasks[taskId]?.title ?? taskId)
           }
           readOnly={readOnly}
@@ -231,7 +231,7 @@ function GroupSection({
         <GitBranch className="mt-px size-3.5 shrink-0" />
         <span>
           {group.template.state === 'empty'
-            ? 'Шаблон пуст: Students получат пустой репозиторий'
+            ? 'Шаблон пуст: студенты получат пустой репозиторий'
             : `Шаблон: ${group.template.commit} «${group.template.message}», ${formatMoment(group.template.at)}`}
         </span>
       </p>
@@ -264,7 +264,7 @@ function GroupSection({
 
 export function GradeRow({ session, readOnly, locked, errors }: FieldProps) {
   return (
-    <PropertyRow label="Макс. Grade" locked={locked} error={errors.maxGrade}>
+    <PropertyRow label="Макс. балл" locked={locked} error={errors.maxGrade}>
       {locked ? (
         <span className="text-sm tabular-nums">{session.form.maxGrade}</span>
       ) : (
@@ -274,7 +274,7 @@ export function GradeRow({ session, readOnly, locked, errors }: FieldProps) {
           value={session.form.maxGrade ?? ''}
           disabled={readOnly}
           placeholder="Нет"
-          aria-label="Максимальная Grade"
+          aria-label="Максимальный балл"
           aria-invalid={Boolean(errors.maxGrade)}
           onChange={(event) =>
             session.setField(
@@ -364,8 +364,8 @@ export function AnnotationRow({ session, readOnly }: FieldProps) {
       <input
         value={session.form.annotation}
         disabled={readOnly}
-        placeholder="Видна Students даже у закрытой Task"
-        aria-label="Аннотация Task Summary"
+        placeholder="Видна студентам даже у закрытого задания"
+        aria-label="Аннотация задания"
         onChange={(event) => session.setField('annotation', event.target.value)}
         className={cn(GHOST_INPUT, 'w-full')}
       />
@@ -385,7 +385,7 @@ export function ScheduleRows({
   const edit = useScheduleEdit();
   const openVariant = useOpenVariant(courseSlug);
   const taskId = session.taskId;
-  const label = session.form.title || 'Новая Task';
+  const label = session.form.title || 'Новое задание';
   const counts = overrideCounts(schedule, taskId);
 
   if (!schedule.tasks[taskId]) {
@@ -462,7 +462,7 @@ export function OverridesBlock({
     >
       <TaskScheduleEditor
         taskId={taskId}
-        taskTitle={session.form.title || 'Новая Task'}
+        taskTitle={session.form.title || 'Новое задание'}
         showOpening={false}
         showTaskDeadline={false}
       />

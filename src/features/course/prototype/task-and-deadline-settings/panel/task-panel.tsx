@@ -67,7 +67,7 @@ export function TaskPanel({
     key: validateKey(form.key, takenKeys) ?? undefined,
     maxGrade:
       form.maxGrade === null
-        ? 'Введите максимальную Grade: по умолчанию её нет'
+        ? 'Введите максимальный балл: по умолчанию его нет'
         : !Number.isInteger(form.maxGrade) || form.maxGrade <= 0
           ? 'Целое число больше нуля'
           : undefined,
@@ -105,11 +105,12 @@ export function TaskPanel({
           <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <span>
             {sameTask
-              ? `Эту Task сейчас правит ${OTHER_TEACHER.shortName} `
+              ? `Это задание сейчас правит ${OTHER_TEACHER.shortName} `
               : `Курс редактирует ${OTHER_TEACHER.shortName} `}
-            Task правится через черновик курса, а у него Course Editing Lease с{' '}
+            Задание правится через черновик курса, а у него блокировка
+            редактирования курса с{' '}
             {lease.holder === 'other' ? formatClock(lease.since) : ''}. Пока он
-            не опубликует курс или не отпустит lease, здесь только просмотр.
+            не опубликует курс или не снимет блокировку, здесь только просмотр.
           </span>
         </div>
       ) : null}
@@ -125,7 +126,7 @@ export function TaskPanel({
         </div>
         {locked ? (
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Lock className="size-3" /> не меняется после открытия Course
+            <Lock className="size-3" /> не меняется после открытия курса
           </p>
         ) : null}
       </div>

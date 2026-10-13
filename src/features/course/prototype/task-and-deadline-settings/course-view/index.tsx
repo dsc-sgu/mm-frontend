@@ -89,7 +89,7 @@ export function PrototypeCourseView({
             <PanelFrame
               layout={layout}
               expanded={session.expanded && settings.statement === 'expanded'}
-              label="Настройка Task"
+              label="Настройка задания"
               onEscape={close}
             >
               <TaskPanel

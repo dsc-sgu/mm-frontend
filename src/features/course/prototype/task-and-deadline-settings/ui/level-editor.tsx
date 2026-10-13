@@ -1,6 +1,6 @@
 // PROTOTYPE (#181): editor of one level — Task Deadline, a Student Group's
-// or a Student's Deadline Override. Typed date first, shortcuts, then the
-// two non-date values, as in Todoist / Stripe date popovers.
+// or a Student's Deadline Override. Calendar and time first, shortcuts, then
+// the two non-date values, as in Todoist / Stripe date popovers.
 import { useState, type ReactNode } from 'react';
 import { Ban, Check, CornerDownRight } from 'lucide-react';
 
@@ -17,7 +17,7 @@ import {
   NOW,
   shiftDays,
 } from '@/features/course/prototype/task-and-deadline-settings/time';
-import { MomentField } from '@/features/course/prototype/task-and-deadline-settings/ui/moment-field';
+import { MomentPicker } from '@/features/course/prototype/task-and-deadline-settings/ui/moment-picker';
 
 function endOfToday() {
   const date = new Date(NOW);
@@ -128,20 +128,15 @@ export function LevelEditor({
 
   return (
     <>
-      <MomentField
-        autoFocus
+      <MomentPicker
         defaultTime="23:59"
         value={value.kind === 'at' ? value.at : null}
-        placeholder={
+        inherited={
           value.kind === 'inherit' && inherited?.kind === 'at'
-            ? `Своя дата вместо ${formatMoment(inherited.at)}`
+            ? inherited.at
             : undefined
         }
-        onCommit={(at) => {
-          if (at !== null) {
-            setValue({ kind: 'at', at });
-          }
-        }}
+        onCommit={(at) => setValue({ kind: 'at', at })}
       />
       <Shortcuts
         base={base}
@@ -203,7 +198,7 @@ function ReasonInput({
 
   return (
     <label className="grid gap-1 border-t pt-3 text-xs text-muted-foreground">
-      Причина. Её видят Teachers и те, к кому она относится
+      Причина. Её видят преподаватели и те, к кому она относится
       <Input
         value={text}
         placeholder="Например, праздник в день занятия"

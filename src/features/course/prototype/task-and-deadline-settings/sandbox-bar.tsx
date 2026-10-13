@@ -116,7 +116,7 @@ function SandboxSettings() {
   return (
     <div className="grid gap-4 p-4">
       <p className="rounded-md bg-fuchsia-500/10 px-2 py-1.5 text-xs text-fuchsia-900 dark:text-fuchsia-200">
-        Прототип #181. Всё в памяти: перезагрузка возвращает fixture.
+        Прототип #181. Всё в памяти: перезагрузка возвращает исходные данные.
       </p>
 
       <Row label="Применение дедлайнов" hint="?apply">
@@ -130,13 +130,13 @@ function SandboxSettings() {
         />
       </Row>
 
-      <Row label="Применение правок Task" hint="?taskApply, #129">
+      <Row label="Применение правок задания" hint="?taskApply, #129">
         <Segmented
           value={settings.taskApply}
           onChange={(taskApply) => update({ taskApply })}
           options={[
             { value: 'course', label: 'A · через черновик курса' },
-            { value: 'task', label: 'D · публикация Task' },
+            { value: 'task', label: 'D · публикация задания' },
           ]}
         />
       </Row>
@@ -172,18 +172,18 @@ function SandboxSettings() {
         />
       </Row>
 
-      <Row label="Course Access State">
+      <Row label="Доступ к курсу">
         <Segmented
           value={sandbox.courseAccess}
           onChange={sandbox.setCourseAccess}
           options={[
-            { value: 'open', label: 'open' },
-            { value: 'draft', label: 'draft' },
+            { value: 'open', label: 'открыт' },
+            { value: 'draft', label: 'в подготовке' },
           ]}
         />
       </Row>
 
-      <Row label="Сценарии применения правок Task">
+      <Row label="Сценарии применения правок задания">
         <div className="grid gap-1.5">
           <Toggle
             checked={Boolean(sandbox.draft?.pageEdits.length)}
@@ -195,19 +195,19 @@ function SandboxSettings() {
             checked={sandbox.lease.holder === 'other'}
             onChange={sandbox.setLeaseByOther}
           >
-            4 · Lease держит {OTHER_TEACHER.shortName}
+            4 · Блокировку редактирования держит {OTHER_TEACHER.shortName}
           </Toggle>
           <Toggle
             checked={sandbox.concurrentEdit}
             onChange={sandbox.setConcurrentEdit}
           >
-            5 · {OTHER_TEACHER.shortName} правит ту же Task
+            5 · {OTHER_TEACHER.shortName} правит то же задание
             <span className="block text-xs text-muted-foreground">
               {settings.taskApply === 'course'
                 ? sandbox.lease.holder === 'me'
-                  ? 'В A невозможно: lease у вас, он не может начать правку'
-                  : 'В A это значит, что Course Editing Lease у него'
-                : 'В D lease не нужен: второй получит конфликт версий'}
+                  ? 'В A невозможно: блокировка у вас, он не может начать правку'
+                  : 'В A это значит, что блокировка редактирования курса у него'
+                : 'В D блокировка не нужна: второй получит конфликт версий'}
             </span>
           </Toggle>
           <Toggle
@@ -227,18 +227,18 @@ function SandboxSettings() {
 
       <Row label="Состояние">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
-          <dt className="text-muted-foreground">Lease</dt>
+          <dt className="text-muted-foreground">Блокировка</dt>
           <dd>
             {effectiveLease.lease.holder === 'nobody'
-              ? 'свободен'
+              ? 'свободна'
               : effectiveLease.lease.holder === 'me'
                 ? 'у вас'
-                : `${OTHER_TEACHER.shortName}${effectiveLease.sameTask ? ', правит эту же Task' : ''}`}
+                : `${OTHER_TEACHER.shortName}${effectiveLease.sameTask ? ', правит это же задание' : ''}`}
           </dd>
           <dt className="text-muted-foreground">Черновик</dt>
           <dd>
             {sandbox.draft
-              ? `правок страницы ${sandbox.draft.pageEdits.length}, Task ${Object.keys(sandbox.draft.taskEdits).length}${sandbox.draft.stale ? ', устарел' : ''}`
+              ? `правок страницы ${sandbox.draft.pageEdits.length}, заданий ${Object.keys(sandbox.draft.taskEdits).length}${sandbox.draft.stale ? ', устарел' : ''}`
               : 'нет'}
           </dd>
           <dt className="text-muted-foreground">Дедлайны</dt>

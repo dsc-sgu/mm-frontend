@@ -30,7 +30,7 @@ export function PropertyRow({
       <span className="flex min-h-8 items-center gap-1.5 text-sm text-muted-foreground">
         {label}
         {locked ? (
-          <span title="Меняется только пока Course draft">
+          <span title="Меняется, только пока курс в подготовке">
             <Lock className="size-3 shrink-0" aria-hidden="true" />
           </span>
         ) : null}

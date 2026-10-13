@@ -194,10 +194,10 @@ export function TimelineView({
     <div className="grid gap-2">
       <p className="text-xs text-muted-foreground">
         {shift === 'undo'
-          ? 'Перетащите ◆, чтобы сдвинуть Task целиком (или все выбранные): сдвиг применится сразу, отменить его можно в уведомлении.'
-          : 'Перетащите ◆, чтобы сдвинуть Task целиком (или все выбранные): перед сдвигом откроется окно.'}{' '}
-        Отметки групп, Students и ▸ открытия двигаются сразу. Группы без отметки
-        наследуют ◆.
+          ? 'Перетащите ◆, чтобы сдвинуть задание целиком (или все выбранные): сдвиг применится сразу, отменить его можно в уведомлении.'
+          : 'Перетащите ◆, чтобы сдвинуть задание целиком (или все выбранные): перед сдвигом откроется окно.'}{' '}
+        Отметки групп, студентов и ▸ открытия двигаются сразу. Группы без
+        отметки наследуют ◆.
       </p>
       <div className="flex overflow-hidden rounded-xl border bg-card">
         <div className="w-64 shrink-0 border-r">
@@ -322,10 +322,10 @@ export function TimelineView({
       </div>
 
       {openTask ? (
-        <PanelFrame layout="overlay" label="Дедлайны Task" onEscape={close}>
+        <PanelFrame layout="overlay" label="Дедлайны задания" onEscape={close}>
           <header className="flex h-12 shrink-0 items-center gap-2 border-b px-5">
             <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
-              Дедлайны Task
+              Дедлайны задания
             </span>
             <Button
               variant="ghost"
@@ -486,7 +486,7 @@ function TaskTrack({
         <DraggableMark
           id={`${task.id}|opening`}
           at={taskSchedule.openingTime}
-          label="Task Opening Time"
+          label="Время открытия"
           title={`Открытие: ${formatMoment(taskSchedule.openingTime)}`}
           drag={drag}
           setDrag={setDrag}

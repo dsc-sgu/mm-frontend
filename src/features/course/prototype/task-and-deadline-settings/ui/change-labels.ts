@@ -50,7 +50,7 @@ export function changeTarget(change: ScheduleChange) {
         change.target?.kind === 'student'
           ? studentsById.get(change.target.studentId)
           : undefined;
-      return student ? studentName(student) : 'Student';
+      return student ? studentName(student) : 'Студент';
     }
   }
 }
