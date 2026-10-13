@@ -21,6 +21,7 @@ import {
 } from './search';
 import { useSandbox, type LogTone } from './store';
 import { formatClock } from './time';
+import { useEffectiveLease } from './use-lease';
 import { Segmented } from './ui/segmented';
 
 const LOG_TONE: Record<LogTone, string> = {
@@ -109,6 +110,7 @@ function SandboxSettings() {
   const settings = usePrototypeSettings();
   const update = useUpdatePrototypeSearch();
   const sandbox = useSandbox();
+  const effectiveLease = useEffectiveLease();
 
   return (
     <div className="grid gap-4 p-4">
@@ -191,6 +193,13 @@ function SandboxSettings() {
             onChange={sandbox.setConcurrentEdit}
           >
             5 · {OTHER_TEACHER.shortName} правит ту же Task
+            <span className="block text-xs text-muted-foreground">
+              {settings.taskApply === 'course'
+                ? sandbox.lease.holder === 'me'
+                  ? 'В A невозможно: lease у вас, он не может начать правку'
+                  : 'В A это значит, что Course Editing Lease у него'
+                : 'В D lease не нужен: второй получит конфликт версий'}
+            </span>
           </Toggle>
           <Toggle
             checked={Boolean(sandbox.draft?.stale)}
@@ -211,11 +220,11 @@ function SandboxSettings() {
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
           <dt className="text-muted-foreground">Lease</dt>
           <dd>
-            {sandbox.lease.holder === 'nobody'
+            {effectiveLease.lease.holder === 'nobody'
               ? 'свободен'
-              : sandbox.lease.holder === 'me'
+              : effectiveLease.lease.holder === 'me'
                 ? 'у вас'
-                : OTHER_TEACHER.shortName}
+                : `${OTHER_TEACHER.shortName}${effectiveLease.sameTask ? ', правит эту же Task' : ''}`}
           </dd>
           <dt className="text-muted-foreground">Черновик</dt>
           <dd>

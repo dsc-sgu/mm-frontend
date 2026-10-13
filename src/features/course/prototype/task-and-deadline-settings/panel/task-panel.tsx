@@ -9,6 +9,7 @@ import { cn } from '@/shadcn/lib/utils';
 import { OTHER_TEACHER } from '@/features/course/prototype/task-and-deadline-settings/fixture';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
+import { useEffectiveLease } from '@/features/course/prototype/task-and-deadline-settings/use-lease';
 import { formatClock } from '@/features/course/prototype/task-and-deadline-settings/time';
 import {
   AnnotationRow,
@@ -43,7 +44,7 @@ export function TaskPanel({
 }) {
   const { taskApply, statement } = usePrototypeSettings();
   const courseAccess = useSandbox((state) => state.courseAccess);
-  const lease = useSandbox((state) => state.lease);
+  const { lease, sameTask } = useEffectiveLease();
   const taskGroups = useSandbox((state) => state.taskGroups);
   const tasks = useSandbox((state) => state.tasks);
   const newTaskIds = useSandbox((state) => state.newTaskIds);
@@ -102,9 +103,12 @@ export function TaskPanel({
         <div className="flex gap-2 border-b bg-muted/60 px-5 py-2.5 text-sm">
           <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <span>
-            Курс редактирует {OTHER_TEACHER.shortName} с{' '}
-            {lease.holder === 'other' ? formatClock(lease.since) : ''}. Task
-            правится через черновик курса, поэтому пока только просмотр.
+            {sameTask
+              ? `Эту Task сейчас правит ${OTHER_TEACHER.shortName} `
+              : `Курс редактирует ${OTHER_TEACHER.shortName} `}
+            Task правится через черновик курса, а у него Course Editing Lease с{' '}
+            {lease.holder === 'other' ? formatClock(lease.since) : ''}. Пока он
+            не опубликует курс или не отпустит lease, здесь только просмотр.
           </span>
         </div>
       ) : null}
