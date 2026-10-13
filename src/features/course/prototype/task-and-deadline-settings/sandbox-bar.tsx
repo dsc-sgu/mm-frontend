@@ -145,8 +145,8 @@ function SandboxSettings() {
           value={settings.deadlineField}
           onChange={(deadlineField) => update({ deadlineField })}
           options={[
-            { value: 'counter', label: 'Общий + «Переопределений: N»' },
             { value: 'full', label: 'Все переопределения в панели' },
+            { value: 'counter', label: 'Общий + «Переопределений: N»' },
           ]}
         />
       </Row>

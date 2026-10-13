@@ -89,7 +89,8 @@ export function usePrototypeSettings(): PrototypeSettings {
     variant: search.variant,
     apply: search.apply ?? 'batch',
     taskApply: search.taskApply ?? 'course',
-    deadlineField: search.deadlineField ?? 'counter',
+    // Verdict 13.10.2026: a Task's overrides are visible in its panel too.
+    deadlineField: search.deadlineField ?? 'full',
     statement: search.statement ?? 'panel',
     task: search.task,
   };

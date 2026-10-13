@@ -425,15 +425,48 @@ export function ScheduleRows({
             <ArrowUpRight className="size-3.5 text-muted-foreground" />
           </button>
         </PropertyRow>
-      ) : (
-        <TaskScheduleEditor
-          taskId={taskId}
-          taskTitle={label}
-          showOpening={false}
-          showTaskDeadline={false}
-        />
-      )}
+      ) : null}
     </>
+  );
+}
+
+/** Every override of this Task right in the panel (`?deadlineField=full`). */
+export function OverridesBlock({
+  session,
+  courseSlug,
+}: {
+  session: PanelSession;
+  courseSlug: string;
+}) {
+  const { deadlineField } = usePrototypeSettings();
+  const schedule = useViewSchedule();
+  const openVariant = useOpenVariant(courseSlug);
+  const taskId = session.taskId;
+
+  if (deadlineField !== 'full' || !schedule.tasks[taskId]) {
+    return null;
+  }
+
+  return (
+    <Block
+      title="Переопределения сроков"
+      aside={
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={() => openVariant('A', { task: taskId })}
+        >
+          Страница сроков <ArrowUpRight />
+        </Button>
+      }
+    >
+      <TaskScheduleEditor
+        taskId={taskId}
+        taskTitle={session.form.title || 'Новая Task'}
+        showOpening={false}
+        showTaskDeadline={false}
+      />
+    </Block>
   );
 }
 

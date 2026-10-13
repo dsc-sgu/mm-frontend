@@ -17,6 +17,7 @@ import {
   GradeRow,
   GroupRow,
   KeyRow,
+  OverridesBlock,
   PatternsRow,
   ScheduleRows,
   StatementBlock,
@@ -128,6 +129,7 @@ export function TaskPanel({
           </p>
         ) : null}
       </div>
+      <OverridesBlock session={session} courseSlug={courseSlug} />
       <StatementBlock {...fieldProps} onRevealInDocument={onRevealInDocument} />
       <AttachmentsBlock {...fieldProps} />
     </div>
