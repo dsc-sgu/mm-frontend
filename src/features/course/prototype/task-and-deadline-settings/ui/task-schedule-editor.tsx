@@ -70,7 +70,8 @@ export function OpeningRow({
       note={<OpeningNotes taskId={taskId} quietWhenFine />}
     >
       <ValuePopover
-        title={`${label}: время открытия`}
+        context={label}
+        title="Время открытия"
         pending={keys.has(key)}
         onRevert={() => dropPending(new Set([key]))}
         trigger={
@@ -110,7 +111,8 @@ export function DeadlineRow({
   return (
     <PropertyRow label="Общий дедлайн">
       <ValuePopover
-        title={`${label}: общий дедлайн`}
+        context={label}
+        title="Общий дедлайн"
         pending={keys.has(key)}
         onRevert={() => dropPending(new Set([key]))}
         trigger={<DeadlineText value={deadline} />}
@@ -180,7 +182,8 @@ export function TaskScheduleEditor({
             }
           >
             <ValuePopover
-              title={`${taskTitle}: ${group.name}`}
+              context={taskTitle}
+              title={`Подгруппа ${group.name}`}
               pending={keys.has(key)}
               onRevert={() => dropPending(new Set([key]))}
               trigger={
@@ -263,7 +266,8 @@ export function TaskScheduleEditor({
                 </span>
                 <span className="grid min-w-0 gap-0.5">
                   <ValuePopover
-                    title={`${taskTitle}: ${studentName(student)}`}
+                    context={taskTitle}
+                    title={studentName(student)}
                     pending={keys.has(key)}
                     onRevert={() => dropPending(new Set([key]))}
                     trigger={<DeadlineText value={item.value} />}

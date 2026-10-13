@@ -4,13 +4,13 @@
 import type { ReactNode } from 'react';
 import { RotateCcw } from 'lucide-react';
 
+import { Button } from '@/shadcn/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/shadcn/components/ui/popover';
 import { cn } from '@/shadcn/lib/utils';
-import { timeZoneLabel } from '@/features/course/prototype/task-and-deadline-settings/time';
 
 const TRIGGER = {
   row: 'min-h-8 max-w-full rounded-md px-2 -mx-2 text-left whitespace-nowrap',
@@ -18,24 +18,36 @@ const TRIGGER = {
   chip: 'h-7 rounded-full border px-2.5 text-xs whitespace-nowrap',
 } as const;
 
+/** Plain content of a popover; date editors bring their own sections. */
+export function PopoverSection({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return <div className={cn('grid gap-3 p-3', className)}>{children}</div>;
+}
+
 export function ValuePopover({
   trigger,
+  context,
   title,
   pending = false,
   onRevert,
   variant = 'row',
   disabled = false,
-  showZone = true,
   className,
   children,
 }: {
   trigger: ReactNode;
+  /** What the value belongs to, usually the Task, shown above the title. */
+  context?: string;
   title: string;
   pending?: boolean;
   onRevert?: () => void;
   variant?: keyof typeof TRIGGER;
   disabled?: boolean;
-  showZone?: boolean;
   className?: string;
   children: ReactNode;
 }) {
@@ -63,18 +75,45 @@ export function ValuePopover({
             {trigger}
           </button>
         </PopoverTrigger>
-        {/* Never taller than the room left on screen: the calendar is tall. */}
+        {/* Never taller than the room left on screen: the calendar is tall.
+            The date editor sets the width for its layout. */}
         <PopoverContent
           align="start"
-          className="max-h-(--radix-popover-content-available-height) w-80 overflow-y-auto p-0"
+          className={cn(
+            'max-h-(--radix-popover-content-available-height) w-80 overflow-y-auto p-0',
+            'divide-y has-[[data-picker=split]]:w-136 has-[[data-picker=stack]]:w-72'
+          )}
         >
-          <p className="border-b px-3 py-2 text-sm font-medium">{title}</p>
-          <div className="grid gap-3 p-3">{children}</div>
-          {showZone ? (
-            <p className="border-t px-3 py-1.5 text-xs text-muted-foreground">
-              Время в поясе {timeZoneLabel()}
-            </p>
-          ) : null}
+          <div className="grid px-3 pt-2 pb-1.5">
+            {context ? (
+              <p className="truncate text-xs text-muted-foreground">
+                {context}
+              </p>
+            ) : null}
+            {/* The row is as tall as the button, so the header does not jump
+                when an unapplied change makes «Сбросить» appear. */}
+            <div className="flex h-7 items-center gap-2">
+              <p className="min-w-0 flex-1 truncate text-sm font-medium">
+                {title}
+              </p>
+              {pending && onRevert ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  title="Вернуть применённое значение"
+                  onClick={onRevert}
+                  className={cn(
+                    '-mr-2 h-7 shrink-0 gap-1.5 px-2 text-xs',
+                    'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <RotateCcw className="size-3.5" />
+                  Сбросить
+                </Button>
+              ) : null}
+            </div>
+          </div>
+          {children}
         </PopoverContent>
       </Popover>
       {pending && onRevert ? (

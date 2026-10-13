@@ -37,7 +37,10 @@ import { usePendingChanges } from '@/features/course/prototype/task-and-deadline
 import { DeadlineText } from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
 import { LevelEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/level-editor';
 import { OpeningEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/opening-time-field';
-import { ValuePopover } from '@/features/course/prototype/task-and-deadline-settings/ui/value-popover';
+import {
+  PopoverSection,
+  ValuePopover,
+} from '@/features/course/prototype/task-and-deadline-settings/ui/value-popover';
 import { insertAfterTask, NEW_TASK_ID, takeCarry } from './new-task';
 
 const studentsById = new Map(STUDENTS.map((student) => [student.id, student]));
@@ -71,13 +74,15 @@ function InheritingGroups({
     const override = findOverride(schedule, taskId, target);
     return (
       <>
-        <button
-          type="button"
-          onClick={() => setEditing(null)}
-          className="inline-flex w-fit items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="size-3.5" /> {group.name}
-        </button>
+        <div className="px-3 py-2">
+          <button
+            type="button"
+            onClick={() => setEditing(null)}
+            className="inline-flex w-fit items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="size-3.5" /> Подгруппа {group.name}
+          </button>
+        </div>
         <LevelEditor
           taskId={taskId}
           target={target}
@@ -91,8 +96,8 @@ function InheritingGroups({
   }
 
   return (
-    <div className="-mx-1 grid">
-      <p className="px-1 pb-1 text-xs text-muted-foreground">
+    <div className="grid p-1">
+      <p className="px-2 pt-1.5 pb-1 text-xs text-muted-foreground">
         Эти группы получают общий дедлайн {label}. Выберите группу, чтобы задать
         ей свой.
       </p>
@@ -216,7 +221,8 @@ export function EditorTaskReference({
         <ValuePopover
           variant="chip"
           className={CHIP_TONE.task}
-          title={`${label}: общий дедлайн`}
+          context={label}
+          title="Общий дедлайн"
           pending={keys.has(`${resolvedId}|task`)}
           onRevert={revert(`${resolvedId}|task`)}
           trigger={
@@ -247,7 +253,8 @@ export function EditorTaskReference({
                 key={studentGroup.id}
                 variant="chip"
                 className={CHIP_TONE.group}
-                title={`${label}: ${studentGroup.name}`}
+                context={label}
+                title={`Подгруппа ${studentGroup.name}`}
                 pending={keys.has(key)}
                 onRevert={revert(key)}
                 trigger={
@@ -274,7 +281,8 @@ export function EditorTaskReference({
           <ValuePopover
             variant="chip"
             className={CHIP_TONE.quiet}
-            title={`${label}: группы с общим дедлайном`}
+            context={label}
+            title="Группы с общим дедлайном"
             pending={inheriting.some((groupId) =>
               keys.has(`${resolvedId}|g:${groupId}`)
             )}
@@ -300,8 +308,8 @@ export function EditorTaskReference({
         <ValuePopover
           variant="chip"
           className={personal.length ? CHIP_TONE.student : CHIP_TONE.quiet}
-          title={`${label}: личные переопределения`}
-          showZone={personal.length > 0}
+          context={label}
+          title="Личные переопределения"
           pending={personal.some((item) =>
             keys.has(overrideKey(resolvedId, item.target))
           )}
@@ -313,12 +321,14 @@ export function EditorTaskReference({
           }
         >
           {personal.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Личных переопределений нет. Добавить их можно на экране дедлайнов
-              или в панели задания.
-            </p>
+            <PopoverSection>
+              <p className="text-sm text-muted-foreground">
+                Личных переопределений нет. Добавить их можно на экране
+                дедлайнов или в панели задания.
+              </p>
+            </PopoverSection>
           ) : (
-            <ul className="-mx-1 grid">
+            <ul className="grid p-2">
               {personal.map((item) => {
                 if (item.target.kind !== 'student') {
                   return null;
@@ -344,7 +354,8 @@ export function EditorTaskReference({
         <ValuePopover
           variant="chip"
           className={CHIP_TONE.quiet}
-          title={`${label}: время открытия`}
+          context={label}
+          title="Время открытия"
           pending={keys.has(`${resolvedId}|opening`)}
           onRevert={revert(`${resolvedId}|opening`)}
           trigger={
