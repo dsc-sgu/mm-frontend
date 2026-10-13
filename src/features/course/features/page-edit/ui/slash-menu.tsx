@@ -15,6 +15,7 @@ import {
   List,
   ListCollapse,
   ListOrdered,
+  Lock,
   Quote,
   X,
   Trophy,
@@ -44,6 +45,7 @@ import {
   hasCoursePageSlashMenuTrigger,
   type CoursePageSlashMenuItem,
 } from '@/features/course/features/page-edit/model/slash-menu';
+import { useTaskCreationBlock } from '@/features/course/prototype/task-and-deadline-settings/editor/new-task';
 
 type SlashMenuPosition = {
   left: number;
@@ -124,6 +126,8 @@ function useSlashMenuController({
   editor: SlateEditor;
 }) {
   const value = useEditorValue();
+  // PROTOTYPE (#181): «Задание» is disabled while the Course is open.
+  const taskBlocked = useTaskCreationBlock();
   const isFocused = useSlashMenuEditorFocus(containerRef);
   const [dismissal, setDismissal] = useState<SlashMenuDismissal>(
     READY_SLASH_MENU_DISMISSAL
@@ -174,7 +178,7 @@ function useSlashMenuController({
 
   const applyItem = useCallback(
     (item: CoursePageSlashMenuItem) => {
-      if (state.status !== 'open') {
+      if (state.status !== 'open' || (item.id === 'task' && taskBlocked)) {
         return;
       }
 
@@ -182,7 +186,7 @@ function useSlashMenuController({
       setDismissal(READY_SLASH_MENU_DISMISSAL);
       setSelectedIndex(0);
     },
-    [editor, setSelectedIndex, state]
+    [editor, setSelectedIndex, state, taskBlocked]
   );
 
   const dismissMenu = useCallback(() => {
@@ -265,6 +269,7 @@ function useSlashMenuController({
     isOpen,
     items,
     setSelectedIndex,
+    taskBlocked,
   };
 }
 
@@ -371,6 +376,7 @@ export function CoursePageSlashMenu({
     isOpen,
     items,
     setSelectedIndex,
+    taskBlocked,
   } = useSlashMenuController({ containerRef, editor });
   const position = useSlashMenuPosition({ containerRef, editor, isOpen });
   const { activeItemRef, commandListRef } = useSlashMenuScroll({
@@ -411,6 +417,7 @@ export function CoursePageSlashMenu({
           <CommandGroup>
             {items.map((item, index) => {
               const Icon = ICON_BY_SLASH_MENU_ITEM_ID[item.id];
+              const blockedReason = item.id === 'task' ? taskBlocked : null;
 
               return (
                 <CommandItem
@@ -420,12 +427,18 @@ export function CoursePageSlashMenu({
                   onMouseDown={(event) => event.preventDefault()}
                   onMouseMove={() => setSelectedIndex(index)}
                   onSelect={() => applyItem(item)}
+                  disabled={Boolean(blockedReason)}
                 >
-                  <Icon />
+                  {blockedReason ? <Lock /> : <Icon />}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate">{item.label}</span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {item.description}
+                    <span
+                      className={cn(
+                        'block text-xs text-muted-foreground',
+                        !blockedReason && 'truncate'
+                      )}
+                    >
+                      {blockedReason ?? item.description}
                     </span>
                   </span>
                 </CommandItem>
