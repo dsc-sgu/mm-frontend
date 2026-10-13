@@ -173,7 +173,7 @@ export const useSandbox = create<Sandbox>()((set, get) => {
         failNextSave: false,
         save: { status: 'failed', label, commands },
       });
-      log(`Сбой сохранения сроков: ${label}`, 'conflict');
+      log(`Сбой сохранения дедлайнов: ${label}`, 'conflict');
       return false;
     }
 
@@ -183,7 +183,7 @@ export const useSandbox = create<Sandbox>()((set, get) => {
       save: { status: 'saved', label, at: Date.now() },
       lastApplied: { taskIds, at: Date.now() },
     }));
-    log(`Сроки применены: ${label}`, 'schedule');
+    log(`Дедлайны применены: ${label}`, 'schedule');
     return true;
   }
 
@@ -539,7 +539,7 @@ export const useSandbox = create<Sandbox>()((set, get) => {
       });
       log(
         source
-          ? `Создана Task после «${source.title}»: перенесены группа, Grade, сроки`
+          ? `Создана Task после «${source.title}»: перенесены группа, Grade, дедлайны`
           : 'Создана Task в новой Task Group',
         'task'
       );

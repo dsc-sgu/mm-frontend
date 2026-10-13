@@ -112,8 +112,8 @@ export function OpeningNotes({
         <Warning>
           Откроется позже{' '}
           {conflicts.task
-            ? 'общего срока'
-            : `срока ${conflicts.students} из ${STUDENTS.length} Students`}
+            ? 'общего дедлайна'
+            : `дедлайна ${conflicts.students} из ${STUDENTS.length} Students`}
           : они увидят её уже просроченной. Сохранить можно.
         </Warning>
       ) : null}

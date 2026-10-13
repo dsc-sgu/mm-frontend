@@ -402,7 +402,7 @@ export function ScheduleRows({
       <DeadlineRow
         taskId={taskId}
         label={label}
-        onCommands={(commands) => edit(commands, `${label}: общий срок`)}
+        onCommands={(commands) => edit(commands, `${label}: общий дедлайн`)}
       />
       {deadlineField === 'counter' ? (
         <PropertyRow label="Переопределения">
@@ -449,14 +449,14 @@ export function OverridesBlock({
 
   return (
     <Block
-      title="Переопределения сроков"
+      title="Переопределения дедлайнов"
       aside={
         <Button
           variant="ghost"
           size="xs"
           onClick={() => openVariant('A', { task: taskId })}
         >
-          Страница сроков <ArrowUpRight />
+          Страница дедлайнов <ArrowUpRight />
         </Button>
       }
     >

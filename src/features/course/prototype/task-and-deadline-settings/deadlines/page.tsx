@@ -62,10 +62,10 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="grid gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">
-            {variant === 'B' ? 'Задания и сроки' : 'Сроки'}
+            {variant === 'B' ? 'Задания и дедлайны' : 'Дедлайны'}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Время в поясе {timeZoneLabel()}. Сроки применяются отдельно от
+            Время в поясе {timeZoneLabel()}. Дедлайны применяются отдельно от
             публикации курса.
           </p>
         </div>
@@ -77,7 +77,7 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
             onClick={() => setShift({ taskIds: [...selection] })}
           >
             <CalendarArrowUp />
-            Сдвинуть сроки
+            Сдвинуть дедлайны
           </Button>
         </div>
       </header>
@@ -114,7 +114,7 @@ function Legend() {
           inherited={{ kind: 'at', at: Date.UTC(2026, 9, 27, 19, 59) }}
           compact
         />
-        наследует общий срок
+        наследует общий дедлайн
       </LegendItem>
       <LegendItem>
         <DeadlineText
@@ -124,7 +124,7 @@ function Legend() {
         задан явно
       </LegendItem>
       <LegendItem>
-        <NoDeadline /> явно без срока
+        <NoDeadline /> явно без дедлайна
       </LegendItem>
       <LegendItem>
         <span className="h-3.5 w-1 rounded-sm bg-amber-500" />

@@ -1,5 +1,5 @@
 // PROTOTYPE (#181): how a deadline value reads: explicit, inherited (pale),
-// «без срока» (marked), and «было → стало».
+// «без дедлайна» (marked), and «было → стало».
 import { ArrowRight, Ban, CornerDownRight } from 'lucide-react';
 
 import { cn } from '@/shadcn/lib/utils';
@@ -32,7 +32,7 @@ export function NoDeadline({
       )}
     >
       <Ban className="size-3" aria-hidden="true" />
-      без срока
+      без дедлайна
     </span>
   );
 }
@@ -80,7 +80,7 @@ export function DeadlineText({
 
   return (
     <span
-      title="Наследует общий срок"
+      title="Наследует общий дедлайн"
       className={cn(
         'inline-flex items-center gap-0.5 whitespace-nowrap tabular-nums',
         'text-muted-foreground/60',

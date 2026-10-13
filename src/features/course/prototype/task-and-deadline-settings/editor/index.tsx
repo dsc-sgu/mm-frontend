@@ -109,7 +109,7 @@ export function PrototypeEditor({
             <DraftStrip />
             <ScheduleDock
               floating={false}
-              note="Сроки применяются отдельно от черновика курса"
+              note="Дедлайны применяются отдельно от черновика курса"
             />
           </div>
           <SandboxBar courseSlug={courseSlug} />

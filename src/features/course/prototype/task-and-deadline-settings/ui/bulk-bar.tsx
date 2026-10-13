@@ -32,7 +32,7 @@ export function BulkBar({
         className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 hover:bg-background/15"
       >
         <CalendarArrowUp className="size-4" />
-        Сдвинуть сроки
+        Сдвинуть дедлайны
       </button>
     </div>
   );

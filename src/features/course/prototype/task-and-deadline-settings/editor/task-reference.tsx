@@ -93,8 +93,8 @@ function InheritingGroups({
   return (
     <div className="-mx-1 grid">
       <p className="px-1 pb-1 text-xs text-muted-foreground">
-        Эти группы получают общий срок {label}. Выберите группу, чтобы задать ей
-        свой.
+        Эти группы получают общий дедлайн {label}. Выберите группу, чтобы задать
+        ей свой.
       </p>
       {groupIds.map((groupId) => (
         <button
@@ -216,12 +216,12 @@ export function EditorTaskReference({
         <ValuePopover
           variant="chip"
           className={CHIP_TONE.task}
-          title={`${label}: общий срок`}
+          title={`${label}: общий дедлайн`}
           pending={keys.has(`${resolvedId}|task`)}
           onRevert={revert(`${resolvedId}|task`)}
           trigger={
             <>
-              Срок
+              Дедлайн
               <DeadlineText compact value={taskSchedule.deadline} />
             </>
           }
@@ -229,7 +229,7 @@ export function EditorTaskReference({
           <LevelEditor
             taskId={resolvedId}
             value={taskSchedule.deadline}
-            onCommands={emit('общий срок')}
+            onCommands={emit('общий дедлайн')}
           />
         </ValuePopover>
 
@@ -274,14 +274,14 @@ export function EditorTaskReference({
           <ValuePopover
             variant="chip"
             className={CHIP_TONE.quiet}
-            title={`${label}: группы с общим сроком`}
+            title={`${label}: группы с общим дедлайном`}
             pending={inheriting.some((groupId) =>
               keys.has(`${resolvedId}|g:${groupId}`)
             )}
             trigger={
               inheriting.length === STUDENT_GROUPS.length
-                ? 'Все группы с общим сроком'
-                : `Ещё ${inheriting.length} с общим сроком`
+                ? 'Все группы с общим дедлайном'
+                : `Ещё ${inheriting.length} с общим дедлайном`
             }
           >
             <InheritingGroups
@@ -289,7 +289,7 @@ export function EditorTaskReference({
               label={
                 taskSchedule.deadline.kind === 'at'
                   ? formatCompactMoment(taskSchedule.deadline.at)
-                  : '(без срока)'
+                  : '(без дедлайна)'
               }
               groupIds={inheriting}
               onCommands={emit}
@@ -314,8 +314,8 @@ export function EditorTaskReference({
         >
           {personal.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Личных переопределений нет. Добавить их можно на экране сроков или
-              в панели Task.
+              Личных переопределений нет. Добавить их можно на экране дедлайнов
+              или в панели Task.
             </p>
           ) : (
             <ul className="-mx-1 grid">
@@ -335,7 +335,7 @@ export function EditorTaskReference({
                 );
               })}
               <li className="px-1 pt-1 text-xs text-muted-foreground">
-                Правка — в панели Task или на экране сроков
+                Правка — в панели Task или на экране дедлайнов
               </li>
             </ul>
           )}

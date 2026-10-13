@@ -118,7 +118,7 @@ function SandboxSettings() {
         Прототип #181. Всё в памяти: перезагрузка возвращает fixture.
       </p>
 
-      <Row label="Применение сроков" hint="?apply">
+      <Row label="Применение дедлайнов" hint="?apply">
         <Segmented
           value={settings.apply}
           onChange={(apply) => update({ apply })}
@@ -211,7 +211,7 @@ function SandboxSettings() {
             checked={sandbox.failNextSave}
             onChange={sandbox.setFailNextSave}
           >
-            Следующее сохранение сроков упадёт
+            Следующее сохранение дедлайнов упадёт
           </Toggle>
         </div>
       </Row>
@@ -232,7 +232,7 @@ function SandboxSettings() {
               ? `правок страницы ${sandbox.draft.pageEdits.length}, Task ${Object.keys(sandbox.draft.taskEdits).length}${sandbox.draft.stale ? ', устарел' : ''}`
               : 'нет'}
           </dd>
-          <dt className="text-muted-foreground">Сроки</dt>
+          <dt className="text-muted-foreground">Дедлайны</dt>
           <dd>не применено {sandbox.pending.length} команд</dd>
         </dl>
       </Row>
