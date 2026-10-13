@@ -1,14 +1,16 @@
 // PROTOTYPE (#181): selection bar for several Tasks, after ClickUp / folk.
-import { CalendarArrowUp, X } from 'lucide-react';
+import { CalendarArrowUp, CalendarPlus, X } from 'lucide-react';
 
 export function BulkBar({
   count,
   onClear,
   onShift,
+  onExtend,
 }: {
   count: number;
   onClear: () => void;
   onShift: () => void;
+  onExtend: () => void;
 }) {
   if (count === 0) {
     return null;
@@ -33,6 +35,14 @@ export function BulkBar({
       >
         <CalendarArrowUp className="size-4" />
         Сдвинуть дедлайны
+      </button>
+      <button
+        type="button"
+        onClick={onExtend}
+        className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 hover:bg-background/15"
+      >
+        <CalendarPlus className="size-4" />
+        Продлить студентам
       </button>
     </div>
   );

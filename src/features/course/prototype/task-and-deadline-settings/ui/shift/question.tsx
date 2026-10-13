@@ -39,16 +39,7 @@ import {
   toggleIn,
   type ShiftPreset,
 } from './model';
-import { DaysPicker, TaskPicker, VariantSwitch } from './parts';
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="grid gap-2">
-      <h3 className="text-sm font-medium">{title}</h3>
-      {children}
-    </section>
-  );
-}
+import { DaysPicker, Section, TaskPicker, VariantSwitch } from './parts';
 
 function KindRow({
   draft,

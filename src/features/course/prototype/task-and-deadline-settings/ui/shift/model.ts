@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 
 import {
   applyCommands,
+  groupDeadline,
   latenessChanges,
   overrideKey,
   planShift,
@@ -21,6 +22,7 @@ import {
   useSandbox,
   useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
+import { NOW } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
 
 export type ShiftPreset = {
@@ -63,6 +65,18 @@ export function toggleIn<T>(set: ReadonlySet<T>, value: T) {
     next.add(value);
   }
   return next;
+}
+
+/** Tasks whose deadline for this Student Group is still ahead. */
+export function upcomingForGroup(
+  schedule: Schedule,
+  taskIds: readonly string[],
+  groupId: string
+) {
+  return taskIds.filter((taskId) => {
+    const value = groupDeadline(schedule, taskId, groupId).value;
+    return value.kind === 'at' && value.at > NOW;
+  });
 }
 
 /** Values that actually move, for counts and summaries. */
@@ -283,12 +297,14 @@ export function flipsSentence(flips: {
   becameLate: LatenessChange[];
   becameOnTime: LatenessChange[];
 }) {
+  const onTime = flips.becameOnTime.length;
+  const late = flips.becameLate.length;
   const parts = [
-    flips.becameOnTime.length
-      ? `${flips.becameOnTime.length} ${plural(flips.becameOnTime.length, 'сдача перестанет', 'сдачи перестанут', 'сдач перестанут')} быть опоздавшими`
+    onTime
+      ? `${onTime} ${plural(onTime, 'сдача перестанет быть опоздавшей', 'сдачи перестанут быть опоздавшими', 'сдач перестанут быть опоздавшими')}`
       : null,
-    flips.becameLate.length
-      ? `${flips.becameLate.length} ${plural(flips.becameLate.length, 'сдача станет', 'сдачи станут', 'сдач станут')} опоздавшими`
+    late
+      ? `${late} ${plural(late, 'сдача станет опоздавшей', 'сдачи станут опоздавшими', 'сдач станут опоздавшими')}`
       : null,
   ].filter(Boolean);
 

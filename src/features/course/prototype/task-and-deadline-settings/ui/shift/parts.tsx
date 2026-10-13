@@ -20,6 +20,10 @@ import {
   usePrototypeSettings,
   useUpdatePrototypeSearch,
 } from '@/features/course/prototype/task-and-deadline-settings/search';
+import {
+  formatMoment,
+  parseMomentInput,
+} from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
 import { plural, toggleIn, type ShiftDraft } from './model';
 import { useShiftToast } from './toast-store';
@@ -53,11 +57,31 @@ export function VariantSwitch() {
   );
 }
 
+/** A titled block of a shift or extension window. */
+export function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="grid gap-2">
+      <h3 className="text-sm font-medium">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
 export function TaskPicker({
   draft,
   trigger,
 }: {
-  draft: Pick<ShiftDraft, 'groups' | 'taskIds' | 'setTaskIds'>;
+  draft: {
+    groups: ShiftDraft['groups'];
+    taskIds: ReadonlySet<string>;
+    setTaskIds: (next: ReadonlySet<string>) => void;
+  };
   trigger: ReactNode;
 }) {
   return (
@@ -198,29 +222,47 @@ function DaysInput({
 const DAY_STEPS = [-7, -1, 1, 2, 7, 14];
 
 const DAY_CELL = cn(
-  'h-9 cursor-pointer rounded-md border px-2 text-sm whitespace-nowrap tabular-nums transition-colors'
+  'h-9 cursor-pointer rounded-md border px-1 text-sm whitespace-nowrap tabular-nums transition-colors sm:px-2'
 );
+
+const CUSTOM_SPAN = { 1: '', 2: 'col-span-2' } as const;
 
 /**
  * Shift buttons from «Сразу»; the last cell looks like them and takes any
- * other number, negative for earlier.
+ * other number, negative for earlier. `days` is null while another way of
+ * choosing (a cell passed as children) is active.
  */
 export function DaysPicker({
   days,
   onChange,
+  steps = DAY_STEPS,
+  customSpan = 2,
+  children,
 }: {
-  days: number;
+  days: number | null;
   onChange: (days: number) => void;
+  steps?: readonly number[];
+  customSpan?: keyof typeof CUSTOM_SPAN;
+  children?: ReactNode;
 }) {
   const [text, setText] = useState(
-    DAY_STEPS.includes(days) ? '' : signed(days)
+    days === null || steps.includes(days) ? '' : signed(days)
   );
+  const [seen, setSeen] = useState(days);
   const typed = parseDays(text);
   const customActive = text !== '' && typed !== null && typed === days;
 
+  // Another cell took over: the typed number no longer applies.
+  if (seen !== days) {
+    setSeen(days);
+    if (days === null) {
+      setText('');
+    }
+  }
+
   return (
     <div className="grid grid-cols-4 gap-1.5">
-      {DAY_STEPS.map((value) => {
+      {steps.map((value) => {
         const selected = value === days && !customActive;
         return (
           <button
@@ -247,7 +289,8 @@ export function DaysPicker({
       <label
         className={cn(
           DAY_CELL,
-          'col-span-2 flex items-center justify-center gap-1',
+          CUSTOM_SPAN[customSpan],
+          'flex items-center justify-center gap-1',
           'focus-within:ring-2 focus-within:ring-ring',
           customActive
             ? 'border-foreground bg-foreground text-background'
@@ -283,7 +326,79 @@ export function DaysPicker({
           </span>
         ) : null}
       </label>
+      {children}
     </div>
+  );
+}
+
+/**
+ * A DaysPicker cell for one date instead of a number of days: «до 3.11».
+ * Shows the date it understood next to the typed text.
+ */
+export function UntilCell({
+  at,
+  onChange,
+}: {
+  at: number | null;
+  onChange: (at: number) => void;
+}) {
+  const [text, setText] = useState('');
+  const [seen, setSeen] = useState(at);
+  const parsed = parseMomentInput(text, '23:59');
+  const active = at !== null && parsed.status === 'valid' && parsed.at === at;
+
+  // Days were chosen instead: the typed date no longer applies.
+  if (seen !== at) {
+    setSeen(at);
+    if (at === null) {
+      setText('');
+    }
+  }
+
+  return (
+    <label
+      className={cn(
+        DAY_CELL,
+        'col-span-2 flex items-center justify-center gap-1.5',
+        'focus-within:ring-2 focus-within:ring-ring',
+        active
+          ? 'border-foreground bg-foreground text-background'
+          : 'hover:bg-muted',
+        parsed.status === 'invalid' && 'border-destructive/60'
+      )}
+    >
+      {text ? <span className="shrink-0">до</span> : null}
+      <input
+        type="text"
+        value={text}
+        placeholder="или до даты"
+        aria-label="Продлить до даты, например 3.11"
+        onChange={(event) => {
+          setText(event.target.value);
+          const next = parseMomentInput(event.target.value, '23:59');
+          if (next.status === 'valid') {
+            onChange(next.at);
+          }
+        }}
+        className={cn(
+          'min-w-0 bg-transparent text-center tabular-nums outline-none',
+          text ? 'w-[6ch]' : 'w-full',
+          active
+            ? 'placeholder:text-background/60'
+            : 'placeholder:text-muted-foreground'
+        )}
+      />
+      {parsed.status === 'valid' ? (
+        <span
+          className={cn(
+            'shrink-0 text-xs',
+            active ? 'text-background/70' : 'text-muted-foreground'
+          )}
+        >
+          {formatMoment(parsed.at)}
+        </span>
+      ) : null}
+    </label>
   );
 }
 

@@ -1,6 +1,7 @@
 // PROTOTYPE (#181): search a Student by name or Student Group.
 import { useState, type ReactNode } from 'react';
 
+import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import {
   Command,
   CommandEmpty,
@@ -24,12 +25,15 @@ export function StudentPicker({
   trigger,
   onPick,
   excludeIds = [],
+  selectedIds,
   placeholder = 'Фамилия или группа…',
   align = 'start',
 }: {
   trigger: ReactNode;
   onPick: (studentId: string) => void;
   excludeIds?: readonly string[];
+  /** Several Students: items carry ticks and the list stays open. */
+  selectedIds?: readonly string[];
   placeholder?: string;
   align?: 'start' | 'end';
 }) {
@@ -56,10 +60,19 @@ export function StudentPicker({
                       key={student.id}
                       value={`${studentFullName(student)} ${group.name}`}
                       onSelect={() => {
-                        setOpen(false);
+                        if (!selectedIds) {
+                          setOpen(false);
+                        }
                         onPick(student.id);
                       }}
                     >
+                      {selectedIds ? (
+                        <Checkbox
+                          checked={selectedIds.includes(student.id)}
+                          tabIndex={-1}
+                          aria-hidden="true"
+                        />
+                      ) : null}
                       {studentFullName(student)}
                     </CommandItem>
                   ))}

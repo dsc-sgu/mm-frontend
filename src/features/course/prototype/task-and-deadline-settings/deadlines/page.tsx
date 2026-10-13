@@ -2,7 +2,7 @@
 // Group» and D — timeline at `/deadlines`; B — Task list with a side panel at
 // `/tasks`. All share the store, the save flow and the mass shift dialog.
 import { useState, type ReactNode } from 'react';
-import { CalendarArrowUp } from 'lucide-react';
+import { CalendarArrowUp, CalendarPlus } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
@@ -14,6 +14,8 @@ import { SandboxBar } from '@/features/course/prototype/task-and-deadline-settin
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { timeZoneLabel } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { BulkBar } from '@/features/course/prototype/task-and-deadline-settings/ui/bulk-bar';
+import { ExtendDialog } from '@/features/course/prototype/task-and-deadline-settings/ui/extend/dialog';
+import type { ExtendPreset } from '@/features/course/prototype/task-and-deadline-settings/ui/extend/model';
 import {
   DeadlineText,
   NoDeadline,
@@ -36,6 +38,7 @@ export type DeadlinesViewProps = {
   selection: ReadonlySet<string>;
   setSelection: (selection: ReadonlySet<string>) => void;
   onShift: (preset: ShiftPreset) => void;
+  onExtend: (preset: ExtendPreset) => void;
 };
 
 export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
@@ -43,12 +46,14 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
   const panelOpen = variant === 'B' && Boolean(task);
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   const [shift, setShift] = useState<ShiftPreset | null>(null);
+  const [extend, setExtend] = useState<ExtendPreset | null>(null);
 
   const viewProps: DeadlinesViewProps = {
     courseSlug,
     selection,
     setSelection,
     onShift: setShift,
+    onExtend: setExtend,
   };
 
   return (
@@ -75,6 +80,16 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
           <Button
             variant="outline"
             size="sm"
+            onClick={() =>
+              setExtend({ taskIds: [...selection], studentIds: [] })
+            }
+          >
+            <CalendarPlus />
+            Продлить студентам
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShift({ taskIds: [...selection] })}
           >
             <CalendarArrowUp />
@@ -95,9 +110,13 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
           count={selection.size}
           onClear={() => setSelection(new Set())}
           onShift={() => setShift({ taskIds: [...selection] })}
+          onExtend={() =>
+            setExtend({ taskIds: [...selection], studentIds: [] })
+          }
         />
       </ScheduleDock>
       <ShiftDialog preset={shift} onClose={() => setShift(null)} />
+      <ExtendDialog preset={extend} onClose={() => setExtend(null)} />
       <SandboxBar courseSlug={courseSlug} />
     </main>
   );

@@ -2,11 +2,26 @@
 // Group», styled after Airtable / Vanta grids: hairline cells edited in
 // popovers, collapsible Task Groups, personal overrides folding out of a
 // counter, and a Student column with Effective Deadline and its source.
-import { Fragment, useEffect, useState } from 'react';
-import { ChevronRight, Info, Plus, Search, Trash2, X } from 'lucide-react';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
+import {
+  CalendarArrowUp,
+  CalendarPlus,
+  ChevronRight,
+  Info,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/shadcn/components/ui/tooltip';
 import { cn } from '@/shadcn/lib/utils';
 import {
   studentName,
@@ -44,6 +59,7 @@ import {
 } from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
 import { LevelEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/level-editor';
 import { OpeningEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/opening-time-field';
+import { upcomingForGroup } from '@/features/course/prototype/task-and-deadline-settings/ui/shift/model';
 import { StudentPicker } from '@/features/course/prototype/task-and-deadline-settings/ui/student-picker';
 import { ValuePopover } from '@/features/course/prototype/task-and-deadline-settings/ui/value-popover';
 import type { DeadlinesViewProps } from './page';
@@ -54,9 +70,15 @@ const groupName = (groupId: string) =>
 
 type Emit = (label: string) => (commands: DeadlineCommand[]) => void;
 
-export function MatrixView({ selection, setSelection }: DeadlinesViewProps) {
+export function MatrixView({
+  selection,
+  setSelection,
+  onShift,
+  onExtend,
+}: DeadlinesViewProps) {
   const { task: focusTaskId } = usePrototypeSettings();
   const groups = useOrderedTasks();
+  const schedule = useViewSchedule();
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(
     () => new Set(focusTaskId ? [focusTaskId] : [])
   );
@@ -123,7 +145,8 @@ export function MatrixView({ selection, setSelection }: DeadlinesViewProps) {
         )}
         {student ? (
           <span className="text-xs text-muted-foreground">
-            Колонка справа: его дедлайн по каждой Task и откуда он взялся
+            Колонка справа: его дедлайн по каждой Task и откуда он взялся.
+            Заголовок колонки продлевает ему дедлайны
           </span>
         ) : null}
       </div>
@@ -131,31 +154,65 @@ export function MatrixView({ selection, setSelection }: DeadlinesViewProps) {
       <div className="overflow-x-auto rounded-xl border bg-card">
         <table className="w-full min-w-[66rem] border-collapse text-sm">
           <thead>
-            <tr className="border-b bg-muted text-left text-xs text-muted-foreground">
-              <th className="w-10 py-2.5 pl-3" />
-              <th className="sticky left-0 z-10 min-w-60 bg-muted py-2.5 pr-3 font-medium">
-                Task
-              </th>
-              <th className="border-l px-2.5 py-2.5 font-medium">Открытие</th>
-              <th className="border-l px-2.5 py-2.5 font-medium text-foreground">
-                Общий дедлайн
-              </th>
-              {STUDENT_GROUPS.map((group) => (
-                <th
-                  key={group.id}
-                  className="border-l px-2.5 py-2.5 font-medium"
-                >
-                  {group.name}
+            <TooltipProvider delayDuration={300} disableHoverableContent>
+              <tr className="border-b bg-muted text-left text-xs text-muted-foreground">
+                <th className="w-10 py-2.5 pl-3" />
+                <th className="sticky left-0 z-10 min-w-60 bg-muted py-2.5 pr-3 font-medium">
+                  Task
                 </th>
-              ))}
-              <th className="border-l px-2.5 py-2.5 font-medium">Личные</th>
-              {student ? (
-                <th className="border-l bg-violet-500/5 px-2.5 py-2.5 font-medium text-violet-800 dark:text-violet-300">
-                  {studentName(student)}
+                <th className="border-l px-2.5 py-2.5 font-medium">Открытие</th>
+                <th className="border-l px-2.5 py-2.5 font-medium text-foreground">
+                  Общий дедлайн
                 </th>
-              ) : null}
-              <th className="w-px" />
-            </tr>
+                {STUDENT_GROUPS.map((group) => (
+                  <th key={group.id} className="border-l p-0 font-medium">
+                    <HeaderAction
+                      hint={
+                        selection.size
+                          ? `Сдвинуть дедлайны ${group.name} по выбранным Task: ${selection.size}`
+                          : `Сдвинуть дедлайны ${group.name} по предстоящим Task`
+                      }
+                      icon={<CalendarArrowUp />}
+                      onClick={() =>
+                        onShift({
+                          taskIds: selection.size
+                            ? [...selection]
+                            : upcomingForGroup(
+                                schedule,
+                                groups.flatMap(({ tasks }) =>
+                                  tasks.map((task) => task.id)
+                                ),
+                                group.id
+                              ),
+                          groupIds: [group.id],
+                        })
+                      }
+                    >
+                      {group.name}
+                    </HeaderAction>
+                  </th>
+                ))}
+                <th className="border-l px-2.5 py-2.5 font-medium">Личные</th>
+                {student ? (
+                  <th className="border-l bg-violet-500/5 p-0 font-medium text-violet-800 dark:text-violet-300">
+                    <HeaderAction
+                      tone="student"
+                      hint={`Продлить дедлайны: ${studentName(student)}`}
+                      icon={<CalendarPlus />}
+                      onClick={() =>
+                        onExtend({
+                          taskIds: [...selection],
+                          studentIds: [student.id],
+                        })
+                      }
+                    >
+                      {studentName(student)}
+                    </HeaderAction>
+                  </th>
+                ) : null}
+                <th className="w-px" />
+              </tr>
+            </TooltipProvider>
           </thead>
           <tbody>
             {groups.map(({ group, tasks }) => {
@@ -223,6 +280,47 @@ export function MatrixView({ selection, setSelection }: DeadlinesViewProps) {
         </table>
       </div>
     </div>
+  );
+}
+
+/** A column header that opens a window for the whole column. */
+function HeaderAction({
+  hint,
+  icon,
+  tone = 'group',
+  onClick,
+  children,
+}: {
+  hint: string;
+  icon: ReactNode;
+  tone?: 'group' | 'student';
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={onClick}
+          className={cn(
+            'group/head flex w-full cursor-pointer items-center justify-between gap-1.5 px-2.5 py-2.5 text-left',
+            'transition-colors [&_svg]:size-3.5 [&_svg]:shrink-0',
+            tone === 'group'
+              ? 'hover:bg-background/70 hover:text-foreground'
+              : 'hover:bg-violet-500/10'
+          )}
+        >
+          {children}
+          <span className="opacity-40 transition-opacity group-hover/head:opacity-100">
+            {icon}
+          </span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-none whitespace-nowrap">
+        {hint}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
