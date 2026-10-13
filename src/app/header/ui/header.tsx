@@ -68,7 +68,11 @@ export function Header() {
           match.routeId === '/_authenticated/courses/$courseSlug'
             ? {
                 ...match,
-                context: { ...match.context, course: lookup.course },
+                context: {
+                  ...match.context,
+                  course: lookup.course,
+                  courseRole: lookup.role,
+                },
               }
             : match
         )
@@ -189,7 +193,7 @@ function AuthorizedPart({
           <Button variant="ghost" className="h-10 w-10 rounded-full p-0">
             <Avatar className="h-9 w-9">
               <AvatarImage src={session.avatarURL} alt={session.username} />
-              <AvatarFallback className="text-xs">
+              <AvatarFallback className="text-xs text-foreground">
                 {sessionNameAbbreviation(session)}
               </AvatarFallback>
             </Avatar>
@@ -228,5 +232,5 @@ function sessionFullName({ firstName, lastName, patronymic }: Session) {
 }
 
 function sessionNameAbbreviation({ firstName, lastName }: Session) {
-  return lastName[0] + firstName[0];
+  return lastName.charAt(0) + firstName.charAt(0);
 }

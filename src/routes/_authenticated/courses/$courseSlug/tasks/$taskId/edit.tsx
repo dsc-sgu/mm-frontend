@@ -1,4 +1,3 @@
-import { requireCourseRole } from '@/features/course/routing/guards';
 import { getTaskEditBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -6,16 +5,10 @@ export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/tasks/$taskId/edit'
 )({
   staticData: {
+    courseSection: 'edit',
     header: {
       getBreadcrumb: getTaskEditBreadcrumb,
     },
-  },
-  beforeLoad({ context }) {
-    requireCourseRole({
-      courseRole: context.courseRole,
-      courseSlug: context.courseSlug,
-      roles: ['teacher'],
-    });
   },
   component: RouteComponent,
 });

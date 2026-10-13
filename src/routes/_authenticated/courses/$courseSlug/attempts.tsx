@@ -4,7 +4,6 @@ import {
   searchFromCourseAttemptsFilters,
   validateCourseAttemptsSearch,
 } from '@/features/course/features/attempts/model/filters';
-import { requireCourseRole } from '@/features/course/routing/guards';
 import { createCourseSectionBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useMemo } from 'react';
@@ -14,6 +13,7 @@ export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/attempts'
 )({
   staticData: {
+    courseSection: 'attempts',
     header: {
       getBreadcrumb: createCourseSectionBreadcrumb(
         'Попытки',
@@ -22,13 +22,6 @@ export const Route = createFileRoute(
     },
   },
   validateSearch: validateCourseAttemptsSearch,
-  beforeLoad({ context }) {
-    requireCourseRole({
-      courseRole: context.courseRole,
-      courseSlug: context.courseSlug,
-      roles: ['teacher'],
-    });
-  },
   component: RouteComponent,
 });
 

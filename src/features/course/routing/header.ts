@@ -1,5 +1,9 @@
 import type { Session } from '@/features/auth/model/types';
 import type { CourseRouteContext } from '@/features/course/routing/context';
+import {
+  canAccessCourseSection,
+  type CourseSection,
+} from '@/features/course/features/access/model/section-policy';
 import type {
   HeaderBreadcrumbItem,
   HeaderDataContext,
@@ -27,60 +31,58 @@ export const getCourseNavItems: HeaderDataGetter<HeaderNavItem[]> = (
   const { courseSlug, courseRole, session } = getCourseData(context);
   const params = { courseSlug };
 
-  if (courseRole === 'student') {
-    return [
-      {
-        label: 'Курс',
-        to: '/courses/$courseSlug',
-        params,
-        exact: true,
-      },
-      {
-        label: 'Репозиторий',
-        to: '/courses/$courseSlug/repositories/$studentUsername',
-        params: { courseSlug, studentUsername: session.username },
-      },
-    ];
-  }
-
-  return [
-    {
+  const sections: Record<CourseSection, HeaderNavItem> = {
+    page: {
       label: 'Курс',
       to: '/courses/$courseSlug',
       params,
       exact: true,
     },
-    {
+    attempts: {
       label: 'Попытки',
       to: '/courses/$courseSlug/attempts',
       params,
     },
-    {
+    repositories: {
       label: 'Репозитории',
       to: '/courses/$courseSlug/repositories',
       params,
     },
-    {
+    journal: {
       label: 'Журнал',
       to: '/courses/$courseSlug/journal',
       params,
     },
-    {
+    files: {
       label: 'Файлы',
       to: '/courses/$courseSlug/files',
       params,
     },
-    {
+    analytics: {
       label: 'Аналитика',
       to: '/courses/$courseSlug/stats',
       params,
     },
-    {
+    edit: {
       label: 'Редактирование',
       to: '/courses/$courseSlug/edit',
       params,
     },
-  ];
+  };
+  const navItems = (Object.keys(sections) as CourseSection[])
+    .filter((section) => canAccessCourseSection(section, courseRole))
+    .map((section) => sections[section]);
+
+  // A Student's own Repository is a participant-bound resource, not the
+  // Teacher-only repository index. Its ownership is outside section policy.
+  if (courseRole === 'student') {
+    navItems.splice(1, 0, {
+      label: 'Репозиторий',
+      to: '/courses/$courseSlug/repositories/$studentUsername',
+      params: { courseSlug, studentUsername: session.username },
+    });
+  }
+  return navItems;
 };
 
 export function createCourseSectionBreadcrumb(

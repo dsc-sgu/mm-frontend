@@ -5,6 +5,7 @@ export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/stats'
 )({
   staticData: {
+    courseSection: 'analytics',
     header: {
       getBreadcrumb: createCourseSectionBreadcrumb(
         'Аналитика',

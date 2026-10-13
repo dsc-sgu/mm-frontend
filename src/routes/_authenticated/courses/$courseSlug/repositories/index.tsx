@@ -1,16 +1,9 @@
-import { requireCourseRole } from '@/features/course/routing/guards';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/repositories/'
 )({
-  beforeLoad({ context }) {
-    requireCourseRole({
-      courseRole: context.courseRole,
-      courseSlug: context.courseSlug,
-      roles: ['teacher'],
-    });
-  },
+  staticData: { courseSection: 'repositories' },
   component: RouteComponent,
 });
 

@@ -1,5 +1,14 @@
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Outlet, createFileRoute, notFound } from '@tanstack/react-router';
+import {
+  Outlet,
+  createFileRoute,
+  notFound,
+  useMatches,
+  useRouter,
+} from '@tanstack/react-router';
+import { canAccessCourseSection } from '@/features/course/features/access/model/section-policy';
+import { getCourseSection } from '@/features/course/routing/section';
 import { courseContextOptions } from '@/features/course/features/access/api/queries';
 import { courseAccessRouteState } from '@/features/course/features/access/model/route-state';
 import {
@@ -49,6 +58,7 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
   ),
   errorComponent: () => <CourseRouteOutcome kind="lookup" />,
   staticData: {
+    courseSection: 'page',
     header: {
       getBreadcrumb: getCourseRootBreadcrumb,
       getNavItems: getCourseNavItems,
@@ -58,13 +68,24 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
 });
 
 function RouteComponent() {
-  const { courseSlug, session } = Route.useRouteContext();
+  const section = getCourseSection(useMatches());
+  const { courseSlug, courseRole, session } = Route.useRouteContext();
+  const router = useRouter();
   const requestedCourseSlug = useRequestedCourseSlug();
   const query = useQuery({
     ...courseContextOptions(session.userId, courseSlug),
     // beforeLoad owns the entry recheck, including cached confirmation.
     refetchOnMount: false,
   });
+  const roleChanged =
+    query.data?.status === 'found' && query.data.role !== courseRole;
+
+  useEffect(() => {
+    if (requestedCourseSlug === courseSlug && !query.isError && roleChanged) {
+      // Re-run resource guards and replace child context after a role change.
+      void router.invalidate();
+    }
+  }, [requestedCourseSlug, courseSlug, query.isError, roleChanged, router]);
 
   if (requestedCourseSlug !== courseSlug) {
     return <CourseContextLoading />;
@@ -76,5 +97,13 @@ function RouteComponent() {
       <CourseAccessState state={courseAccessRouteState(query.data.status)} />
     );
   }
+  // Authorize before mounting any child content, using the live lookup rather
+  // than the role captured by beforeLoad. Background demotion closes the route.
+  if (!canAccessCourseSection(section, query.data.role)) {
+    return <CourseAccessState state="forbidden" courseSlug={courseSlug} />;
+  }
+  // Do not leave role-sensitive actions mounted while Router reconciles the
+  // latest confirmed role into its child context.
+  if (roleChanged) return <CourseContextLoading />;
   return <Outlet />;
 }
