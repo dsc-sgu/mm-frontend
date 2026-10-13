@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { CourseSlugSchema } from '@/features/course/model/identity';
 
 import type {
   CourseColor,
@@ -43,10 +44,7 @@ export const coursePageEditSchema = v.object({
     v.string(),
     v.trim(),
     v.minLength(1, 'Введите slug курса.'),
-    v.regex(
-      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      'Slug может содержать только строчные латинские буквы, цифры и дефисы.'
-    )
+    CourseSlugSchema
   ),
   description: v.pipe(
     v.string(),

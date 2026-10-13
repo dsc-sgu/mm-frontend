@@ -4,7 +4,14 @@ export const CourseIdSchema = v.pipe(v.string(), v.uuid(), v.brand('CourseId'));
 
 export const CourseSlugSchema = v.pipe(
   v.string(),
-  v.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  v.regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    'Slug может содержать только строчные латинские буквы, цифры и дефисы.'
+  ),
+  v.check(
+    (slug) => !v.is(CourseIdSchema, slug),
+    'Slug курса не может быть UUID.'
+  ),
   v.brand('CourseSlug')
 );
 
