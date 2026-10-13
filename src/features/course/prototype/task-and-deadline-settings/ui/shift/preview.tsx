@@ -4,6 +4,8 @@
 import type { ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
 
+import { cn } from '@/shadcn/lib/utils';
+
 export function ChangesBox({
   empty,
   children,
@@ -33,7 +35,7 @@ export function ChangesTask({
   children: ReactNode;
 }) {
   return (
-    <div className="grid gap-1">
+    <div className="grid gap-0.5">
       <span className="truncate text-xs text-muted-foreground">{title}</span>
       {children}
     </div>
@@ -52,7 +54,13 @@ export function ChangeLine({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-3">
+    // The hover tint reaches past the text, so the line reads as one row.
+    <div
+      className={cn(
+        '-mx-1.5 flex flex-wrap items-center justify-between gap-x-3 rounded px-1.5 py-0.5',
+        'transition-colors hover:bg-foreground/8'
+      )}
+    >
       <span className="min-w-0 truncate">
         {who}
         {note ? (
