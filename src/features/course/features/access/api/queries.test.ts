@@ -88,9 +88,7 @@ describe('ACC-04 / TR-05: Course context query outcomes', () => {
     '%s rejects without entering cache or retrying',
     async (kind, resolver) => {
       const requests = countRequests(resolver);
-      server.use(
-        http.get('/api/v1/courses/by-slug/algorithms', requests.resolver)
-      );
+      server.use(http.get('/api/v1/courses/algorithms', requests.resolver));
       const queryClient = createQueryClient();
       // The context query must override a caller's generic retry policy.
       queryClient.setDefaultOptions({ queries: { retry: 2, retryDelay: 0 } });
@@ -110,7 +108,7 @@ describe('ACC-04 / TR-05: Course context query outcomes', () => {
 
   test('cancelling a held query does not leave an operation failure or denial', async () => {
     const held = holdResponse();
-    server.use(http.get('/api/v1/courses/by-slug/algorithms', held.resolver));
+    server.use(http.get('/api/v1/courses/algorithms', held.resolver));
     const queryClient = createQueryClient();
     const key = courseContextKeys.bySlug(VERA, SLUG);
     const pending = queryClient.query(courseContextOptions(VERA, SLUG));
@@ -136,9 +134,7 @@ describe('ACC-09: Course context rechecks', () => {
     mockBackend.reset('world:access');
     signInAs(VERA);
     const requests = countRequests(() => undefined);
-    server.use(
-      http.get('/api/v1/courses/by-slug/algorithms', requests.resolver)
-    );
+    server.use(http.get('/api/v1/courses/algorithms', requests.resolver));
     const queryClient = createQueryClient();
     const observer = new QueryObserver(
       queryClient,
@@ -182,9 +178,7 @@ describe('ACC-09: Course context rechecks', () => {
       focusManager.setFocused(true);
       onlineManager.setOnline(true);
       const requests = countRequests(() => undefined);
-      server.use(
-        http.get('/api/v1/courses/by-slug/algorithms', requests.resolver)
-      );
+      server.use(http.get('/api/v1/courses/algorithms', requests.resolver));
       const queryClient = createQueryClient();
       queryClient.mount();
       const observer = new QueryObserver(
@@ -252,9 +246,7 @@ describe('ACC-09: Course context rechecks', () => {
           userId !== VERA || courseId !== accessWorld.courses.algorithms.id
       );
       const requests = countRequests(() => undefined);
-      server.use(
-        http.get('/api/v1/courses/by-slug/algorithms', requests.resolver)
-      );
+      server.use(http.get('/api/v1/courses/algorithms', requests.resolver));
 
       await expect(
         recheckCourseContextAfterAccessDenial(queryClient, VERA, SLUG)
@@ -279,9 +271,7 @@ describe('ACC-09: Course context rechecks', () => {
       const confirmed = await queryClient.query(
         courseContextOptions(VERA, SLUG)
       );
-      server.use(
-        http.get('/api/v1/courses/by-slug/algorithms', undeclaredStatus(500))
-      );
+      server.use(http.get('/api/v1/courses/algorithms', undeclaredStatus(500)));
 
       await expect(
         recheckCourseContextAfterAccessDenial(queryClient, VERA, SLUG)
@@ -307,7 +297,7 @@ describe('ACC-09: Course context rechecks', () => {
       await queryClient.query(courseContextOptions(VERA, SLUG));
       let firstRequest = true;
       server.use(
-        http.get('/api/v1/courses/by-slug/algorithms', (info) => {
+        http.get('/api/v1/courses/algorithms', (info) => {
           if (firstRequest) {
             firstRequest = false;
             return held.resolver(info);

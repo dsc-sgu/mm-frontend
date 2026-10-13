@@ -52,7 +52,7 @@ test('ACC-E5: Vera never sees Database metadata or Teacher navigation under the 
   ).toBeVisible();
   await controlMockBackend(page, {
     action: 'hold',
-    operation: 'load-course-by-slug',
+    operation: 'load-course',
   });
 
   try {
@@ -105,7 +105,7 @@ test('ACC-E5: Vera never sees Database metadata or Teacher navigation under the 
       expect(frame.neutralOrConfirmedNew).toBe(true);
     }
     await expect(
-      page.getByRole('status', { name: 'Загрузка курса' })
+      page.getByRole('status', { name: 'Загрузка страницы' })
     ).toBeVisible();
     await expect(
       page.getByRole('heading', { name: 'Базы данных' })
@@ -117,7 +117,7 @@ test('ACC-E5: Vera never sees Database metadata or Teacher navigation under the 
   } finally {
     await controlMockBackend(page, {
       action: 'release',
-      operation: 'load-course-by-slug',
+      operation: 'load-course',
     });
   }
 

@@ -6,6 +6,7 @@ import {
 } from '@/app/remote-data/http';
 import {
   CourseIdSchema,
+  type CourseId,
   type CourseSlug,
 } from '@/features/course/model/identity';
 import {
@@ -35,14 +36,14 @@ export type LoadCourseResult =
   | v.InferOutput<typeof DeniedCourseSchema>;
 
 /** Looks up shell identity and membership without loading Course Page content. */
-export function loadCourseBySlug(
-  courseSlug: CourseSlug,
+export function loadCourse(
+  locator: CourseId | CourseSlug,
   signal?: AbortSignal
 ): Promise<LoadCourseResult> {
   return runHttpOperation<LoadCourseResult>(
     {
-      name: 'load-course-by-slug',
-      url: `/api/v1/courses/by-slug/${encodeURIComponent(courseSlug)}`,
+      name: 'load-course',
+      url: `/api/v1/courses/${encodeURIComponent(locator)}`,
       credentials: 'include',
       signal,
     },

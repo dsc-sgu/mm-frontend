@@ -1,4 +1,5 @@
 import { http } from 'msw';
+import * as v from 'valibot';
 import {
   holdResponse,
   invalidBody,
@@ -14,7 +15,8 @@ import {
   mockBackend,
   SESSION_EXPIRES_AT,
 } from '@/app/mock-backend/state';
-import { loadCourseBySlug } from './load-course';
+import { loadCourse } from './load-course';
+import { CourseIdSchema } from '@/features/course/model/identity';
 
 const ALGORITHMS = {
   id: '20000000-0000-4000-8000-000000000001',
@@ -24,7 +26,7 @@ const ALGORITHMS = {
   color: 'teal',
 };
 
-const LOOKUP_URL = '/api/v1/courses/by-slug/algorithms';
+const LOOKUP_URL = '/api/v1/courses/algorithms';
 const FOUND = { status: 'found', course: ALGORITHMS, role: 'student' };
 
 function signInAs(userId: typeof accessWorld.users.vera.id) {
@@ -37,14 +39,14 @@ describe('ACC-04: course lookup against canonical memberships', () => {
     signInAs(accessWorld.users.vera.id);
 
     await expect(
-      loadCourseBySlug(accessWorld.courses.algorithms.slug)
+      loadCourse(accessWorld.courses.algorithms.slug)
     ).resolves.toEqual({
       status: 'found',
       course: ALGORITHMS,
       role: 'student',
     });
     await expect(
-      loadCourseBySlug(accessWorld.courses.databases.slug)
+      loadCourse(accessWorld.courses.databases.slug)
     ).resolves.toEqual({
       status: 'found',
       course: {
@@ -58,16 +60,42 @@ describe('ACC-04: course lookup against canonical memberships', () => {
     });
   });
 
-  test('distinguishes an unknown locator from an authenticated non-member without leaking metadata', async () => {
-    signInAs(accessWorld.users.guest.id);
+  test('resolves a stable CourseId to shell metadata and the current User membership', async () => {
+    signInAs(accessWorld.users.vera.id);
 
-    await expect(loadCourseBySlug(accessWorld.missingSlug)).resolves.toEqual({
-      status: 'course-not-found',
-    });
     await expect(
-      loadCourseBySlug(accessWorld.courses.algorithms.slug)
-    ).resolves.toEqual({ status: 'not-member' });
+      loadCourse(accessWorld.courses.algorithms.id)
+    ).resolves.toEqual({
+      status: 'found',
+      course: ALGORITHMS,
+      role: 'student',
+    });
   });
+
+  test.each([
+    {
+      kind: 'slug',
+      missing: accessWorld.missingSlug,
+      existing: accessWorld.courses.algorithms.slug,
+    },
+    {
+      kind: 'id',
+      missing: v.parse(CourseIdSchema, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+      existing: accessWorld.courses.algorithms.id,
+    },
+  ])(
+    '$kind distinguishes an unknown locator from a non-member without leaking metadata',
+    async ({ missing, existing }) => {
+      signInAs(accessWorld.users.guest.id);
+
+      await expect(loadCourse(missing)).resolves.toEqual({
+        status: 'course-not-found',
+      });
+      await expect(loadCourse(existing)).resolves.toEqual({
+        status: 'not-member',
+      });
+    }
+  );
 });
 
 describe('ACC-04 / TR-05: lookup transport contract', () => {
@@ -77,10 +105,10 @@ describe('ACC-04 / TR-05: lookup transport contract', () => {
       server.use(http.get(LOOKUP_URL, undeclaredStatus(status)));
 
       await expect(
-        loadCourseBySlug(accessWorld.courses.algorithms.slug)
+        loadCourse(accessWorld.courses.algorithms.slug)
       ).rejects.toMatchObject({
         name: 'OperationFailure',
-        operation: 'load-course-by-slug',
+        operation: 'load-course',
         reason: { kind: 'unexpected-http-status', status },
       });
     }
@@ -101,9 +129,9 @@ describe('ACC-04 / TR-05: lookup transport contract', () => {
       server.use(http.get(LOOKUP_URL, invalidBody(body)));
 
       await expect(
-        loadCourseBySlug(accessWorld.courses.algorithms.slug)
+        loadCourse(accessWorld.courses.algorithms.slug)
       ).rejects.toMatchObject({
-        operation: 'load-course-by-slug',
+        operation: 'load-course',
         kind: 'invalid-response',
       });
     }
@@ -115,7 +143,7 @@ describe('ACC-04 / TR-05: lookup transport contract', () => {
       server.use(http.get(LOOKUP_URL, reply(404, body)));
 
       await expect(
-        loadCourseBySlug(accessWorld.courses.algorithms.slug)
+        loadCourse(accessWorld.courses.algorithms.slug)
       ).rejects.toMatchObject({ kind: 'invalid-response' });
     }
   );
@@ -127,7 +155,7 @@ describe('ACC-04 / TR-05: lookup transport contract', () => {
     server.use(http.get(LOOKUP_URL, resolver));
 
     await expect(
-      loadCourseBySlug(accessWorld.courses.algorithms.slug)
+      loadCourse(accessWorld.courses.algorithms.slug)
     ).rejects.toMatchObject({ name: 'OperationFailure', kind });
   });
 
@@ -136,7 +164,7 @@ describe('ACC-04 / TR-05: lookup transport contract', () => {
     server.use(http.get(LOOKUP_URL, held.resolver));
     const controller = new AbortController();
     const reason = new Error('left the course route');
-    const pending = loadCourseBySlug(
+    const pending = loadCourse(
       accessWorld.courses.algorithms.slug,
       controller.signal
     );
@@ -154,7 +182,7 @@ describe('ACC-04 / TR-05: lookup transport contract', () => {
     mockBackend.state.session = null;
 
     await expect(
-      loadCourseBySlug(accessWorld.courses.algorithms.slug)
+      loadCourse(accessWorld.courses.algorithms.slug)
     ).rejects.toMatchObject({
       kind: 'unexpected-http-status',
       reason: { status: 401 },

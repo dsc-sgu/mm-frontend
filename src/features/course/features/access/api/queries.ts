@@ -1,7 +1,7 @@
 import { queryOptions, type QueryClient } from '@tanstack/react-query';
 import type { UserId } from '@/features/auth/model/identity';
 import type { CourseSlug } from '@/features/course/model/identity';
-import { loadCourseBySlug, type LoadCourseResult } from './load-course';
+import { loadCourse, type LoadCourseResult } from './load-course';
 
 // Slug is the lookup input, so this family is outside the CourseId prefix.
 export const courseContextKeys = {
@@ -13,7 +13,7 @@ export const courseContextKeys = {
 export function courseContextOptions(userId: UserId, courseSlug: CourseSlug) {
   return queryOptions({
     queryKey: courseContextKeys.bySlug(userId, courseSlug),
-    queryFn: ({ signal }) => loadCourseBySlug(courseSlug, signal),
+    queryFn: ({ signal }) => loadCourse(courseSlug, signal),
     staleTime: 0,
     retry: false,
     refetchOnMount: 'always',

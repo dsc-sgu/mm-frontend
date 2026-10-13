@@ -27,7 +27,7 @@ import {
 } from '@/app/mock-backend/state';
 import { renderRoutes } from '@/app/testing/render-routes';
 
-const LOOKUP_URL = '/api/v1/courses/by-slug/:courseSlug';
+const LOOKUP_URL = '/api/v1/courses/:locator';
 const ALGORITHMS_PATH = '/courses/algorithms';
 const DATABASES_PATH = '/courses/databases';
 const NOT_FOUND_DESCRIPTION =
@@ -62,8 +62,25 @@ describe('ACC-10: confirmed Course context controls the real shell', () => {
 
     try {
       await held.requested;
-      await screen.findByRole('status', { name: 'Загрузка курса' });
+      await screen.findByRole('status', { name: 'Загрузка страницы' });
+      expect(screen.getAllByRole('status')).toHaveLength(1);
       expect(router.state.location.pathname).toBe(ALGORITHMS_PATH);
+      expectNeutralCourseShell();
+    } finally {
+      held.release();
+    }
+    await screen.findByRole('heading', { name: 'Алгоритмы' });
+  });
+
+  test('one progress indicator survives an unconfirmed session beforeLoad', async () => {
+    const held = holdResponse();
+    server.use(http.get('/api/v1/auth/session', held.resolver));
+    renderRoutes([], ALGORITHMS_PATH, { appRoutes: true });
+
+    try {
+      await held.requested;
+      await screen.findByRole('status', { name: 'Загрузка страницы' });
+      expect(screen.getAllByRole('status')).toHaveLength(1);
       expectNeutralCourseShell();
     } finally {
       held.release();
@@ -83,7 +100,8 @@ describe('ACC-10: confirmed Course context controls the real shell', () => {
         void router.navigate({ to: ALGORITHMS_PATH });
       });
       await held.requested;
-      await screen.findByRole('status', { name: 'Загрузка курса' });
+      await screen.findByRole('status', { name: 'Загрузка страницы' });
+      expect(screen.getAllByRole('status')).toHaveLength(1);
       expect(router.state.location.pathname).toBe(ALGORITHMS_PATH);
       expectNeutralCourseShell();
     } finally {
@@ -124,9 +142,6 @@ describe('ACC-10: confirmed Course context controls the real shell', () => {
       expect(
         screen.getByRole('navigation', { name: 'Разделы страницы' })
       ).toBeDefined();
-      expect(
-        screen.queryByRole('status', { name: 'Загрузка курса' })
-      ).toBeNull();
     } finally {
       held.release();
     }
@@ -266,6 +281,47 @@ test('saved Course metadata replaces the confirmed Header title without changing
   expect(router.history.location.href).toBe(DATABASES_PATH);
 });
 
+test('saving a UUID-shaped slug rejects without changing Course metadata or its published Page', async () => {
+  const { queryClient } = renderRoutes([], DATABASES_PATH, { appRoutes: true });
+  await screen.findByRole('heading', { name: 'Базы данных' });
+  const page = await queryClient.ensureQueryData(
+    coursePageQueryOptions('databases')
+  );
+  if (!page) throw new Error('The Course fixture has no published Page');
+  const mutation = renderHook(() => useSaveCoursePageMutation(), {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    ),
+  });
+
+  await act(async () => {
+    await expect(
+      mutation.result.current.mutateAsync({
+        ...page,
+        courseSlug: 'databases',
+        courseId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        title: 'Rejected UUID rename',
+      })
+    ).rejects.toBeInstanceOf(Error);
+  });
+
+  await expect(
+    queryClient.fetchQuery(coursePageQueryOptions('databases'))
+  ).resolves.toMatchObject({ courseId: 'databases', title: 'Базы данных' });
+  await queryClient.invalidateQueries();
+  await screen.findByRole('heading', { name: 'Базы данных' });
+  expect(screen.getByRole('link', { name: 'Редактирование' })).toBeDefined();
+});
+
+test('a UUID CourseId cannot be used as a CourseSlug route locator', async () => {
+  const path = `/courses/${accessWorld.courses.algorithms.id}`;
+  const { router } = renderRoutes([], path, { appRoutes: true });
+
+  await screen.findByRole('heading', { name: 'Страница не найдена' });
+  expectNeutralCourseShell();
+  expect(router.history.location.href).toBe(path);
+});
+
 test('case-insensitive static route segments do not hide a valid confirmed Course', async () => {
   const path = '/Courses/databases';
   const { router } = renderRoutes([], path, { appRoutes: true });
@@ -316,6 +372,13 @@ test('focus rechecks an initial denial and establishes the newly confirmed Membe
   const { router } = renderRoutes([], ALGORITHMS_PATH, { appRoutes: true });
   await screen.findByRole('heading', { name: 'Страница не найдена' });
   expectNeutralCourseShell();
+  await waitFor(() =>
+    expect(
+      screen.queryByRole('status', { name: 'Загрузка страницы' })
+    ).toBeNull()
+  );
+  const held = holdResponse();
+  server.use(http.get(LOOKUP_URL, held.resolver));
 
   try {
     mockBackend.state.memberships.push(membership);
@@ -323,14 +386,20 @@ test('focus rechecks an initial denial and establishes the newly confirmed Membe
       focusManager.setFocused(false);
       focusManager.setFocused(true);
     });
-    await screen.findByRole('heading', { name: 'Алгоритмы' });
-    expect(router.history.location.href).toBe(ALGORITHMS_PATH);
-    expect(
-      screen.getByRole('link', { name: 'Репозиторий' }).getAttribute('href')
-    ).toBe('/courses/algorithms/repositories/vera');
+    await held.requested;
+    await screen.findByRole('status', { name: 'Загрузка страницы' });
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(router.state.isLoading).toBe(false);
+    expectNeutralCourseShell();
   } finally {
+    held.release();
     focusManager.setFocused(undefined);
   }
+  await screen.findByRole('heading', { name: 'Алгоритмы' });
+  expect(router.history.location.href).toBe(ALGORITHMS_PATH);
+  expect(
+    screen.getByRole('link', { name: 'Репозиторий' }).getAttribute('href')
+  ).toBe('/courses/algorithms/repositories/vera');
 });
 
 test('manual retry rechecks a cached context after its background lookup failed', async () => {
@@ -368,7 +437,7 @@ test('returning directly from another Course rechecks cached context in the back
   const held = holdResponse();
   let requested = false;
   server.use(
-    http.get('/api/v1/courses/by-slug/algorithms', (args) => {
+    http.get('/api/v1/courses/algorithms', (args) => {
       requested = true;
       return held.resolver(args);
     })
@@ -378,7 +447,6 @@ test('returning directly from another Course rechecks cached context in the back
       void router.navigate({ to: ALGORITHMS_PATH });
     });
     await screen.findByRole('heading', { name: 'Алгоритмы' });
-    expect(screen.queryByRole('status', { name: 'Загрузка курса' })).toBeNull();
     await waitFor(() => expect(requested).toBe(true));
     expect(router.history.location.href).toBe(ALGORITHMS_PATH);
   } finally {
@@ -399,7 +467,7 @@ test('cached Course entry rechecks after another Course denied access', async ()
   const held = holdResponse();
   let requested = false;
   server.use(
-    http.get('/api/v1/courses/by-slug/algorithms', (args) => {
+    http.get('/api/v1/courses/algorithms', (args) => {
       requested = true;
       return held.resolver(args);
     })
@@ -409,7 +477,6 @@ test('cached Course entry rechecks after another Course denied access', async ()
       void router.navigate({ to: ALGORITHMS_PATH });
     });
     await screen.findByRole('heading', { name: 'Алгоритмы' });
-    expect(screen.queryByRole('status', { name: 'Загрузка курса' })).toBeNull();
     await waitFor(() => expect(requested).toBe(true));
     expect(router.history.location.href).toBe(ALGORITHMS_PATH);
   } finally {

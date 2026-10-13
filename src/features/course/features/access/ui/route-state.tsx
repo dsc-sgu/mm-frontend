@@ -20,17 +20,7 @@ import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 
 export function CourseContextLoading() {
-  return (
-    <main className="flex flex-1 items-center justify-center p-6">
-      <p
-        role="status"
-        aria-label="Загрузка курса"
-        className="text-muted-foreground"
-      >
-        Загрузка…
-      </p>
-    </main>
-  );
+  return <main className="flex-1" aria-busy="true" />;
 }
 
 export function CourseAccessState({

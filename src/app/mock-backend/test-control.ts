@@ -16,7 +16,7 @@ import { UserIdSchema, UsernameSchema } from '@/features/auth/model/identity';
 const CONTROL_URL = '/__test/mock-backend';
 const STORAGE_KEY = 'mergeminds:e2e:mock-backend';
 const WorldSchema = v.picklist(['dev', 'world:access']);
-const OperationSchema = v.literal('load-course-by-slug');
+const OperationSchema = v.literal('load-course');
 const SelectionSchema = v.object({
   world: WorldSchema,
   session: v.nullable(
@@ -127,8 +127,8 @@ export function installTestControl(worker: SetupWorker) {
       }
       return new HttpResponse(null, { status: 204 });
     }),
-    http.get('/api/v1/courses/by-slug/:courseSlug', async (args) => {
-      const gate = held.get('load-course-by-slug');
+    http.get('/api/v1/courses/:locator', async (args) => {
+      const gate = held.get('load-course');
       if (gate) {
         gate.requested += 1;
         await gate.response.resolver(args);

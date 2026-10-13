@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test';
 import * as v from 'valibot';
 
 const CONTROL_URL = '/__test/mock-backend';
-const OperationSchema = v.literal('load-course-by-slug');
+const OperationSchema = v.literal('load-course');
 const CommandSchema = v.variant('action', [
   v.object({
     action: v.literal('scenario'),
@@ -65,7 +65,7 @@ export async function waitForHeldCourseLookup(page: Page) {
       }, CONTROL_URL);
       const status = v.parse(StatusSchema, body);
       return (
-        status.held.find((gate) => gate.operation === 'load-course-by-slug')
+        status.held.find((gate) => gate.operation === 'load-course')
           ?.requested ?? 0
       );
     })
