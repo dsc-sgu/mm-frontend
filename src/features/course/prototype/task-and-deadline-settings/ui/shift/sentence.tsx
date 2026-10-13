@@ -58,7 +58,8 @@ const TOKEN = cn(
 
 function Token({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <Popover>
+    // Modal, so the portaled content scrolls inside the Dialog.
+    <Popover modal>
       <PopoverTrigger asChild>
         <button type="button" className={TOKEN}>
           {label}

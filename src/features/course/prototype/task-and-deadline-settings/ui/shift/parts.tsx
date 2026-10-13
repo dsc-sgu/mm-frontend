@@ -85,7 +85,9 @@ export function TaskPicker({
   trigger: ReactNode;
 }) {
   return (
-    <Popover>
+    // Modal: the Dialog blocks wheel scroll outside itself, and this list is
+    // portaled out of it. A modal Popover lets its own content scroll.
+    <Popover modal>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent align="start" className="w-80 p-0">
         <Command>
