@@ -19,6 +19,8 @@ import { CoursePageEditApplyBar } from '@/features/course/features/page-edit/ui/
 import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui/content-editor';
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
 import type { CoursePage } from '@/features/course/features/page/model/types';
+// PROTOTYPE (#181): `?taskApply=contract` publishes Tasks with the page.
+import { usePrototypePageEdit } from '@/features/course/prototype/task-and-deadline-settings/page-edit-slot';
 
 import styles from './page.module.css';
 
@@ -57,6 +59,7 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
     (state) => state.setWorkingCopy
   );
   const workingCopy = useCoursePageEditStore((state) => state.workingCopy);
+  const prototypeSlot = usePrototypePageEdit();
 
   const apply = useCallback(async () => {
     if (!isDirty) {
@@ -74,6 +77,11 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
       return;
     }
 
+    // PROTOTYPE (#181): an unfinished new Task stops the publication.
+    if (prototypeSlot && !prototypeSlot.beforeApply(workingCopy.content)) {
+      return;
+    }
+
     const submittedWorkingCopy = structuredClone(workingCopy);
 
     await saveMutation.mutateAsync({
@@ -87,6 +95,8 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
       content: submittedWorkingCopy.content,
       resources: submittedWorkingCopy.resources,
     });
+    // PROTOTYPE (#181): Tasks are created and deleted in the same publication.
+    await prototypeSlot?.afterApply(submittedWorkingCopy.content);
 
     markWorkingCopySaved(submittedWorkingCopy);
 
@@ -108,6 +118,7 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
     isDirty,
     markWorkingCopySaved,
     navigate,
+    prototypeSlot,
     router,
     saveMutation,
     workingCopy,
@@ -164,6 +175,8 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
         >
           <CoursePageContentEditor />
         </article>
+
+        {prototypeSlot?.render()}
 
         <CoursePageEditApplyBar
           isDirty={isDirty}

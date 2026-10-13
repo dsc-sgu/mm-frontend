@@ -23,6 +23,7 @@ import {
   useUpdatePrototypeSearch,
 } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
+import { NEW_TASK_ID } from '@/features/course/prototype/task-and-deadline-settings/editor/new-task';
 import { revealTaskReference } from './reveal';
 import { TaskReferenceCard } from './task-card';
 
@@ -61,14 +62,20 @@ export function PrototypeCourseView({
   }, [openTaskId, layout]);
 
   const renderCard = useCallback(
-    ({ taskId }: { taskId: string }) => (
-      <TaskReferenceCard
-        taskId={taskId}
-        selected={taskId === openTaskId}
-        remembered={taskId === remembered}
-        onOpen={() => open(taskId)}
-      />
-    ),
+    (reference: { taskId: string; blockId: string }) => {
+      // A Task created in the editor is named by its block id.
+      const taskId =
+        reference.taskId === NEW_TASK_ID ? reference.blockId : reference.taskId;
+
+      return (
+        <TaskReferenceCard
+          taskId={taskId}
+          selected={taskId === openTaskId}
+          remembered={taskId === remembered}
+          onOpen={() => open(taskId)}
+        />
+      );
+    },
     [open, openTaskId, remembered]
   );
 

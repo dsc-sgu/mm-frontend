@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   CircleAlert,
   Clock,
+  FileStack,
   Settings2,
   UserRound,
 } from 'lucide-react';
@@ -31,6 +32,7 @@ import {
   useSandbox,
   useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
+import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { formatCompactMoment } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
 import { usePendingChanges } from '@/features/course/prototype/task-and-deadline-settings/use-pending';
@@ -132,8 +134,15 @@ export function EditorTaskReference({
   onOpenPanel: (taskId: string) => void;
 }) {
   const editor = useEditorRef();
+  const { taskApply } = usePrototypeSettings();
   const resolvedId = taskId === NEW_TASK_ID ? blockId : taskId;
   const task = useSandbox((state) => state.tasks[resolvedId]);
+  const inDraft = useSandbox(
+    (state) => taskApply === 'contract' && state.newTaskIds.includes(resolvedId)
+  );
+  const removed = useSandbox((state) =>
+    state.removedTaskIds.includes(resolvedId)
+  );
   const courseAccess = useSandbox((state) => state.courseAccess);
   const createTask = useSandbox((state) => state.createTask);
   const dropPending = useSandbox((state) => state.dropPending);
@@ -151,10 +160,10 @@ export function EditorTaskReference({
       courseAccess === 'draft' &&
       !useSandbox.getState().tasks[blockId]
     ) {
-      createTask(blockId, takeCarry());
+      createTask(blockId, takeCarry(), taskApply === 'contract');
       onOpenPanel(blockId);
     }
-  }, [blockId, courseAccess, createTask, onOpenPanel, taskId]);
+  }, [blockId, courseAccess, createTask, onOpenPanel, taskApply, taskId]);
 
   useEffect(() => {
     insertAfterTask.set(resolvedId, () => {
@@ -169,13 +178,15 @@ export function EditorTaskReference({
     };
   }, [blockId, editor, resolvedId]);
 
-  if (!task) {
+  if (!task || removed) {
     return (
       <div className="flex gap-2 rounded-xl border border-dashed border-destructive/50 bg-destructive/5 p-4 text-sm">
         <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
-        {courseAccess === 'open'
-          ? 'Курс открыт, новые задания не создаются (#180). Удалите блок или верните курс в подготовку в «Песочнице».'
-          : 'Задание создаётся…'}
+        {removed
+          ? 'Задание удалено при публикации курса: блок вернулся, а задания уже нет. Удалите блок.'
+          : courseAccess === 'open'
+            ? 'Курс открыт, новые задания не создаются (#180). Удалите блок или верните курс в подготовку в «Песочнице».'
+            : 'Задание создаётся…'}
       </div>
     );
   }
@@ -203,8 +214,13 @@ export function EditorTaskReference({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">
+          <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             Задание в группе «{group?.title}»
+            {inDraft ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-0.5 text-xs text-violet-800 dark:text-violet-300">
+                <FileStack className="size-3" /> новое, в черновике курса
+              </span>
+            ) : null}
           </p>
           <p className="text-lg font-semibold text-foreground">{label}</p>
         </div>
