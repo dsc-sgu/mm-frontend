@@ -2,12 +2,13 @@
 // out as a property list (Linear, Twenty, Asana): label on the left, the
 // value edited in place. Task Group and masks are simplified but sized like
 // the real ones (#190, #191 extend them).
-import { useState, type ReactNode } from 'react';
+import { useState, type ComponentProps, type ReactNode } from 'react';
 import {
   ArrowUpRight,
   ChevronDown,
   GitBranch,
   GripVertical,
+  Info,
   Maximize2,
   Paperclip,
   Plus,
@@ -28,7 +29,10 @@ import {
 } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { formatMoment } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
-import { PropertyRow } from '@/features/course/prototype/task-and-deadline-settings/ui/property-row';
+import {
+  PropertyRow,
+  VALUE_INDENT,
+} from '@/features/course/prototype/task-and-deadline-settings/ui/property-row';
 import {
   DeadlineRow,
   OpeningRow,
@@ -52,25 +56,66 @@ type FieldProps = {
   errors: Partial<Record<string, string>>;
 };
 
+/** A panel section: divided by a line (`list`) or a card (`cards`). */
 export function Block({
   title,
   aside,
+  divided = true,
   children,
 }: {
   title?: string;
   aside?: ReactNode;
+  /** `list` only: the line above. Off right under the title. */
+  divided?: boolean;
   children: ReactNode;
 }) {
+  const { panelLook } = usePrototypeSettings();
+
+  if (panelLook === 'cards') {
+    return (
+      <section className="mx-3 rounded-lg border bg-muted/30">
+        {title ? (
+          <div className="flex h-10 items-center justify-between gap-2 border-b px-4">
+            <h3 className="text-sm font-medium">{title}</h3>
+            {aside}
+          </div>
+        ) : null}
+        <div className="grid grid-cols-[minmax(0,1fr)] px-4 py-3">
+          {children}
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="grid grid-cols-[minmax(0,1fr)] gap-1 border-t px-5 py-4">
+    <section
+      className={cn(
+        'grid grid-cols-[minmax(0,1fr)] px-5 py-4',
+        divided ? 'border-t' : 'pt-0'
+      )}
+    >
       {title ? (
-        <div className="flex min-h-7 items-center justify-between gap-2">
-          <h3 className="text-sm font-medium">{title}</h3>
+        <div className="mb-1 flex h-8 items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">{title}</h3>
           {aside}
         </div>
       ) : null}
       {children}
     </section>
+  );
+}
+
+/** Quiet action in a section header. */
+function HeaderAction({ children, ...props }: ComponentProps<typeof Button>) {
+  return (
+    <Button
+      variant="ghost"
+      size="xs"
+      className="-mr-2 text-muted-foreground hover:text-foreground"
+      {...props}
+    >
+      {children}
+    </Button>
   );
 }
 
@@ -91,7 +136,7 @@ export function TitleInput({ session, readOnly, errors }: FieldProps) {
         }}
         className={cn(
           GHOST_INPUT,
-          'h-auto py-1 text-xl font-semibold tracking-tight'
+          'h-auto w-full py-1 text-xl font-semibold tracking-tight'
         )}
       />
       {errors.title ? (
@@ -146,35 +191,43 @@ export function GroupRow({ session, readOnly, locked }: FieldProps) {
         {locked ? (
           <span className="truncate text-sm">{group?.title}</span>
         ) : (
-          <select
-            value={session.form.groupId}
-            disabled={readOnly}
-            aria-label="Группа заданий"
-            onChange={(event) =>
-              session.setField('groupId', event.target.value)
-            }
-            className={cn(GHOST_INPUT, 'cursor-pointer')}
-          >
-            {taskGroups.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.title}
-              </option>
-            ))}
-          </select>
+          <span className="relative -mx-2 inline-flex min-w-0">
+            <select
+              value={session.form.groupId}
+              disabled={readOnly}
+              aria-label="Группа заданий"
+              onChange={(event) =>
+                session.setField('groupId', event.target.value)
+              }
+              className={cn(
+                GHOST_INPUT,
+                'mx-0 cursor-pointer appearance-none pr-7'
+              )}
+            >
+              {taskGroups.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.title}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+          </span>
         )}
         <button
           type="button"
           aria-expanded={open}
+          title={open ? 'Скрыть сведения о группе' : 'О группе'}
           onClick={() => setOpen(!open)}
-          className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          className={cn(
+            'ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-xs',
+            'text-muted-foreground hover:bg-muted hover:text-foreground',
+            open && 'bg-muted text-foreground'
+          )}
         >
-          О группе
-          <ChevronDown
-            className={cn(
-              'size-3.5 transition-transform',
-              open && 'rotate-180'
-            )}
-          />
+          <Info className="size-3.5" aria-hidden="true" />О группе
         </button>
       </PropertyRow>
       {open && group ? (
@@ -214,7 +267,12 @@ function GroupSection({
   const [title, setTitle] = useState(group.title);
 
   return (
-    <div className="my-1 ml-[9.25rem] grid gap-2 rounded-lg bg-muted/50 p-3 text-sm">
+    <div
+      className={cn(
+        VALUE_INDENT,
+        'my-1 grid gap-2 rounded-lg bg-muted/50 p-3 text-sm'
+      )}
+    >
       <input
         value={title}
         disabled={readOnly}
@@ -282,7 +340,11 @@ export function GradeRow({ session, readOnly, locked, errors }: FieldProps) {
               event.target.value === '' ? null : Number(event.target.value)
             )
           }
-          className={cn(GHOST_INPUT, 'w-24 tabular-nums')}
+          className={cn(
+            GHOST_INPUT,
+            'w-24 [appearance:textfield] tabular-nums',
+            '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+          )}
         />
       )}
     </PropertyRow>
@@ -304,14 +366,14 @@ export function PatternsRow({ session, readOnly }: FieldProps) {
         ) : null
       }
     >
-      <div className="flex min-w-0 flex-wrap items-center gap-1 py-1">
+      <div className="flex min-w-0 flex-wrap items-center gap-1 py-0.5">
         {patterns.length === 0 ? (
           <span className="text-sm text-muted-foreground">Любые файлы</span>
         ) : null}
         {patterns.map((pattern, index) => (
           <span
             key={index}
-            className="inline-flex h-7 items-center rounded-md border border-border bg-muted/40 pl-2"
+            className="inline-flex h-7 items-center rounded-md bg-muted pl-2"
           >
             <input
               value={pattern}
@@ -346,8 +408,9 @@ export function PatternsRow({ session, readOnly }: FieldProps) {
         ))}
         <Button
           variant="ghost"
-          size="icon-xs"
+          size="icon-sm"
           aria-label="Добавить маску"
+          className="size-7 text-muted-foreground"
           disabled={readOnly}
           onClick={() => session.setField('patterns', [...patterns, ''])}
         >
@@ -388,7 +451,9 @@ export function ScheduleRows({
   const label = session.form.title || 'Новое задание';
   const counts = overrideCounts(schedule, taskId);
 
-  if (!schedule.tasks[taskId]) {
+  // With every override in the panel, opening and deadline move to the
+  // «Дедлайны» section next to them.
+  if (!schedule.tasks[taskId] || deadlineField === 'full') {
     return null;
   }
 
@@ -449,22 +514,16 @@ export function OverridesBlock({
 
   return (
     <Block
-      title="Переопределения дедлайнов"
+      title="Дедлайны"
       aside={
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={() => openVariant('A', { task: taskId })}
-        >
+        <HeaderAction onClick={() => openVariant('A', { task: taskId })}>
           Страница дедлайнов <ArrowUpRight />
-        </Button>
+        </HeaderAction>
       }
     >
       <TaskScheduleEditor
         taskId={taskId}
         taskTitle={session.form.title || 'Новое задание'}
-        showOpening={false}
-        showTaskDeadline={false}
       />
     </Block>
   );
@@ -483,9 +542,9 @@ export function StatementBlock({
       <Block
         title="Условие"
         aside={
-          <Button variant="ghost" size="xs" onClick={onRevealInDocument}>
+          <HeaderAction onClick={onRevealInDocument}>
             Править в документе <ArrowUpRight />
-          </Button>
+          </HeaderAction>
         }
       >
         <p className="line-clamp-3 text-sm whitespace-pre-line text-muted-foreground">
@@ -501,13 +560,9 @@ export function StatementBlock({
       <Block
         title="Условие"
         aside={
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={() => session.setExpanded(true)}
-          >
+          <HeaderAction onClick={() => session.setExpanded(true)}>
             <Maximize2 /> Развернуть
-          </Button>
+          </HeaderAction>
         }
       >
         <button
@@ -575,9 +630,7 @@ export function AttachmentsBlock({ session, readOnly }: FieldProps) {
     <Block
       title="Вложения"
       aside={
-        <Button
-          variant="ghost"
-          size="xs"
+        <HeaderAction
           disabled={readOnly}
           onClick={() =>
             session.setField('attachments', [
@@ -590,11 +643,13 @@ export function AttachmentsBlock({ session, readOnly }: FieldProps) {
           }
         >
           <Plus /> Файл
-        </Button>
+        </HeaderAction>
       }
     >
       {attachments.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Нет файлов</p>
+        <p className="flex min-h-8 items-center text-sm text-muted-foreground">
+          Нет файлов
+        </p>
       ) : (
         <ul className="flex flex-wrap gap-1.5">
           {attachments.map((file, index) => (

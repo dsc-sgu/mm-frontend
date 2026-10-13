@@ -171,6 +171,17 @@ function SandboxSettings() {
         />
       </Row>
 
+      <Row label="Разделы панели задания" hint="?panelLook">
+        <Segmented
+          value={settings.panelLook}
+          onChange={(panelLook) => update({ panelLook })}
+          options={[
+            { value: 'list', label: 'Через линии' },
+            { value: 'cards', label: 'Карточками' },
+          ]}
+        />
+      </Row>
+
       <Row label="Где править условие" hint="?statement">
         <Segmented
           value={settings.statement}

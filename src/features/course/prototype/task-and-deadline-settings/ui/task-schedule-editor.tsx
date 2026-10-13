@@ -1,7 +1,7 @@
 // PROTOTYPE (#181): every schedule value of one Task as property rows —
 // opening time, Task Deadline, each Student Group and personal Deadline
 // Overrides (the latter as a list, like Lyssna's date overrides).
-import { Plus, Trash2 } from 'lucide-react';
+import { CornerDownRight, Plus, Trash2 } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { studentName } from '@/features/course/prototype/task-and-deadline-settings/fixture';
@@ -147,7 +147,7 @@ export function TaskScheduleEditor({
     edit(commands, `${taskTitle}: ${what}`);
 
   return (
-    <div className="grid gap-1">
+    <div className="grid">
       {showOpening ? (
         <OpeningRow
           taskId={taskId}
@@ -187,10 +187,16 @@ export function TaskScheduleEditor({
               pending={keys.has(key)}
               onRevert={() => dropPending(new Set([key]))}
               trigger={
-                <DeadlineText
-                  value={override?.value ?? { kind: 'inherit' }}
-                  inherited={task.deadline}
-                />
+                override ? (
+                  <DeadlineText value={override.value} />
+                ) : (
+                  // The date is the Task Deadline right above; repeating it
+                  // in every row only adds noise.
+                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                    <CornerDownRight className="size-3.5" aria-hidden="true" />
+                    как общий
+                  </span>
+                )
               }
             >
               <LevelEditor
@@ -227,7 +233,11 @@ export function TaskScheduleEditor({
               ]);
             }}
             trigger={
-              <Button variant="ghost" size="xs">
+              <Button
+                variant="ghost"
+                size="xs"
+                className="-mr-2 text-muted-foreground hover:text-foreground"
+              >
                 <Plus /> Добавить
               </Button>
             }
@@ -237,11 +247,11 @@ export function TaskScheduleEditor({
         Личные переопределения
       </RowsHeading>
       {personal.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Нет. Каждый студент получает дедлайн своей группы.
+        <p className="flex min-h-8 items-center text-sm text-muted-foreground">
+          Нет. Каждый студент получает дедлайн своей подгруппы.
         </p>
       ) : (
-        <ul className="grid gap-1">
+        <ul className="grid">
           {personal.map((item) => {
             if (item.target.kind !== 'student') {
               return null;
@@ -254,9 +264,9 @@ export function TaskScheduleEditor({
             return (
               <li
                 key={student.id}
-                className="grid grid-cols-[8.5rem_minmax(0,1fr)_auto] items-start gap-x-3"
+                className="group/row grid grid-cols-[8rem_minmax(0,1fr)_auto] items-start gap-x-3 py-0.5"
               >
-                <span className="grid min-h-8 content-center">
+                <span className="grid min-h-8 min-w-0 content-center">
                   <span className="truncate text-sm">
                     {studentName(student)}
                   </span>
@@ -293,6 +303,7 @@ export function TaskScheduleEditor({
                 <Button
                   variant="ghost"
                   size="icon-sm"
+                  className="text-muted-foreground opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
                   aria-label={`Снять личное переопределение: ${studentName(student)}`}
                   onClick={() =>
                     emit(`снято ${label}`)([
