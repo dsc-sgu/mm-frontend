@@ -90,7 +90,7 @@ export function PrototypeEditor({
             <PanelFrame
               layout="dock"
               expanded={session.expanded && settings.statement === 'expanded'}
-              label="Настройка Task"
+              label="Настройка задания"
               onEscape={close}
             >
               <TaskPanel
@@ -136,11 +136,13 @@ function DraftStrip() {
     <div className="pointer-events-auto flex w-full flex-wrap items-center gap-3 rounded-xl border bg-background px-4 py-2.5 text-sm shadow-lg">
       <FileStack className="size-4 text-violet-600" />
       <span className="min-w-0 flex-1">
-        В черновике курса правки Task:{' '}
+        В черновике курса правки заданий:{' '}
         {entries
           .map(
             ([taskId, edits]) =>
-              `«${tasks[taskId]?.title || 'Новая Task'}» (${Object.keys(edits)
+              `«${tasks[taskId]?.title || 'Новое задание'}» (${Object.keys(
+                edits
+              )
                 .map((key) => FIELD_LABEL[key as keyof typeof FIELD_LABEL])
                 .join(', ')})`
           )

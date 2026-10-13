@@ -29,6 +29,7 @@ import {
   flipsSentence,
   inverseOf,
   movingRows,
+  taskCount,
   type ShiftPreset,
 } from './model';
 
@@ -269,7 +270,7 @@ export function useKindsDraft(preset: ShiftPreset) {
 
   const blocked =
     orderedTaskIds.length === 0
-      ? 'Выберите хотя бы одну Task'
+      ? 'Выберите хотя бы одно задание'
       : !kinds.general && !kinds.groups && !kinds.students && !kinds.opening
         ? 'Отметьте, какие дедлайны сдвинуть'
         : days === 0
@@ -281,7 +282,7 @@ export function useKindsDraft(preset: ShiftPreset) {
   function submit() {
     edit(
       plan.commands,
-      `сдвиг ${daysLabel(days)}: ${orderedTaskIds.length} Task`
+      `сдвиг ${daysLabel(days)}: ${taskCount(orderedTaskIds.length)}`
     );
     return inverseOf(plan.rows);
   }

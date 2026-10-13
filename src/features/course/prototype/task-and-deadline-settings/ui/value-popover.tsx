@@ -63,7 +63,11 @@ export function ValuePopover({
             {trigger}
           </button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-80 p-0">
+        {/* Never taller than the room left on screen: the calendar is tall. */}
+        <PopoverContent
+          align="start"
+          className="max-h-(--radix-popover-content-available-height) w-80 overflow-y-auto p-0"
+        >
           <p className="border-b px-3 py-2 text-sm font-medium">{title}</p>
           <div className="grid gap-3 p-3">{children}</div>
           {showZone ? (

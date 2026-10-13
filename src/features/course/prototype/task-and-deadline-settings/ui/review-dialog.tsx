@@ -123,7 +123,7 @@ function ReviewBody({ onClose }: { onClose: () => void }) {
                   }
                 />
               </th>
-              <th className="py-2 font-medium">Task</th>
+              <th className="py-2 font-medium">Задание</th>
               <th className="py-2 font-medium">Что</th>
               <th className="py-2 font-medium">Было</th>
               <th className="w-6" />
@@ -186,7 +186,7 @@ function ReviewBody({ onClose }: { onClose: () => void }) {
           {flips.becameLate.length + flips.becameOnTime.length > 0 ? (
             <span className="flex items-center gap-1">
               <TriangleAlert className="size-3.5 text-amber-600" />
-              Attempts: станут опоздавшими {flips.becameLate.length}, перестанут{' '}
+              Попытки: станут опоздавшими {flips.becameLate.length}, перестанут{' '}
               {flips.becameOnTime.length}
             </span>
           ) : null}

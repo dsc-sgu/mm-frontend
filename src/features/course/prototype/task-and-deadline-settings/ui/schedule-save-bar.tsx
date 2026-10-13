@@ -13,6 +13,7 @@ import { useSandbox } from '@/features/course/prototype/task-and-deadline-settin
 import { formatClock } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { usePendingChanges } from '@/features/course/prototype/task-and-deadline-settings/use-pending';
 import { ReviewDialog } from '@/features/course/prototype/task-and-deadline-settings/ui/review-dialog';
+import { plural } from '@/features/course/prototype/task-and-deadline-settings/ui/shift/model';
 
 /** Inline status for toolbars. */
 export function ScheduleStatus({ className }: { className?: string }) {
@@ -108,7 +109,8 @@ export function ScheduleDock({
             ) : null}
             {flips > 0 ? (
               <span className="text-muted-foreground">
-                , опоздание изменится у {flips} Attempts
+                , опоздание изменится у {flips}{' '}
+                {plural(flips, 'попытки', 'попыток', 'попыток')}
               </span>
             ) : null}
           </span>

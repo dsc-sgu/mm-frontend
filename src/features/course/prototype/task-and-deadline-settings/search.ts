@@ -33,11 +33,15 @@ export type PrototypeSearch = {
 export type VariantRoute = 'course' | 'deadlines' | 'tasks' | 'edit';
 
 export const VARIANTS = [
-  { key: 'overlay', name: 'Панель поверх Course Page', route: 'course' },
-  { key: 'dock', name: 'Панель рядом с Course Page', route: 'course' },
-  { key: 'A', name: 'Дедлайны: матрица Task × группа', route: 'deadlines' },
-  { key: 'B', name: 'Дедлайны: список Task и панель', route: 'tasks' },
-  { key: 'C', name: 'Дедлайны в редакторе Course Page', route: 'edit' },
+  { key: 'overlay', name: 'Панель поверх страницы курса', route: 'course' },
+  { key: 'dock', name: 'Панель рядом со страницей курса', route: 'course' },
+  {
+    key: 'A',
+    name: 'Дедлайны: матрица задания × подгруппы',
+    route: 'deadlines',
+  },
+  { key: 'B', name: 'Дедлайны: список заданий и панель', route: 'tasks' },
+  { key: 'C', name: 'Дедлайны в редакторе страницы курса', route: 'edit' },
   { key: 'D', name: 'Дедлайны: таймлайн', route: 'deadlines' },
 ] as const satisfies ReadonlyArray<{
   key: string;

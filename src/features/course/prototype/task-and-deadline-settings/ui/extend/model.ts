@@ -30,6 +30,7 @@ import {
   daysLabel,
   flipsSentence,
   plural,
+  taskCount,
 } from '@/features/course/prototype/task-and-deadline-settings/ui/shift/model';
 
 const studentsById = new Map(STUDENTS.map((student) => [student.id, student]));
@@ -221,7 +222,7 @@ export function useExtendDraft(preset: ExtendPreset) {
           : orderedTaskIds.length === 0
             ? range
               ? 'В этот период у выбранных студентов нет дедлайнов'
-              : 'Выберите хотя бы одну Task'
+              : 'Выберите хотя бы одно задание'
             : by.kind === 'days' && by.days === 0
               ? 'Выберите, на сколько продлить'
               : by.kind === 'days' && by.days < 0
@@ -237,7 +238,7 @@ export function useExtendDraft(preset: ExtendPreset) {
         : `${studentIds.length} ${plural(studentIds.length, 'студент', 'студента', 'студентов')}`;
     edit(
       plan.commands,
-      `продление ${byLabel(by)}: ${who}, ${orderedTaskIds.length} Task`
+      `продление ${byLabel(by)}: ${who}, ${taskCount(orderedTaskIds.length)}`
     );
   }
 

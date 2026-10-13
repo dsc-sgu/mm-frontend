@@ -128,7 +128,7 @@ export function PublishFooter({
   function guard() {
     onAttempt();
     if (hasErrors) {
-      toast.error('Исправьте ошибки в полях Task');
+      toast.error('Исправьте ошибки в полях задания');
       return false;
     }
     return true;
@@ -141,7 +141,7 @@ export function PublishFooter({
       summary={
         <>
           <CalendarClock className="mr-1 inline size-3.5 align-[-2px]" />
-          Дедлайны этой Task применятся отдельно от публикации:{' '}
+          Дедлайны этого задания применятся отдельно от публикации:{' '}
           {scheduleChanges.length}
         </>
       }
@@ -176,8 +176,8 @@ export function PublishFooter({
         <FooterShell>
           <Note tone="warn" icon={<CircleAlert className="size-3.5" />}>
             {effectiveLease.sameTask
-              ? `Две правки одной Task одновременно невозможны: ${OTHER_TEACHER.shortName} уже правит её через черновик курса и держит Course Editing Lease. Ваша правка станет доступна, когда он опубликует курс или отпустит lease.`
-              : `Правка Task идёт через черновик курса, а его сейчас редактирует ${OTHER_TEACHER.shortName}. Панель только для чтения, пока он не отпустит Course Editing Lease.`}
+              ? `Две правки одного задания одновременно невозможны: ${OTHER_TEACHER.shortName} уже правит его через черновик курса и держит блокировку редактирования курса. Ваша правка станет доступна, когда он опубликует курс или снимет блокировку.`
+              : `Правка задания идёт через черновик курса, а его сейчас редактирует ${OTHER_TEACHER.shortName}. Панель только для чтения, пока он не снимет блокировку редактирования курса.`}
           </Note>
           {scheduleBox}
           {scheduleDirty ? (
@@ -226,7 +226,7 @@ export function PublishFooter({
         <FooterShell>
           {result}
           <Note>
-            Правки Task попадут в черновик курса. Опубликует их кнопка
+            Правки задания попадут в черновик курса. Опубликует их кнопка
             «Применить» редактора вместе со страницей.
           </Note>
           {scheduleBox}
@@ -260,7 +260,7 @@ export function PublishFooter({
       ...(draft?.pageEdits ?? []),
       ...otherTaskEdits.map(
         ([taskId, edits]) =>
-          `Task «${sandbox.tasks[taskId]?.title}»: ${Object.keys(edits)
+          `Задание «${sandbox.tasks[taskId]?.title}»: ${Object.keys(edits)
             .map((key) => FIELD_LABEL[key as keyof typeof FIELD_LABEL])
             .join(', ')}`
       ),
@@ -318,8 +318,8 @@ export function PublishFooter({
           <Note tone="danger" icon={<GitCompareArrows className="size-3.5" />}>
             <p>
               Ваш черновик устарел: {OTHER_TEACHER.shortName} опубликовал курс в
-              11:05. Правка Task попадёт в устаревший черновик; опубликовать его
-              можно только после пересборки на новой версии.
+              11:05. Правка задания попадёт в устаревший черновик; опубликовать
+              его можно только после пересборки на новой версии.
             </p>
             <div>
               <Button
@@ -342,14 +342,14 @@ export function PublishFooter({
                   {alsoPublished.length === 1 ? 'правка' : 'правки'}
                 </span>
               ) : (
-                'Опубликуется весь черновик курса, сейчас в нём только эта Task'
+                'Опубликуется весь черновик курса, сейчас в нём только это задание'
               )
             }
           >
             <ul className="grid gap-0.5 text-muted-foreground">
               {dirty || ownDraftEdits ? (
                 <li>
-                  Эта Task:{' '}
+                  Это задание:{' '}
                   {[
                     ...new Set([
                       ...fields,
@@ -367,9 +367,9 @@ export function PublishFooter({
               ))}
               <li>
                 {sandbox.lease.holder === 'me'
-                  ? 'Course Editing Lease у вас.'
-                  : 'На время правки берётся Course Editing Lease.'}{' '}
-                Students увидят всё сразу после публикации.
+                  ? 'Блокировка редактирования курса у вас.'
+                  : 'На время правки берётся блокировка редактирования курса.'}{' '}
+                Студенты увидят всё сразу после публикации.
               </li>
             </ul>
           </Disclosure>
@@ -447,7 +447,7 @@ export function PublishFooter({
     session.rebase(pickProps(task), task.version);
     const parts = [
       published !== null
-        ? `Task опубликована, версия ${published} (${fieldList})`
+        ? `Задание опубликовано, версия ${published} (${fieldList})`
         : null,
       scheduleDirty
         ? scheduleOk
@@ -461,7 +461,7 @@ export function PublishFooter({
       text: parts.join('; '),
     });
     toast.success(
-      published !== null ? 'Task опубликована' : 'Дедлайны применены'
+      published !== null ? 'Задание опубликовано' : 'Дедлайны применены'
     );
   }
 
@@ -471,8 +471,8 @@ export function PublishFooter({
       {conflict ? (
         <Note tone="danger" icon={<GitCompareArrows className="size-3.5" />}>
           <p>
-            <b>Конфликт версий.</b> {OTHER_TEACHER.shortName} опубликовал эту
-            Task, пока вы её правили: версия {session.baseVersion} →{' '}
+            <b>Конфликт версий.</b> {OTHER_TEACHER.shortName} опубликовал это
+            задание, пока вы его правили: версия {session.baseVersion} →{' '}
             {conflict.theirs.version}. У него изменены:{' '}
             {conflict.changedFields.map((key) => FIELD_LABEL[key]).join(', ')}.
           </p>
@@ -504,8 +504,8 @@ export function PublishFooter({
       ) : null}
       {sandbox.lease.holder === 'other' ? (
         <Note>
-          Курс редактирует {OTHER_TEACHER.shortName}. Task публикуется отдельно
-          от черновика курса, поэтому её можно править.
+          Курс редактирует {OTHER_TEACHER.shortName}. Задание публикуется
+          отдельно от черновика курса, поэтому его можно править.
         </Note>
       ) : null}
       {sandbox.draft ? (
@@ -516,7 +516,7 @@ export function PublishFooter({
       ) : null}
       {dirty ? (
         <Note>
-          Опубликуется только эта Task ({fieldList}), версия {version} →{' '}
+          Опубликуется только это задание ({fieldList}), версия {version} →{' '}
           {version + 1}.
           {scheduleDirty
             ? ' Дедлайны уйдут второй операцией за той же кнопкой.'
@@ -537,10 +537,10 @@ export function PublishFooter({
           {busy ? <LoaderCircle className="animate-spin" /> : null}
           {dirty
             ? scheduleDirty
-              ? 'Опубликовать Task и дедлайны'
+              ? 'Опубликовать задание и дедлайны'
               : isNew
-                ? 'Создать Task'
-                : 'Опубликовать Task'
+                ? 'Создать задание'
+                : 'Опубликовать задание'
             : 'Применить дедлайны'}
         </Button>
       </Buttons>

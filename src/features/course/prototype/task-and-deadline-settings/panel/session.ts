@@ -43,9 +43,9 @@ export type PanelSession = {
 
 export const FIELD_LABEL: Record<keyof TaskProps, string> = {
   title: 'название',
-  key: 'Task Key',
-  groupId: 'Task Group',
-  maxGrade: 'максимальная Grade',
+  key: 'ключ задания',
+  groupId: 'группа заданий',
+  maxGrade: 'максимальный балл',
   statement: 'условие',
   annotation: 'аннотация',
   attachments: 'вложения',

@@ -59,7 +59,7 @@ import {
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
 import { DeadlineText } from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
 import { Segmented } from '@/features/course/prototype/task-and-deadline-settings/ui/segmented';
-import type { ShiftPreset } from './shift/model';
+import { taskCount, type ShiftPreset } from './shift/model';
 import { VariantSwitch } from './shift/parts';
 import { QuestionBody } from './shift/question';
 import { SentenceBody } from './shift/sentence';
@@ -232,21 +232,21 @@ function ShiftDialogBody({
   function submit() {
     const scope =
       recipients === 'course'
-        ? 'весь Course'
+        ? 'весь курс'
         : [...groupIds].map(groupName).join(', ');
     edit(
       plan.commands,
-      `сдвиг ${daysLabel(days)}: ${orderedTaskIds.length} Task, ${scope}`
+      `сдвиг ${daysLabel(days)}: ${taskCount(orderedTaskIds.length)}, ${scope}`
     );
     onApplied();
   }
 
   const taskSummary =
     orderedTaskIds.length === 0
-      ? 'Выберите Task'
+      ? 'Выберите задания'
       : orderedTaskIds.length === 1
         ? tasks[orderedTaskIds[0]!]?.title
-        : `${orderedTaskIds.length} Task`;
+        : taskCount(orderedTaskIds.length);
 
   return (
     <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-4xl">
@@ -298,8 +298,8 @@ function ShiftDialogBody({
             onChange={setRecipients}
             label="Кому"
             options={[
-              { value: 'course', label: 'Весь Course' },
-              { value: 'groups', label: 'Student Groups' },
+              { value: 'course', label: 'Весь курс' },
+              { value: 'groups', label: 'Подгруппы' },
             ]}
           />
           {recipients === 'groups'
@@ -390,7 +390,7 @@ function ShiftDialogBody({
             className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
           >
             <TriangleAlert className="size-3.5 text-amber-600" />
-            Attempts: станут опоздавшими {flips.becameLate.length}, перестанут{' '}
+            Попытки: станут опоздавшими {flips.becameLate.length}, перестанут{' '}
             {flips.becameOnTime.length}
             <ChevronDown
               className={cn(
@@ -401,7 +401,7 @@ function ShiftDialogBody({
           </button>
         ) : (
           <span className="text-muted-foreground">
-            Статус опоздания Attempts не изменится
+            Статус опоздания попыток не изменится
           </span>
         )}
       </div>
@@ -415,7 +415,7 @@ function ShiftDialogBody({
       <div className="min-h-0 flex-1 overflow-y-auto border-t">
         {orderedTaskIds.length === 0 ? (
           <p className="p-5 text-sm text-muted-foreground">
-            Выберите хотя бы одну Task.
+            Выберите хотя бы одно задание.
           </p>
         ) : (
           <table className="w-full text-sm">
@@ -529,7 +529,7 @@ function rowNote(row: ShiftRow) {
     case 'no-deadline':
       return 'Без дедлайна, не двигается';
     case 'opening-course-only':
-      return 'Двигается только для всего Course';
+      return 'Двигается только для всего курса';
     case 'shift':
       if (row.equalsTaskDeadline) {
         return 'Совпадёт с общим, но останется явным';
@@ -541,7 +541,7 @@ function rowNote(row: ShiftRow) {
         row.after.at > row.before.at &&
         isTaskOpen(row.before.at)
       ) {
-        return `Уже открыта ${STUDENTS.length} Students, им ничего не меняет`;
+        return `Уже открыто ${STUDENTS.length} ${plural(STUDENTS.length, 'студенту', 'студентам', 'студентам')}, им ничего не меняет`;
       }
       if (row.excludable && !row.included) {
         return 'Останется как есть';

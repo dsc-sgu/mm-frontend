@@ -43,6 +43,7 @@ import {
   daysLabel,
   groupName,
   plural,
+  taskCount,
   taskSummary,
   toggleIn,
   type ShiftPreset,
@@ -240,7 +241,7 @@ function GroupButtons({ draft }: { draft: KindsDraft }) {
         })}
         {single === null ? (
           <span className="self-center text-xs text-muted-foreground">
-            Отмеченные подгруппы сдвинутся во всех выбранных Task
+            Отмеченные подгруппы сдвинутся во всех выбранных заданиях
           </span>
         ) : null}
       </div>
@@ -318,7 +319,7 @@ function ShiftPreview({ draft }: { draft: KindsDraft }) {
     <ChangesBox
       empty={
         rows.length === 0
-          ? 'Выберите Task и что сдвинуть, здесь появятся новые дедлайны'
+          ? 'Выберите задания и что сдвинуть, здесь появятся новые дедлайны'
           : null
       }
     >
@@ -372,7 +373,7 @@ export function QuestionBody({
       : single
         ? 'без дедлайна'
         : ids.length > 1
-          ? `${ids.length} Task`
+          ? taskCount(ids.length)
           : null;
 
   return (
@@ -381,12 +382,12 @@ export function QuestionBody({
         <VariantSwitch />
         <DialogTitle className="text-lg">Сдвинуть дедлайны</DialogTitle>
         <DialogDescription className="sr-only">
-          Выберите Task, на сколько дней и какие дедлайны сдвинуть
+          Выберите задания, на сколько дней и какие дедлайны сдвинуть
         </DialogDescription>
       </DialogHeader>
 
       <div className="grid min-h-0 gap-5 overflow-y-auto px-6 pb-5">
-        <Section title="Task">
+        <Section title="Задания">
           <TaskPicker
             draft={draft}
             trigger={
@@ -398,7 +399,7 @@ export function QuestionBody({
                 )}
               >
                 <span className="truncate">
-                  {ids.length === 0 ? 'Выберите Task' : taskSummary(draft)}
+                  {ids.length === 0 ? 'Выберите задания' : taskSummary(draft)}
                 </span>
                 <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
               </button>

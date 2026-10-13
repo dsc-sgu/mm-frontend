@@ -70,7 +70,7 @@ export function OpeningRow({
       note={<OpeningNotes taskId={taskId} quietWhenFine />}
     >
       <ValuePopover
-        title={`${label}: Task Opening Time`}
+        title={`${label}: время открытия`}
         pending={keys.has(key)}
         onRevert={() => dropPending(new Set([key]))}
         trigger={
@@ -161,7 +161,7 @@ export function TaskScheduleEditor({
         />
       ) : null}
 
-      <RowsHeading>Student Groups</RowsHeading>
+      <RowsHeading>Подгруппы</RowsHeading>
       {STUDENT_GROUPS.map((group) => {
         const target: OverrideTarget = { kind: 'group', groupId: group.id };
         const override = findOverride(schedule, taskId, target);
@@ -235,7 +235,7 @@ export function TaskScheduleEditor({
       </RowsHeading>
       {personal.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Нет. Каждый Student получает дедлайн своей группы.
+          Нет. Каждый студент получает дедлайн своей группы.
         </p>
       ) : (
         <ul className="grid gap-1">

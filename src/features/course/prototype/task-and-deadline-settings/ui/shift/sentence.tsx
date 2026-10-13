@@ -73,7 +73,7 @@ function Token({ label, children }: { label: string; children: ReactNode }) {
 }
 
 const SCOPE_WORDS: Record<ShiftScope, string> = {
-  everything: 'вместе с дедлайнами групп и Students',
+  everything: 'вместе с дедлайнами групп и студентов',
   'general-only': 'только общий дедлайн',
   groups: 'только для групп',
 };
@@ -125,7 +125,7 @@ export function SentenceBody({
         <VariantSwitch />
         <DialogTitle className="sr-only">Сдвинуть дедлайны</DialogTitle>
         <DialogDescription className="sr-only">
-          Выберите Task, на сколько и для кого сдвинуть дедлайны
+          Выберите задания, на сколько и для кого сдвинуть дедлайны
         </DialogDescription>
       </DialogHeader>
 

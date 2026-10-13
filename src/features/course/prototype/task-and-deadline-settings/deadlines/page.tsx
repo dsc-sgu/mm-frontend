@@ -1,7 +1,7 @@
 // PROTOTYPE (#181): deadline screen variants. A — matrix «Task × Student
 // Group» and D — timeline at `/deadlines`; B — Task list with a side panel at
 // `/tasks`. All share the store, the save flow and the mass shift dialog.
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { CalendarArrowUp, CalendarPlus } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -12,14 +12,9 @@ import {
 } from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
 import { SandboxBar } from '@/features/course/prototype/task-and-deadline-settings/sandbox-bar';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
-import { timeZoneLabel } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { BulkBar } from '@/features/course/prototype/task-and-deadline-settings/ui/bulk-bar';
 import { ExtendDialog } from '@/features/course/prototype/task-and-deadline-settings/ui/extend/dialog';
 import type { ExtendPreset } from '@/features/course/prototype/task-and-deadline-settings/ui/extend/model';
-import {
-  DeadlineText,
-  NoDeadline,
-} from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
 import {
   ScheduleDock,
   ScheduleStatus,
@@ -29,7 +24,7 @@ import {
   type ShiftPreset,
 } from '@/features/course/prototype/task-and-deadline-settings/ui/shift-dialog';
 import { ShiftToastView } from '@/features/course/prototype/task-and-deadline-settings/ui/shift/parts';
-import { MatrixView } from './matrix';
+import { MatrixView, StudentColumnControl } from './matrix';
 import { TaskListView } from './task-list';
 import { TimelineView } from './timeline';
 
@@ -39,6 +34,8 @@ export type DeadlinesViewProps = {
   setSelection: (selection: ReadonlySet<string>) => void;
   onShift: (preset: ShiftPreset) => void;
   onExtend: (preset: ExtendPreset) => void;
+  /** Matrix A: the Student whose own column is shown. */
+  studentId: string | null;
 };
 
 export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
@@ -47,6 +44,7 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   const [shift, setShift] = useState<ShiftPreset | null>(null);
   const [extend, setExtend] = useState<ExtendPreset | null>(null);
+  const [studentId, setStudentId] = useState<string | null>(null);
 
   const viewProps: DeadlinesViewProps = {
     courseSlug,
@@ -54,6 +52,7 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
     setSelection,
     onShift: setShift,
     onExtend: setExtend,
+    studentId,
   };
 
   return (
@@ -65,18 +64,18 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
         dockOffset(panelOpen, 'dock')
       )}
     >
-      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div className="grid gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {variant === 'B' ? 'Задания и дедлайны' : 'Дедлайны'}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Время в поясе {timeZoneLabel()}. Дедлайны применяются отдельно от
-            публикации курса.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {variant === 'B' ? 'Задания и дедлайны' : 'Дедлайны'}
+        </h1>
+        <div className="flex flex-wrap items-center gap-3">
           <ScheduleStatus />
+          {variant === 'A' ? (
+            <StudentColumnControl
+              studentId={studentId}
+              onChange={setStudentId}
+            />
+          ) : null}
           <Button
             variant="outline"
             size="sm"
@@ -97,8 +96,6 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
           </Button>
         </div>
       </header>
-
-      {variant === 'B' ? null : <Legend />}
 
       {variant === 'A' ? <MatrixView {...viewProps} /> : null}
       {variant === 'B' ? <TaskListView {...viewProps} /> : null}
@@ -128,38 +125,5 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
       />
       <SandboxBar courseSlug={courseSlug} />
     </main>
-  );
-}
-
-function LegendItem({ children }: { children: ReactNode }) {
-  return <span className="inline-flex items-center gap-1.5">{children}</span>;
-}
-
-function Legend() {
-  return (
-    <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
-      <LegendItem>
-        <DeadlineText
-          value={{ kind: 'inherit' }}
-          inherited={{ kind: 'at', at: Date.UTC(2026, 9, 27, 19, 59) }}
-          compact
-        />
-        наследует общий дедлайн
-      </LegendItem>
-      <LegendItem>
-        <DeadlineText
-          value={{ kind: 'at', at: Date.UTC(2026, 9, 29, 19, 59) }}
-          compact
-        />
-        задан явно
-      </LegendItem>
-      <LegendItem>
-        <NoDeadline /> явно без дедлайна
-      </LegendItem>
-      <LegendItem>
-        <span className="h-3.5 w-1 rounded-sm bg-amber-500" />
-        не применено
-      </LegendItem>
-    </div>
   );
 }

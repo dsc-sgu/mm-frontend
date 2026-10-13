@@ -88,8 +88,8 @@ export const COURSE_PAGE_SLASH_MENU_ITEMS: CoursePageSlashMenuItem[] = [
   // PROTOTYPE (#181): a Task is created only by inserting its Task Reference.
   {
     id: 'task',
-    label: 'Task',
-    description: 'Новая Task: вставит Task Reference и откроет панель',
+    label: 'Задание',
+    description: 'Новое задание: вставит блок задания и откроет панель',
     keywords: ['task', 'задание', 'лабораторная'],
     input: { type: 'assignment', taskId: NEW_TASK_ID },
   },

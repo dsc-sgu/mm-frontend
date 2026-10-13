@@ -21,7 +21,7 @@ import {
   OptionRow,
   Shortcuts,
 } from '@/features/course/prototype/task-and-deadline-settings/ui/level-editor';
-import { MomentField } from '@/features/course/prototype/task-and-deadline-settings/ui/moment-field';
+import { MomentPicker } from '@/features/course/prototype/task-and-deadline-settings/ui/moment-picker';
 
 const STEPS = [
   { label: '+1 день', days: 1 },
@@ -49,19 +49,13 @@ export function OpeningEditor({
 
   return (
     <>
-      <MomentField
-        autoFocus
-        allowEmpty
-        defaultTime="00:00"
-        value={opening}
-        onCommit={set}
-      />
+      <MomentPicker defaultTime="00:00" value={opening} onCommit={set} />
       <Shortcuts base={opening ?? startOfToday()} steps={STEPS} onPick={set} />
       <div className="-mx-1 grid border-t pt-2">
         <OptionRow
           selected={opening === null}
           icon={<CircleSlash className="size-4" />}
-          label="Не задано: Task открыта сразу"
+          label="Не задано: задание открыто сразу"
           onSelect={() => set(null)}
         />
       </div>
@@ -98,14 +92,14 @@ export function OpeningNotes({
       {!quietWhenFine ? (
         <p className="text-xs text-muted-foreground">
           {alreadyOpen
-            ? `Уже открыта всем ${STUDENTS.length} Students`
-            : `Пока закрыта, откроется ${formatMoment(appliedOpening!)}`}
+            ? `Уже открыто всем ${STUDENTS.length} студентам`
+            : `Пока закрыто, откроется ${formatMoment(appliedOpening!)}`}
         </p>
       ) : null}
       {movedLater ? (
         <Warning>
-          Перенос на более позднее время не закроет Task для {STUDENTS.length}{' '}
-          Students, которым она уже открыта.
+          Перенос на более позднее время не закроет задание для{' '}
+          {STUDENTS.length} студентов, которым оно уже открыто.
         </Warning>
       ) : null}
       {late ? (
@@ -113,8 +107,8 @@ export function OpeningNotes({
           Откроется позже{' '}
           {conflicts.task
             ? 'общего дедлайна'
-            : `дедлайна ${conflicts.students} из ${STUDENTS.length} Students`}
-          : они увидят её уже просроченной. Сохранить можно.
+            : `дедлайна ${conflicts.students} из ${STUDENTS.length} студентов`}
+          : они увидят его уже просроченным. Сохранить можно.
         </Warning>
       ) : null}
     </div>

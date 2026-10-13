@@ -53,7 +53,7 @@ export function validateKey(
   takenInGroup: readonly string[]
 ): string | null {
   if (!key) {
-    return 'Введите Task Key';
+    return 'Введите ключ задания';
   }
 
   if (!KEY_FORMAT.test(key)) {
@@ -67,7 +67,7 @@ export function validateKey(
     while (takenInGroup.includes(`${lower}-${suffix}`)) {
       suffix += 1;
     }
-    return `Ключ «${lower}» уже занят в этой Task Group. Свободен «${lower}-${suffix}»`;
+    return `Ключ «${lower}» уже занят в этой группе заданий. Свободен «${lower}-${suffix}»`;
   }
 
   return null;

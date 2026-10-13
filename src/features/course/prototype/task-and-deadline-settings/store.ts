@@ -192,15 +192,15 @@ export const useSandbox = create<Sandbox>()((set, get) => {
 
     reset: () => {
       set(initialState());
-      log('Песочница сброшена к fixture', 'world');
+      log('Песочница сброшена к исходным данным', 'world');
     },
 
     setCourseAccess: (courseAccess) => {
       set({ courseAccess });
       log(
         courseAccess === 'open'
-          ? 'Course открыт Students'
-          : 'Course переведён в draft',
+          ? 'Курс открыт студентам'
+          : 'Курс снова в подготовке',
         'world'
       );
     },
@@ -252,8 +252,8 @@ export const useSandbox = create<Sandbox>()((set, get) => {
       });
       log(
         on
-          ? `Course Editing Lease у ${OTHER_TEACHER.shortName}`
-          : 'Course Editing Lease свободен',
+          ? `Блокировка редактирования курса у ${OTHER_TEACHER.shortName}`
+          : 'Блокировка редактирования курса свободна',
         'world'
       );
     },
@@ -262,8 +262,8 @@ export const useSandbox = create<Sandbox>()((set, get) => {
       set({ concurrentEdit: on });
       log(
         on
-          ? `${OTHER_TEACHER.shortName} правит ту же Task`
-          : 'Никто больше не правит Task',
+          ? `${OTHER_TEACHER.shortName} правит то же задание`
+          : 'Никто больше не правит задание',
         'world'
       );
     },
@@ -372,11 +372,11 @@ export const useSandbox = create<Sandbox>()((set, get) => {
       });
 
       if (lease.holder === 'nobody') {
-        log('Вы взяли Course Editing Lease', 'course');
+        log('Вы взяли блокировку редактирования курса', 'course');
       }
 
       log(
-        `В черновик курса: Task «${tasks[taskId]?.title ?? taskId}» — ${Object.keys(edits).length} полей`,
+        `В черновик курса: задание «${tasks[taskId]?.title ?? taskId}» — ${Object.keys(edits).length} полей`,
         'course'
       );
     },
@@ -404,7 +404,7 @@ export const useSandbox = create<Sandbox>()((set, get) => {
 
       const parts = [
         ...draft.pageEdits,
-        ...taskIds.map((taskId) => `Task «${nextTasks[taskId]?.title}»`),
+        ...taskIds.map((taskId) => `Задание «${nextTasks[taskId]?.title}»`),
       ];
 
       set({
@@ -447,7 +447,7 @@ export const useSandbox = create<Sandbox>()((set, get) => {
           tasks: { ...tasks, [taskId]: theirs },
         });
         log(
-          `${OTHER_TEACHER.shortName} опубликовал Task «${current.title}» (версия ${theirs.version})`,
+          `${OTHER_TEACHER.shortName} опубликовал задание «${current.title}» (версия ${theirs.version})`,
           'conflict'
         );
         return {
@@ -471,7 +471,7 @@ export const useSandbox = create<Sandbox>()((set, get) => {
         lastApplied: { taskIds: [taskId], at: Date.now() },
       });
       log(
-        `Опубликована Task «${next.title}» (версия ${next.version}): ${Object.keys(edits).join(', ')}`,
+        `Опубликовано задание «${next.title}» (версия ${next.version}): ${Object.keys(edits).join(', ')}`,
         'task'
       );
       return { status: 'published', version: next.version };
@@ -539,8 +539,8 @@ export const useSandbox = create<Sandbox>()((set, get) => {
       });
       log(
         source
-          ? `Создана Task после «${source.title}»: перенесены группа, Grade, дедлайны`
-          : 'Создана Task в новой Task Group',
+          ? `Создано задание после «${source.title}»: перенесены группа, балл, дедлайны`
+          : 'Создано задание в новой группе заданий',
         'task'
       );
     },
@@ -575,7 +575,7 @@ export const useSandbox = create<Sandbox>()((set, get) => {
         taskGroups: groups,
       });
       log(
-        `Новая Task «${props.title}» сохранена; появится у Students после публикации курса`,
+        `Новое задание «${props.title}» сохранено; появится у студентов после публикации курса`,
         'task'
       );
     },

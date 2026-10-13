@@ -59,7 +59,10 @@ import {
 } from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
 import { LevelEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/level-editor';
 import { OpeningEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/opening-time-field';
-import { upcomingForGroup } from '@/features/course/prototype/task-and-deadline-settings/ui/shift/model';
+import {
+  plural,
+  upcomingForGroup,
+} from '@/features/course/prototype/task-and-deadline-settings/ui/shift/model';
 import { StudentPicker } from '@/features/course/prototype/task-and-deadline-settings/ui/student-picker';
 import { ValuePopover } from '@/features/course/prototype/task-and-deadline-settings/ui/value-popover';
 import type { DeadlinesViewProps } from './page';
@@ -70,9 +73,50 @@ const groupName = (groupId: string) =>
 
 type Emit = (label: string) => (commands: DeadlineCommand[]) => void;
 
+/**
+ * «Дедлайны студента»: adds a column with one Student's deadline per Task
+ * and where it comes from. Sits in the page header next to the actions.
+ */
+export function StudentColumnControl({
+  studentId,
+  onChange,
+}: {
+  studentId: string | null;
+  onChange: (studentId: string | null) => void;
+}) {
+  const student = studentId ? studentsById.get(studentId) : undefined;
+
+  return student ? (
+    <span
+      title="Колонка справа: дедлайн студента по каждому заданию и откуда он взялся. Заголовок колонки продлевает ему дедлайны"
+      className="inline-flex h-8 items-center gap-2 rounded-md border border-violet-500/40 bg-violet-500/10 pr-1 pl-2.5 text-sm"
+    >
+      {studentName(student)}, {groupName(student.groupId)}
+      <button
+        type="button"
+        aria-label="Убрать колонку студента"
+        onClick={() => onChange(null)}
+        className="grid size-6 cursor-pointer place-items-center rounded hover:bg-violet-500/15"
+      >
+        <X className="size-3.5" />
+      </button>
+    </span>
+  ) : (
+    <StudentPicker
+      onPick={onChange}
+      trigger={
+        <Button variant="outline" size="sm">
+          <Search /> Дедлайны студента
+        </Button>
+      }
+    />
+  );
+}
+
 export function MatrixView({
   selection,
   setSelection,
+  studentId,
   onShift,
   onExtend,
 }: DeadlinesViewProps) {
@@ -83,7 +127,6 @@ export function MatrixView({
     () => new Set(focusTaskId ? [focusTaskId] : [])
   );
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const [studentId, setStudentId] = useState<string | null>(null);
   const student = studentId ? studentsById.get(studentId) : undefined;
 
   useEffect(() => {
@@ -120,37 +163,6 @@ export function MatrixView({
 
   return (
     <div className="grid gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        {student ? (
-          <span className="inline-flex h-8 items-center gap-2 rounded-md border border-violet-500/40 bg-violet-500/10 pr-1 pl-2.5 text-sm">
-            {studentName(student)}, {groupName(student.groupId)}
-            <button
-              type="button"
-              aria-label="Убрать колонку Student"
-              onClick={() => setStudentId(null)}
-              className="grid size-6 place-items-center rounded hover:bg-violet-500/15"
-            >
-              <X className="size-3.5" />
-            </button>
-          </span>
-        ) : (
-          <StudentPicker
-            onPick={setStudentId}
-            trigger={
-              <Button variant="outline" size="sm">
-                <Search /> Дедлайны Student
-              </Button>
-            }
-          />
-        )}
-        {student ? (
-          <span className="text-xs text-muted-foreground">
-            Колонка справа: его дедлайн по каждой Task и откуда он взялся.
-            Заголовок колонки продлевает ему дедлайны
-          </span>
-        ) : null}
-      </div>
-
       <div className="overflow-x-auto rounded-xl border bg-card">
         <table className="w-full min-w-[66rem] border-collapse text-sm">
           <thead>
@@ -158,7 +170,7 @@ export function MatrixView({
               <tr className="border-b bg-muted text-left text-xs text-muted-foreground">
                 <th className="w-10 py-2.5 pl-3" />
                 <th className="sticky left-0 z-10 min-w-60 bg-muted py-2.5 pr-3 font-medium">
-                  Task
+                  Задание
                 </th>
                 <th className="border-l px-2.5 py-2.5 font-medium">Открытие</th>
                 <th className="border-l px-2.5 py-2.5 font-medium text-foreground">
@@ -169,8 +181,8 @@ export function MatrixView({
                     <HeaderAction
                       hint={
                         selection.size
-                          ? `Сдвинуть дедлайны ${group.name} по выбранным Task: ${selection.size}`
-                          : `Сдвинуть дедлайны ${group.name} по предстоящим Task`
+                          ? `Сдвинуть дедлайны ${group.name} по выбранным заданиям: ${selection.size}`
+                          : `Сдвинуть дедлайны ${group.name} по предстоящим заданиям`
                       }
                       icon={<CalendarArrowUp />}
                       onClick={() =>
@@ -224,7 +236,7 @@ export function MatrixView({
                   <tr className="border-b bg-muted/20">
                     <td className="py-2 pl-3">
                       <Checkbox
-                        aria-label={`Выбрать все Task группы ${group.title}`}
+                        aria-label={`Выбрать все задания группы «${group.title}»`}
                         checked={allSelected}
                         onCheckedChange={() =>
                           select(
@@ -251,7 +263,14 @@ export function MatrixView({
                         />
                         {group.title}
                         <span className="font-normal text-muted-foreground">
-                          {tasks.length} Task в порядке выполнения
+                          {tasks.length}{' '}
+                          {plural(
+                            tasks.length,
+                            'задание',
+                            'задания',
+                            'заданий'
+                          )}{' '}
+                          в порядке выполнения
                         </span>
                       </button>
                     </td>
@@ -565,7 +584,7 @@ function PersonalList({
     <div className="grid max-w-3xl gap-1">
       {personal.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Личных переопределений нет: каждый Student получает дедлайн своей
+          Личных переопределений нет: каждый студент получает дедлайн своей
           группы.
         </p>
       ) : null}
