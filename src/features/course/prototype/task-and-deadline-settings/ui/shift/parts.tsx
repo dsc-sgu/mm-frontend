@@ -57,7 +57,7 @@ export function TaskPicker({
   draft,
   trigger,
 }: {
-  draft: ShiftDraft;
+  draft: Pick<ShiftDraft, 'groups' | 'taskIds' | 'setTaskIds'>;
   trigger: ReactNode;
 }) {
   return (
@@ -128,7 +128,16 @@ export function DaysStepper({
   );
 }
 
-/** A signed number of days as plain text: no browser spin arrows. */
+/** «−3», «-3», «+3», «3» → a signed number of days; anything else → null. */
+function parseDays(text: string) {
+  const clean = text.trim().replace('−', '-').replace('+', '');
+  return /^-?\d+$/.test(clean) ? Number(clean) : null;
+}
+
+/**
+ * A signed number of days as plain text: no browser spin arrows, and a lone
+ * «-» stays while the Teacher is typing a negative number.
+ */
 function DaysInput({
   days,
   onChange,
@@ -138,19 +147,29 @@ function DaysInput({
   onChange: (days: number) => void;
   className?: string;
 }) {
+  const [text, setText] = useState(String(days));
+  const [seen, setSeen] = useState(days);
+
+  if (seen !== days) {
+    setSeen(days);
+    if (parseDays(text) !== days) {
+      setText(String(days));
+    }
+  }
+
   return (
     <input
       type="text"
       inputMode="numeric"
-      value={days === 0 ? '' : String(days)}
-      placeholder="0"
+      value={text}
       aria-label="Сколько дней"
       onChange={(event) => {
-        const parsed = Number.parseInt(
-          event.target.value.replace('−', '-'),
-          10
-        );
-        onChange(Number.isNaN(parsed) ? 0 : parsed);
+        setText(event.target.value);
+        const parsed = parseDays(event.target.value);
+        if (parsed !== null) {
+          setSeen(parsed);
+          onChange(parsed);
+        }
       }}
       className={cn(
         'h-7 bg-transparent text-center text-sm tabular-nums outline-none',
@@ -162,7 +181,14 @@ function DaysInput({
 
 const DAY_STEPS = [-7, -1, 1, 2, 7, 14];
 
-/** Shift buttons from «Сразу» plus a labelled field for any other value. */
+const DAY_CELL = cn(
+  'h-9 rounded-md border px-2 text-sm whitespace-nowrap tabular-nums transition-colors'
+);
+
+/**
+ * Shift buttons from «Сразу»; the last cell looks like them and takes any
+ * other number, negative for earlier.
+ */
 export function DaysPicker({
   days,
   onChange,
@@ -170,143 +196,77 @@ export function DaysPicker({
   days: number;
   onChange: (days: number) => void;
 }) {
-  const custom = !DAY_STEPS.includes(days);
+  const [text, setText] = useState(
+    DAY_STEPS.includes(days) ? '' : String(days)
+  );
+  const typed = parseDays(text);
+  const customActive = text !== '' && typed !== null && typed === days;
 
   return (
-    <div className="grid gap-2">
-      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
-        {DAY_STEPS.map((value) => (
+    <div className="grid grid-cols-4 gap-1.5">
+      {DAY_STEPS.map((value) => {
+        const selected = value === days && !customActive;
+        return (
           <button
             key={value}
             type="button"
-            aria-pressed={value === days}
-            onClick={() => onChange(value)}
+            aria-pressed={selected}
+            onClick={() => {
+              setText('');
+              onChange(value);
+            }}
             className={cn(
-              'h-9 rounded-md border px-2 text-sm whitespace-nowrap tabular-nums transition-colors',
-              value === days
+              DAY_CELL,
+              selected
                 ? 'border-foreground bg-foreground text-background'
                 : 'hover:bg-muted',
-              value < 0 && value !== days && 'text-muted-foreground'
+              value < 0 && !selected && 'text-muted-foreground'
             )}
           >
             {value > 0 ? `+${value}` : `−${-value}`}{' '}
             {plural(value, 'день', 'дня', 'дней')}
           </button>
-        ))}
-      </div>
-      <label className="flex items-center gap-2 text-sm text-muted-foreground">
-        Или своё:
-        <span
+        );
+      })}
+      <label
+        className={cn(
+          DAY_CELL,
+          'col-span-2 flex items-center justify-center gap-1',
+          'focus-within:ring-2 focus-within:ring-ring',
+          customActive
+            ? 'border-foreground bg-foreground text-background'
+            : 'hover:bg-muted'
+        )}
+      >
+        <input
+          type="text"
+          inputMode="numeric"
+          value={text}
+          placeholder="или своё"
+          aria-label="Своё число дней, минус — раньше"
+          onChange={(event) => {
+            setText(event.target.value);
+            const parsed = parseDays(event.target.value);
+            if (parsed !== null && parsed !== 0) {
+              onChange(parsed);
+            }
+          }}
           className={cn(
-            'inline-flex items-center rounded-md border bg-background px-1',
-            custom && days !== 0 && 'border-foreground'
+            'w-full min-w-0 bg-transparent text-center tabular-nums outline-none',
+            customActive
+              ? 'placeholder:text-background/60'
+              : 'placeholder:text-muted-foreground'
           )}
-        >
-          <DaysInput days={days} onChange={onChange} className="w-12" />
-        </span>
-        <span>
-          {plural(days, 'день', 'дня', 'дней')} {days < 0 ? 'раньше' : 'позже'}
-        </span>
-        <span className="text-xs">(минус — раньше)</span>
-      </label>
-    </div>
-  );
-}
-
-/** Tasks picked right in the window, no popover. */
-export function TaskChooser({
-  groups,
-  taskIds,
-  onChange,
-}: {
-  groups: ReadonlyArray<{
-    group: { id: string; title: string };
-    tasks: ReadonlyArray<{ id: string; title: string }>;
-  }>;
-  taskIds: ReadonlySet<string>;
-  onChange: (taskIds: ReadonlySet<string>) => void;
-}) {
-  const [open, setOpen] = useState(taskIds.size === 0);
-  const titles = new Map(
-    groups.flatMap(({ tasks }) => tasks.map((task) => [task.id, task.title]))
-  );
-
-  return (
-    <div className="grid gap-2">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {[...taskIds].map((taskId) => (
-          <span
-            key={taskId}
-            className="inline-flex h-7 items-center gap-1 rounded-md border bg-muted/40 pr-1 pl-2 text-sm"
-          >
-            <span className="max-w-56 truncate">{titles.get(taskId)}</span>
-            <button
-              type="button"
-              aria-label={`Убрать ${titles.get(taskId)}`}
-              onClick={() => onChange(toggleIn(taskIds, taskId))}
-              className="grid size-5 place-items-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <X className="size-3.5" />
-            </button>
+          style={{
+            maxWidth: text ? `${Math.max(text.length, 2) + 1}ch` : undefined,
+          }}
+        />
+        {text !== '' && typed !== null ? (
+          <span className="shrink-0">
+            {plural(typed, 'день', 'дня', 'дней')}
           </span>
-        ))}
-        <button
-          type="button"
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
-          className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          {taskIds.size === 0 ? 'Выбрать Task' : 'Другие Task'}
-          <ChevronDown
-            className={cn(
-              'size-3.5 transition-transform',
-              open && 'rotate-180'
-            )}
-          />
-        </button>
-      </div>
-      {open ? (
-        <div className="grid max-h-56 gap-3 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">
-          {groups.map(({ group, tasks }) => {
-            const all = tasks.every((task) => taskIds.has(task.id));
-            return (
-              <div key={group.id} className="grid content-start gap-1">
-                <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <Checkbox
-                    checked={all}
-                    onCheckedChange={() => {
-                      const next = new Set(taskIds);
-                      for (const task of tasks) {
-                        if (all) {
-                          next.delete(task.id);
-                        } else {
-                          next.add(task.id);
-                        }
-                      }
-                      onChange(next);
-                    }}
-                  />
-                  {group.title}
-                </label>
-                {tasks.map((task) => (
-                  <label
-                    key={task.id}
-                    className="flex min-w-0 items-center gap-2 pl-6 text-sm"
-                  >
-                    <Checkbox
-                      checked={taskIds.has(task.id)}
-                      onCheckedChange={() =>
-                        onChange(toggleIn(taskIds, task.id))
-                      }
-                    />
-                    <span className="truncate">{task.title}</span>
-                  </label>
-                ))}
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
+        ) : null}
+      </label>
     </div>
   );
 }

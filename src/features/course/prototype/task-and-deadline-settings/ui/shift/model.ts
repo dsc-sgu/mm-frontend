@@ -263,7 +263,7 @@ export function useShiftDraft(preset: ShiftPreset) {
 
 export type ShiftDraft = ReturnType<typeof useShiftDraft>;
 
-export function taskSummary(draft: ShiftDraft) {
+export function taskSummary(draft: { orderedTaskIds: readonly string[] }) {
   const tasks = useSandbox.getState().tasks;
   const ids = draft.orderedTaskIds;
 
