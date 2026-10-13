@@ -2,26 +2,42 @@ import {
   requireAttemptNumber,
   requireUsername,
 } from '@/features/course/routing/params';
-import { CourseResourceNotFound } from '@/features/course/features/access/ui/route-state';
+import {
+  CourseResourceNotFound,
+  CourseResourceCheckFailed,
+} from '@/features/course/features/access/ui/route-state';
+import { attemptLocatorOptions } from '@/features/course/features/attempt-review/api/locator-queries';
+import { recheckCourseContextAfterAccessDenial } from '@/features/course/features/access/api/queries';
 import { Outlet, createFileRoute, notFound } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber'
 )({
-  beforeLoad({ context, params }) {
+  async beforeLoad({ context, params }) {
     const studentUsername = requireUsername(params.studentUsername);
     const attemptNumber = requireAttemptNumber(params.attemptNumber);
-    if (
-      context.courseRole === 'student' &&
-      context.session.username !== studentUsername
-    ) {
-      throw notFound();
+    const result = await context.queryClient.fetchQuery(
+      attemptLocatorOptions(
+        context.session.userId,
+        context.course.id,
+        String(context.taskId),
+        studentUsername,
+        attemptNumber
+      )
+    );
+    if (result.status === 'forbidden') {
+      await recheckCourseContextAfterAccessDenial(
+        context.queryClient,
+        context.session.userId,
+        context.courseSlug
+      );
     }
-
-    return { attemptNumber, studentUsername };
+    if (result.status !== 'found') throw notFound();
+    return { attempt: result.attempt };
   },
   component: RouteComponent,
   notFoundComponent: CourseResourceNotFound,
+  errorComponent: CourseResourceCheckFailed,
 });
 
 function RouteComponent() {

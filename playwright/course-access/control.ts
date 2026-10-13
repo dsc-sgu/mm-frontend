@@ -7,14 +7,14 @@ const OperationSchema = v.literal('load-course');
 const CommandSchema = v.variant('action', [
   v.object({
     action: v.literal('scenario'),
-    world: v.picklist(['dev', 'world:access']),
+    world: v.picklist(['dev', 'world:access', 'world:review']),
     session: v.nullable(v.string()),
   }),
   v.object({ action: v.literal('hold'), operation: OperationSchema }),
   v.object({ action: v.literal('release'), operation: OperationSchema }),
 ]);
 const StatusSchema = v.object({
-  world: v.picklist(['dev', 'world:access']),
+  world: v.picklist(['dev', 'world:access', 'world:review']),
   held: v.array(
     v.object({ operation: OperationSchema, requested: v.number() })
   ),
@@ -39,13 +39,17 @@ export async function controlMockBackend(page: Page, command: Command) {
   expect(status, 'the test-only MSW control command succeeds').toBe(204);
 }
 
-export async function selectAccessSession(page: Page, username: string | null) {
+export async function selectAccessSession(
+  page: Page,
+  username: string | null,
+  world: 'world:access' | 'world:review' = 'world:access'
+) {
   await page.goto('/');
   // Rendering starts only after MSW is listening. No login markup is a seam.
   await expect(page.getByRole('link', { name: 'На главную' })).toBeVisible();
   await controlMockBackend(page, {
     action: 'scenario',
-    world: 'world:access',
+    world,
     session: username,
   });
   // The scenario's world/session survive this full reload, unlike ordinary dev.

@@ -242,7 +242,11 @@ describe('participant-bound resource denials keep the confirmed Course shell', (
   });
 
   test('a Teacher does not need a client-side Student roster to open a repository', async () => {
-    const path = '/courses/databases/repositories/not-listed';
+    mockBackend.state.session = {
+      userId: accessWorld.users.anna.id,
+      expiresAt: SESSION_EXPIRES_AT,
+    };
+    const path = '/courses/algorithms/repositories/petya';
     const { router } = renderRoutes([], path, { appRoutes: true });
     await screen.findByText('Student repository page');
     expect(router.state.location.pathname).toBe(path);

@@ -15,7 +15,7 @@ import { UserIdSchema, UsernameSchema } from '@/features/auth/model/identity';
 // uses page-origin HTTP (MSW), not a window global or Playwright's API context.
 const CONTROL_URL = '/__test/mock-backend';
 const STORAGE_KEY = 'mergeminds:e2e:mock-backend';
-const WorldSchema = v.picklist(['dev', 'world:access']);
+const WorldSchema = v.picklist(['dev', 'world:access', 'world:review']);
 const OperationSchema = v.literal('load-course');
 const SelectionSchema = v.object({
   world: WorldSchema,
@@ -91,7 +91,7 @@ export function installTestControl(worker: SetupWorker) {
         case 'scenario': {
           // Validate the selected identity before changing the running world.
           const users =
-            command.world === 'world:access'
+            command.world !== 'dev'
               ? Object.values(accessWorld.users)
               : Object.values(seededUsers);
           const user = users.find(

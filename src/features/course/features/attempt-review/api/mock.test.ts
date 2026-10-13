@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'vitest';
-import * as v from 'valibot';
 
 import {
   mockBackend,
@@ -7,7 +6,6 @@ import {
   SESSION_EXPIRES_AT,
 } from '@/app/mock-backend/state';
 import { createAttemptReviewCommentReply, fetchAttemptReview } from './mock';
-import { AttemptNumberSchema } from '@/features/course/model/identity';
 
 describe('attempt review reply ownership', () => {
   test.each([
@@ -28,11 +26,15 @@ describe('attempt review reply ownership', () => {
         userId: user.id,
         expiresAt: SESSION_EXPIRES_AT,
       };
+      const attempt = mockBackend.state.attempts.find(
+        ({ studentId, attemptNumber }) =>
+          studentId === seededUsers.mitStudent.id && attemptNumber === 2
+      );
+      if (!attempt) throw new Error('The fixture has no Student Attempt #2');
       const params = {
-        courseSlug: 'reply-ownership',
-        taskId: authorUsername,
-        studentUsername: 'mit-student',
-        attemptNumber: v.parse(AttemptNumberSchema, 2),
+        courseId: attempt.courseId,
+        studentId: attempt.studentId,
+        attemptId: attempt.id,
       };
 
       const created = await createAttemptReviewCommentReply({

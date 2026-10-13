@@ -68,7 +68,13 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
 });
 
 function RouteComponent() {
-  const section = getCourseSection(useMatches());
+  const matches = useMatches();
+  const section = getCourseSection(matches);
+  const resourceUnavailable = matches.some(
+    (match) =>
+      match.routeId !== Route.id &&
+      (match.status === 'notFound' || match.status === 'error')
+  );
   const { courseSlug, courseRole, session } = Route.useRouteContext();
   const router = useRouter();
   const requestedCourseSlug = useRequestedCourseSlug();
@@ -99,7 +105,10 @@ function RouteComponent() {
   }
   // Authorize before mounting any child content, using the live lookup rather
   // than the role captured by beforeLoad. Background demotion closes the route.
-  if (!canAccessCourseSection(section, query.data.role)) {
+  if (
+    !resourceUnavailable &&
+    !canAccessCourseSection(section, query.data.role)
+  ) {
     return <CourseAccessState state="forbidden" courseSlug={courseSlug} />;
   }
   // Do not leave role-sensitive actions mounted while Router reconciles the

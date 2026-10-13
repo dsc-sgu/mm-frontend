@@ -16,10 +16,17 @@ export function getHeaderState(
     return { breadcrumbs: [], navItems: [] };
   }
 
+  // Failed/pending resource matches have not resolved their identities. Never
+  // build owner labels or links from their locators (or from descendants).
+  const unresolvedIndex = matches.findIndex(
+    (match) => match.status !== 'success'
+  );
+  const resolvedMatches =
+    unresolvedIndex < 0 ? matches : matches.slice(0, unresolvedIndex);
   const headerSegments: Array<{
     breadcrumbs: HeaderBreadcrumbItem[];
     navItems: HeaderNavItem[] | 'inherit';
-  }> = matches.map((match) => {
+  }> = resolvedMatches.map((match) => {
     const context: HeaderDataContext = { matches, match, currentMatch };
     const headerData = match.staticData?.header;
 
