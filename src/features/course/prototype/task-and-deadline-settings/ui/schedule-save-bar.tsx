@@ -7,6 +7,7 @@ import { Check, CloudAlert, LoaderCircle } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
+import { DOCK_CENTER_LEFT } from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { formatClock } from '@/features/course/prototype/task-and-deadline-settings/time';
@@ -78,9 +79,10 @@ export function ScheduleDock({
 
   return (
     <div
+      style={floating ? { left: DOCK_CENTER_LEFT } : undefined}
       className={cn(
         'pointer-events-none grid w-[calc(100%-1rem)] max-w-3xl justify-items-center gap-2',
-        floating && 'fixed bottom-16 left-1/2 z-40 -translate-x-1/2'
+        floating && 'fixed bottom-16 z-40 -translate-x-1/2'
       )}
     >
       {children}
