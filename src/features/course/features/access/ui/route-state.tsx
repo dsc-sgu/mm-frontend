@@ -47,9 +47,14 @@ export function CourseAccessState({
         {failed
           ? 'Не удалось проверить доступ'
           : forbidden
-            ? 'Недостаточно прав'
+            ? 'Нет доступа'
             : 'Страница не найдена'}
       </h1>
+      {forbidden && (
+        <p className="text-muted-foreground">
+          Этот раздел доступен только преподавателям курса.
+        </p>
+      )}
       {!failed && !forbidden && (
         <p className="text-muted-foreground">
           Возможно, ссылка устарела или страница больше недоступна.
