@@ -98,6 +98,10 @@ Playwright starts its own Vite dev server on port 5180 in `e2e` mode with the mo
 
 Only the `e2e` dev mode exposes the page-origin MSW HTTP channel `/__test/mock-backend`: select `{ action: 'scenario', world: 'dev' | 'world:access', session: username | null }`, or `{ action: 'hold' | 'release', operation: 'load-course' }`. Selected world/session survive full page reload; held operations stay page-local. Use the page-side Fetch helpers in `playwright/course-access/control.ts`, not Playwright's API request context. No window control global is installed. Ordinary dev mode still resets the seed on every page load; production excludes the channel.
 
+Block-drag helpers wait for activation and the dragged block's visual rank before dropping. Reuse this condition-based synchronization for pointer and keyboard drags; completed mouse events do not guarantee that dnd-kit's collision state has settled.
+
+CI allows one retry to capture a trace and classify failures, but `failOnFlakyTests` keeps the run red even when the retry passes. Fix synchronization rather than increasing retries or adding fixed delays.
+
 A test marked `test.fail()` describes target behaviour the current code lacks; its comment names the slice that brings it. When that slice lands, the test starts passing, Playwright reports the unexpected pass, and the PR removes the mark.
 
 ## Radix UI
