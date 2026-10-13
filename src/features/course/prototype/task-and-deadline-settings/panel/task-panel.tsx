@@ -23,11 +23,11 @@ import {
   PatternsRow,
   ScheduleRows,
   StatementBlock,
-  StatementTextarea,
   TitleInput,
 } from './fields';
 import { PublishFooter } from './publish-footer';
 import { changedFields, editsOf, type PanelSession } from './session';
+import { StatementEditor } from '@/features/course/prototype/task-and-deadline-settings/panel/statement/editor';
 import { validateKey } from './task-key';
 
 type Status = { label: string; tone: string };
@@ -191,12 +191,13 @@ export function TaskPanel({
                 <Minimize2 /> Свернуть
               </Button>
             </div>
-            <StatementTextarea
+            <StatementEditor
               autoFocus
               value={form.statement}
               disabled={readOnly}
               onChange={(value) => session.setField('statement', value)}
-              className="min-h-64 flex-1 resize-none"
+              className="min-h-64 flex-1 overflow-hidden"
+              contentClassName="flex-1 overflow-y-auto"
             />
           </div>
           <div className="flex min-h-0 flex-col">{body}</div>

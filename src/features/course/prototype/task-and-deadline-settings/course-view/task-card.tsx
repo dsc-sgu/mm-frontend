@@ -20,7 +20,7 @@ import {
   timeZoneLabel,
 } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { NoDeadline } from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
-import { StatementTextarea } from '@/features/course/prototype/task-and-deadline-settings/panel/fields';
+import { StatementEditor } from '@/features/course/prototype/task-and-deadline-settings/panel/statement/editor';
 import { usePanelSession } from '@/features/course/prototype/task-and-deadline-settings/panel/session';
 
 export function TaskReferenceCard({
@@ -157,10 +157,12 @@ export function TaskReferenceCard({
               Сохраняется кнопкой в панели
             </span>
           </div>
-          <StatementTextarea
+          <StatementEditor
             autoFocus
             value={inline.form.statement}
-            rows={inline.form.statement.length > 600 ? 18 : 6}
+            contentClassName={
+              inline.form.statement.length > 600 ? 'min-h-96' : 'min-h-32'
+            }
             onChange={(value) => inline.setField('statement', value)}
           />
         </div>
