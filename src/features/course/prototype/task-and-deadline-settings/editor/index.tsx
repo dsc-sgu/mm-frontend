@@ -5,7 +5,13 @@ import { useCallback, useState, type ReactNode } from 'react';
 import { FileStack, LoaderCircle } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
+import { cn } from '@/shadcn/lib/utils';
 import { PrototypeAssignmentContext } from '@/features/course/prototype/task-and-deadline-settings/assignment-slot';
+import {
+  dockOffset,
+  dockPadding,
+  DOCK_CENTER_LEFT,
+} from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
 import { PanelFrame } from '@/features/course/prototype/task-and-deadline-settings/panel/panel-frame';
 import {
   FIELD_LABEL,
@@ -70,31 +76,44 @@ export function PrototypeEditor({
   return (
     <PrototypeAssignmentContext.Provider value={renderCard}>
       <PanelSessionContext.Provider value={session}>
-        {children}
-        {session ? (
-          <PanelFrame
-            layout="overlay"
-            expanded={session.expanded && settings.statement === 'expanded'}
-            label="Настройка Task"
-            onEscape={close}
+        <div className={dockOffset(Boolean(session), 'dock')}>
+          <div
+            className={cn(
+              'transition-[padding] duration-200',
+              dockPadding(Boolean(session), 'dock'),
+              dockOffset(Boolean(session), 'dock')
+            )}
           >
-            <TaskPanel
-              key={session.taskId}
-              session={session}
-              courseSlug={courseSlug}
-              onClose={close}
-              onCreateAnother={createAnother}
+            {children}
+          </div>
+          {session ? (
+            <PanelFrame
+              layout="dock"
+              expanded={session.expanded && settings.statement === 'expanded'}
+              label="Настройка Task"
+              onEscape={close}
+            >
+              <TaskPanel
+                key={session.taskId}
+                session={session}
+                courseSlug={courseSlug}
+                onClose={close}
+                onCreateAnother={createAnother}
+              />
+            </PanelFrame>
+          ) : null}
+          <div
+            style={{ left: DOCK_CENTER_LEFT }}
+            className="pointer-events-none fixed top-16 z-30 grid w-[calc(100%-1rem)] max-w-2xl -translate-x-1/2 justify-items-center gap-2"
+          >
+            <DraftStrip />
+            <ScheduleDock
+              floating={false}
+              note="Сроки применяются отдельно от черновика курса"
             />
-          </PanelFrame>
-        ) : null}
-        <div className="pointer-events-none fixed top-16 left-1/2 z-30 grid w-[calc(100%-1rem)] max-w-2xl -translate-x-1/2 justify-items-center gap-2">
-          <DraftStrip />
-          <ScheduleDock
-            floating={false}
-            note="Сроки применяются отдельно от черновика курса"
-          />
+          </div>
+          <SandboxBar courseSlug={courseSlug} />
         </div>
-        <SandboxBar courseSlug={courseSlug} />
       </PanelSessionContext.Provider>
     </PrototypeAssignmentContext.Provider>
   );

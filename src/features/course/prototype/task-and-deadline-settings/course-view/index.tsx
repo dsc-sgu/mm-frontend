@@ -7,7 +7,10 @@ import { cn } from '@/shadcn/lib/utils';
 import { CoursePage } from '@/features/course/features/page/ui/page';
 import type { CoursePage as CoursePageModel } from '@/features/course/features/page/model/types';
 import { PrototypeAssignmentContext } from '@/features/course/prototype/task-and-deadline-settings/assignment-slot';
-import { dockPadding } from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
+import {
+  dockOffset,
+  dockPadding,
+} from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
 import { PanelFrame } from '@/features/course/prototype/task-and-deadline-settings/panel/panel-frame';
 import {
   PanelSessionContext,
@@ -72,32 +75,34 @@ export function PrototypeCourseView({
   return (
     <PrototypeAssignmentContext.Provider value={renderCard}>
       <PanelSessionContext.Provider value={session}>
-        <div
-          className={cn(
-            'transition-[padding] duration-200',
-            dockPadding(Boolean(session), layout)
-          )}
-        >
-          <CoursePage course={course} />
-          <div className="h-24" />
-        </div>
-        {session ? (
-          <PanelFrame
-            layout={layout}
-            expanded={session.expanded && settings.statement === 'expanded'}
-            label="Настройка Task"
-            onEscape={close}
+        <div className={dockOffset(Boolean(session), layout)}>
+          <div
+            className={cn(
+              'transition-[padding] duration-200',
+              dockPadding(Boolean(session), layout)
+            )}
           >
-            <TaskPanel
-              key={session.taskId}
-              session={session}
-              courseSlug={courseSlug}
-              onClose={close}
-              onRevealInDocument={() => revealTaskReference(openTaskId)}
-            />
-          </PanelFrame>
-        ) : null}
-        <SandboxBar courseSlug={courseSlug} />
+            <CoursePage course={course} />
+            <div className="h-24" />
+          </div>
+          {session ? (
+            <PanelFrame
+              layout={layout}
+              expanded={session.expanded && settings.statement === 'expanded'}
+              label="Настройка Task"
+              onEscape={close}
+            >
+              <TaskPanel
+                key={session.taskId}
+                session={session}
+                courseSlug={courseSlug}
+                onClose={close}
+                onRevealInDocument={() => revealTaskReference(openTaskId)}
+              />
+            </PanelFrame>
+          ) : null}
+          <SandboxBar courseSlug={courseSlug} />
+        </div>
       </PanelSessionContext.Provider>
     </PrototypeAssignmentContext.Provider>
   );

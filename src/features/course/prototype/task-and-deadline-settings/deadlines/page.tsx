@@ -6,7 +6,10 @@ import { CalendarArrowUp } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
-import { dockPadding } from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
+import {
+  dockOffset,
+  dockPadding,
+} from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
 import { SandboxBar } from '@/features/course/prototype/task-and-deadline-settings/sandbox-bar';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { timeZoneLabel } from '@/features/course/prototype/task-and-deadline-settings/time';
@@ -52,7 +55,8 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
       className={cn(
         'mx-auto flex w-full flex-col gap-4 px-4 pt-6 pb-44 sm:px-6',
         'max-w-[96rem]',
-        dockPadding(panelOpen, 'dock')
+        dockPadding(panelOpen, 'dock'),
+        dockOffset(panelOpen, 'dock')
       )}
     >
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">

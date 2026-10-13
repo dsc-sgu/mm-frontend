@@ -73,8 +73,10 @@ export function PrototypeSwitcher({
   return (
     <div
       data-prototype-switcher
+      // Centred in the space a docked side panel leaves, if any.
+      style={{ left: 'calc((100% - var(--prototype-dock-offset, 0px)) / 2)' }}
       className={cn(
-        'fixed bottom-3 left-1/2 z-[100] -translate-x-1/2',
+        'fixed bottom-3 z-[100] -translate-x-1/2',
         'flex max-w-[calc(100vw-1rem)] items-center gap-1 rounded-full',
         'bg-zinc-950 p-1 text-sm text-zinc-50 shadow-2xl ring-2 ring-fuchsia-500',
         'dark:bg-zinc-50 dark:text-zinc-950'
