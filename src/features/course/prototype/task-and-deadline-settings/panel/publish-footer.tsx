@@ -23,6 +23,7 @@ import {
   useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { formatClock } from '@/features/course/prototype/task-and-deadline-settings/time';
+import { useEffectiveLease } from '@/features/course/prototype/task-and-deadline-settings/use-lease';
 import { usePendingChanges } from '@/features/course/prototype/task-and-deadline-settings/use-pending';
 import { ChangesList } from '@/features/course/prototype/task-and-deadline-settings/ui/changes-list';
 import {
@@ -103,6 +104,7 @@ export function PublishFooter({
 }) {
   const { taskApply, apply } = usePrototypeSettings();
   const sandbox = useSandbox();
+  const effectiveLease = useEffectiveLease();
   const view = useViewSchedule();
   const { changes } = usePendingChanges();
   const [busy, setBusy] = useState(false);
@@ -167,15 +169,15 @@ export function PublishFooter({
 
   // ---------------------------------------------------------------- A
   if (taskApply === 'course') {
-    const leaseOther = sandbox.lease.holder === 'other';
+    const leaseOther = effectiveLease.lease.holder === 'other';
 
     if (leaseOther) {
       return (
         <FooterShell>
           <Note tone="warn" icon={<CircleAlert className="size-3.5" />}>
-            Правка Task идёт через черновик курса, а его сейчас редактирует{' '}
-            {OTHER_TEACHER.shortName}. Панель только для чтения, пока он не
-            отпустит Course Editing Lease.
+            {effectiveLease.sameTask
+              ? `Две правки одной Task одновременно невозможны: ${OTHER_TEACHER.shortName} уже правит её через черновик курса и держит Course Editing Lease. Ваша правка станет доступна, когда он опубликует курс или отпустит lease.`
+              : `Правка Task идёт через черновик курса, а его сейчас редактирует ${OTHER_TEACHER.shortName}. Панель только для чтения, пока он не отпустит Course Editing Lease.`}
           </Note>
           {scheduleBox}
           {scheduleDirty ? (
