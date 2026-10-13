@@ -3,7 +3,7 @@
 // (dots) and Task Opening Time (▸). Dragging a mark moves it; dragging ◆
 // opens the mass shift preview for that Task (or the selected Tasks).
 import { Fragment, useCallback, useRef, useState, type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
@@ -30,6 +30,7 @@ import {
 } from '@/features/course/prototype/task-and-deadline-settings/store';
 import {
   formatCompactMoment,
+  formatDay,
   formatMoment,
   NOW,
   shiftDays,
@@ -46,7 +47,7 @@ const RANGE_START = new Date(2026, 8, 1).getTime();
 const RANGE_END = new Date(2027, 0, 1).getTime();
 const WIDTH = Math.round((RANGE_END - RANGE_START) / DAY) * DAY_PX;
 const ROW = 'h-[4.5rem]';
-const GROUP_ROW = 'h-8';
+const GROUP_ROW = 'h-10';
 
 const x = (at: number) => ((at - RANGE_START) / DAY) * DAY_PX;
 
@@ -149,7 +150,17 @@ export function TimelineView({
   const [drag, setDrag] = useState<DragState>(null);
   const openTask = openTaskId ? tasks[openTaskId] : undefined;
   const close = useCallback(() => update({ task: undefined }), [update]);
-  const scroller = useRef<HTMLDivElement>(null);
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+
+  function toggleGroup(groupId: string) {
+    const next = new Set(collapsed);
+    if (next.has(groupId)) {
+      next.delete(groupId);
+    } else {
+      next.add(groupId);
+    }
+    setCollapsed(next);
+  }
 
   const months: { label: string; left: number; width: number }[] = [];
   for (
@@ -168,61 +179,93 @@ export function TimelineView({
   }
 
   const mondays: number[] = [];
+  const saturdays: number[] = [];
   for (let at = RANGE_START; at < RANGE_END; at = shiftDays(at, 1)) {
-    if (new Date(at).getDay() === 1) {
+    const day = new Date(at).getDay();
+    if (day === 1) {
       mondays.push(at);
+    }
+    if (day === 6) {
+      saturdays.push(at);
     }
   }
 
   return (
     <div className="grid gap-2">
       <p className="text-xs text-muted-foreground">
-        ◆ — общий срок: перетаскивание открывает предпросмотр сдвига этой Task
-        (или всех выбранных). Пилюли групп, точки Students и ▸ открытия
-        двигаются сразу. Клик по строке — все сроки Task. Группы без пилюли
-        наследуют ◆.
+        Перетащите ◆, чтобы сдвинуть Task целиком (или все выбранные) с
+        предпросмотром. Отметки групп, Students и ▸ открытия двигаются сразу.
+        Группы без отметки наследуют ◆.
       </p>
       <div className="flex overflow-hidden rounded-xl border bg-card">
-        <div className="w-60 shrink-0 border-r">
-          <div className="h-10 border-b" />
+        <div className="w-64 shrink-0 border-r">
+          <div className="h-12 border-b bg-muted/40" />
           {groups.map(({ group, tasks: items }) => (
             <Fragment key={group.id}>
-              <div
+              <button
+                type="button"
+                aria-expanded={!collapsed.has(group.id)}
+                onClick={() => toggleGroup(group.id)}
                 className={cn(
                   GROUP_ROW,
-                  'flex items-center border-b bg-muted/40 px-3 text-xs font-semibold tracking-wide uppercase'
+                  'flex w-full items-center gap-1.5 border-b bg-muted/20 px-3 text-left text-sm font-medium hover:bg-muted/60'
                 )}
               >
-                {group.title}
-              </div>
-              {items.map((task) => (
-                <TaskTitleCell
-                  key={task.id}
-                  task={task}
-                  selected={selection.has(task.id)}
-                  open={task.id === openTaskId}
-                  onSelect={(on) => {
-                    const next = new Set(selection);
-                    if (on) {
-                      next.add(task.id);
-                    } else {
-                      next.delete(task.id);
-                    }
-                    setSelection(next);
-                  }}
-                  onOpen={() => update({ task: task.id })}
+                <ChevronRight
+                  className={cn(
+                    'size-4 text-muted-foreground transition-transform',
+                    !collapsed.has(group.id) && 'rotate-90'
+                  )}
                 />
-              ))}
+                {group.title}
+                <span className="font-normal text-muted-foreground">
+                  {items.length}
+                </span>
+              </button>
+              {collapsed.has(group.id)
+                ? null
+                : items.map((task) => (
+                    <TaskTitleCell
+                      key={task.id}
+                      task={task}
+                      selected={selection.has(task.id)}
+                      open={task.id === openTaskId}
+                      onSelect={(on) => {
+                        const next = new Set(selection);
+                        if (on) {
+                          next.add(task.id);
+                        } else {
+                          next.delete(task.id);
+                        }
+                        setSelection(next);
+                      }}
+                      onOpen={() => update({ task: task.id })}
+                    />
+                  ))}
             </Fragment>
           ))}
         </div>
-        <div ref={scroller} className="min-w-0 flex-1 overflow-x-auto">
+        <div className="min-w-0 flex-1 overflow-x-auto">
           <div className="relative" style={{ width: WIDTH }}>
-            <div className="relative h-10 border-b">
+            {saturdays.map((at) => (
+              <span
+                key={at}
+                className="pointer-events-none absolute top-12 bottom-0 bg-muted/50"
+                style={{ left: x(at), width: DAY_PX * 2 }}
+              />
+            ))}
+            {mondays.map((at) => (
+              <span
+                key={at}
+                className="pointer-events-none absolute top-12 bottom-0 border-l border-border/60"
+                style={{ left: x(at) }}
+              />
+            ))}
+            <div className="relative h-12 border-b bg-muted/40">
               {months.map((month) => (
                 <span
                   key={month.left}
-                  className="absolute top-1 border-l pl-1 text-xs font-medium"
+                  className="absolute top-1.5 border-l border-border pl-1.5 text-xs font-medium"
                   style={{ left: month.left, width: month.width }}
                 >
                   {month.label}
@@ -231,48 +274,45 @@ export function TimelineView({
               {mondays.map((at) => (
                 <span
                   key={at}
-                  className="absolute bottom-0.5 -translate-x-1/2 text-[10px] text-muted-foreground tabular-nums"
-                  style={{ left: x(at) }}
+                  className="absolute bottom-1.5 -translate-x-1/2 text-[11px] text-muted-foreground tabular-nums"
+                  style={{ left: x(at) + DAY_PX / 2 }}
                 >
                   {new Date(at).getDate()}
                 </span>
               ))}
-            </div>
-            {mondays.map((at) => (
               <span
-                key={at}
-                className="pointer-events-none absolute top-10 bottom-0 border-l border-dashed border-border/70"
-                style={{ left: x(at) }}
-              />
-            ))}
-            <span
-              className="pointer-events-none absolute top-0 bottom-0 z-[5] border-l-2 border-red-500/70"
-              style={{ left: x(NOW) }}
-            >
-              <span className="absolute top-0 left-1 rounded bg-red-500 px-1 text-[10px] text-white">
-                сегодня
+                className="absolute bottom-1 z-[6] -translate-x-1/2 rounded bg-red-500 px-1.5 text-[11px] leading-4 font-medium text-white"
+                style={{ left: x(NOW) }}
+              >
+                {formatDay(NOW)}
               </span>
-            </span>
+            </div>
+            <span
+              className="pointer-events-none absolute top-12 bottom-0 z-[5] border-l border-red-500"
+              style={{ left: x(NOW) }}
+            />
             {groups.map(({ group, tasks: items }) => (
               <Fragment key={group.id}>
-                <div className={cn(GROUP_ROW, 'border-b bg-muted/40')} />
-                {items.map((task) => (
-                  <TaskTrack
-                    key={task.id}
-                    task={task}
-                    drag={drag}
-                    setDrag={setDrag}
-                    onOpen={() => update({ task: task.id })}
-                    onShiftTask={(days) =>
-                      onShift({
-                        taskIds: selection.has(task.id)
-                          ? [...selection]
-                          : [task.id],
-                        days,
-                      })
-                    }
-                  />
-                ))}
+                <div className={cn(GROUP_ROW, 'border-b bg-muted/20')} />
+                {collapsed.has(group.id)
+                  ? null
+                  : items.map((task) => (
+                      <TaskTrack
+                        key={task.id}
+                        task={task}
+                        drag={drag}
+                        setDrag={setDrag}
+                        onOpen={() => update({ task: task.id })}
+                        onShiftTask={(days) =>
+                          onShift({
+                            taskIds: selection.has(task.id)
+                              ? [...selection]
+                              : [task.id],
+                            days,
+                          })
+                        }
+                      />
+                    ))}
               </Fragment>
             ))}
           </div>
@@ -281,13 +321,10 @@ export function TimelineView({
 
       {openTask ? (
         <PanelFrame layout="overlay" label="Сроки Task" onEscape={close}>
-          <header className="flex items-start gap-2 border-b px-5 py-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted-foreground">Сроки Task</p>
-              <h2 className="truncate text-lg font-semibold">
-                {openTask.title}
-              </h2>
-            </div>
+          <header className="flex h-12 shrink-0 items-center gap-2 border-b px-5">
+            <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+              Сроки Task
+            </span>
             <Button
               variant="ghost"
               size="icon-sm"
@@ -297,8 +334,12 @@ export function TimelineView({
               <X />
             </Button>
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 pb-32">
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-32">
+            <h2 className="mb-3 text-xl font-semibold tracking-tight">
+              {openTask.title}
+            </h2>
             <TaskScheduleEditor
+              key={openTask.id}
               taskId={openTask.id}
               taskTitle={openTask.title}
             />
@@ -335,9 +376,9 @@ function TaskTitleCell({
     <div
       className={cn(
         ROW,
-        'flex items-start gap-2 border-b px-3 py-2',
-        open && 'bg-primary/8',
-        selected && !open && 'bg-primary/4'
+        'flex items-start gap-2.5 border-b px-3 py-2.5',
+        open && 'bg-primary/6',
+        selected && !open && 'bg-primary/3'
       )}
     >
       <Checkbox
@@ -351,22 +392,25 @@ function TaskTitleCell({
         onClick={onOpen}
         className="grid min-w-0 flex-1 gap-0.5 text-left"
       >
-        <span className="truncate text-sm font-medium">{task.title}</span>
-        <span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+        <span className="truncate text-sm">{task.title}</span>
+        <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
           {taskSchedule.deadline.kind === 'none' ? (
             <NoDeadline />
           ) : (
             formatCompactMoment(taskSchedule.deadline.at)
           )}
-          {noneGroups.map((item) => (
-            <span key={item.target.kind === 'group' ? item.target.groupId : ''}>
-              ·{' '}
-              {item.target.kind === 'group'
-                ? groupName(item.target.groupId)
-                : ''}{' '}
+          {noneGroups.length > 0 ? (
+            <span>
+              {noneGroups
+                .map((item) =>
+                  item.target.kind === 'group'
+                    ? groupName(item.target.groupId)
+                    : ''
+                )
+                .join(', ')}{' '}
               без срока
             </span>
-          ))}
+          ) : null}
         </span>
       </button>
     </div>
@@ -430,7 +474,7 @@ function TaskTrack({
   return (
     <div className={cn(ROW, 'relative border-b')}>
       <span
-        className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary/15"
+        className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-foreground/10"
         style={{
           left: x(windowStart),
           width: Math.max(0, x(windowEnd) - x(windowStart)),
@@ -482,10 +526,13 @@ function TaskTrack({
         >
           <span
             className={cn(
-              'block size-3.5 rotate-45 rounded-[2px] bg-primary shadow',
+              'block size-3.5 rotate-45 rounded-[2px] bg-foreground',
               keys.has(`${task.id}|task`) && 'ring-2 ring-amber-500'
             )}
           />
+          <span className="pointer-events-none absolute top-1/2 left-full ml-1.5 -translate-y-1/2 text-[11px] whitespace-nowrap text-muted-foreground tabular-nums">
+            {formatDay(deadline)}
+          </span>
         </DraggableMark>
       ) : null}
 

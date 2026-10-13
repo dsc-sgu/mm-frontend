@@ -1,23 +1,18 @@
 // PROTOTYPE (#181): variant C — a Task Reference in the Course Page editor
 // with deadline chips per Student Group, edited in popovers and applied
-// apart from the Course Draft Snapshot.
-import { useEffect, type ReactNode } from 'react';
+// apart from the Course Draft Snapshot. Only explicit values get their own
+// chip; inheriting groups share one, so the card stays quiet.
+import { useEffect, useState } from 'react';
 import { useEditorRef } from 'platejs/react';
 import {
-  Ban,
+  ChevronLeft,
   CircleAlert,
   Clock,
   Settings2,
-  Trophy,
   UserRound,
 } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shadcn/components/ui/popover';
 import { cn } from '@/shadcn/lib/utils';
 import {
   createEmptyPlateBlock,
@@ -26,8 +21,8 @@ import {
 import { studentName } from '@/features/course/prototype/task-and-deadline-settings/fixture';
 import {
   findOverride,
-  groupDeadline,
-  type DeadlineValue,
+  overrideKey,
+  type DeadlineCommand,
   type OverrideTarget,
 } from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import {
@@ -36,78 +31,87 @@ import {
   useSandbox,
   useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
-import {
-  formatCompactMoment,
-  timeZoneLabel,
-} from '@/features/course/prototype/task-and-deadline-settings/time';
+import { formatCompactMoment } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
 import { usePendingChanges } from '@/features/course/prototype/task-and-deadline-settings/use-pending';
+import { DeadlineText } from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
 import { LevelEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/level-editor';
-import { OpeningTimeField } from '@/features/course/prototype/task-and-deadline-settings/ui/opening-time-field';
+import { OpeningEditor } from '@/features/course/prototype/task-and-deadline-settings/ui/opening-time-field';
+import { ValuePopover } from '@/features/course/prototype/task-and-deadline-settings/ui/value-popover';
 import { insertAfterTask, NEW_TASK_ID, takeCarry } from './new-task';
 
 const studentsById = new Map(STUDENTS.map((student) => [student.id, student]));
 
-function Chip({
-  label,
-  value,
-  inherited,
-  pending,
-  tone,
-  title,
-  children,
-}: {
-  label: ReactNode;
-  value: DeadlineValue | { kind: 'inherit' } | null;
-  inherited?: DeadlineValue;
-  pending: boolean;
-  tone: 'task' | 'group' | 'student' | 'opening';
-  title: string;
-  children: ReactNode;
-}) {
-  const shown = value?.kind === 'inherit' ? inherited : value;
+const CHIP_TONE = {
+  task: 'border-foreground/20 bg-background font-medium',
+  group: 'border-sky-500/40 bg-sky-500/10',
+  student: 'border-violet-500/40 bg-violet-500/10',
+  quiet: 'border-dashed border-border text-muted-foreground',
+} as const;
 
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
+/** Inheriting groups: pick one, then give it its own value. */
+function InheritingGroups({
+  taskId,
+  label,
+  groupIds,
+  onCommands,
+}: {
+  taskId: string;
+  label: string;
+  groupIds: string[];
+  onCommands: (what: string) => (commands: DeadlineCommand[]) => void;
+}) {
+  const schedule = useViewSchedule();
+  const [editing, setEditing] = useState<string | null>(null);
+  const task = schedule.tasks[taskId]!;
+
+  if (editing) {
+    const group = STUDENT_GROUPS.find((item) => item.id === editing)!;
+    const target: OverrideTarget = { kind: 'group', groupId: editing };
+    const override = findOverride(schedule, taskId, target);
+    return (
+      <>
         <button
           type="button"
-          className={cn(
-            'inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-xs whitespace-nowrap',
-            'transition-colors hover:bg-muted',
-            value?.kind === 'inherit'
-              ? 'border-dashed border-border text-muted-foreground/70'
-              : tone === 'task'
-                ? 'border-primary/40 bg-primary/5 font-medium'
-                : tone === 'group'
-                  ? 'border-sky-500/40 bg-sky-500/10'
-                  : tone === 'student'
-                    ? 'border-violet-500/40 bg-violet-500/10'
-                    : 'border-border',
-            pending && 'ring-2 ring-amber-500/70'
-          )}
+          onClick={() => setEditing(null)}
+          className="inline-flex w-fit items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
-          <span className="font-medium">{label}</span>
-          {shown === undefined || shown === null ? null : shown.kind ===
-            'none' ? (
-            <span className="inline-flex items-center gap-0.5 text-amber-700 dark:text-amber-300">
-              <Ban className="size-3" /> без срока
-            </span>
-          ) : (
-            <span className="tabular-nums">
-              {formatCompactMoment(
-                shown.at,
-                tone === 'opening' ? '00:00' : '23:59'
-              )}
-            </span>
-          )}
+          <ChevronLeft className="size-3.5" /> {group.name}
         </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-80">
-        <p className="mb-2 text-sm font-semibold">{title}</p>
-        {children}
-      </PopoverContent>
-    </Popover>
+        <LevelEditor
+          taskId={taskId}
+          target={target}
+          value={override?.value ?? { kind: 'inherit' }}
+          inherited={task.deadline}
+          reason={override?.reason}
+          onCommands={onCommands(`группа ${group.name}`)}
+        />
+      </>
+    );
+  }
+
+  return (
+    <div className="-mx-1 grid">
+      <p className="px-1 pb-1 text-xs text-muted-foreground">
+        Эти группы получают общий срок {label}. Выберите группу, чтобы задать ей
+        свой.
+      </p>
+      {groupIds.map((groupId) => (
+        <button
+          key={groupId}
+          type="button"
+          onClick={() => setEditing(groupId)}
+          className="flex h-8 items-center justify-between rounded-md px-2 text-sm hover:bg-muted"
+        >
+          {STUDENT_GROUPS.find((group) => group.id === groupId)?.name}
+          <DeadlineText
+            compact
+            value={{ kind: 'inherit' }}
+            inherited={task.deadline}
+          />
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -127,6 +131,7 @@ export function EditorTaskReference({
   const task = useSandbox((state) => state.tasks[resolvedId]);
   const courseAccess = useSandbox((state) => state.courseAccess);
   const createTask = useSandbox((state) => state.createTask);
+  const dropPending = useSandbox((state) => state.dropPending);
   const group = useSandbox((state) =>
     state.taskGroups.find((item) => item.id === task?.groupId)
   );
@@ -164,7 +169,7 @@ export function EditorTaskReference({
       <div className="flex gap-2 rounded-xl border border-dashed border-destructive/50 bg-destructive/5 p-4 text-sm">
         <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
         {courseAccess === 'open'
-          ? 'Course открыт: новые Task не создаются (#180). Удалите этот блок или переведите Course в draft в песочнице.'
+          ? 'Course открыт, новые Task не создаются (#180). Удалите блок или переведите Course в draft в «Песочнице».'
           : 'Task создаётся…'}
       </div>
     );
@@ -172,154 +177,187 @@ export function EditorTaskReference({
 
   const taskSchedule = schedule.tasks[resolvedId]!;
   const label = task.title || 'Новая Task';
-  const emit = (what: string) => (commands: Parameters<typeof edit>[0]) =>
+  const emit = (what: string) => (commands: DeadlineCommand[]) =>
     edit(commands, `${label}: ${what}`);
+  const revert = (key: string) => () => dropPending(new Set([key]));
   const personal = schedule.overrides.filter(
     (item) => item.taskId === resolvedId && item.target.kind === 'student'
   );
+  const inheriting = STUDENT_GROUPS.filter(
+    (item) =>
+      !findOverride(schedule, resolvedId, { kind: 'group', groupId: item.id })
+  ).map((item) => item.id);
 
   return (
     <div
       id={`task-ref-${resolvedId}`}
       className={cn(
-        'rounded-xl border bg-primary/3 p-4 md:rounded-2xl md:p-5',
-        selected ? 'border-primary ring-2 ring-primary/40' : 'border-black/10',
-        'dark:border-white/10'
+        'rounded-xl border bg-card p-4 md:rounded-2xl md:p-5',
+        selected ? 'border-primary ring-2 ring-primary/30' : 'border-border'
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="mb-1 flex flex-wrap items-center gap-2 text-sm font-medium text-primary">
-            <Trophy className="size-4" aria-hidden="true" />
-            Задание
-            <span className="text-xs font-normal text-muted-foreground">
-              {group?.title} ·{' '}
-              <span className="font-mono">{task.key || '—'}</span>
-            </span>
-          </div>
-          <div className="text-lg font-semibold text-foreground">{label}</div>
+          <p className="text-sm text-muted-foreground">
+            Задание в группе «{group?.title}»
+          </p>
+          <p className="text-lg font-semibold text-foreground">{label}</p>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => onOpenPanel(resolvedId)}
         >
-          <Settings2 /> Настроить Task
+          <Settings2 /> Настроить
         </Button>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <Chip
-          label="Все"
-          tone="task"
-          value={taskSchedule.deadline}
-          pending={keys.has(`${resolvedId}|task`)}
+        <ValuePopover
+          variant="chip"
+          className={CHIP_TONE.task}
           title={`${label}: общий срок`}
+          pending={keys.has(`${resolvedId}|task`)}
+          onRevert={revert(`${resolvedId}|task`)}
+          trigger={
+            <>
+              Срок
+              <DeadlineText compact value={taskSchedule.deadline} />
+            </>
+          }
         >
           <LevelEditor
             taskId={resolvedId}
             value={taskSchedule.deadline}
             onCommands={emit('общий срок')}
           />
-        </Chip>
-        {STUDENT_GROUPS.map((studentGroup) => {
-          const target: OverrideTarget = {
-            kind: 'group',
-            groupId: studentGroup.id,
-          };
-          const override = findOverride(schedule, resolvedId, target);
-          return (
-            <Chip
-              key={studentGroup.id}
-              label={studentGroup.name}
-              tone="group"
-              value={override?.value ?? { kind: 'inherit' }}
-              inherited={taskSchedule.deadline}
-              pending={keys.has(`${resolvedId}|g:${studentGroup.id}`)}
-              title={`${label}: ${studentGroup.name}${override?.reason ? ` — ${override.reason}` : ''}`}
-            >
-              <LevelEditor
-                taskId={resolvedId}
-                target={target}
-                value={override?.value ?? { kind: 'inherit' }}
-                inherited={taskSchedule.deadline}
-                reason={override?.reason}
-                inheritLabel="Общий срок"
-                onCommands={emit(`группа ${studentGroup.name}`)}
-              />
-            </Chip>
-          );
-        })}
-        <Chip
-          label={
-            <span className="inline-flex items-center gap-1">
-              <UserRound className="size-3" /> {personal.length}
-            </span>
+        </ValuePopover>
+
+        {STUDENT_GROUPS.filter((item) => !inheriting.includes(item.id)).map(
+          (studentGroup) => {
+            const target: OverrideTarget = {
+              kind: 'group',
+              groupId: studentGroup.id,
+            };
+            const override = findOverride(schedule, resolvedId, target)!;
+            const key = overrideKey(resolvedId, target);
+
+            return (
+              <ValuePopover
+                key={studentGroup.id}
+                variant="chip"
+                className={CHIP_TONE.group}
+                title={`${label}: ${studentGroup.name}`}
+                pending={keys.has(key)}
+                onRevert={revert(key)}
+                trigger={
+                  <>
+                    {studentGroup.name}
+                    <DeadlineText compact value={override.value} />
+                  </>
+                }
+              >
+                <LevelEditor
+                  taskId={resolvedId}
+                  target={target}
+                  value={override.value}
+                  inherited={taskSchedule.deadline}
+                  reason={override.reason}
+                  onCommands={emit(`группа ${studentGroup.name}`)}
+                />
+              </ValuePopover>
+            );
           }
-          tone="student"
-          value={null}
-          pending={personal.some((item) =>
-            keys.has(
-              `${resolvedId}|s:${item.target.kind === 'student' ? item.target.studentId : ''}`
-            )
-          )}
+        )}
+
+        {inheriting.length > 0 ? (
+          <ValuePopover
+            variant="chip"
+            className={CHIP_TONE.quiet}
+            title={`${label}: группы с общим сроком`}
+            pending={inheriting.some((groupId) =>
+              keys.has(`${resolvedId}|g:${groupId}`)
+            )}
+            trigger={
+              inheriting.length === STUDENT_GROUPS.length
+                ? 'Все группы с общим сроком'
+                : `Ещё ${inheriting.length} с общим сроком`
+            }
+          >
+            <InheritingGroups
+              taskId={resolvedId}
+              label={
+                taskSchedule.deadline.kind === 'at'
+                  ? formatCompactMoment(taskSchedule.deadline.at)
+                  : '(без срока)'
+              }
+              groupIds={inheriting}
+              onCommands={emit}
+            />
+          </ValuePopover>
+        ) : null}
+
+        <ValuePopover
+          variant="chip"
+          className={personal.length ? CHIP_TONE.student : CHIP_TONE.quiet}
           title={`${label}: личные переопределения`}
+          showZone={personal.length > 0}
+          pending={personal.some((item) =>
+            keys.has(overrideKey(resolvedId, item.target))
+          )}
+          trigger={
+            <>
+              <UserRound className="size-3" />
+              {personal.length || 'нет'}
+            </>
+          }
         >
           {personal.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Нет. Добавить можно на экране сроков или в панели Task.
+              Личных переопределений нет. Добавить их можно на экране сроков или
+              в панели Task.
             </p>
           ) : (
-            <ul className="grid max-h-72 gap-3 overflow-y-auto">
+            <ul className="-mx-1 grid">
               {personal.map((item) => {
                 if (item.target.kind !== 'student') {
                   return null;
                 }
                 const student = studentsById.get(item.target.studentId)!;
                 return (
-                  <li key={student.id} className="grid gap-1">
-                    <span className="text-sm font-medium">
-                      {studentName(student)}
-                    </span>
-                    <LevelEditor
-                      compact
-                      taskId={resolvedId}
-                      target={item.target}
-                      value={item.value}
-                      inherited={
-                        groupDeadline(schedule, resolvedId, student.groupId)
-                          .value
-                      }
-                      reason={item.reason}
-                      inheritLabel="Срок группы"
-                      onCommands={emit(`личное, ${studentName(student)}`)}
-                    />
+                  <li
+                    key={student.id}
+                    className="flex h-8 items-center justify-between gap-2 px-1 text-sm"
+                  >
+                    <span className="truncate">{studentName(student)}</span>
+                    <DeadlineText compact value={item.value} />
                   </li>
                 );
               })}
+              <li className="px-1 pt-1 text-xs text-muted-foreground">
+                Правка — в панели Task или на экране сроков
+              </li>
             </ul>
           )}
-        </Chip>
-        <Chip
-          label={
-            <span className="inline-flex items-center gap-1">
-              <Clock className="size-3" /> открытие
-            </span>
-          }
-          tone="opening"
-          value={
-            taskSchedule.openingTime === null
-              ? null
-              : { kind: 'at', at: taskSchedule.openingTime }
-          }
+        </ValuePopover>
+
+        <ValuePopover
+          variant="chip"
+          className={CHIP_TONE.quiet}
+          title={`${label}: время открытия`}
           pending={keys.has(`${resolvedId}|opening`)}
-          title={`${label}: Task Opening Time`}
+          onRevert={revert(`${resolvedId}|opening`)}
+          trigger={
+            <>
+              <Clock className="size-3" />
+              {taskSchedule.openingTime === null
+                ? 'открыта сразу'
+                : formatCompactMoment(taskSchedule.openingTime, '00:00')}
+            </>
+          }
         >
-          <OpeningTimeField taskId={resolvedId} onCommands={emit('открытие')} />
-        </Chip>
-        <span className="text-[11px] text-muted-foreground">
-          {timeZoneLabel()} · сроки не входят в черновик курса
-        </span>
+          <OpeningEditor taskId={resolvedId} onCommands={emit('открытие')} />
+        </ValuePopover>
       </div>
     </div>
   );
