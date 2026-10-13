@@ -8,9 +8,8 @@ import {
   ChevronDown,
   CircleCheck,
   LoaderCircle,
-  Plus,
   TriangleAlert,
-  X,
+  UsersRound,
 } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -82,59 +81,47 @@ export function ExtendDialog({
   );
 }
 
-function StudentChips({ draft }: { draft: ExtendDraft }) {
-  function toggle(studentId: string) {
-    draft.setStudentIds(
-      draft.studentIds.includes(studentId)
-        ? draft.studentIds.filter((id) => id !== studentId)
-        : [...draft.studentIds, studentId]
-    );
-  }
+/** «Иванов А. А., Смирнова Д. И. и ещё 3» — one line, whatever the count. */
+function studentsSummary(studentIds: readonly string[]) {
+  const names = studentIds.map((id) => studentName(studentsById.get(id)!));
+  return names.length <= 2
+    ? names.join(', ')
+    : `${names.slice(0, 2).join(', ')} и ещё ${names.length - 2}`;
+}
+
+/**
+ * A field of fixed size, like the Task picker: ticking Students changes
+ * only its text, so the list under it never moves.
+ */
+function StudentField({ draft }: { draft: ExtendDraft }) {
+  const empty = draft.studentIds.length === 0;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {draft.studentIds.map((studentId) => {
-        const student = studentsById.get(studentId)!;
-        return (
-          <span
-            key={studentId}
-            className={cn(
-              'inline-flex h-8 items-center gap-1.5 rounded-md border pr-1 pl-2.5 text-sm',
-              'border-violet-500/40 bg-violet-500/10'
-            )}
-          >
-            {studentName(student)}
-            <span className="text-xs text-muted-foreground">
-              {groupName(student.groupId)}
-            </span>
-            <button
-              type="button"
-              aria-label={`Убрать: ${studentName(student)}`}
-              onClick={() => toggle(studentId)}
-              className="grid size-6 cursor-pointer place-items-center rounded hover:bg-violet-500/15"
-            >
-              <X className="size-3.5" />
-            </button>
+    <StudentPicker
+      selectedIds={draft.studentIds}
+      onPick={(studentId) =>
+        draft.setStudentIds(
+          draft.studentIds.includes(studentId)
+            ? draft.studentIds.filter((id) => id !== studentId)
+            : [...draft.studentIds, studentId]
+        )
+      }
+      trigger={
+        <button
+          type="button"
+          className={cn(
+            'inline-flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border px-3 text-sm hover:bg-muted',
+            empty && 'text-muted-foreground'
+          )}
+        >
+          <UsersRound className="size-4 shrink-0 text-muted-foreground" />
+          <span className="flex-1 truncate text-left">
+            {empty ? 'Выберите студентов' : studentsSummary(draft.studentIds)}
           </span>
-        );
-      })}
-      <StudentPicker
-        selectedIds={draft.studentIds}
-        onPick={toggle}
-        trigger={
-          <button
-            type="button"
-            className={cn(
-              'inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-dashed px-2.5 text-sm',
-              'text-muted-foreground hover:bg-muted hover:text-foreground'
-            )}
-          >
-            <Plus className="size-4" />
-            {draft.studentIds.length ? 'Ещё студент' : 'Выбрать студентов'}
-          </button>
-        }
-      />
-    </div>
+          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+        </button>
+      }
+    />
   );
 }
 
@@ -300,7 +287,7 @@ function ExtendBody({
 
       <div className="grid min-h-0 gap-5 overflow-y-auto px-6 pb-5">
         <Section title="Студенты">
-          <StudentChips draft={draft} />
+          <StudentField draft={draft} />
         </Section>
 
         <Section title="Task">
