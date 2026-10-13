@@ -295,8 +295,13 @@ export function useKindsDraft(preset: ShiftPreset) {
     days,
     setDays,
     kinds,
-    setKind: (kind: keyof ShiftKinds, on: boolean) =>
-      setKinds((previous) => ({ ...previous, [kind]: on })),
+    setKind: (kind: keyof ShiftKinds, on: boolean) => {
+      setKinds((previous) => ({ ...previous, [kind]: on }));
+      // Ticking «Дедлайны подгрупп» again after unticking every group.
+      if (kind === 'groups' && on && groupIds.size === 0) {
+        setGroupIds(new Set(STUDENT_GROUPS.map((group) => group.id)));
+      }
+    },
     groupIds,
     setGroupIds,
     plan,

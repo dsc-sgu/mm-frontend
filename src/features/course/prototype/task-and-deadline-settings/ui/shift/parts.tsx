@@ -128,6 +128,22 @@ export function DaysStepper({
   );
 }
 
+/** Positive numbers always carry «+», so «+3» and «−3» read alike. */
+function signed(days: number) {
+  return days > 0 ? `+${days}` : days < 0 ? `−${-days}` : '0';
+}
+
+/**
+ * As typed, but signed like the buttons: «3» becomes «+3», «-» becomes «−».
+ * A lone sign stays while the Teacher is still typing.
+ */
+function withSign(text: string) {
+  const minus = text.replace('-', '−');
+  return /^\s*\d+\s*$/.test(minus) && Number(minus) > 0
+    ? `+${minus.trim()}`
+    : minus;
+}
+
 /** «−3», «-3», «+3», «3» → a signed number of days; anything else → null. */
 function parseDays(text: string) {
   const clean = text.trim().replace('−', '-').replace('+', '');
@@ -147,13 +163,13 @@ function DaysInput({
   onChange: (days: number) => void;
   className?: string;
 }) {
-  const [text, setText] = useState(String(days));
+  const [text, setText] = useState(signed(days));
   const [seen, setSeen] = useState(days);
 
   if (seen !== days) {
     setSeen(days);
     if (parseDays(text) !== days) {
-      setText(String(days));
+      setText(signed(days));
     }
   }
 
@@ -164,7 +180,7 @@ function DaysInput({
       value={text}
       aria-label="Сколько дней"
       onChange={(event) => {
-        setText(event.target.value);
+        setText(withSign(event.target.value));
         const parsed = parseDays(event.target.value);
         if (parsed !== null) {
           setSeen(parsed);
@@ -182,7 +198,7 @@ function DaysInput({
 const DAY_STEPS = [-7, -1, 1, 2, 7, 14];
 
 const DAY_CELL = cn(
-  'h-9 rounded-md border px-2 text-sm whitespace-nowrap tabular-nums transition-colors'
+  'h-9 cursor-pointer rounded-md border px-2 text-sm whitespace-nowrap tabular-nums transition-colors'
 );
 
 /**
@@ -197,7 +213,7 @@ export function DaysPicker({
   onChange: (days: number) => void;
 }) {
   const [text, setText] = useState(
-    DAY_STEPS.includes(days) ? '' : String(days)
+    DAY_STEPS.includes(days) ? '' : signed(days)
   );
   const typed = parseDays(text);
   const customActive = text !== '' && typed !== null && typed === days;
@@ -245,7 +261,7 @@ export function DaysPicker({
           placeholder="или своё"
           aria-label="Своё число дней, минус — раньше"
           onChange={(event) => {
-            setText(event.target.value);
+            setText(withSign(event.target.value));
             const parsed = parseDays(event.target.value);
             if (parsed !== null && parsed !== 0) {
               onChange(parsed);
@@ -258,7 +274,7 @@ export function DaysPicker({
               : 'placeholder:text-muted-foreground'
           )}
           style={{
-            maxWidth: text ? `${Math.max(text.length, 2) + 1}ch` : undefined,
+            maxWidth: text ? `${text.length + 0.4}ch` : undefined,
           }}
         />
         {text !== '' && typed !== null ? (
