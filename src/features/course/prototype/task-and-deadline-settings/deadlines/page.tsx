@@ -26,6 +26,7 @@ import {
   ShiftDialog,
   type ShiftPreset,
 } from '@/features/course/prototype/task-and-deadline-settings/ui/shift-dialog';
+import { ShiftToastView } from '@/features/course/prototype/task-and-deadline-settings/ui/shift/parts';
 import { MatrixView } from './matrix';
 import { TaskListView } from './task-list';
 import { TimelineView } from './timeline';
@@ -89,6 +90,7 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
       {variant === 'D' ? <TimelineView {...viewProps} /> : null}
 
       <ScheduleDock>
+        <ShiftToastView />
         <BulkBar
           count={selection.size}
           onClear={() => setSelection(new Set())}
