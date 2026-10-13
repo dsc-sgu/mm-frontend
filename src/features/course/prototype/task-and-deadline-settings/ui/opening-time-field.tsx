@@ -18,15 +18,14 @@ import {
   NOW,
 } from '@/features/course/prototype/task-and-deadline-settings/time';
 import {
+  MomentPicker,
   OptionRow,
-  Shortcuts,
-} from '@/features/course/prototype/task-and-deadline-settings/ui/level-editor';
-import { MomentPicker } from '@/features/course/prototype/task-and-deadline-settings/ui/moment-picker';
+} from '@/features/course/prototype/task-and-deadline-settings/ui/moment-picker';
 
 const STEPS = [
+  { label: '−1 неделя', days: -7 },
   { label: '+1 день', days: 1 },
   { label: '+1 неделя', days: 7 },
-  { label: '−1 неделя', days: -7 },
 ] as const;
 
 function startOfToday() {
@@ -48,19 +47,22 @@ export function OpeningEditor({
     onCommands([{ type: 'set-opening-time', taskId, at }]);
 
   return (
-    <>
-      <MomentPicker defaultTime="00:00" value={opening} onCommit={set} />
-      <Shortcuts base={opening ?? startOfToday()} steps={STEPS} onPick={set} />
-      <div className="-mx-1 grid border-t pt-2">
+    <MomentPicker
+      defaultTime="00:00"
+      value={opening}
+      onCommit={set}
+      base={opening ?? startOfToday()}
+      steps={STEPS}
+      options={
         <OptionRow
           selected={opening === null}
-          icon={<CircleSlash className="size-4" />}
-          label="Не задано: задание открыто сразу"
+          icon={<CircleSlash />}
+          label="Открыто сразу"
           onSelect={() => set(null)}
         />
-      </div>
-      <OpeningNotes taskId={taskId} />
-    </>
+      }
+      extra={<OpeningNotes taskId={taskId} />}
+    />
   );
 }
 

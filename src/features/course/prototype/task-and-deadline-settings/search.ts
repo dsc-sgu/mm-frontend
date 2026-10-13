@@ -7,6 +7,7 @@ export type TaskApplyMode = 'course' | 'task';
 export type DeadlineFieldMode = 'counter' | 'full';
 export type StatementMode = 'panel' | 'inline' | 'expanded';
 export type ShiftVariant = 'question' | 'sentence' | 'undo' | 'table';
+export type PickerLayout = 'stack' | 'split';
 
 export const SHIFT_VARIANTS: ReadonlyArray<{
   value: ShiftVariant;
@@ -26,6 +27,8 @@ export type PrototypeSearch = {
   statement?: StatementMode;
   /** Which mass-shift window to show. */
   shift?: ShiftVariant;
+  /** How the date popover of a deadline or an opening time is laid out. */
+  picker?: PickerLayout;
   /** The Task whose panel is open. */
   task?: string;
 };
@@ -83,6 +86,7 @@ export function validatePrototypeSearch(
       'shift',
       pick(search.shift, ['question', 'sentence', 'undo', 'table'] as const)
     ),
+    ...withValue('picker', pick(search.picker, ['stack', 'split'] as const)),
     ...withValue(
       'task',
       typeof search.task === 'string' ? search.task : undefined
@@ -101,6 +105,7 @@ export type PrototypeSettings = {
   deadlineField: DeadlineFieldMode;
   statement: StatementMode;
   shift: ShiftVariant;
+  picker: PickerLayout;
   task: string | undefined;
 };
 
@@ -115,6 +120,8 @@ export function usePrototypeSettings(): PrototypeSettings {
     deadlineField: search.deadlineField ?? 'full',
     statement: search.statement ?? 'panel',
     shift: search.shift ?? 'question',
+    // Verdict 13.10.2026: the two-column date popover.
+    picker: search.picker ?? 'split',
     task: search.task,
   };
 }
@@ -169,6 +176,7 @@ export function useOpenVariant(courseSlug: string) {
             : {}),
           ...(previous.statement ? { statement: previous.statement } : {}),
           ...(previous.shift ? { shift: previous.shift } : {}),
+          ...(previous.picker ? { picker: previous.picker } : {}),
           // The same Task stays selected across variants.
           ...(previous.task ? { task: previous.task } : {}),
           ...extra,

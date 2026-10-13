@@ -1,11 +1,10 @@
 // PROTOTYPE (#181): editor of one level — Task Deadline, a Student Group's
-// or a Student's Deadline Override. Calendar and time first, shortcuts, then
-// the two non-date values, as in Todoist / Stripe date popovers.
-import { useState, type ReactNode } from 'react';
-import { Ban, Check, CornerDownRight } from 'lucide-react';
+// or a Student's Deadline Override: date and time, quick moves, then the two
+// non-date values and the reason, as in Todoist / Stripe date popovers.
+import { useState } from 'react';
+import { Ban, CornerDownRight } from 'lucide-react';
 
 import { Input } from '@/shadcn/components/ui/input';
-import { cn } from '@/shadcn/lib/utils';
 import type {
   DeadlineCommand,
   DeadlineValue,
@@ -13,11 +12,13 @@ import type {
   OverrideTarget,
 } from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import {
-  formatMoment,
+  formatCompactMoment,
   NOW,
-  shiftDays,
 } from '@/features/course/prototype/task-and-deadline-settings/time';
-import { MomentPicker } from '@/features/course/prototype/task-and-deadline-settings/ui/moment-picker';
+import {
+  MomentPicker,
+  OptionRow,
+} from '@/features/course/prototype/task-and-deadline-settings/ui/moment-picker';
 
 function endOfToday() {
   const date = new Date(NOW);
@@ -25,72 +26,11 @@ function endOfToday() {
   return date.getTime();
 }
 
-export function Shortcuts({
-  base,
-  steps,
-  onPick,
-}: {
-  base: number;
-  steps: ReadonlyArray<{ label: string; days: number }>;
-  onPick: (at: number) => void;
-}) {
-  return (
-    <div className="flex flex-wrap gap-1">
-      {steps.map((step) => (
-        <button
-          key={step.label}
-          type="button"
-          onClick={() => onPick(shiftDays(base, step.days))}
-          className="h-7 rounded-md border border-border px-2 text-xs hover:bg-muted"
-        >
-          {step.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-export function OptionRow({
-  selected,
-  icon,
-  label,
-  detail,
-  onSelect,
-}: {
-  selected: boolean;
-  icon: ReactNode;
-  label: string;
-  detail?: ReactNode;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="menuitemradio"
-      aria-checked={selected}
-      onClick={onSelect}
-      className={cn(
-        'flex h-8 items-center gap-2 rounded-md px-2 text-left text-sm hover:bg-muted',
-        selected && 'font-medium'
-      )}
-    >
-      <span className="text-muted-foreground">{icon}</span>
-      <span className="flex-1">{label}</span>
-      {detail ? (
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {detail}
-        </span>
-      ) : null}
-      <Check className={cn('size-4', !selected && 'invisible')} />
-    </button>
-  );
-}
-
 const STEPS = [
+  { label: '−1 день', days: -1 },
   { label: '+1 день', days: 1 },
   { label: '+2 дня', days: 2 },
   { label: '+1 неделя', days: 7 },
-  { label: '−1 день', days: -1 },
 ] as const;
 
 export function LevelEditor({
@@ -127,57 +67,56 @@ export function LevelEditor({
         : endOfToday();
 
   return (
-    <>
-      <MomentPicker
-        defaultTime="23:59"
-        value={value.kind === 'at' ? value.at : null}
-        inherited={
-          value.kind === 'inherit' && inherited?.kind === 'at'
-            ? inherited.at
-            : undefined
-        }
-        onCommit={(at) => setValue({ kind: 'at', at })}
-      />
-      <Shortcuts
-        base={base}
-        steps={STEPS}
-        onPick={(at) => setValue({ kind: 'at', at })}
-      />
-      <div className="-mx-1 grid border-t pt-2">
-        {target ? (
+    <MomentPicker
+      defaultTime="23:59"
+      value={value.kind === 'at' ? value.at : null}
+      inherited={
+        value.kind === 'inherit' && inherited?.kind === 'at'
+          ? inherited.at
+          : undefined
+      }
+      onCommit={(at) => setValue({ kind: 'at', at })}
+      base={base}
+      steps={STEPS}
+      options={
+        <>
+          {target ? (
+            <OptionRow
+              selected={value.kind === 'inherit'}
+              icon={<CornerDownRight />}
+              label={inheritLabel}
+              detail={
+                inherited?.kind === 'at'
+                  ? formatCompactMoment(inherited.at)
+                  : inherited
+                    ? 'без дедлайна'
+                    : undefined
+              }
+              onSelect={() =>
+                onCommands([{ type: 'reset-override', taskId, target }])
+              }
+            />
+          ) : null}
           <OptionRow
-            selected={value.kind === 'inherit'}
-            icon={<CornerDownRight className="size-4" />}
-            label={inheritLabel}
-            detail={
-              inherited?.kind === 'at'
-                ? formatMoment(inherited.at)
-                : inherited
-                  ? 'без дедлайна'
-                  : undefined
-            }
-            onSelect={() =>
-              onCommands([{ type: 'reset-override', taskId, target }])
+            selected={value.kind === 'none'}
+            icon={<Ban />}
+            label="Без дедлайна"
+            onSelect={() => setValue({ kind: 'none' })}
+          />
+        </>
+      }
+      extra={
+        target && value.kind !== 'inherit' ? (
+          <ReasonInput
+            key={reason}
+            reason={reason ?? ''}
+            onCommit={(next) =>
+              onCommands([{ type: 'set-reason', taskId, target, reason: next }])
             }
           />
-        ) : null}
-        <OptionRow
-          selected={value.kind === 'none'}
-          icon={<Ban className="size-4" />}
-          label="Без дедлайна"
-          onSelect={() => setValue({ kind: 'none' })}
-        />
-      </div>
-      {target && value.kind !== 'inherit' ? (
-        <ReasonInput
-          key={reason}
-          reason={reason ?? ''}
-          onCommit={(next) =>
-            onCommands([{ type: 'set-reason', taskId, target, reason: next }])
-          }
-        />
-      ) : null}
-    </>
+        ) : null
+      }
+    />
   );
 }
 
@@ -197,8 +136,8 @@ function ReasonInput({
   }
 
   return (
-    <label className="grid gap-1 border-t pt-3 text-xs text-muted-foreground">
-      Причина. Её видят преподаватели и те, к кому она относится
+    <label className="grid gap-1.5">
+      <span className="text-xs font-medium">Причина</span>
       <Input
         value={text}
         placeholder="Например, праздник в день занятия"
@@ -211,6 +150,9 @@ function ReasonInput({
           }
         }}
       />
+      <span className="text-xs text-muted-foreground">
+        Её видят преподаватели и те, к кому она относится
+      </span>
     </label>
   );
 }

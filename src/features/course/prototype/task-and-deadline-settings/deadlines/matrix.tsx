@@ -405,7 +405,8 @@ function TaskRows({
         <td className="h-px border-l p-0">
           <ValuePopover
             variant="cell"
-            title={`${task.title}: время открытия`}
+            context={task.title}
+            title="Время открытия"
             pending={keys.has(`${task.id}|opening`)}
             onRevert={revert(`${task.id}|opening`)}
             trigger={
@@ -424,7 +425,8 @@ function TaskRows({
         <td className="h-px border-l p-0">
           <ValuePopover
             variant="cell"
-            title={`${task.title}: общий дедлайн`}
+            context={task.title}
+            title="Общий дедлайн"
             pending={keys.has(`${task.id}|task`)}
             onRevert={revert(`${task.id}|task`)}
             trigger={<DeadlineText value={taskSchedule.deadline} compact />}
@@ -445,7 +447,8 @@ function TaskRows({
             <td key={group.id} className="h-px border-l p-0">
               <ValuePopover
                 variant="cell"
-                title={`${task.title}: ${group.name}`}
+                context={task.title}
+                title={`Подгруппа ${group.name}`}
                 pending={keys.has(key)}
                 onRevert={revert(key)}
                 trigger={
@@ -610,7 +613,8 @@ function PersonalList({
               </span>
             </span>
             <ValuePopover
-              title={`${taskTitle}: ${studentName(student)}`}
+              context={taskTitle}
+              title={studentName(student)}
               pending={keys.has(key)}
               onRevert={() => dropPending(new Set([key]))}
               trigger={<DeadlineText value={item.value} compact />}

@@ -160,6 +160,17 @@ function SandboxSettings() {
         />
       </Row>
 
+      <Row label="Окно даты в ячейке" hint="?picker">
+        <Segmented
+          value={settings.picker}
+          onChange={(picker) => update({ picker })}
+          options={[
+            { value: 'split', label: 'В две колонки' },
+            { value: 'stack', label: 'В столбик' },
+          ]}
+        />
+      </Row>
+
       <Row label="Где править условие" hint="?statement">
         <Segmented
           value={settings.statement}
