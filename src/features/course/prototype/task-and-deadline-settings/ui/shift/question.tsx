@@ -1,8 +1,9 @@
-// PROTOTYPE (#181): shift window «Вопрос». One question with three answers
-// instead of a table (Blue Apron «this delivery / all deliveries», Google
-// Calendar recurring events). Fine-grained choice stays one click away.
+// PROTOTYPE (#181): shift window «Вопрос», refined after review. Kinds of
+// deadlines are ticked independently (no «всё вместе»), Student Groups are
+// picked right in the window, days come from buttons as in «Сразу», and a
+// read-only sentence from «Фраза» says what will happen.
 import type { ReactNode } from 'react';
-import { ChevronDown, LoaderCircle, TriangleAlert } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
@@ -14,87 +15,136 @@ import {
   DialogTitle,
 } from '@/shadcn/components/ui/dialog';
 import { cn } from '@/shadcn/lib/utils';
-import {
-  usePrototypeSettings,
-  useUpdatePrototypeSearch,
-} from '@/features/course/prototype/task-and-deadline-settings/search';
+import { findOverride } from '@/features/course/prototype/task-and-deadline-settings/schedule';
+import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import {
   STUDENT_GROUPS,
   useSandbox,
-  useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
 import {
   formatCompactMoment,
   shiftDays,
 } from '@/features/course/prototype/task-and-deadline-settings/time';
-import {
-  daysLabel,
-  flipsSentence,
-  movingRows,
-  plural,
-  taskSummary,
-  toggleIn,
-  useShiftDraft,
-  type ShiftPreset,
-  type ShiftScope,
-} from './model';
-import { DaysStepper, TaskPicker, VariantSwitch } from './parts';
+import { useKindsDraft, type KindsDraft, type ShiftKinds } from './kinds';
+import { plural, toggleIn, type ShiftPreset } from './model';
+import { DaysPicker, TaskChooser, VariantSwitch } from './parts';
 
-function Answer({
-  value,
-  current,
-  onSelect,
-  title,
-  detail,
-  count,
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="grid gap-2">
+      <h3 className="text-sm font-medium">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function KindRow({
+  draft,
+  kind,
+  label,
+  meta,
+  disabled = false,
   children,
 }: {
-  value: ShiftScope;
-  current: ShiftScope;
-  onSelect: (value: ShiftScope) => void;
-  title: string;
-  detail: string;
-  count?: number;
+  draft: KindsDraft;
+  kind: keyof ShiftKinds;
+  label: string;
+  meta?: ReactNode;
+  disabled?: boolean;
   children?: ReactNode;
 }) {
-  const selected = value === current;
+  const checked = draft.kinds[kind] && !disabled;
 
   return (
-    <div
-      className={cn(
-        'rounded-lg border transition-colors',
-        selected ? 'border-foreground/60 bg-muted/40' : 'hover:bg-muted/30'
-      )}
-    >
-      <button
-        type="button"
-        role="radio"
-        aria-checked={selected}
-        onClick={() => onSelect(value)}
-        className="flex w-full items-start gap-3 px-3 py-2.5 text-left"
+    <div className="grid gap-2">
+      <label
+        className={cn(
+          'flex items-center gap-2.5 text-sm',
+          disabled && 'text-muted-foreground'
+        )}
       >
-        <span
-          className={cn(
-            'mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border',
-            selected ? 'border-foreground' : 'border-muted-foreground/50'
-          )}
-        >
-          {selected ? (
-            <span className="size-2 rounded-full bg-foreground" />
-          ) : null}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium">{title}</span>
-          <span className="block text-xs text-muted-foreground">{detail}</span>
-        </span>
-        {count !== undefined ? (
+        <Checkbox
+          checked={checked}
+          disabled={disabled}
+          onCheckedChange={(value) => draft.setKind(kind, value === true)}
+        />
+        <span className="flex-1">{label}</span>
+        {meta ? (
           <span className="text-xs text-muted-foreground tabular-nums">
-            {count} {plural(count, 'изменение', 'изменения', 'изменений')}
+            {meta}
           </span>
         ) : null}
-      </button>
-      {selected && children ? (
-        <div className="px-3 pb-3 pl-10">{children}</div>
+      </label>
+      {checked && children ? <div className="pl-6.5">{children}</div> : null}
+    </div>
+  );
+}
+
+function GroupButtons({ draft }: { draft: KindsDraft }) {
+  const single =
+    draft.orderedTaskIds.length === 1 ? draft.orderedTaskIds[0]! : null;
+  const task = single ? draft.schedule.tasks[single] : undefined;
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {STUDENT_GROUPS.map((group) => {
+        const override = single
+          ? findOverride(draft.schedule, single, {
+              kind: 'group',
+              groupId: group.id,
+            })
+          : undefined;
+        const inherits = Boolean(single) && !override;
+        const none = override?.value.kind === 'none';
+        // With the general deadline moving, an inheriting group moves anyway.
+        const follows = inherits && draft.kinds.general;
+        const selected = draft.groupIds.has(group.id) && !none;
+        const hint = !single
+          ? null
+          : none
+            ? 'без дедлайна'
+            : follows
+              ? 'вместе с общим'
+              : inherits
+                ? selected
+                  ? 'получит свой'
+                  : 'как общий'
+                : override?.value.kind === 'at'
+                  ? formatCompactMoment(override.value.at)
+                  : null;
+
+        return (
+          <button
+            key={group.id}
+            type="button"
+            disabled={none || follows}
+            aria-pressed={selected || follows}
+            onClick={() =>
+              draft.setGroupIds(toggleIn(draft.groupIds, group.id))
+            }
+            className={cn(
+              'inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-sm',
+              'disabled:cursor-default',
+              follows
+                ? 'border-dashed text-muted-foreground'
+                : none
+                  ? 'border-dashed text-muted-foreground/60'
+                  : selected
+                    ? 'border-sky-500/50 bg-sky-500/10 text-sky-950 dark:text-sky-100'
+                    : 'text-muted-foreground hover:bg-muted'
+            )}
+          >
+            {group.name}
+            {hint ? (
+              <span className="text-xs text-muted-foreground">{hint}</span>
+            ) : null}
+          </button>
+        );
+      })}
+      {task === undefined && single === null ? (
+        <span className="self-center text-xs text-muted-foreground">
+          Отмеченные подгруппы сдвинутся во всех выбранных Task
+        </span>
       ) : null}
     </div>
   );
@@ -108,164 +158,113 @@ export function QuestionBody({
   onClose: () => void;
 }) {
   const { apply } = usePrototypeSettings();
-  const update = useUpdatePrototypeSearch();
   const save = useSandbox((state) => state.save);
-  const schedule = useViewSchedule();
-  const draft = useShiftDraft(preset);
+  const draft = useKindsDraft(preset);
   const ids = draft.orderedTaskIds;
-  const single = ids.length === 1 ? schedule.tasks[ids[0]!] : undefined;
+  const single = ids.length === 1 ? draft.schedule.tasks[ids[0]!] : undefined;
+  const opening =
+    single?.openingTime !== null && single?.openingTime !== undefined
+      ? single.openingTime
+      : null;
 
-  const everything = movingRows(draft.scopePlans.everything.rows);
-  const groupsMoving = everything.filter((row) => row.level === 'group').length;
-  const studentsMoving = everything.filter(
-    (row) => row.level === 'student'
-  ).length;
-  const flips = flipsSentence(draft.flips);
-
-  const everythingDetail =
-    groupsMoving + studentsMoving === 0
-      ? 'Своих дедлайнов у групп и Students здесь нет'
-      : `Общий дедлайн и свои дедлайны: ${[
-          groupsMoving
-            ? `${groupsMoving} ${plural(groupsMoving, 'группа', 'группы', 'групп')}`
-            : null,
-          studentsMoving
-            ? `${studentsMoving} ${plural(studentsMoving, 'Student', 'Students', 'Students')}`
-            : null,
-        ]
-          .filter(Boolean)
-          .join(', ')}`;
+  const generalMeta =
+    single?.deadline.kind === 'at'
+      ? `${formatCompactMoment(single.deadline.at)} → ${formatCompactMoment(shiftDays(single.deadline.at, draft.days))}`
+      : single
+        ? 'без дедлайна'
+        : ids.length > 1
+          ? `${ids.length} Task`
+          : null;
 
   return (
-    <DialogContent className="gap-0 p-0 sm:max-w-md">
+    <DialogContent className="flex max-h-[92dvh] flex-col gap-0 p-0 sm:max-w-xl">
       <DialogHeader className="gap-3 px-6 pt-5 pb-4">
         <VariantSwitch />
-        <DialogTitle className="text-lg leading-snug">
-          {ids.length === 0
-            ? 'Какие Task сдвинуть?'
-            : `Сдвинуть ${taskSummary(draft)} ${daysLabel(draft.days)}?`}
-        </DialogTitle>
-        <DialogDescription asChild>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            {single?.deadline.kind === 'at' ? (
-              <span className="text-muted-foreground">
-                Общий дедлайн{' '}
-                <span className="line-through">
-                  {formatCompactMoment(single.deadline.at)}
-                </span>{' '}
-                →{' '}
-                <span className="font-medium text-foreground">
-                  {formatCompactMoment(
-                    shiftDays(single.deadline.at, draft.days)
-                  )}
-                </span>
-              </span>
-            ) : null}
-            <span className="ml-auto flex items-center gap-2">
-              <TaskPicker
-                draft={draft}
-                trigger={
-                  <button
-                    type="button"
-                    className={cn(
-                      'inline-flex items-center gap-1 hover:text-foreground',
-                      ids.length === 0
-                        ? 'font-medium text-foreground'
-                        : 'text-muted-foreground'
-                    )}
-                  >
-                    {ids.length === 0 ? 'Выбрать Task' : 'Другие Task'}
-                    <ChevronDown className="size-3.5" />
-                  </button>
-                }
-              />
-              <DaysStepper days={draft.days} onChange={draft.setDays} />
-            </span>
-          </div>
+        <DialogTitle className="text-lg">Сдвинуть дедлайны</DialogTitle>
+        <DialogDescription className="sr-only">
+          Выберите Task, на сколько дней и какие дедлайны сдвинуть
         </DialogDescription>
       </DialogHeader>
 
-      <div role="radiogroup" className="grid gap-2 px-6">
-        <Answer
-          value="everything"
-          current={draft.scope}
-          onSelect={draft.setScope}
-          title="Всё вместе"
-          detail={everythingDetail}
-          count={everything.length}
-        />
-        <Answer
-          value="general-only"
-          current={draft.scope}
-          onSelect={draft.setScope}
-          title="Только общий дедлайн"
-          detail="Группы и Students со своими дедлайнами останутся как есть"
-          count={movingRows(draft.scopePlans['general-only'].rows).length}
-        />
-        <Answer
-          value="groups"
-          current={draft.scope}
-          onSelect={draft.setScope}
-          title="Только для отдельных групп"
-          detail="Общий дедлайн и остальные группы не изменятся"
-        >
-          <div className="flex flex-wrap gap-1.5">
-            {STUDENT_GROUPS.map((group) => (
-              <button
-                key={group.id}
-                type="button"
-                aria-pressed={draft.groupIds.has(group.id)}
-                onClick={() =>
-                  draft.setGroupIds(toggleIn(draft.groupIds, group.id))
-                }
-                className={cn(
-                  'h-7 rounded-md border px-2 text-xs',
-                  draft.groupIds.has(group.id)
-                    ? 'border-sky-500/50 bg-sky-500/10 text-sky-900 dark:text-sky-200'
-                    : 'bg-background hover:bg-muted'
-                )}
-              >
-                {group.name}
-              </button>
-            ))}
-          </div>
-        </Answer>
-      </div>
+      <div className="grid min-h-0 gap-5 overflow-y-auto px-6 pb-5">
+        <Section title="Task">
+          <TaskChooser
+            groups={draft.groups}
+            taskIds={draft.taskIds}
+            onChange={draft.setTaskIds}
+          />
+        </Section>
 
-      <div className="grid gap-2 px-6 pt-3 text-sm">
-        {draft.hasOpening && draft.scope !== 'groups' ? (
-          <label className="flex items-center gap-2 text-muted-foreground">
-            <Checkbox
-              checked={draft.includeOpening}
-              onCheckedChange={(value) =>
-                draft.setIncludeOpening(value === true)
+        <Section title="На сколько">
+          <DaysPicker days={draft.days} onChange={draft.setDays} />
+        </Section>
+
+        <Section title="Что сдвинуть">
+          <div className="grid gap-3">
+            <KindRow
+              draft={draft}
+              kind="general"
+              label="Общие дедлайны"
+              meta={generalMeta}
+            />
+            <KindRow
+              draft={draft}
+              kind="groups"
+              label="Дедлайны подгрупп"
+              meta={
+                draft.kinds.groups && draft.counts.groups > 0
+                  ? `${draft.counts.groups} ${plural(draft.counts.groups, 'изменение', 'изменения', 'изменений')}`
+                  : null
+              }
+            >
+              <GroupButtons draft={draft} />
+            </KindRow>
+            <KindRow
+              draft={draft}
+              kind="students"
+              label="Индивидуальные дедлайны студентов"
+              disabled={ids.length > 0 && draft.counts.personalTotal === 0}
+              meta={
+                ids.length === 0
+                  ? null
+                  : draft.counts.personalTotal === 0
+                    ? 'нет'
+                    : `${draft.counts.personalTotal} ${plural(draft.counts.personalTotal, 'студент', 'студента', 'студентов')}`
               }
             />
-            И время открытия
-          </label>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => update({ shift: 'table' })}
-          className="w-fit text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-        >
-          Выбрать каждое значение отдельно
-        </button>
-        {flips ? (
-          <p className="flex items-start gap-1.5 text-amber-800 dark:text-amber-300">
-            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-            {flips[0]!.toUpperCase() + flips.slice(1)}
+            {draft.hasOpening ? (
+              <KindRow
+                draft={draft}
+                kind="opening"
+                label="Время открытия"
+                meta={
+                  opening !== null
+                    ? `${formatCompactMoment(opening, '00:00')} → ${formatCompactMoment(shiftDays(opening, draft.days), '00:00')}`
+                    : null
+                }
+              />
+            ) : null}
+          </div>
+        </Section>
+
+        {ids.length > 0 ? (
+          <p
+            aria-live="polite"
+            className="rounded-lg bg-muted/60 px-4 py-3 text-sm leading-6"
+          >
+            {draft.summary.join(' ')}
           </p>
         ) : null}
       </div>
 
-      <DialogFooter className="items-center px-6 pt-4 pb-5">
+      <DialogFooter className="items-center gap-3 border-t px-6 py-3 sm:justify-between">
+        <span className="text-sm text-muted-foreground">{draft.blocked}</span>
         <div className="flex gap-2">
           <Button variant="ghost" onClick={onClose}>
             Отмена
           </Button>
           <Button
-            disabled={!draft.canApply || save.status === 'saving'}
+            disabled={Boolean(draft.blocked) || save.status === 'saving'}
             onClick={() => {
               draft.submit();
               onClose();

@@ -318,10 +318,13 @@ function ShiftDialogBody({
               <Minus className="size-4" />
             </button>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={days}
               aria-label="Дней"
-              onChange={(event) => setDays(Number(event.target.value) || 0)}
+              onChange={(event) =>
+                setDays(Number.parseInt(event.target.value, 10) || 0)
+              }
               className="h-8 w-12 border-x bg-transparent text-center text-sm tabular-nums outline-none"
             />
             <button
