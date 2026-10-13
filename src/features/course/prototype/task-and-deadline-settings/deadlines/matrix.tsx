@@ -1,4 +1,4 @@
-// PROTOTYPE (#181): variant A — section «Сроки» as a matrix «Task × Student
+// PROTOTYPE (#181): variant A — section «Дедлайны» as a matrix «Task × Student
 // Group», styled after Airtable / Vanta grids: hairline cells edited in
 // popovers, collapsible Task Groups, personal overrides folding out of a
 // counter, and a Student column with Effective Deadline and its source.
@@ -116,14 +116,14 @@ export function MatrixView({ selection, setSelection }: DeadlinesViewProps) {
             onPick={setStudentId}
             trigger={
               <Button variant="outline" size="sm">
-                <Search /> Сроки Student
+                <Search /> Дедлайны Student
               </Button>
             }
           />
         )}
         {student ? (
           <span className="text-xs text-muted-foreground">
-            Колонка справа: его срок по каждой Task и откуда он взялся
+            Колонка справа: его дедлайн по каждой Task и откуда он взялся
           </span>
         ) : null}
       </div>
@@ -138,7 +138,7 @@ export function MatrixView({ selection, setSelection }: DeadlinesViewProps) {
               </th>
               <th className="border-l px-2.5 py-2.5 font-medium">Открытие</th>
               <th className="border-l px-2.5 py-2.5 font-medium text-foreground">
-                Общий срок
+                Общий дедлайн
               </th>
               {STUDENT_GROUPS.map((group) => (
                 <th
@@ -307,7 +307,7 @@ function TaskRows({
         <td className="h-px border-l p-0">
           <ValuePopover
             variant="cell"
-            title={`${task.title}: общий срок`}
+            title={`${task.title}: общий дедлайн`}
             pending={keys.has(`${task.id}|task`)}
             onRevert={revert(`${task.id}|task`)}
             trigger={<DeadlineText value={taskSchedule.deadline} compact />}
@@ -315,7 +315,7 @@ function TaskRows({
             <LevelEditor
               taskId={task.id}
               value={taskSchedule.deadline}
-              onCommands={emit('общий срок')}
+              onCommands={emit('общий дедлайн')}
             />
           </ValuePopover>
         </td>
@@ -467,7 +467,8 @@ function PersonalList({
     <div className="grid max-w-3xl gap-1">
       {personal.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Личных переопределений нет: каждый Student получает срок своей группы.
+          Личных переопределений нет: каждый Student получает дедлайн своей
+          группы.
         </p>
       ) : null}
       {personal.map((item) => {

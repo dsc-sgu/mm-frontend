@@ -320,10 +320,10 @@ export function TimelineView({
       </div>
 
       {openTask ? (
-        <PanelFrame layout="overlay" label="Сроки Task" onEscape={close}>
+        <PanelFrame layout="overlay" label="Дедлайны Task" onEscape={close}>
           <header className="flex h-12 shrink-0 items-center gap-2 border-b px-5">
             <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
-              Сроки Task
+              Дедлайны Task
             </span>
             <Button
               variant="ghost"
@@ -408,7 +408,7 @@ function TaskTitleCell({
                     : ''
                 )
                 .join(', ')}{' '}
-              без срока
+              без дедлайна
             </span>
           ) : null}
         </span>
@@ -516,8 +516,8 @@ function TaskTrack({
         <DraggableMark
           id={`${task.id}|task`}
           at={deadline}
-          label="Общий срок"
-          title={`Общий срок: ${formatMoment(deadline)}`}
+          label="Общий дедлайн"
+          title={`Общий дедлайн: ${formatMoment(deadline)}`}
           drag={drag}
           setDrag={setDrag}
           onClick={onOpen}

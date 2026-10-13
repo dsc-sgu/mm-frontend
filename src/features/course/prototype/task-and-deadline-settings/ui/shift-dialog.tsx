@@ -220,9 +220,9 @@ function ShiftDialogBody({
   return (
     <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-4xl">
       <DialogHeader className="px-5 pt-5 pb-4">
-        <DialogTitle>Сдвинуть сроки</DialogTitle>
+        <DialogTitle>Сдвинуть дедлайны</DialogTitle>
         <DialogDescription>
-          Время в поясе {timeZoneLabel()}. Значения «без срока» не двигаются.
+          Время в поясе {timeZoneLabel()}. Значения «без дедлайна» не двигаются.
         </DialogDescription>
       </DialogHeader>
 
@@ -481,7 +481,7 @@ function rowTarget(row: ShiftRow) {
     return `${studentName(student)} (${groupName(student.groupId)})`;
   }
 
-  return row.level === 'opening' ? 'Время открытия' : 'Общий срок';
+  return row.level === 'opening' ? 'Время открытия' : 'Общий дедлайн';
 }
 
 function rowNote(row: ShiftRow) {
@@ -489,9 +489,9 @@ function rowNote(row: ShiftRow) {
     case 'create-override':
       return 'Получит своё переопределение';
     case 'follows':
-      return 'Наследует общий срок';
+      return 'Наследует общий дедлайн';
     case 'no-deadline':
-      return 'Без срока, не двигается';
+      return 'Без дедлайна, не двигается';
     case 'opening-course-only':
       return 'Двигается только для всего Course';
     case 'shift':

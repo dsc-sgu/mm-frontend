@@ -14,7 +14,7 @@ export const Route = createFileRoute(
   staticData: {
     header: {
       getBreadcrumb: createCourseSectionBreadcrumb(
-        'Сроки',
+        'Дедлайны',
         '/courses/$courseSlug/deadlines'
       ),
     },

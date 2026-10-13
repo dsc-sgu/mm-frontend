@@ -35,7 +35,7 @@ export function inheritedValue(
 export function changeTarget(change: ScheduleChange) {
   switch (change.level) {
     case 'task':
-      return 'Общий срок';
+      return 'Общий дедлайн';
     case 'opening':
       return 'Открытие';
     case 'group': {

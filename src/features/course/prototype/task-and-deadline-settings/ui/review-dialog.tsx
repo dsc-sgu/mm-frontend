@@ -94,7 +94,7 @@ function ReviewBody({ onClose }: { onClose: () => void }) {
   return (
     <DialogContent className="flex max-h-[88dvh] flex-col gap-0 p-0 sm:max-w-3xl">
       <DialogHeader className="px-5 pt-5 pb-3">
-        <DialogTitle>Проверить изменения сроков</DialogTitle>
+        <DialogTitle>Проверить изменения дедлайнов</DialogTitle>
         <DialogDescription>
           Применятся отмеченные строки. Остальные останутся неприменёнными.
         </DialogDescription>

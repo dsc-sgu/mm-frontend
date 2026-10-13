@@ -439,7 +439,7 @@ export type ShiftRowKind =
   | 'create-override'
   /** An inheriting Student Group follows the shifted Task Deadline. */
   | 'follows'
-  /** «без срока» never moves. */
+  /** «без дедлайна» never moves. */
   | 'no-deadline'
   /** Task Opening Time is per Task; group-only shifts cannot move it. */
   | 'opening-course-only';

@@ -108,9 +108,9 @@ export function DeadlineRow({
   }
 
   return (
-    <PropertyRow label="Общий срок">
+    <PropertyRow label="Общий дедлайн">
       <ValuePopover
-        title={`${label}: общий срок`}
+        title={`${label}: общий дедлайн`}
         pending={keys.has(key)}
         onRevert={() => dropPending(new Set([key]))}
         trigger={<DeadlineText value={deadline} />}
@@ -157,7 +157,7 @@ export function TaskScheduleEditor({
         <DeadlineRow
           taskId={taskId}
           label={taskTitle}
-          onCommands={emit('общий срок')}
+          onCommands={emit('общий дедлайн')}
         />
       ) : null}
 
@@ -235,7 +235,7 @@ export function TaskScheduleEditor({
       </RowsHeading>
       {personal.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Нет. Каждый Student получает срок своей группы.
+          Нет. Каждый Student получает дедлайн своей группы.
         </p>
       ) : (
         <ul className="grid gap-1">

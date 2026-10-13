@@ -141,7 +141,7 @@ export function PublishFooter({
       summary={
         <>
           <CalendarClock className="mr-1 inline size-3.5 align-[-2px]" />
-          Сроки этой Task применятся отдельно от публикации:{' '}
+          Дедлайны этой Task применятся отдельно от публикации:{' '}
           {scheduleChanges.length}
         </>
       }
@@ -189,7 +189,7 @@ export function PublishFooter({
                 setBusy(false);
               }}
             >
-              Применить сроки
+              Применить дедлайны
             </Button>
           ) : null}
         </FooterShell>
@@ -217,7 +217,7 @@ export function PublishFooter({
       setBusy(false);
       session.setResult({ kind: 'draft', at: Date.now() });
       if (ok && scheduleDirty) {
-        toast.success('Сроки применены отдельно от черновика');
+        toast.success('Дедлайны применены отдельно от черновика');
       }
     }
 
@@ -243,8 +243,8 @@ export function PublishFooter({
               {busy ? <LoaderCircle className="animate-spin" /> : null}
               {scheduleDirty
                 ? dirty
-                  ? 'В черновик и применить сроки'
-                  : 'Применить сроки'
+                  ? 'В черновик и применить дедлайны'
+                  : 'Применить дедлайны'
                 : 'В черновик'}
             </Button>
           </Buttons>
@@ -299,15 +299,15 @@ export function PublishFooter({
             : null,
           scheduleDirty
             ? scheduleOk
-              ? 'сроки применены отдельно'
-              : 'сроки не применены'
+              ? 'дедлайны применены отдельно'
+              : 'дедлайны не применены'
             : null,
         ]
           .filter(Boolean)
           .join('; '),
       });
       toast.success(
-        somethingToPublish ? 'Курс опубликован' : 'Сроки применены'
+        somethingToPublish ? 'Курс опубликован' : 'Дедлайны применены'
       );
     }
 
@@ -393,9 +393,9 @@ export function PublishFooter({
           >
             {busy ? <LoaderCircle className="animate-spin" /> : null}
             {somethingToPublish && scheduleDirty
-              ? 'Опубликовать курс и применить сроки'
+              ? 'Опубликовать курс и применить дедлайны'
               : !somethingToPublish && scheduleDirty
-                ? 'Применить сроки'
+                ? 'Применить дедлайны'
                 : 'Опубликовать курс'}
           </Button>
         </Buttons>
@@ -451,8 +451,8 @@ export function PublishFooter({
         : null,
       scheduleDirty
         ? scheduleOk
-          ? 'сроки применены'
-          : 'сроки не применены'
+          ? 'дедлайны применены'
+          : 'дедлайны не применены'
         : null,
     ].filter(Boolean);
     session.setResult({
@@ -460,7 +460,9 @@ export function PublishFooter({
       at: Date.now(),
       text: parts.join('; '),
     });
-    toast.success(published !== null ? 'Task опубликована' : 'Сроки применены');
+    toast.success(
+      published !== null ? 'Task опубликована' : 'Дедлайны применены'
+    );
   }
 
   return (
@@ -517,7 +519,7 @@ export function PublishFooter({
           Опубликуется только эта Task ({fieldList}), версия {version} →{' '}
           {version + 1}.
           {scheduleDirty
-            ? ' Сроки уйдут второй операцией за той же кнопкой.'
+            ? ' Дедлайны уйдут второй операцией за той же кнопкой.'
             : ''}
         </Note>
       ) : null}
@@ -535,11 +537,11 @@ export function PublishFooter({
           {busy ? <LoaderCircle className="animate-spin" /> : null}
           {dirty
             ? scheduleDirty
-              ? 'Опубликовать Task и сроки'
+              ? 'Опубликовать Task и дедлайны'
               : isNew
                 ? 'Создать Task'
                 : 'Опубликовать Task'
-            : 'Применить сроки'}
+            : 'Применить дедлайны'}
         </Button>
       </Buttons>
     </FooterShell>

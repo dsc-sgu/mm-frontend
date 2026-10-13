@@ -194,10 +194,10 @@ export function TaskListView({
       </div>
 
       {openTask ? (
-        <PanelFrame layout="dock" label="Сроки Task" onEscape={close}>
+        <PanelFrame layout="dock" label="Дедлайны Task" onEscape={close}>
           <header className="flex h-12 shrink-0 items-center gap-2 border-b px-5">
             <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
-              Сроки Task
+              Дедлайны Task
             </span>
             <Button
               variant="ghost"

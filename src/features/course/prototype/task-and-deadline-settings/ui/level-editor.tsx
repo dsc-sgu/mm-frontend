@@ -100,7 +100,7 @@ export function LevelEditor({
   inherited,
   reason,
   onCommands,
-  inheritLabel = 'Как общий срок',
+  inheritLabel = 'Как общий дедлайн',
 }: {
   taskId: string;
   /** Undefined edits the Task Deadline itself. */
@@ -158,7 +158,7 @@ export function LevelEditor({
               inherited?.kind === 'at'
                 ? formatMoment(inherited.at)
                 : inherited
-                  ? 'без срока'
+                  ? 'без дедлайна'
                   : undefined
             }
             onSelect={() =>
@@ -169,7 +169,7 @@ export function LevelEditor({
         <OptionRow
           selected={value.kind === 'none'}
           icon={<Ban className="size-4" />}
-          label="Без срока"
+          label="Без дедлайна"
           onSelect={() => setValue({ kind: 'none' })}
         />
       </div>

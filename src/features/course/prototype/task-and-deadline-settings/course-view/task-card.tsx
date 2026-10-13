@@ -123,7 +123,7 @@ export function TaskReferenceCard({
             <span className="text-xs">{timeZoneLabel()}</span>
             {counts.total > 0 ? (
               <span className="text-xs">
-                У части Students свой срок ({counts.total})
+                У части Students свой дедлайн ({counts.total})
               </span>
             ) : null}
             {taskSchedule?.openingTime && taskSchedule.openingTime > NOW ? (
