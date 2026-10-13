@@ -2,6 +2,28 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { selectAccessSession } from './control';
 
+test('ACC-12 / A11Y-01: Review editor 403 has no forbidden breadcrumb links', async ({
+  page,
+}) => {
+  await selectAccessSession(page, 'sasha');
+  const path = '/courses/algorithms/tasks/1/attempts/sasha/1/review';
+  await page.goto(path);
+  await expect(
+    page.getByRole('heading', { name: 'Нет доступа' })
+  ).toBeVisible();
+  await expect(page).toHaveURL(path);
+  const breadcrumbs = page.getByRole('navigation', {
+    name: 'Навигационная цепочка',
+  });
+  await expect(
+    breadcrumbs.getByRole('link', { name: 'Попытки', exact: true })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('status', { name: 'Загрузка страницы' })
+  ).toHaveCount(0);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
 test('ACC-E2 / A11Y-01: Sasha opens Course Attempts directly and sees an accessible 403', async ({
   page,
 }) => {

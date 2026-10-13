@@ -216,8 +216,13 @@ export const getAttemptDiffBreadcrumb: HeaderDataGetter<
 export const getAttemptReviewBreadcrumb: HeaderDataGetter<
   HeaderBreadcrumbItem[]
 > = (context) => {
-  const { courseSlug } = getCourseData(context);
+  const { courseSlug, courseRole } = getCourseData(context);
   const attemptNumber = getParam(context, 'attemptNumber');
+  const currentAttempt = { label: formatAttemptReviewLabel(attemptNumber) };
+
+  if (!canAccessCourseSection('attempts', courseRole)) {
+    return [currentAttempt];
+  }
 
   return [
     {
@@ -225,7 +230,7 @@ export const getAttemptReviewBreadcrumb: HeaderDataGetter<
       to: '/courses/$courseSlug/attempts',
       params: { courseSlug },
     },
-    { label: formatAttemptReviewLabel(attemptNumber) },
+    currentAttempt,
   ];
 };
 
