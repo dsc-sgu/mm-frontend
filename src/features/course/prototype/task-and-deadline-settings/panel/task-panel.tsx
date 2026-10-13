@@ -2,6 +2,7 @@
 // and (later) the Task page. Hosts decide where it sits; the panel decides
 // what is inside.
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { ChevronRight, Lock, Minimize2, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -51,10 +52,15 @@ export function TaskPanel({
   const tasks = useSandbox((state) => state.tasks);
   const newTaskIds = useSandbox((state) => state.newTaskIds);
   const saveNewTask = useSandbox((state) => state.saveNewTask);
+  const draftNewTask = useSandbox((state) => state.draftNewTask);
+  const removed = useSandbox((state) =>
+    state.removedTaskIds.includes(session.taskId)
+  );
   const writeTaskToDraft = useSandbox((state) => state.writeTaskToDraft);
   const [attempted, setAttempted] = useState(false);
 
-  const readOnly = taskApply === 'course' && lease.holder === 'other';
+  const readOnly =
+    (taskApply === 'course' && lease.holder === 'other') || removed;
   const locked = courseAccess === 'open';
   const form = session.form;
   const fields = changedFields(session.base, form);
@@ -81,20 +87,22 @@ export function TaskPanel({
   );
   const visibleErrors = Object.values(errors).some(Boolean);
 
-  const status: Status = readOnly
-    ? { label: 'Только чтение', tone: 'bg-muted-foreground' }
-    : visibleErrors
-      ? { label: 'Есть ошибки', tone: 'bg-red-500' }
-      : fields.length > 0
-        ? { label: `Изменено полей: ${fields.length}`, tone: 'bg-amber-500' }
-        : session.result.kind === 'applied'
-          ? {
-              label: `Применено в ${formatClock(session.result.at)}`,
-              tone: 'bg-emerald-500',
-            }
-          : session.result.kind === 'draft'
-            ? { label: 'В черновике курса', tone: 'bg-violet-500' }
-            : { label: 'Без изменений', tone: 'bg-border' };
+  const status: Status = removed
+    ? { label: 'Удалено', tone: 'bg-red-500' }
+    : readOnly
+      ? { label: 'Только чтение', tone: 'bg-muted-foreground' }
+      : visibleErrors
+        ? { label: 'Есть ошибки', tone: 'bg-red-500' }
+        : fields.length > 0
+          ? { label: `Изменено полей: ${fields.length}`, tone: 'bg-amber-500' }
+          : session.result.kind === 'applied'
+            ? {
+                label: `Применено в ${formatClock(session.result.at)}`,
+                tone: 'bg-emerald-500',
+              }
+            : session.result.kind === 'draft'
+              ? { label: 'В черновике курса', tone: 'bg-violet-500' }
+              : { label: 'Без изменений', tone: 'bg-border' };
 
   const fieldProps = { session, readOnly, locked, errors };
   const expanded = statement === 'expanded' && session.expanded;
@@ -106,7 +114,7 @@ export function TaskPanel({
         panelLook === 'cards' && 'grid content-start gap-3 pb-3'
       )}
     >
-      {readOnly ? (
+      {readOnly && !removed ? (
         <div className="flex gap-2 border-b bg-muted/60 px-5 py-2.5 text-sm">
           <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <span>
@@ -211,7 +219,17 @@ export function TaskPanel({
                 // «Создать ещё» keeps this Task first, then carries its
                 // group, Grade and schedule into the next one.
                 if (newTaskIds.includes(session.taskId)) {
-                  saveNewTask(session.taskId, form);
+                  if (taskApply === 'contract') {
+                    draftNewTask(session.taskId, form);
+                  } else {
+                    saveNewTask(session.taskId, form);
+                  }
+                } else if (fields.length > 0 && taskApply === 'contract') {
+                  // The draft holds only the `taskId` of a published Task.
+                  toast.error(
+                    'Сначала опубликуйте правки этого задания или отмените их'
+                  );
+                  return;
                 } else if (fields.length > 0) {
                   writeTaskToDraft(session.taskId, editsOf(session.base, form));
                 }

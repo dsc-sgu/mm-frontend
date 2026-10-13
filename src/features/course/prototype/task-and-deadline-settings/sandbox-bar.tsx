@@ -137,6 +137,7 @@ function SandboxSettings() {
           options={[
             { value: 'course', label: 'A · через черновик курса' },
             { value: 'task', label: 'D · публикация задания' },
+            { value: 'contract', label: 'Контракт #129' },
           ]}
         />
       </Row>
@@ -229,7 +230,7 @@ function SandboxSettings() {
                 ? sandbox.lease.holder === 'me'
                   ? 'В A невозможно: блокировка у вас, он не может начать правку'
                   : 'В A это значит, что блокировка редактирования курса у него'
-                : 'В D блокировка не нужна: второй получит конфликт версий'}
+                : `В ${settings.taskApply === 'task' ? 'D' : 'контракте'} блокировка не нужна: второй получит конфликт версий`}
             </span>
           </Toggle>
           <Toggle
@@ -238,6 +239,20 @@ function SandboxSettings() {
           >
             6 · Мой черновик устарел
           </Toggle>
+          {settings.taskApply === 'contract' ? (
+            <Toggle
+              checked={sandbox.deletedByOther}
+              onChange={sandbox.setDeletedByOther}
+            >
+              7 · {OTHER_TEACHER.shortName} опубликует курс без задания, которое
+              вы правите
+              <span className="block text-xs text-muted-foreground">
+                {sandbox.courseAccess === 'draft'
+                  ? 'Сработает, когда вы опубликуете правку опубликованного задания'
+                  : 'Только пока курс в подготовке: после открытия задания не удаляются'}
+              </span>
+            </Toggle>
+          ) : null}
           <Toggle
             checked={sandbox.failNextSave}
             onChange={sandbox.setFailNextSave}
@@ -263,6 +278,20 @@ function SandboxSettings() {
               ? `правок страницы ${sandbox.draft.pageEdits.length}, заданий ${Object.keys(sandbox.draft.taskEdits).length}${sandbox.draft.stale ? ', устарел' : ''}`
               : 'нет'}
           </dd>
+          {settings.taskApply === 'contract' ? (
+            <>
+              <dt className="text-muted-foreground">Ссылки в черновике</dt>
+              <dd>
+                {sandbox.pageTaskIds
+                  ? `${sandbox.pageTaskIds.length}, из них новых заданий ${
+                      sandbox.pageTaskIds.filter((taskId) =>
+                        sandbox.newTaskIds.includes(taskId)
+                      ).length
+                    }`
+                  : 'редактор закрыт'}
+              </dd>
+            </>
+          ) : null}
           <dt className="text-muted-foreground">Дедлайны</dt>
           <dd>не применено {sandbox.pending.length} команд</dd>
         </dl>

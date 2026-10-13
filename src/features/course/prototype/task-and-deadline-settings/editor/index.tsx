@@ -1,6 +1,7 @@
 // PROTOTYPE (#181): variant C — deadlines inside the Course Page editor.
 // The real Plate editor renders; Task References get deadline chips, the
 // Task panel opens from them (scenario 1, edit mode), «/Task» creates a Task.
+// Under `?taskApply=contract` «Применить» also creates and deletes Tasks.
 import { useCallback, useState, type ReactNode } from 'react';
 import { FileStack, LoaderCircle } from 'lucide-react';
 
@@ -12,6 +13,7 @@ import {
   dockPadding,
   DOCK_CENTER_LEFT,
 } from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
+import { PrototypePageEditContext } from '@/features/course/prototype/task-and-deadline-settings/page-edit-slot';
 import { PanelFrame } from '@/features/course/prototype/task-and-deadline-settings/panel/panel-frame';
 import {
   FIELD_LABEL,
@@ -27,6 +29,8 @@ import {
 } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { ScheduleDock } from '@/features/course/prototype/task-and-deadline-settings/ui/schedule-save-bar';
+import { useContractPageEditSlot } from './apply-slot';
+import { ContractDraftStrip } from './draft-strip';
 import { insertAfterTask, setCarry } from './new-task';
 import { EditorTaskReference } from './task-reference';
 
@@ -40,15 +44,22 @@ export function PrototypeEditor({
   const settings = usePrototypeSettings();
   const update = useUpdatePrototypeSearch();
   const tasks = useSandbox((state) => state.tasks);
+  const removedTaskIds = useSandbox((state) => state.removedTaskIds);
   const openTaskId =
-    settings.task && tasks[settings.task] ? settings.task : null;
+    settings.task &&
+    tasks[settings.task] &&
+    !removedTaskIds.includes(settings.task)
+      ? settings.task
+      : null;
   const session = usePanelSessionState(openTaskId, 'edit');
+  const contract = settings.taskApply === 'contract';
 
   const open = useCallback(
     (taskId: string) => update({ task: taskId }),
     [update]
   );
   const close = useCallback(() => update({ task: undefined }), [update]);
+  const contractSlot = useContractPageEditSlot(open);
 
   const renderCard = useCallback(
     ({ taskId, blockId }: { taskId: string; blockId: string }) => (
@@ -75,46 +86,53 @@ export function PrototypeEditor({
 
   return (
     <PrototypeAssignmentContext.Provider value={renderCard}>
-      <PanelSessionContext.Provider value={session}>
-        <div className={dockOffset(Boolean(session), 'dock')}>
-          <div
-            className={cn(
-              'transition-[padding] duration-200',
-              dockPadding(Boolean(session), 'dock'),
-              dockOffset(Boolean(session), 'dock')
-            )}
-          >
-            {children}
-          </div>
-          {session ? (
-            <PanelFrame
-              layout="dock"
-              expanded={session.expanded && settings.statement === 'expanded'}
-              label="Настройка задания"
-              onEscape={close}
+      <PrototypePageEditContext.Provider value={contract ? contractSlot : null}>
+        <PanelSessionContext.Provider value={session}>
+          <div className={dockOffset(Boolean(session), 'dock')}>
+            <div
+              className={cn(
+                'transition-[padding] duration-200',
+                dockPadding(Boolean(session), 'dock'),
+                dockOffset(Boolean(session), 'dock')
+              )}
             >
-              <TaskPanel
-                key={session.taskId}
-                session={session}
-                courseSlug={courseSlug}
-                onClose={close}
-                onCreateAnother={createAnother}
+              {children}
+            </div>
+            {session ? (
+              <PanelFrame
+                layout="dock"
+                expanded={session.expanded && settings.statement === 'expanded'}
+                label="Настройка задания"
+                onEscape={close}
+              >
+                <TaskPanel
+                  key={session.taskId}
+                  session={session}
+                  courseSlug={courseSlug}
+                  onClose={close}
+                  onCreateAnother={createAnother}
+                />
+              </PanelFrame>
+            ) : null}
+            <div
+              style={{ left: DOCK_CENTER_LEFT }}
+              className="pointer-events-none fixed top-16 z-30 grid w-[calc(100%-1rem)] max-w-2xl -translate-x-1/2 justify-items-center gap-2"
+            >
+              <DraftStrip />
+              {contract ? <ContractDraftStrip /> : null}
+              <ScheduleDock
+                floating={false}
+                note={
+                  contract
+                    ? 'Дедлайны опубликованных заданий применяются отдельно от черновика курса, новых — в черновике'
+                    : 'Дедлайны применяются отдельно от черновика курса'
+                }
               />
-            </PanelFrame>
-          ) : null}
-          <div
-            style={{ left: DOCK_CENTER_LEFT }}
-            className="pointer-events-none fixed top-16 z-30 grid w-[calc(100%-1rem)] max-w-2xl -translate-x-1/2 justify-items-center gap-2"
-          >
-            <DraftStrip />
-            <ScheduleDock
-              floating={false}
-              note="Дедлайны применяются отдельно от черновика курса"
-            />
+            </div>
+            <SandboxBar courseSlug={courseSlug} />
           </div>
-          <SandboxBar courseSlug={courseSlug} />
-        </div>
-      </PanelSessionContext.Provider>
+        </PanelSessionContext.Provider>
+      </PrototypePageEditContext.Provider>
     </PrototypeAssignmentContext.Provider>
   );
 }

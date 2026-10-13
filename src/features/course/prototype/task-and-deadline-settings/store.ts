@@ -24,6 +24,12 @@ import {
   type TaskSchedule,
 } from './schedule';
 import { NOW } from './time';
+import { usePrototypeSettings } from './search';
+import {
+  draftTaskChanges,
+  quoteTitles,
+  type DraftTaskChanges,
+} from './contract';
 
 export type CourseAccess = 'draft' | 'open';
 
@@ -52,7 +58,9 @@ export type LogEntry = { id: number; at: number; text: string; tone: LogTone };
 
 export type TaskPublishResult =
   | { status: 'published'; version: number }
-  | { status: 'conflict'; theirs: Task; changedFields: (keyof TaskProps)[] };
+  | { status: 'conflict'; theirs: Task; changedFields: (keyof TaskProps)[] }
+  /** `?taskApply=contract`: the Task was deleted by a Course publication. */
+  | { status: 'deleted' };
 
 type SandboxState = {
   courseAccess: CourseAccess;
@@ -71,6 +79,15 @@ type SandboxState = {
   lastApplied: { taskIds: string[]; at: number } | null;
   /** Tasks created in this session and not yet published. */
   newTaskIds: string[];
+  /** Tasks deleted by a Course publication; kept so open panels can say so. */
+  removedTaskIds: string[];
+  /**
+   * `?taskApply=contract`: Task References in the editor's working copy, i.e.
+   * the `taskId`s the Course Draft Snapshot holds. Null outside the editor.
+   */
+  pageTaskIds: string[] | null;
+  /** Scenario 7: another Teacher publishes the Course without this Task. */
+  deletedByOther: boolean;
 };
 
 type SandboxActions = {
@@ -81,6 +98,8 @@ type SandboxActions = {
   setLeaseByOther: (on: boolean) => void;
   setConcurrentEdit: (on: boolean) => void;
   setFailNextSave: (on: boolean) => void;
+  setDeletedByOther: (on: boolean) => void;
+  setPageTaskIds: (taskIds: string[] | null) => void;
 
   queue: (commands: DeadlineCommand[]) => void;
   dropPending: (keys: ReadonlySet<string>) => void;
@@ -106,10 +125,20 @@ type SandboxActions = {
 
   createTask: (
     taskId: string,
-    carry: { from: string; schedule: TaskSchedule } | null
+    carry: { from: string; schedule: TaskSchedule } | null,
+    inDraft?: boolean
   ) => void;
   /** Unpublished new Tasks keep their props right in the sandbox. */
   saveNewTask: (taskId: string, props: TaskProps) => void;
+  /** `?taskApply=contract`: a new Task's props autosave into the draft. */
+  draftNewTask: (taskId: string, props: TaskProps) => void;
+  /** `?taskApply=contract`: a new Task's schedule lives in the draft. */
+  writeDraftSchedule: (commands: DeadlineCommand[], label: string) => void;
+  /**
+   * `?taskApply=contract`: «Применить» of the editor publishes the page and,
+   * in the same operation, creates and deletes Tasks and Task Groups.
+   */
+  publishCourseWithTasks: (pageTaskIds: string[]) => Promise<DraftTaskChanges>;
   updateTaskGroup: (
     groupId: string,
     patch: Partial<Pick<TaskGroup, 'title' | 'key'>>
@@ -135,6 +164,9 @@ function initialState(): SandboxState {
     log: [],
     lastApplied: null,
     newTaskIds: [],
+    removedTaskIds: [],
+    pageTaskIds: null,
+    deletedByOther: false,
   };
 }
 
@@ -269,6 +301,18 @@ export const useSandbox = create<Sandbox>()((set, get) => {
     },
 
     setFailNextSave: (on) => set({ failNextSave: on }),
+
+    setDeletedByOther: (on) => {
+      set({ deletedByOther: on });
+      log(
+        on
+          ? `${OTHER_TEACHER.shortName} готовит публикацию курса без задания, которое вы правите`
+          : 'Никто не удаляет задание',
+        'world'
+      );
+    },
+
+    setPageTaskIds: (pageTaskIds) => set({ pageTaskIds }),
 
     queue: (commands) => {
       if (commands.length === 0) {
@@ -429,8 +473,28 @@ export const useSandbox = create<Sandbox>()((set, get) => {
 
     publishTask: async (taskId, edits, baseVersion) => {
       await wait(450);
-      const { tasks, concurrentEdit } = get();
+      const { tasks, concurrentEdit, deletedByOther, removedTaskIds } = get();
       const current = tasks[taskId]!;
+
+      if (removedTaskIds.includes(taskId)) {
+        return { status: 'deleted' };
+      }
+
+      // Scenario 7: the other Teacher's Course publication deleted the Task
+      // just before this edit arrived; the Task's own publication finds it gone.
+      if (deletedByOther && get().courseAccess === 'draft') {
+        set((state) => ({
+          deletedByOther: false,
+          removedTaskIds: [...state.removedTaskIds, taskId],
+          taskGroups: withoutTasks(state.taskGroups, new Set([taskId])),
+          pending: state.pending.filter((command) => command.taskId !== taskId),
+        }));
+        log(
+          `${OTHER_TEACHER.shortName} опубликовал курс без задания «${current.title}»: задание удалено`,
+          'conflict'
+        );
+        return { status: 'deleted' };
+      }
 
       if (concurrentEdit && current.version === baseVersion) {
         const theirs: Task = {
@@ -477,7 +541,7 @@ export const useSandbox = create<Sandbox>()((set, get) => {
       return { status: 'published', version: next.version };
     },
 
-    createTask: (taskId, carry) => {
+    createTask: (taskId, carry, inDraft = false) => {
       const { tasks, taskGroups, schedule } = get();
 
       if (tasks[taskId]) {
@@ -538,46 +602,76 @@ export const useSandbox = create<Sandbox>()((set, get) => {
         newTaskIds: [...get().newTaskIds, taskId],
       });
       log(
-        source
-          ? `Создано задание после «${source.title}»: перенесены группа, балл, дедлайны`
-          : 'Создано задание в новой группе заданий',
-        'task'
+        (inDraft ? 'В черновик курса: ' : '') +
+          (source
+            ? `новое задание после «${source.title}», перенесены группа, балл, дедлайны`
+            : 'новое задание в новой группе заданий'),
+        inDraft ? 'course' : 'task'
       );
     },
 
     saveNewTask: (taskId, props) => {
-      const { tasks, taskGroups } = get();
-      const task = tasks[taskId];
-
-      if (!task) {
-        return;
-      }
-
-      let groups = taskGroups;
-      if (props.groupId !== task.groupId) {
-        groups = taskGroups
-          .map((group) =>
-            group.id === task.groupId
-              ? {
-                  ...group,
-                  taskIds: group.taskIds.filter((id) => id !== taskId),
-                }
-              : group.id === props.groupId
-                ? { ...group, taskIds: [...group.taskIds, taskId] }
-                : group
-          )
-          // A Task Group exists only while it has Tasks.
-          .filter((group) => group.taskIds.length > 0);
-      }
-
-      set({
-        tasks: { ...tasks, [taskId]: { ...task, ...props } },
-        taskGroups: groups,
-      });
+      putNewTaskProps(taskId, props);
       log(
         `Новое задание «${props.title}» сохранено; появится у студентов после публикации курса`,
         'task'
       );
+    },
+
+    draftNewTask: (taskId, props) => putNewTaskProps(taskId, props),
+
+    writeDraftSchedule: (commands, label) => {
+      if (commands.length === 0) {
+        return;
+      }
+
+      set((state) => ({ schedule: applyCommands(state.schedule, commands) }));
+      log(`В черновик курса: ${label}`, 'course');
+    },
+
+    publishCourseWithTasks: async (pageTaskIds) => {
+      await wait(500);
+      const state = get();
+      const changes = draftTaskChanges(state, pageTaskIds);
+      const gone = new Set(
+        [...changes.dropped, ...changes.deleted].map((task) => task.id)
+      );
+      const created = new Set(changes.created.map((task) => task.id));
+      const tasks = { ...state.tasks };
+
+      for (const taskId of created) {
+        tasks[taskId] = { ...tasks[taskId]!, version: 1 };
+      }
+
+      set({
+        tasks,
+        taskGroups: withoutTasks(state.taskGroups, gone),
+        newTaskIds: state.newTaskIds.filter(
+          (taskId) => !created.has(taskId) && !gone.has(taskId)
+        ),
+        removedTaskIds: [...state.removedTaskIds, ...gone],
+        pending: state.pending.filter((command) => !gone.has(command.taskId)),
+        lastApplied: { taskIds: [...created], at: Date.now() },
+      });
+
+      const parts = [
+        'страница',
+        changes.created.length
+          ? `создано: ${quoteTitles(changes.created)}`
+          : null,
+        changes.deleted.length
+          ? `удалено: ${quoteTitles(changes.deleted)}`
+          : null,
+        changes.groupsCreated.length
+          ? `новые группы: ${quoteTitles(changes.groupsCreated)}`
+          : null,
+        changes.groupsRemoved.length
+          ? `исчезли группы: ${quoteTitles(changes.groupsRemoved)}`
+          : null,
+      ].filter(Boolean);
+      log(`Опубликован курс одной операцией: ${parts.join('; ')}`, 'course');
+
+      return changes;
     },
 
     updateTaskGroup: (groupId, patch) =>
@@ -587,7 +681,48 @@ export const useSandbox = create<Sandbox>()((set, get) => {
         ),
       })),
   };
+
+  function putNewTaskProps(taskId: string, props: TaskProps) {
+    const { tasks, taskGroups } = get();
+    const task = tasks[taskId];
+
+    if (!task) {
+      return;
+    }
+
+    let groups = taskGroups;
+    if (props.groupId !== task.groupId) {
+      groups = taskGroups
+        .map((group) =>
+          group.id === task.groupId
+            ? {
+                ...group,
+                taskIds: group.taskIds.filter((id) => id !== taskId),
+              }
+            : group.id === props.groupId
+              ? { ...group, taskIds: [...group.taskIds, taskId] }
+              : group
+        )
+        // A Task Group exists only while it has Tasks.
+        .filter((group) => group.taskIds.length > 0);
+    }
+
+    set({
+      tasks: { ...tasks, [taskId]: { ...task, ...props } },
+      taskGroups: groups,
+    });
+  }
 });
+
+/** Drops Tasks from their groups; a Task Group exists only with Tasks. */
+function withoutTasks(taskGroups: TaskGroup[], taskIds: ReadonlySet<string>) {
+  return taskGroups
+    .map((group) => ({
+      ...group,
+      taskIds: group.taskIds.filter((taskId) => !taskIds.has(taskId)),
+    }))
+    .filter((group) => group.taskIds.length > 0);
+}
 
 /** The schedule a Teacher sees: applied values plus the pending batch. */
 export function useViewSchedule() {
@@ -601,19 +736,26 @@ export function useViewSchedule() {
 }
 
 export function useOrderedTasks() {
+  const { taskApply } = usePrototypeSettings();
   const tasks = useSandbox((state) => state.tasks);
   const taskGroups = useSandbox((state) => state.taskGroups);
+  const newTaskIds = useSandbox((state) => state.newTaskIds);
 
-  return useMemo(
-    () =>
-      taskGroups.map((group) => ({
+  return useMemo(() => {
+    // Under the #129 contract a new Task exists only in the Course Draft
+    // Snapshot until it is published, so screens outside the editor skip it.
+    const hidden = new Set(taskApply === 'contract' ? newTaskIds : []);
+
+    return taskGroups
+      .map((group) => ({
         group,
         tasks: group.taskIds
+          .filter((taskId) => !hidden.has(taskId))
           .map((taskId) => tasks[taskId])
           .filter((task): task is Task => Boolean(task)),
-      })),
-    [tasks, taskGroups]
-  );
+      }))
+      .filter((entry) => entry.tasks.length > 0);
+  }, [newTaskIds, taskApply, tasks, taskGroups]);
 }
 
 export { ATTEMPTS, STUDENTS, STUDENT_GROUPS };

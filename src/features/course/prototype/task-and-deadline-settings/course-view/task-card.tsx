@@ -44,6 +44,7 @@ export function TaskReferenceCard({
   );
   const draftEdits = useSandbox((state) => state.draft?.taskEdits[taskId]);
   const lastApplied = useSandbox((state) => state.lastApplied);
+  const removed = useSandbox((state) => state.removedTaskIds.includes(taskId));
   const session = usePanelSession();
 
   if (!task) {
@@ -94,6 +95,11 @@ export function TaskReferenceCard({
               {draftEdits && taskApply === 'course' ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-0.5 text-xs text-violet-800 dark:text-violet-300">
                   <FileStack className="size-3" /> есть правки в черновике
+                </span>
+              ) : null}
+              {removed ? (
+                <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-xs text-red-800 dark:text-red-300">
+                  Удалено публикацией курса
                 </span>
               ) : null}
               {recentlyApplied ? (

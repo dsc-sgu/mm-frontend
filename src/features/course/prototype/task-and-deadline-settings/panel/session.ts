@@ -22,7 +22,9 @@ export type PanelResult =
       kind: 'conflict';
       theirs: Task;
       changedFields: (keyof TaskProps)[];
-    };
+    }
+  /** `?taskApply=contract`: a Course publication deleted the Task. */
+  | { kind: 'deleted'; at: number };
 
 export type PanelSession = {
   taskId: string;

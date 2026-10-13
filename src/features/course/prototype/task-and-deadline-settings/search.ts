@@ -3,7 +3,12 @@ import { useCallback } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 export type ApplyMode = 'instant' | 'batch';
-export type TaskApplyMode = 'course' | 'task';
+/**
+ * How Task edits are applied (#129): A — through the Course Draft Snapshot;
+ * D — a Task publication with a version check; `contract` — the contract
+ * from #129: D for published Tasks, new Tasks live in the draft.
+ */
+export type TaskApplyMode = 'course' | 'task' | 'contract';
 export type DeadlineFieldMode = 'counter' | 'full';
 export type StatementMode = 'panel' | 'inline' | 'expanded';
 export type ShiftVariant = 'question' | 'sentence' | 'undo' | 'table';
@@ -75,7 +80,7 @@ export function validatePrototypeSearch(
     ...withValue('apply', pick(search.apply, ['instant', 'batch'] as const)),
     ...withValue(
       'taskApply',
-      pick(search.taskApply, ['course', 'task'] as const)
+      pick(search.taskApply, ['course', 'task', 'contract'] as const)
     ),
     ...withValue(
       'deadlineField',

@@ -1,7 +1,10 @@
 // PROTOTYPE (#181): how Task edits are applied — `?taskApply=course` (A,
-// through the Course Draft Snapshot) or `?taskApply=task` (D, a Task
-// publication with a version check). The schedule is always applied apart.
-import { useState, type ReactNode } from 'react';
+// through the Course Draft Snapshot), `?taskApply=task` (D, a Task
+// publication with a version check) or `?taskApply=contract` (the #129
+// contract: D for a published Task, a new Task autosaves into the draft and
+// is published by «Применить» of the editor). The schedule of a published
+// Task is always applied apart.
+import { useEffect, useEffectEvent, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import {
   CalendarClock,
@@ -12,10 +15,12 @@ import {
   FileStack,
   GitCompareArrows,
   LoaderCircle,
+  Trash2,
 } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
+import { missingForPublish } from '@/features/course/prototype/task-and-deadline-settings/contract';
 import { OTHER_TEACHER } from '@/features/course/prototype/task-and-deadline-settings/fixture';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import {
@@ -116,6 +121,25 @@ export function PublishFooter({
   );
   const scheduleDirty = apply === 'batch' && scheduleChanges.length > 0;
   const isNew = sandbox.newTaskIds.includes(session.taskId);
+  const removed = sandbox.removedTaskIds.includes(session.taskId);
+  const draftOwned = taskApply === 'contract' && isNew;
+
+  // `?taskApply=contract`: a new Task belongs to the Course Draft Snapshot,
+  // so its fields save into the draft by themselves, like page edits.
+  const saveToDraft = useEffectEvent(() => {
+    sandbox.draftNewTask(session.taskId, session.form);
+    session.rebase(session.form, session.baseVersion);
+    session.setResult({ kind: 'draft', at: Date.now() });
+  });
+
+  useEffect(() => {
+    if (!draftOwned || !dirty) {
+      return;
+    }
+
+    const timer = setTimeout(() => saveToDraft(), 500);
+    return () => clearTimeout(timer);
+  }, [draftOwned, dirty, session.form]);
 
   async function applySchedule() {
     if (!scheduleDirty) {
@@ -403,8 +427,53 @@ export function PublishFooter({
     );
   }
 
-  // ---------------------------------------------------------------- D
+  // ------------------------------------------------- contract, new Task
+  if (draftOwned) {
+    const missing = missingForPublish(
+      { ...sandbox.tasks[session.taskId]!, ...session.form },
+      sandbox
+    );
+
+    return (
+      <FooterShell>
+        <Note tone="ok" icon={<FileStack className="size-3.5" />}>
+          {dirty
+            ? 'Сохраняется в черновик курса…'
+            : session.result.kind === 'draft'
+              ? `Сохранено в черновике курса в ${formatClock(session.result.at)}`
+              : 'Хранится в черновике курса'}
+        </Note>
+        <Note>
+          Новое задание — часть черновика курса: свойства и дедлайны сохраняются
+          в нём сами, отдельной публикации у задания нет. Студенты увидят его
+          после «Применить» редактора, одной операцией со страницей. Удалите
+          блок задания — и оно исчезнет вместе с черновиком.
+        </Note>
+        {missing.length > 0 ? (
+          <Note tone="warn" icon={<CircleAlert className="size-3.5" />}>
+            Для публикации не хватает: {missing.join(', ')}. В черновике задание
+            может быть незаконченным.
+          </Note>
+        ) : null}
+        {onCreateAnother ? (
+          <Buttons>
+            <Button variant="outline" onClick={onCreateAnother}>
+              <CopyPlus /> Создать ещё
+            </Button>
+          </Buttons>
+        ) : null}
+      </FooterShell>
+    );
+  }
+
+  // ------------------------------------------- D, contract for a published Task
   const conflict = session.result.kind === 'conflict' ? session.result : null;
+  const deleted =
+    session.result.kind === 'deleted'
+      ? session.result
+      : removed
+        ? { kind: 'deleted' as const, at: null }
+        : null;
   const version = conflict ? conflict.theirs.version : session.baseVersion;
 
   async function publishTask(baseVersion: number) {
@@ -426,6 +495,13 @@ export function PublishFooter({
         edits,
         baseVersion
       );
+
+      if (outcome.status === 'deleted') {
+        setBusy(false);
+        session.setResult({ kind: 'deleted', at: Date.now() });
+        toast.error('Задание удалено: публиковать правки некуда');
+        return;
+      }
 
       if (outcome.status === 'conflict') {
         setBusy(false);
@@ -502,10 +578,39 @@ export function PublishFooter({
           </div>
         </Note>
       ) : null}
+      {deleted ? (
+        <Note tone="danger" icon={<Trash2 className="size-3.5" />}>
+          <p>
+            <b>Задание удалено.</b> {OTHER_TEACHER.shortName} опубликовал курс
+            без него
+            {deleted.at ? ` в ${formatClock(deleted.at)}` : ''}. Ваши правки
+            некуда опубликовать.
+          </p>
+          <div>
+            <Button
+              size="xs"
+              variant="outline"
+              onClick={() => {
+                void navigator.clipboard
+                  .writeText(session.form.statement)
+                  .then(() => toast.success('Условие скопировано'));
+              }}
+            >
+              Скопировать условие
+            </Button>
+          </div>
+        </Note>
+      ) : null}
       {sandbox.lease.holder === 'other' ? (
         <Note>
           Курс редактирует {OTHER_TEACHER.shortName}. Задание публикуется
           отдельно от черновика курса, поэтому его можно править.
+        </Note>
+      ) : null}
+      {taskApply === 'contract' && session.context === 'edit' && !deleted ? (
+        <Note>
+          Задание уже опубликовано, поэтому его правка публикуется сразу и
+          отдельно. Правки страницы в редакторе ждут «Применить».
         </Note>
       ) : null}
       {sandbox.draft ? (
@@ -514,7 +619,7 @@ export function PublishFooter({
           {sandbox.draft.stale ? ', хоть он и устарел' : ''}.
         </Note>
       ) : null}
-      {dirty ? (
+      {dirty && !deleted ? (
         <Note>
           Опубликуется только это задание ({fieldList}), версия {version} →{' '}
           {version + 1}.
@@ -531,7 +636,12 @@ export function PublishFooter({
           </Button>
         ) : null}
         <Button
-          disabled={busy || (!dirty && !scheduleDirty) || Boolean(conflict)}
+          disabled={
+            busy ||
+            (!dirty && !scheduleDirty) ||
+            Boolean(conflict) ||
+            Boolean(deleted)
+          }
           onClick={() => void publishTask(session.baseVersion)}
         >
           {busy ? <LoaderCircle className="animate-spin" /> : null}
