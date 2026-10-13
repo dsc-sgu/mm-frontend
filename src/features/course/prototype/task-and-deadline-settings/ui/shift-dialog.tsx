@@ -104,27 +104,38 @@ function toggle<T>(set: ReadonlySet<T>, value: T) {
 export function ShiftDialog({
   preset,
   onClose,
+  onApplied,
 }: {
   preset: ShiftPreset | null;
   onClose: () => void;
+  /** After a shift went through, before the window closes. */
+  onApplied?: () => void;
 }) {
   const { shift } = usePrototypeSettings();
+  const applied = () => {
+    onApplied?.();
+    onClose();
+  };
 
   // «Сразу»: a drag already says how far, so nothing to ask.
   if (shift === 'undo' && preset?.days !== undefined) {
-    return <ApplyNow preset={preset} onClose={onClose} />;
+    return <ApplyNow preset={preset} onApplied={applied} />;
   }
 
   return (
     <Dialog open={preset !== null} onOpenChange={(open) => !open && onClose()}>
       {preset === null ? null : shift === 'question' ? (
-        <QuestionBody preset={preset} onClose={onClose} />
+        <QuestionBody preset={preset} onClose={onClose} onApplied={applied} />
       ) : shift === 'sentence' ? (
-        <SentenceBody preset={preset} onClose={onClose} />
+        <SentenceBody preset={preset} onClose={onClose} onApplied={applied} />
       ) : shift === 'undo' ? (
-        <QuickShiftBody preset={preset} onClose={onClose} />
+        <QuickShiftBody preset={preset} onApplied={applied} />
       ) : (
-        <ShiftDialogBody preset={preset} onClose={onClose} />
+        <ShiftDialogBody
+          preset={preset}
+          onClose={onClose}
+          onApplied={applied}
+        />
       )}
     </Dialog>
   );
@@ -133,9 +144,12 @@ export function ShiftDialog({
 function ShiftDialogBody({
   preset,
   onClose,
+  onApplied,
 }: {
   preset: ShiftPreset;
   onClose: () => void;
+  /** After a shift went through; closes the window. */
+  onApplied: () => void;
 }) {
   const { apply } = usePrototypeSettings();
   const schedule = useViewSchedule();
@@ -224,7 +238,7 @@ function ShiftDialogBody({
       plan.commands,
       `сдвиг ${daysLabel(days)}: ${orderedTaskIds.length} Task, ${scope}`
     );
-    onClose();
+    onApplied();
   }
 
   const taskSummary =

@@ -100,9 +100,12 @@ function rowWho(row: ShiftRow) {
 export function SentenceBody({
   preset,
   onClose,
+  onApplied,
 }: {
   preset: ShiftPreset;
   onClose: () => void;
+  /** After a shift went through; closes the window. */
+  onApplied: () => void;
 }) {
   const { apply } = usePrototypeSettings();
   const save = useSandbox((state) => state.save);
@@ -318,7 +321,7 @@ export function SentenceBody({
           disabled={!draft.canApply || save.status === 'saving'}
           onClick={() => {
             draft.submit();
-            onClose();
+            onApplied();
           }}
         >
           {save.status === 'saving' ? (
