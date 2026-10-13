@@ -21,6 +21,18 @@ import {
   STUDENTS,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
 
+/**
+ * Every typed word starts a word of the name or the group: «Попов» finds
+ * Попов and Попова, not Петров Роман Павлович as fuzzy search would.
+ */
+function matchByWordStart(value: string, search: string) {
+  const words = value.toLowerCase().split(/\s+/);
+  const parts = search.toLowerCase().split(/\s+/).filter(Boolean);
+  return parts.every((part) => words.some((word) => word.startsWith(part)))
+    ? 1
+    : 0;
+}
+
 export function StudentPicker({
   trigger,
   onPick,
@@ -43,7 +55,7 @@ export function StudentPicker({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent align={align} className="w-80 p-0">
-        <Command>
+        <Command filter={matchByWordStart}>
           <CommandInput placeholder={placeholder} autoFocus />
           <CommandList>
             <CommandEmpty>Никого не нашли</CommandEmpty>
