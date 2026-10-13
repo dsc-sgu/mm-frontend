@@ -234,9 +234,12 @@ function GroupButtons({ draft }: { draft: KindsDraft }) {
 export function QuestionBody({
   preset,
   onClose,
+  onApplied,
 }: {
   preset: ShiftPreset;
   onClose: () => void;
+  /** After a shift went through; closes the window. */
+  onApplied: () => void;
 }) {
   const { apply } = usePrototypeSettings();
   const save = useSandbox((state) => state.save);
@@ -368,7 +371,7 @@ export function QuestionBody({
             disabled={Boolean(draft.blocked) || save.status === 'saving'}
             onClick={() => {
               draft.submit();
-              onClose();
+              onApplied();
             }}
           >
             {save.status === 'saving' ? (

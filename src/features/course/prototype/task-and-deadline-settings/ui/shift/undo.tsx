@@ -87,10 +87,11 @@ function useApplyShift() {
 /** A drag on the timeline: apply at once, then close. */
 export function ApplyNow({
   preset,
-  onClose,
+  onApplied,
 }: {
   preset: ShiftPreset;
-  onClose: () => void;
+  /** After a shift went through; closes the window. */
+  onApplied: () => void;
 }) {
   const draft = useShiftDraft(preset);
   const applyShift = useApplyShift();
@@ -103,7 +104,7 @@ export function ApplyNow({
     }
     done.current = true;
     applyShift(draft, preset.days ?? 0);
-    onClose();
+    onApplied();
   });
 
   return null;
@@ -114,10 +115,11 @@ const STEPS = [-7, -1, 1, 2, 7, 14];
 /** The button: a short menu where one click shifts. */
 export function QuickShiftBody({
   preset,
-  onClose,
+  onApplied,
 }: {
   preset: ShiftPreset;
-  onClose: () => void;
+  /** After a shift went through; closes the window. */
+  onApplied: () => void;
 }) {
   const draft = useShiftDraft(preset);
   const applyShift = useApplyShift();
@@ -165,7 +167,7 @@ export function QuickShiftBody({
             disabled={!ready}
             onClick={() => {
               applyShift(draft, days);
-              onClose();
+              onApplied();
             }}
             className={cn(
               'h-14 rounded-lg border text-sm tabular-nums transition-colors',

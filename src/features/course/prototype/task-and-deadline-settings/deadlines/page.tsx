@@ -115,8 +115,17 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
           }
         />
       </ScheduleDock>
-      <ShiftDialog preset={shift} onClose={() => setShift(null)} />
-      <ExtendDialog preset={extend} onClose={() => setExtend(null)} />
+      {/* After a shift or an extension the selection has done its job. */}
+      <ShiftDialog
+        preset={shift}
+        onClose={() => setShift(null)}
+        onApplied={() => setSelection(new Set())}
+      />
+      <ExtendDialog
+        preset={extend}
+        onClose={() => setExtend(null)}
+        onApplied={() => setSelection(new Set())}
+      />
       <SandboxBar courseSlug={courseSlug} />
     </main>
   );

@@ -59,14 +59,24 @@ const EXTEND_STEPS = [1, 2, 3, 7, 14];
 export function ExtendDialog({
   preset,
   onClose,
+  onApplied,
 }: {
   preset: ExtendPreset | null;
   onClose: () => void;
+  /** After an extension went through, before the window closes. */
+  onApplied?: () => void;
 }) {
   return (
     <Dialog open={preset !== null} onOpenChange={(open) => !open && onClose()}>
       {preset === null ? null : (
-        <ExtendBody preset={preset} onClose={onClose} />
+        <ExtendBody
+          preset={preset}
+          onClose={onClose}
+          onApplied={() => {
+            onApplied?.();
+            onClose();
+          }}
+        />
       )}
     </Dialog>
   );
@@ -267,9 +277,11 @@ function Preview({ draft }: { draft: ExtendDraft }) {
 function ExtendBody({
   preset,
   onClose,
+  onApplied,
 }: {
   preset: ExtendPreset;
   onClose: () => void;
+  onApplied: () => void;
 }) {
   const { apply } = usePrototypeSettings();
   const save = useSandbox((state) => state.save);
@@ -375,7 +387,7 @@ function ExtendBody({
             disabled={Boolean(draft.blocked) || save.status === 'saving'}
             onClick={() => {
               draft.submit();
-              onClose();
+              onApplied();
             }}
           >
             {save.status === 'saving' ? (
