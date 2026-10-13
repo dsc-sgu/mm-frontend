@@ -6,6 +6,17 @@ export type ApplyMode = 'instant' | 'batch';
 export type TaskApplyMode = 'course' | 'task';
 export type DeadlineFieldMode = 'counter' | 'full';
 export type StatementMode = 'panel' | 'inline' | 'expanded';
+export type ShiftVariant = 'question' | 'sentence' | 'undo' | 'table';
+
+export const SHIFT_VARIANTS: ReadonlyArray<{
+  value: ShiftVariant;
+  label: string;
+}> = [
+  { value: 'question', label: 'Вопрос' },
+  { value: 'sentence', label: 'Фраза' },
+  { value: 'undo', label: 'Сразу' },
+  { value: 'table', label: 'Таблица' },
+];
 
 export type PrototypeSearch = {
   variant?: string;
@@ -13,6 +24,8 @@ export type PrototypeSearch = {
   taskApply?: TaskApplyMode;
   deadlineField?: DeadlineFieldMode;
   statement?: StatementMode;
+  /** Which mass-shift window to show. */
+  shift?: ShiftVariant;
   /** The Task whose panel is open. */
   task?: string;
 };
@@ -63,6 +76,10 @@ export function validatePrototypeSearch(
       pick(search.statement, ['panel', 'inline', 'expanded'] as const)
     ),
     ...withValue(
+      'shift',
+      pick(search.shift, ['question', 'sentence', 'undo', 'table'] as const)
+    ),
+    ...withValue(
       'task',
       typeof search.task === 'string' ? search.task : undefined
     ),
@@ -79,6 +96,7 @@ export type PrototypeSettings = {
   taskApply: TaskApplyMode;
   deadlineField: DeadlineFieldMode;
   statement: StatementMode;
+  shift: ShiftVariant;
   task: string | undefined;
 };
 
@@ -92,6 +110,7 @@ export function usePrototypeSettings(): PrototypeSettings {
     // Verdict 13.10.2026: a Task's overrides are visible in its panel too.
     deadlineField: search.deadlineField ?? 'full',
     statement: search.statement ?? 'panel',
+    shift: search.shift ?? 'question',
     task: search.task,
   };
 }
@@ -145,6 +164,7 @@ export function useOpenVariant(courseSlug: string) {
             ? { deadlineField: previous.deadlineField }
             : {}),
           ...(previous.statement ? { statement: previous.statement } : {}),
+          ...(previous.shift ? { shift: previous.shift } : {}),
           // The same Task stays selected across variants.
           ...(previous.task ? { task: previous.task } : {}),
           ...extra,

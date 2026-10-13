@@ -13,6 +13,7 @@ import {
 import { cn } from '@/shadcn/lib/utils';
 import { OTHER_TEACHER } from './fixture';
 import {
+  SHIFT_VARIANTS,
   useOpenVariant,
   usePrototypeSettings,
   useUpdatePrototypeSearch,
@@ -148,6 +149,14 @@ function SandboxSettings() {
             { value: 'full', label: 'Все переопределения в панели' },
             { value: 'counter', label: 'Общий + «Переопределений: N»' },
           ]}
+        />
+      </Row>
+
+      <Row label="Окно сдвига дедлайнов" hint="?shift">
+        <Segmented
+          value={settings.shift}
+          onChange={(shift) => update({ shift })}
+          options={SHIFT_VARIANTS}
         />
       </Row>
 

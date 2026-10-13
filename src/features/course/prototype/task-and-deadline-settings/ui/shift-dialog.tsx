@@ -1,6 +1,7 @@
-// PROTOTYPE (#181): mass shift. Settings sit in one strip (Stripe-like
-// shortcuts), the preview is a «было → стало» table with a checkbox per
-// Deadline Override (Arcade «Review changes»), lateness flips on top.
+// PROTOTYPE (#181): mass shift. `?shift=` picks the window: «Вопрос»,
+// «Фраза», «Сразу» (ui/shift/) or this «Таблица»: settings in one strip
+// (Stripe-like shortcuts), the preview a «было → стало» table with a
+// checkbox per Deadline Override (Arcade «Review changes»).
 import { useMemo, useState } from 'react';
 import {
   ArrowRight,
@@ -58,12 +59,13 @@ import {
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
 import { DeadlineText } from '@/features/course/prototype/task-and-deadline-settings/ui/deadline-text';
 import { Segmented } from '@/features/course/prototype/task-and-deadline-settings/ui/segmented';
+import type { ShiftPreset } from './shift/model';
+import { VariantSwitch } from './shift/parts';
+import { QuestionBody } from './shift/question';
+import { SentenceBody } from './shift/sentence';
+import { ApplyNow, QuickShiftBody } from './shift/undo';
 
-export type ShiftPreset = {
-  taskIds: string[];
-  days?: number;
-  groupIds?: string[];
-};
+export type { ShiftPreset } from './shift/model';
 
 const studentsById = new Map(STUDENTS.map((student) => [student.id, student]));
 const groupName = (groupId: string) =>
@@ -106,9 +108,24 @@ export function ShiftDialog({
   preset: ShiftPreset | null;
   onClose: () => void;
 }) {
+  const { shift } = usePrototypeSettings();
+
+  // «Сразу»: a drag already says how far, so nothing to ask.
+  if (shift === 'undo' && preset?.days !== undefined) {
+    return <ApplyNow preset={preset} onClose={onClose} />;
+  }
+
   return (
     <Dialog open={preset !== null} onOpenChange={(open) => !open && onClose()}>
-      {preset ? <ShiftDialogBody preset={preset} onClose={onClose} /> : null}
+      {preset === null ? null : shift === 'question' ? (
+        <QuestionBody preset={preset} onClose={onClose} />
+      ) : shift === 'sentence' ? (
+        <SentenceBody preset={preset} onClose={onClose} />
+      ) : shift === 'undo' ? (
+        <QuickShiftBody preset={preset} onClose={onClose} />
+      ) : (
+        <ShiftDialogBody preset={preset} onClose={onClose} />
+      )}
     </Dialog>
   );
 }
@@ -219,7 +236,8 @@ function ShiftDialogBody({
 
   return (
     <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-4xl">
-      <DialogHeader className="px-5 pt-5 pb-4">
+      <DialogHeader className="gap-3 px-5 pt-5 pb-4">
+        <VariantSwitch />
         <DialogTitle>Сдвинуть дедлайны</DialogTitle>
         <DialogDescription>
           Время в поясе {timeZoneLabel()}. Значения «без дедлайна» не двигаются.

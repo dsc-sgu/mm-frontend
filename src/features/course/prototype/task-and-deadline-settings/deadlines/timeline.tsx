@@ -143,7 +143,7 @@ export function TimelineView({
   setSelection,
   onShift,
 }: DeadlinesViewProps) {
-  const { task: openTaskId } = usePrototypeSettings();
+  const { task: openTaskId, shift } = usePrototypeSettings();
   const update = useUpdatePrototypeSearch();
   const tasks = useSandbox((state) => state.tasks);
   const groups = useOrderedTasks();
@@ -193,9 +193,11 @@ export function TimelineView({
   return (
     <div className="grid gap-2">
       <p className="text-xs text-muted-foreground">
-        Перетащите ◆, чтобы сдвинуть Task целиком (или все выбранные) с
-        предпросмотром. Отметки групп, Students и ▸ открытия двигаются сразу.
-        Группы без отметки наследуют ◆.
+        {shift === 'undo'
+          ? 'Перетащите ◆, чтобы сдвинуть Task целиком (или все выбранные): сдвиг применится сразу, отменить его можно в уведомлении.'
+          : 'Перетащите ◆, чтобы сдвинуть Task целиком (или все выбранные): перед сдвигом откроется окно.'}{' '}
+        Отметки групп, Students и ▸ открытия двигаются сразу. Группы без отметки
+        наследуют ◆.
       </p>
       <div className="flex overflow-hidden rounded-xl border bg-card">
         <div className="w-64 shrink-0 border-r">
