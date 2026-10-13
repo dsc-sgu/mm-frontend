@@ -17,6 +17,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedCoursesCourseSlugRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/route'
 import { Route as AuthenticatedCoursesCourseSlugIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/index'
 import { Route as AuthenticatedCoursesCourseSlugAttemptsRouteImport } from './routes/_authenticated/courses/$courseSlug/attempts'
+import { Route as AuthenticatedCoursesCourseSlugDeadlinesRouteImport } from './routes/_authenticated/courses/$courseSlug/deadlines'
 import { Route as AuthenticatedCoursesCourseSlugEditRouteImport } from './routes/_authenticated/courses/$courseSlug/edit'
 import { Route as AuthenticatedCoursesCourseSlugFilesRouteImport } from './routes/_authenticated/courses/$courseSlug/files'
 import { Route as AuthenticatedCoursesCourseSlugJournalRouteImport } from './routes/_authenticated/courses/$courseSlug/journal'
@@ -24,6 +25,7 @@ import { Route as AuthenticatedCoursesCourseSlugRepositoriesRouteRouteImport } f
 import { Route as AuthenticatedCoursesCourseSlugStatsRouteImport } from './routes/_authenticated/courses/$courseSlug/stats'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/index'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/$studentUsername/route'
+import { Route as AuthenticatedCoursesCourseSlugTasksIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/index'
 import { Route as AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/tasks/$taskId/route'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameIndexRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/$studentUsername/index'
 import { Route as AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRouteImport } from './routes/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits/route'
@@ -76,6 +78,12 @@ const AuthenticatedCoursesCourseSlugAttemptsRoute =
     path: '/attempts',
     getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
   } as any)
+const AuthenticatedCoursesCourseSlugDeadlinesRoute =
+  AuthenticatedCoursesCourseSlugDeadlinesRouteImport.update({
+    id: '/deadlines',
+    path: '/deadlines',
+    getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
+  } as any)
 const AuthenticatedCoursesCourseSlugEditRoute =
   AuthenticatedCoursesCourseSlugEditRouteImport.update({
     id: '/edit',
@@ -121,6 +129,12 @@ const AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRoute =
         AuthenticatedCoursesCourseSlugRepositoriesRouteRoute,
     } as any,
   )
+const AuthenticatedCoursesCourseSlugTasksIndexRoute =
+  AuthenticatedCoursesCourseSlugTasksIndexRouteImport.update({
+    id: '/tasks/',
+    path: '/tasks/',
+    getParentRoute: () => AuthenticatedCoursesCourseSlugRouteRoute,
+  } as any)
 const AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute =
   AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteImport.update({
     id: '/tasks/$taskId',
@@ -209,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/courses/$courseSlug': typeof AuthenticatedCoursesCourseSlugRouteRouteWithChildren
   '/courses/$courseSlug/repositories': typeof AuthenticatedCoursesCourseSlugRepositoriesRouteRouteWithChildren
   '/courses/$courseSlug/attempts': typeof AuthenticatedCoursesCourseSlugAttemptsRoute
+  '/courses/$courseSlug/deadlines': typeof AuthenticatedCoursesCourseSlugDeadlinesRoute
   '/courses/$courseSlug/edit': typeof AuthenticatedCoursesCourseSlugEditRoute
   '/courses/$courseSlug/files': typeof AuthenticatedCoursesCourseSlugFilesRoute
   '/courses/$courseSlug/journal': typeof AuthenticatedCoursesCourseSlugJournalRoute
@@ -217,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/courses/$courseSlug/repositories/$studentUsername': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRouteWithChildren
   '/courses/$courseSlug/tasks/$taskId': typeof AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteWithChildren
   '/courses/$courseSlug/repositories/': typeof AuthenticatedCoursesCourseSlugRepositoriesIndexRoute
+  '/courses/$courseSlug/tasks/': typeof AuthenticatedCoursesCourseSlugTasksIndexRoute
   '/courses/$courseSlug/repositories/$studentUsername/commits': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRouteWithChildren
   '/courses/$courseSlug/tasks/$taskId/edit': typeof AuthenticatedCoursesCourseSlugTasksTaskIdEditRoute
   '/courses/$courseSlug/repositories/$studentUsername/': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameIndexRoute
@@ -232,12 +248,14 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/courses/$courseSlug/attempts': typeof AuthenticatedCoursesCourseSlugAttemptsRoute
+  '/courses/$courseSlug/deadlines': typeof AuthenticatedCoursesCourseSlugDeadlinesRoute
   '/courses/$courseSlug/edit': typeof AuthenticatedCoursesCourseSlugEditRoute
   '/courses/$courseSlug/files': typeof AuthenticatedCoursesCourseSlugFilesRoute
   '/courses/$courseSlug/journal': typeof AuthenticatedCoursesCourseSlugJournalRoute
   '/courses/$courseSlug/stats': typeof AuthenticatedCoursesCourseSlugStatsRoute
   '/courses/$courseSlug': typeof AuthenticatedCoursesCourseSlugIndexRoute
   '/courses/$courseSlug/repositories': typeof AuthenticatedCoursesCourseSlugRepositoriesIndexRoute
+  '/courses/$courseSlug/tasks': typeof AuthenticatedCoursesCourseSlugTasksIndexRoute
   '/courses/$courseSlug/tasks/$taskId/edit': typeof AuthenticatedCoursesCourseSlugTasksTaskIdEditRoute
   '/courses/$courseSlug/repositories/$studentUsername': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameIndexRoute
   '/courses/$courseSlug/tasks/$taskId': typeof AuthenticatedCoursesCourseSlugTasksTaskIdIndexRoute
@@ -256,6 +274,7 @@ export interface FileRoutesById {
   '/_authenticated/courses/$courseSlug': typeof AuthenticatedCoursesCourseSlugRouteRouteWithChildren
   '/_authenticated/courses/$courseSlug/repositories': typeof AuthenticatedCoursesCourseSlugRepositoriesRouteRouteWithChildren
   '/_authenticated/courses/$courseSlug/attempts': typeof AuthenticatedCoursesCourseSlugAttemptsRoute
+  '/_authenticated/courses/$courseSlug/deadlines': typeof AuthenticatedCoursesCourseSlugDeadlinesRoute
   '/_authenticated/courses/$courseSlug/edit': typeof AuthenticatedCoursesCourseSlugEditRoute
   '/_authenticated/courses/$courseSlug/files': typeof AuthenticatedCoursesCourseSlugFilesRoute
   '/_authenticated/courses/$courseSlug/journal': typeof AuthenticatedCoursesCourseSlugJournalRoute
@@ -264,6 +283,7 @@ export interface FileRoutesById {
   '/_authenticated/courses/$courseSlug/repositories/$studentUsername': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRouteWithChildren
   '/_authenticated/courses/$courseSlug/tasks/$taskId': typeof AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteWithChildren
   '/_authenticated/courses/$courseSlug/repositories/': typeof AuthenticatedCoursesCourseSlugRepositoriesIndexRoute
+  '/_authenticated/courses/$courseSlug/tasks/': typeof AuthenticatedCoursesCourseSlugTasksIndexRoute
   '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameCommitsRouteRouteWithChildren
   '/_authenticated/courses/$courseSlug/tasks/$taskId/edit': typeof AuthenticatedCoursesCourseSlugTasksTaskIdEditRoute
   '/_authenticated/courses/$courseSlug/repositories/$studentUsername/': typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameIndexRoute
@@ -283,6 +303,7 @@ export interface FileRouteTypes {
     | '/courses/$courseSlug'
     | '/courses/$courseSlug/repositories'
     | '/courses/$courseSlug/attempts'
+    | '/courses/$courseSlug/deadlines'
     | '/courses/$courseSlug/edit'
     | '/courses/$courseSlug/files'
     | '/courses/$courseSlug/journal'
@@ -291,6 +312,7 @@ export interface FileRouteTypes {
     | '/courses/$courseSlug/repositories/$studentUsername'
     | '/courses/$courseSlug/tasks/$taskId'
     | '/courses/$courseSlug/repositories/'
+    | '/courses/$courseSlug/tasks/'
     | '/courses/$courseSlug/repositories/$studentUsername/commits'
     | '/courses/$courseSlug/tasks/$taskId/edit'
     | '/courses/$courseSlug/repositories/$studentUsername/'
@@ -306,12 +328,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/courses/$courseSlug/attempts'
+    | '/courses/$courseSlug/deadlines'
     | '/courses/$courseSlug/edit'
     | '/courses/$courseSlug/files'
     | '/courses/$courseSlug/journal'
     | '/courses/$courseSlug/stats'
     | '/courses/$courseSlug'
     | '/courses/$courseSlug/repositories'
+    | '/courses/$courseSlug/tasks'
     | '/courses/$courseSlug/tasks/$taskId/edit'
     | '/courses/$courseSlug/repositories/$studentUsername'
     | '/courses/$courseSlug/tasks/$taskId'
@@ -329,6 +353,7 @@ export interface FileRouteTypes {
     | '/_authenticated/courses/$courseSlug'
     | '/_authenticated/courses/$courseSlug/repositories'
     | '/_authenticated/courses/$courseSlug/attempts'
+    | '/_authenticated/courses/$courseSlug/deadlines'
     | '/_authenticated/courses/$courseSlug/edit'
     | '/_authenticated/courses/$courseSlug/files'
     | '/_authenticated/courses/$courseSlug/journal'
@@ -337,6 +362,7 @@ export interface FileRouteTypes {
     | '/_authenticated/courses/$courseSlug/repositories/$studentUsername'
     | '/_authenticated/courses/$courseSlug/tasks/$taskId'
     | '/_authenticated/courses/$courseSlug/repositories/'
+    | '/_authenticated/courses/$courseSlug/tasks/'
     | '/_authenticated/courses/$courseSlug/repositories/$studentUsername/commits'
     | '/_authenticated/courses/$courseSlug/tasks/$taskId/edit'
     | '/_authenticated/courses/$courseSlug/repositories/$studentUsername/'
@@ -411,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoursesCourseSlugAttemptsRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
     }
+    '/_authenticated/courses/$courseSlug/deadlines': {
+      id: '/_authenticated/courses/$courseSlug/deadlines'
+      path: '/deadlines'
+      fullPath: '/courses/$courseSlug/deadlines'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugDeadlinesRouteImport
+      parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
+    }
     '/_authenticated/courses/$courseSlug/edit': {
       id: '/_authenticated/courses/$courseSlug/edit'
       path: '/edit'
@@ -459,6 +492,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/courses/$courseSlug/repositories/$studentUsername'
       preLoaderRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesStudentUsernameRouteRouteImport
       parentRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesRouteRoute
+    }
+    '/_authenticated/courses/$courseSlug/tasks/': {
+      id: '/_authenticated/courses/$courseSlug/tasks/'
+      path: '/tasks'
+      fullPath: '/courses/$courseSlug/tasks/'
+      preLoaderRoute: typeof AuthenticatedCoursesCourseSlugTasksIndexRouteImport
+      parentRoute: typeof AuthenticatedCoursesCourseSlugRouteRoute
     }
     '/_authenticated/courses/$courseSlug/tasks/$taskId': {
       id: '/_authenticated/courses/$courseSlug/tasks/$taskId'
@@ -641,12 +681,14 @@ const AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteWithChildren =
 interface AuthenticatedCoursesCourseSlugRouteRouteChildren {
   AuthenticatedCoursesCourseSlugRepositoriesRouteRoute: typeof AuthenticatedCoursesCourseSlugRepositoriesRouteRouteWithChildren
   AuthenticatedCoursesCourseSlugAttemptsRoute: typeof AuthenticatedCoursesCourseSlugAttemptsRoute
+  AuthenticatedCoursesCourseSlugDeadlinesRoute: typeof AuthenticatedCoursesCourseSlugDeadlinesRoute
   AuthenticatedCoursesCourseSlugEditRoute: typeof AuthenticatedCoursesCourseSlugEditRoute
   AuthenticatedCoursesCourseSlugFilesRoute: typeof AuthenticatedCoursesCourseSlugFilesRoute
   AuthenticatedCoursesCourseSlugJournalRoute: typeof AuthenticatedCoursesCourseSlugJournalRoute
   AuthenticatedCoursesCourseSlugStatsRoute: typeof AuthenticatedCoursesCourseSlugStatsRoute
   AuthenticatedCoursesCourseSlugIndexRoute: typeof AuthenticatedCoursesCourseSlugIndexRoute
   AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute: typeof AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteWithChildren
+  AuthenticatedCoursesCourseSlugTasksIndexRoute: typeof AuthenticatedCoursesCourseSlugTasksIndexRoute
 }
 
 const AuthenticatedCoursesCourseSlugRouteRouteChildren: AuthenticatedCoursesCourseSlugRouteRouteChildren =
@@ -655,6 +697,8 @@ const AuthenticatedCoursesCourseSlugRouteRouteChildren: AuthenticatedCoursesCour
       AuthenticatedCoursesCourseSlugRepositoriesRouteRouteWithChildren,
     AuthenticatedCoursesCourseSlugAttemptsRoute:
       AuthenticatedCoursesCourseSlugAttemptsRoute,
+    AuthenticatedCoursesCourseSlugDeadlinesRoute:
+      AuthenticatedCoursesCourseSlugDeadlinesRoute,
     AuthenticatedCoursesCourseSlugEditRoute:
       AuthenticatedCoursesCourseSlugEditRoute,
     AuthenticatedCoursesCourseSlugFilesRoute:
@@ -667,6 +711,8 @@ const AuthenticatedCoursesCourseSlugRouteRouteChildren: AuthenticatedCoursesCour
       AuthenticatedCoursesCourseSlugIndexRoute,
     AuthenticatedCoursesCourseSlugTasksTaskIdRouteRoute:
       AuthenticatedCoursesCourseSlugTasksTaskIdRouteRouteWithChildren,
+    AuthenticatedCoursesCourseSlugTasksIndexRoute:
+      AuthenticatedCoursesCourseSlugTasksIndexRoute,
   }
 
 const AuthenticatedCoursesCourseSlugRouteRouteWithChildren =

@@ -8,6 +8,7 @@ import type {
   CoursePlateElement,
   CoursePlateText,
 } from '@/features/course/features/page-edit/model/plate-content';
+import { NEW_TASK_ID } from '@/features/course/prototype/task-and-deadline-settings/editor/new-task';
 
 export type CoursePageSlashMenuItem = {
   description: string;
@@ -83,6 +84,14 @@ export const COURSE_PAGE_SLASH_MENU_ITEMS: CoursePageSlashMenuItem[] = [
     description: 'Сворачиваемый блок с деталями',
     keywords: ['details', 'toggle', 'спойлер'],
     input: { type: 'spoiler' },
+  },
+  // PROTOTYPE (#181): a Task is created only by inserting its Task Reference.
+  {
+    id: 'task',
+    label: 'Task',
+    description: 'Новая Task: вставит Task Reference и откроет панель',
+    keywords: ['task', 'задание', 'лабораторная'],
+    input: { type: 'assignment', taskId: NEW_TASK_ID },
   },
 ];
 

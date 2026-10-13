@@ -14,6 +14,8 @@ import type {
   CoursePageResources,
 } from '@/features/course/features/page/model/types';
 import { CourseRichText } from '@/features/course/ui/rich-text';
+// PROTOTYPE (#181): Task References render through the prototype when set.
+import { usePrototypeAssignment } from '@/features/course/prototype/task-and-deadline-settings/assignment-slot';
 
 function formatDueDate(value: string) {
   return new Intl.DateTimeFormat('ru-RU', {
@@ -175,6 +177,8 @@ function CourseContentBlock({
   courseSlug: string;
   resources: CoursePageResources;
 }) {
+  const renderPrototypeAssignment = usePrototypeAssignment();
+
   switch (block.type) {
     case 'paragraph':
       return (
@@ -288,6 +292,13 @@ function CourseContentBlock({
         </section>
       );
     case 'assignment': {
+      if (renderPrototypeAssignment) {
+        return renderPrototypeAssignment({
+          taskId: block.taskId,
+          blockId: block.id,
+        });
+      }
+
       const assignment = resources.assignments.find(
         (item) => item.taskId === block.taskId
       );

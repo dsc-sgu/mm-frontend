@@ -24,6 +24,8 @@ import { matchesShortcut } from '@/features/keyboard/shortcut';
 import { saveShortcut } from '@/features/course/features/page-edit/model/shortcuts';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
 import { CoursePageBlockFrame } from '@/features/course/features/page-edit/ui/block-frame';
+// PROTOTYPE (#181): Task References render through the prototype when set.
+import { usePrototypeAssignment } from '@/features/course/prototype/task-and-deadline-settings/assignment-slot';
 
 function getElement(element: unknown) {
   return element as CoursePlateElement;
@@ -514,6 +516,7 @@ export function CourseAssignmentElement({
   ...props
 }: PlateElementProps) {
   const element = getElement(props.element);
+  const renderPrototypeAssignment = usePrototypeAssignment();
   const resources = useCoursePageEditStore(
     (state) => state.workingCopy.resources
   );
@@ -521,6 +524,20 @@ export function CourseAssignmentElement({
   const assignment = resources.assignments.find(
     (item) => item.taskId === taskId
   );
+
+  if (renderPrototypeAssignment) {
+    return (
+      <CoursePageBlockFrame frameClassName="my-4" {...props}>
+        <div contentEditable={false} className="cursor-default select-none">
+          {renderPrototypeAssignment({
+            taskId,
+            blockId: typeof element.id === 'string' ? element.id : taskId,
+          })}
+        </div>
+        {children}
+      </CoursePageBlockFrame>
+    );
+  }
 
   return (
     <CoursePageBlockFrame frameClassName="my-4" {...props}>
