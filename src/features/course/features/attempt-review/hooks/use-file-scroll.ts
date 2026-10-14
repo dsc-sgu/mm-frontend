@@ -1,13 +1,9 @@
 import { useCallback, type RefObject } from 'react';
-import type { CodeViewHandle } from '@pierre/diffs/react';
 
-import type { AttemptReviewCodeViewAnnotation } from '@/features/course/features/attempt-review/model/code-view-annotation';
+import type { AttemptReviewCodeViewHandle } from '@/features/course/features/attempt-review/model/code-view-annotation';
 
 type AttemptReviewFileScrollOptions = {
-  diffViewerRef: RefObject<CodeViewHandle<
-    AttemptReviewCodeViewAnnotation,
-    undefined
-  > | null>;
+  diffViewerRef: RefObject<AttemptReviewCodeViewHandle | null>;
   isDesktopReviewLayout: boolean;
   onCloseMobileFileTree: () => void;
 };
