@@ -1,4 +1,6 @@
+import * as v from 'valibot';
 import { expect, test } from 'vitest';
+import { GradeSchema } from '@/features/course/model/grade';
 import { seededCourses } from './courses';
 import {
   accessWorld,
@@ -24,6 +26,8 @@ test('the default development world retains its Users, Courses and submissions',
       courseId: id,
       id: '1',
       title: 'Вводное практическое задание',
+      maxGrade: v.parse(GradeSchema, 10),
+      deadlineAt: '2026-05-26T20:59:59.000Z',
     }))
   );
 
@@ -60,6 +64,20 @@ test('the default development world retains its Users, Courses and submissions',
     ]);
     expect(attempts.every(({ taskId }) => taskId === '1')).toBe(true);
   }
+  // The demo: the Teacher's Course has Attempts #1–#3 reviewed, the stress
+  // Attempt #4 is not; Courses the Teacher studies in have no Reviews.
+  const reviewed = new Set(state.reviews.map(({ attemptId }) => attemptId));
+  expect(
+    state.attempts.map(({ id, attemptNumber }) => [
+      attemptNumber,
+      reviewed.has(id),
+    ])
+  ).toEqual(
+    state.attempts.map(({ courseId, attemptNumber }) => [
+      attemptNumber,
+      courseId === mit.id && attemptNumber < 4,
+    ])
+  );
 });
 
 test('the access world retains course-local memberships without Tasks or Attempts', () => {
@@ -70,6 +88,7 @@ test('the access world retains course-local memberships without Tasks or Attempt
     memberships,
     tasks,
     attempts,
+    reviews,
     session,
     nextUserNumber,
   } = mockBackend.state;
@@ -110,6 +129,7 @@ test('the access world retains course-local memberships without Tasks or Attempt
   ]);
   expect(tasks).toEqual([]);
   expect(attempts).toEqual([]);
+  expect(reviews).toEqual([]);
   expect(session).toEqual({
     userId: accessWorld.users.anna.id,
     expiresAt: SESSION_EXPIRES_AT,
@@ -117,7 +137,7 @@ test('the access world retains course-local memberships without Tasks or Attempt
   expect(nextUserNumber).toBe(7);
 });
 
-test('the review world explicitly extends the access world with its Task and Attempts', () => {
+test('the review world explicitly extends the access world with its Task, Attempts and Reviews', () => {
   mockBackend.reset('world:access');
   const accessState = mockBackend.state;
   mockBackend.reset('world:review');
@@ -126,6 +146,7 @@ test('the review world explicitly extends the access world with its Task and Att
     ...accessState,
     tasks: [reviewWorld.task],
     attempts: reviewWorld.attempts,
+    reviews: reviewWorld.reviews,
   });
 });
 
@@ -143,6 +164,7 @@ test.each(['dev', 'world:access', 'world:review'] as const)(
     previous.memberships[0].role = 'student';
     previous.tasks.splice(0);
     previous.attempts.splice(0);
+    previous.reviews.splice(0);
     previous.session = null;
     previous.nextUserNumber = 100;
 

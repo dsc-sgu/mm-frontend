@@ -2,7 +2,10 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { ChevronsUpDown, MessageSquare } from 'lucide-react';
 import { formatGrade, type Grade } from '@/features/course/model/grade';
-import type { AttemptNumber } from '@/features/course/model/identity';
+import type {
+  AttemptId,
+  AttemptNumber,
+} from '@/features/course/model/identity';
 
 import {
   Popover,
@@ -12,35 +15,42 @@ import {
 import { cn } from '@/shadcn/lib/utils';
 import { formatAttemptReviewDateTime } from '@/features/course/features/attempt-review/model/date-format';
 import type {
-  AttemptReviewAggregate,
   AttemptReviewMode,
+  StudentAttempt,
 } from '@/features/course/features/attempt-review/model/types';
 import styles from './attempt-select.module.css';
 
 type AttemptReviewAttemptSelectProps = {
-  review: AttemptReviewAggregate;
+  attempts: StudentAttempt[];
+  /** The open Attempt, also when the list does not have it yet. */
+  current: StudentAttempt;
+  maxGrade: Grade;
   mode: AttemptReviewMode;
   variant?: 'panel' | 'header';
   className?: string;
 };
 
 export function AttemptReviewAttemptSelect({
-  review,
+  attempts: studentAttempts,
+  current,
+  maxGrade,
   mode,
   variant = 'panel',
   className,
 }: AttemptReviewAttemptSelectProps) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  // The Review is cached by CourseId; links follow the confirmed route slug.
-  const { courseSlug } = useParams({
-    from: '/_authenticated/courses/$courseSlug',
+  // Data is addressed by identities; links follow the confirmed route locators.
+  const { courseSlug, taskId, studentUsername } = useParams({
+    from: '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber',
   });
-  const attempts = useMemo(() => getAttemptOptions(review), [review]);
+  const attempts = useMemo(
+    () => getAttemptOptions(studentAttempts, current, maxGrade),
+    [studentAttempts, current, maxGrade]
+  );
   const currentAttempt =
-    attempts.find(
-      (attempt) => attempt.attemptNumber === review.current.attemptNumber
-    ) ?? attempts[0];
+    attempts.find((attempt) => attempt.id === current.id) ??
+    toAttemptOption(current, maxGrade);
   const headerVariant = variant === 'header';
 
   return (
@@ -81,12 +91,11 @@ export function AttemptReviewAttemptSelect({
           <div className="max-h-80 overflow-y-auto">
             <div className="divide-y">
               {attempts.map((attempt) => {
-                const selected =
-                  attempt.attemptNumber === review.current.attemptNumber;
+                const selected = attempt.id === current.id;
 
                 return (
                   <button
-                    key={attempt.attemptNumber}
+                    key={attempt.id}
                     type="button"
                     className={cn(
                       'block w-full cursor-pointer text-left',
@@ -107,8 +116,8 @@ export function AttemptReviewAttemptSelect({
                             : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/',
                         params: {
                           courseSlug,
-                          taskId: review.current.task.id,
-                          studentUsername: review.current.student.username,
+                          taskId,
+                          studentUsername,
                           attemptNumber: String(attempt.attemptNumber),
                         },
                       });
@@ -131,6 +140,7 @@ export function AttemptReviewAttemptSelect({
 }
 
 type AttemptSelectOption = {
+  id: AttemptId;
   attemptNumber: AttemptNumber;
   submittedAt: string;
   gradeLabel: string;
@@ -253,34 +263,24 @@ function getGradeLabel(grade: Grade | null, maxGrade: Grade): string {
     : 'Не оценено';
 }
 
-function getAttemptOptions(review: AttemptReviewAggregate) {
-  const { maxGrade } = review.current.task;
-  const attempts = new Map<AttemptNumber, AttemptSelectOption>();
-
-  const addAttempt = (attempt: AttemptSelectOption) => {
-    attempts.set(attempt.attemptNumber, attempt);
+function toAttemptOption(
+  { review, ...attempt }: StudentAttempt,
+  maxGrade: Grade
+): AttemptSelectOption {
+  return {
+    ...attempt,
+    gradeLabel: getGradeLabel(review?.grade ?? null, maxGrade),
   };
+}
 
-  review.attempts.forEach(({ grade, ...attempt }) =>
-    addAttempt({ ...attempt, gradeLabel: getGradeLabel(grade, maxGrade) })
-  );
+function getAttemptOptions(
+  attempts: StudentAttempt[],
+  current: StudentAttempt,
+  maxGrade: Grade
+): AttemptSelectOption[] {
+  const listed = attempts.some(({ id }) => id === current.id);
 
-  addAttempt({
-    attemptNumber: review.current.attemptNumber,
-    submittedAt: review.current.submittedAt,
-    gradeLabel: getGradeLabel(review.current.grade?.value ?? null, maxGrade),
-    addedLines: review.changedFiles.reduce(
-      (sum, file) => sum + file.addedLines,
-      0
-    ),
-    deletedLines: review.changedFiles.reduce(
-      (sum, file) => sum + file.deletedLines,
-      0
-    ),
-    commentCount: review.lineComments.length,
-  });
-
-  return Array.from(attempts.values()).sort(
-    (first, second) => second.attemptNumber - first.attemptNumber
-  );
+  return (listed ? attempts : [...attempts, current])
+    .map((attempt) => toAttemptOption(attempt, maxGrade))
+    .sort((first, second) => second.attemptNumber - first.attemptNumber);
 }

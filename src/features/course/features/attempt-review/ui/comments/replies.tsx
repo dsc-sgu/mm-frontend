@@ -1,3 +1,4 @@
+import type { UserId } from '@/features/auth/model/identity';
 import { Check, MessageSquare, X } from 'lucide-react';
 
 import { Button } from '@/shadcn/components/ui/button';
@@ -14,7 +15,7 @@ import type { AttemptReviewLineCommentReply } from '@/features/course/features/a
 type AttemptReviewCommentRepliesProps = {
   replies: AttemptReviewLineCommentReply[];
   canReply: boolean;
-  currentUsername?: string;
+  currentUserId?: UserId;
   isReplying: boolean;
   replyHtml: string;
   isReplySubmitDisabled: boolean;
@@ -29,7 +30,7 @@ type AttemptReviewCommentRepliesProps = {
 export function AttemptReviewCommentReplies({
   replies,
   canReply,
-  currentUsername,
+  currentUserId,
   isReplying,
   replyHtml,
   isReplySubmitDisabled,
@@ -55,7 +56,7 @@ export function AttemptReviewCommentReplies({
             <AttemptReviewCommentReplyItem
               key={reply.id}
               reply={reply}
-              canManage={currentUsername === reply.authorUsername}
+              canManage={currentUserId === reply.author.id}
               onUpdate={onReplyUpdate}
               onDelete={onReplyDelete}
             />

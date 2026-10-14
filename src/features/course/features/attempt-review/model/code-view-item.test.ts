@@ -1,3 +1,4 @@
+import type { UserId } from '@/features/auth/model/identity';
 import { parseDiffFromFile } from '@pierre/diffs';
 import { describe, expect, it } from 'vitest';
 
@@ -32,8 +33,10 @@ function lineComment(filePath: string): AttemptReviewLineComment {
     side: 'additions',
     lineNumber: 1,
     html: '<p>Уточните формулировку.</p>',
-    authorName: 'Преподаватель',
-    authorUsername: 'teacher',
+    author: {
+      id: '00000000-0000-4000-8000-000000000001' as UserId,
+      name: 'Преподаватель',
+    },
     createdAt: '2026-10-01T10:00:00.000Z',
     updatedAt: '2026-10-01T10:00:00.000Z',
   };

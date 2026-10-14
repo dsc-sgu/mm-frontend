@@ -21,6 +21,7 @@ function RouteComponent() {
       mode="readonly"
       courseRole={courseRole}
       courseId={course.id}
+      taskId={attempt.taskId}
       studentId={attempt.studentId}
       attemptId={attempt.id}
       viewerId={session.userId}

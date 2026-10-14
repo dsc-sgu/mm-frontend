@@ -17,6 +17,13 @@ import {
   type CourseId,
 } from '@/features/course/model/identity';
 import type { CourseSummary, Teacher } from '@/features/course/model/types';
+import { GradeSchema, type Grade } from '@/features/course/model/grade';
+import {
+  ReviewRevisionSchema,
+  type ReviewRevision,
+} from '@/features/course/features/review/model/revision';
+import type { ReviewCommentSide } from '@/features/course/features/review/model/types';
+import { devReview } from '@/app/mock-backend/reviews';
 
 // Stateful backend shared by the feature MSW handlers. Each reset clones a
 // deterministic world, keeping exported fixtures independent of mutations.
@@ -50,6 +57,8 @@ export type MockTask = {
   courseId: CourseId;
   id: string;
   title: string;
+  maxGrade: Grade;
+  deadlineAt: string;
 };
 
 export type MockAttempt = {
@@ -58,6 +67,47 @@ export type MockAttempt = {
   taskId: string;
   studentId: UserId;
   attemptNumber: AttemptNumber;
+  submittedAt: string;
+};
+
+/** A Teacher's root comment, anchored to a line range of the Attempt diff. */
+export type MockReviewComment = {
+  id: string;
+  authorId: UserId;
+  filePath: string;
+  side: ReviewCommentSide;
+  lineNumber: number;
+  endSide?: ReviewCommentSide;
+  endLineNumber?: number;
+  html: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MockReviewRevision = {
+  number: ReviewRevision;
+  grade: Grade;
+  overallFeedbackHtml: string;
+  comments: MockReviewComment[];
+  publishedAt: string;
+  publishedBy: UserId;
+};
+
+/** Replies sit next to their root comment, outside every revision. */
+export type MockReviewReply = {
+  id: string;
+  commentId: string;
+  authorId: UserId;
+  html: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** The published Review of one Attempt: its latest revision and replies. */
+export type MockReview = {
+  attemptId: AttemptId;
+  revision: MockReviewRevision;
+  replies: MockReviewReply[];
 };
 
 export type MockBackendState = {
@@ -66,11 +116,19 @@ export type MockBackendState = {
   memberships: MockCourseMembership[];
   tasks: MockTask[];
   attempts: MockAttempt[];
+  reviews: MockReview[];
   /** The browser's sign-in session; MSW serves one client at a time. */
   session: MockSession | null;
   /** Sequence for identities created at runtime, so they repeat across runs. */
   nextUserNumber: number;
 };
+
+/** The name a User is shown under to other participants. */
+export function mockUserName(user: MockUser): string {
+  return [user.firstName, user.lastName, user.patronymic]
+    .filter(Boolean)
+    .join(' ');
+}
 
 export const SESSION_EXPIRES_AT = '2099-12-31T23:59:59.999Z';
 
@@ -245,7 +303,8 @@ function mockAttempt(
   sequence: number,
   courseId: CourseId,
   studentId: UserId,
-  attemptNumber: number
+  attemptNumber: number,
+  submittedAt: string
 ): MockAttempt {
   return {
     id: v.parse(
@@ -256,8 +315,78 @@ function mockAttempt(
     taskId: '1',
     studentId,
     attemptNumber: v.parse(AttemptNumberSchema, attemptNumber),
+    submittedAt,
   };
 }
+
+const reviewAttempts = [
+  mockAttempt(
+    1,
+    accessWorld.courses.algorithms.id,
+    accessUsers.sasha.id,
+    1,
+    '2026-05-20T09:00:00.000Z'
+  ),
+  mockAttempt(
+    2,
+    accessWorld.courses.algorithms.id,
+    accessUsers.sasha.id,
+    2,
+    '2026-05-22T09:00:00.000Z'
+  ),
+  mockAttempt(
+    3,
+    accessWorld.courses.algorithms.id,
+    accessUsers.petya.id,
+    1,
+    '2026-05-21T09:00:00.000Z'
+  ),
+];
+
+// Sasha's Attempt #1 is reviewed by both Teachers; the rest have no Review.
+const sashaFirstReview: MockReview = {
+  attemptId: reviewAttempts[0].id,
+  revision: {
+    number: v.parse(ReviewRevisionSchema, 2),
+    grade: v.parse(GradeSchema, 7.5),
+    overallFeedbackHtml:
+      '<p>Сортировка работает, но пустой список не обработан.</p>',
+    comments: [
+      {
+        id: 'comment-anna-main-2',
+        authorId: accessUsers.anna.id,
+        filePath: 'src/main.ts',
+        side: 'additions',
+        lineNumber: 2,
+        html: '<p>Сумму можно посчитать через <code>reduce</code>.</p>',
+        createdAt: '2026-05-20T12:00:00.000Z',
+        updatedAt: '2026-05-20T12:00:00.000Z',
+      },
+      {
+        id: 'comment-boris-readme-3',
+        authorId: accessUsers.boris.id,
+        filePath: 'README.md',
+        side: 'additions',
+        lineNumber: 3,
+        html: '<p>Опишите, как запустить решение.</p>',
+        createdAt: '2026-05-20T13:00:00.000Z',
+        updatedAt: '2026-05-20T13:00:00.000Z',
+      },
+    ],
+    publishedAt: '2026-05-20T13:05:00.000Z',
+    publishedBy: accessUsers.boris.id,
+  },
+  replies: [
+    {
+      id: 'reply-sasha-main-2',
+      commentId: 'comment-anna-main-2',
+      authorId: accessUsers.sasha.id,
+      html: '<p>Перепишу во второй попытке.</p>',
+      createdAt: '2026-05-20T15:00:00.000Z',
+      updatedAt: '2026-05-20T15:00:00.000Z',
+    },
+  ],
+};
 
 export const reviewWorld = {
   ...accessWorld,
@@ -265,18 +394,35 @@ export const reviewWorld = {
     courseId: accessWorld.courses.algorithms.id,
     id: '1',
     title: 'Сортировки',
+    maxGrade: v.parse(GradeSchema, 10),
+    deadlineAt: '2026-05-25T20:59:59.000Z',
   },
-  attempts: [
-    mockAttempt(1, accessWorld.courses.algorithms.id, accessUsers.sasha.id, 1),
-    mockAttempt(2, accessWorld.courses.algorithms.id, accessUsers.sasha.id, 2),
-    mockAttempt(3, accessWorld.courses.algorithms.id, accessUsers.petya.id, 1),
-  ],
+  attempts: reviewAttempts,
+  reviews: [sashaFirstReview],
 };
+
+const DEV_FIRST_SUBMISSION = Date.UTC(2026, 4, 20, 12, 0, 0);
+const DEV_SUBMISSION_STEP = 36 * 60 * 60 * 1000;
 
 type MockWorld = 'dev' | 'world:access' | 'world:review';
 
 function createDevState(): MockBackendState {
   const users = Object.values(seededUsers);
+  const attempts = devMemberships
+    .filter(({ role }) => role === 'student')
+    .flatMap(({ courseId, userId }, index) =>
+      Array.from({ length: 4 }, (_, number) =>
+        mockAttempt(
+          100 + index * 4 + number,
+          courseId,
+          userId,
+          number + 1,
+          new Date(
+            DEV_FIRST_SUBMISSION + number * DEV_SUBMISSION_STEP
+          ).toISOString()
+        )
+      )
+    );
   return {
     users,
     courses: seededCourses,
@@ -285,13 +431,22 @@ function createDevState(): MockBackendState {
       courseId: id,
       id: '1',
       title: 'Вводное практическое задание',
+      maxGrade: v.parse(GradeSchema, 10),
+      deadlineAt: '2026-05-26T20:59:59.000Z',
     })),
-    attempts: devMemberships
-      .filter(({ role }) => role === 'student')
-      .flatMap(({ courseId, userId }, index) =>
-        Array.from({ length: 4 }, (_, number) =>
-          mockAttempt(100 + index * 4 + number, courseId, userId, number + 1)
+    attempts,
+    // Only the Course the demo Teacher teaches has Reviews.
+    reviews: attempts
+      .filter(({ courseId }) =>
+        devMemberships.some(
+          (membership) =>
+            membership.courseId === courseId &&
+            membership.userId === seededUsers.mitTeacher.id &&
+            membership.role === 'teacher'
         )
+      )
+      .flatMap(
+        (attempt) => devReview(attempt, seededUsers.mitTeacher.id) ?? []
       ),
     session: {
       userId: seededUsers.mitTeacher.id,
@@ -309,6 +464,7 @@ function createAccessState(): MockBackendState {
     memberships: accessMemberships,
     tasks: [],
     attempts: [],
+    reviews: [],
     session: {
       userId: accessWorld.users.anna.id,
       expiresAt: SESSION_EXPIRES_AT,
@@ -322,6 +478,7 @@ function createReviewState(): MockBackendState {
     ...createAccessState(),
     tasks: [reviewWorld.task],
     attempts: reviewWorld.attempts,
+    reviews: reviewWorld.reviews,
   };
 }
 
