@@ -4,6 +4,7 @@ import { CalendarDays, Paperclip, Trophy } from 'lucide-react';
 
 import { CodeBlock } from '@/features/code-block/ui/block';
 import { cn } from '@/shadcn/lib/utils';
+import { formatGrade } from '@/features/course/model/grade';
 import { clampCourseListIndent } from '@/features/course/features/page/model/list-indent';
 import { sortRankedContent } from '@/features/course/features/page/model/rank';
 import type {
@@ -354,8 +355,8 @@ function CourseContentBlock({
                   {formatDueDate(assignment.dueDate)}
                 </span>
               )}
-              {assignment.maxScore !== undefined && (
-                <span>Макс. балл: {assignment.maxScore}</span>
+              {assignment.maxGrade !== undefined && (
+                <span>Макс. оценка: {formatGrade(assignment.maxGrade)}</span>
               )}
             </div>
           </div>

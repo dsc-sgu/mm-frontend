@@ -5,6 +5,7 @@ import type {
   CourseId,
 } from '@/features/course/model/identity';
 import type { UserId } from '@/features/auth/model/identity';
+import type { Grade } from '@/features/course/model/grade';
 
 export type AttemptReviewMode = 'editable' | 'readonly';
 export type AttemptReviewDiffViewMode = 'unified' | 'split';
@@ -20,7 +21,7 @@ export type AttemptReviewIdentity = {
 export type AttemptReviewTask = {
   id: string;
   title: string;
-  maxScore: number;
+  maxGrade: Grade;
 };
 
 export type AttemptReviewStudent = {
@@ -31,8 +32,7 @@ export type AttemptReviewStudent = {
 };
 
 export type AttemptReviewGrade = {
-  score: number;
-  maxScore: number;
+  value: Grade;
   gradedAt: string;
   gradedBy: string;
 };
@@ -108,8 +108,7 @@ export type AttemptReviewRichFeedback = {
 export type AttemptReviewHistoryItem = {
   attemptNumber: AttemptNumber;
   submittedAt: string;
-  score: number | null;
-  maxScore: number;
+  grade: Grade | null;
   addedLines: number;
   deletedLines: number;
   commentCount: number;
@@ -126,7 +125,7 @@ export type AttemptReviewAggregate = {
 };
 
 export type SaveAttemptReviewInput = {
-  score: number | null;
+  grade: Grade;
   overallFeedbackHtml: string;
   lineComments: AttemptReviewLineComment[];
 } & AttemptReviewIdentity;

@@ -147,11 +147,11 @@ export function CourseAttemptsPage({
                 <AttemptCard
                   mode="quick-grading"
                   attempt={attempt}
-                  draftScore={grading.getDraftScore(attempt)}
-                  onDraftScoreChange={(score) =>
-                    grading.changeDraftScore(attempt, score)
+                  draftGrade={grading.getDraftGrade(attempt)}
+                  onDraftGradeChange={(grade) =>
+                    grading.changeDraftGrade(attempt, grade)
                   }
-                  onDraftScoreReset={() => grading.resetDraftScore(attempt)}
+                  onDraftGradeReset={() => grading.resetDraftGrade(attempt)}
                 />
               )}
             />

@@ -1,6 +1,10 @@
 import { Check, RotateCcw, Save } from 'lucide-react';
 
-import { CourseScoreField } from '@/features/course/features/grading';
+import {
+  formatGrade,
+  type GradeInputError,
+} from '@/features/course/model/grade';
+import { GradeField } from '@/features/course/ui/grade-field';
 import { Button } from '@/shadcn/components/ui/button';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
@@ -16,13 +20,13 @@ type AttemptReviewReviewPanelProps = {
   review: AttemptReviewAggregate;
   draft: AttemptReviewDraft;
   mode: AttemptReviewMode;
-  scoreError: string | null;
+  gradeError: GradeInputError | null;
   hasChanges: boolean;
   canSave: boolean;
   savePending: boolean;
   id?: string;
   className?: string;
-  onScoreChange: (score: string) => void;
+  onGradeChange: (grade: string) => void;
   onFeedbackChange: (html: string) => void;
   onDiscard: () => void;
   onSave: () => Promise<void>;
@@ -32,13 +36,13 @@ export function AttemptReviewReviewPanel({
   review,
   draft,
   mode,
-  scoreError,
+  gradeError,
   hasChanges,
   canSave,
   savePending,
   id,
   className,
-  onScoreChange,
+  onGradeChange,
   onFeedbackChange,
   onDiscard,
   onSave,
@@ -80,26 +84,29 @@ export function AttemptReviewReviewPanel({
         </div>
 
         <div className="grid gap-2">
-          <h3 className="text-sm font-semibold">Балл</h3>
+          <h3 className="text-sm font-semibold">Оценка за попытку</h3>
           {mode === 'editable' ? (
-            <CourseScoreField
-              value={draft.score}
-              maxScore={review.current.task.maxScore}
+            <GradeField
+              value={draft.grade}
+              maxGrade={review.current.task.maxGrade}
               changed={
-                draft.score !==
-                (review.current.grade ? String(review.current.grade.score) : '')
+                draft.grade !==
+                (review.current.grade
+                  ? formatGrade(review.current.grade.value)
+                  : '')
               }
-              error={scoreError}
-              ariaLabel="Балл за попытку"
-              onChange={onScoreChange}
+              error={gradeError}
+              ariaLabel="Оценка за попытку"
+              onChange={onGradeChange}
             />
           ) : (
             <div className="rounded-xl border bg-muted/30 p-3">
-              <p className="text-sm text-muted-foreground">Балл</p>
+              <p className="text-sm text-muted-foreground">Оценка</p>
               <p className="text-2xl font-semibold">
                 {review.current.grade
-                  ? `${review.current.grade.score}/${review.current.grade.maxScore}`
-                  : `—/${review.current.task.maxScore}`}
+                  ? formatGrade(review.current.grade.value)
+                  : '—'}
+                /{formatGrade(review.current.task.maxGrade)}
               </p>
             </div>
           )}

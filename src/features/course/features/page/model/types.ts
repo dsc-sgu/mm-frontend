@@ -1,3 +1,4 @@
+import type { Grade } from '@/features/course/model/grade';
 import type { CourseId } from '@/features/course/model/identity';
 import type { CourseSummary } from '@/features/course/model/types';
 
@@ -104,7 +105,7 @@ export type CourseAssignmentResource = {
   title: string;
   description?: RichTextNode[];
   dueDate?: string;
-  maxScore?: number;
+  maxGrade?: Grade;
 };
 
 export type CoursePageResources = {

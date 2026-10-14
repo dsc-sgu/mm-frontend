@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { ChevronsUpDown, MessageSquare } from 'lucide-react';
+import { formatGrade, type Grade } from '@/features/course/model/grade';
 import type { AttemptNumber } from '@/features/course/model/identity';
 
 import {
@@ -132,8 +133,7 @@ export function AttemptReviewAttemptSelect({
 type AttemptSelectOption = {
   attemptNumber: AttemptNumber;
   submittedAt: string;
-  score: number | null;
-  maxScore: number;
+  gradeLabel: string;
   addedLines: number;
   deletedLines: number;
   commentCount: number;
@@ -174,9 +174,7 @@ function AttemptOptionCard({
               'text-muted-foreground'
             )}
           >
-            {attempt.score === null
-              ? 'Не оценено'
-              : `${attempt.score}/${attempt.maxScore}`}
+            {attempt.gradeLabel}
             {trailing}
           </span>
         </div>
@@ -234,11 +232,7 @@ function AttemptOptionCard({
           'text-muted-foreground'
         )}
       >
-        <span>
-          {attempt.score === null
-            ? 'Не оценено'
-            : `${attempt.score}/${attempt.maxScore}`}
-        </span>
+        <span>{attempt.gradeLabel}</span>
         <span className="text-emerald-700 dark:text-emerald-300">
           +{attempt.addedLines}
         </span>
@@ -253,20 +247,28 @@ function AttemptOptionCard({
   );
 }
 
+function getGradeLabel(grade: Grade | null, maxGrade: Grade): string {
+  return grade
+    ? `${formatGrade(grade)}/${formatGrade(maxGrade)}`
+    : 'Не оценено';
+}
+
 function getAttemptOptions(review: AttemptReviewAggregate) {
+  const { maxGrade } = review.current.task;
   const attempts = new Map<AttemptNumber, AttemptSelectOption>();
 
   const addAttempt = (attempt: AttemptSelectOption) => {
     attempts.set(attempt.attemptNumber, attempt);
   };
 
-  review.attempts.forEach(addAttempt);
+  review.attempts.forEach(({ grade, ...attempt }) =>
+    addAttempt({ ...attempt, gradeLabel: getGradeLabel(grade, maxGrade) })
+  );
 
   addAttempt({
     attemptNumber: review.current.attemptNumber,
     submittedAt: review.current.submittedAt,
-    score: review.current.grade?.score ?? null,
-    maxScore: review.current.task.maxScore,
+    gradeLabel: getGradeLabel(review.current.grade?.value ?? null, maxGrade),
     addedLines: review.changedFiles.reduce(
       (sum, file) => sum + file.addedLines,
       0

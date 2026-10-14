@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from '@/shadcn/components/ui/tooltip';
 import { cn } from '@/shadcn/lib/utils';
+import { formatGrade } from '@/features/course/model/grade';
 import {
   getShortcutLabels,
   matchesShortcut,
@@ -354,13 +355,13 @@ function TasksFilterSection({
         emptyMessage="Задания не найдены"
         options={tasks.map((task) => ({
           value: task.id,
-          label: `${task.title} · ${task.maxScore} б.`,
+          label: `${task.title} · ${formatGrade(task.maxGrade)} б.`,
         }))}
         selectedOptions={context.tasks
           .filter((task) => selectedTaskIds.includes(task.id))
           .map((task) => ({
             value: task.id,
-            label: `${task.title} · ${task.maxScore} б.`,
+            label: `${task.title} · ${formatGrade(task.maxGrade)} б.`,
           }))}
         selectedValues={selectedTaskIds}
         loading={loading}

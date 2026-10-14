@@ -16,6 +16,7 @@ import {
 } from 'platejs/react';
 
 import { cn } from '@/shadcn/lib/utils';
+import { formatGrade } from '@/features/course/model/grade';
 import { CourseRichText } from '@/features/course/ui/rich-text';
 import type { RichTextNode } from '@/features/course/features/page/model/types';
 import { useCoursePageEditStore } from '@/features/course/features/page-edit/hooks/use-editor-store';
@@ -547,7 +548,7 @@ export function CourseAssignmentElement({
                   </div>
                 )}
               </div>
-              {(assignment.dueDate || assignment.maxScore) && (
+              {(assignment.dueDate || assignment.maxGrade) && (
                 <div className="grid gap-2 text-sm text-muted-foreground md:min-w-48">
                   {assignment.dueDate && (
                     <span className="flex items-center gap-2">
@@ -555,8 +556,8 @@ export function CourseAssignmentElement({
                       {formatDueDate(assignment.dueDate)}
                     </span>
                   )}
-                  {assignment.maxScore !== undefined && (
-                    <span>Максимум: {assignment.maxScore} баллов</span>
+                  {assignment.maxGrade !== undefined && (
+                    <span>Максимум: {formatGrade(assignment.maxGrade)}</span>
                   )}
                 </div>
               )}

@@ -19,6 +19,11 @@ import {
 } from '@/features/course/features/task/model/deadline';
 import type { DeadlineRelation } from '@/features/course/features/task/model/deadline';
 import type { TaskAttempt } from '@/features/course/features/task/model/types';
+import {
+  compareGrades,
+  formatGrade,
+  type Grade,
+} from '@/features/course/model/grade';
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 
@@ -27,7 +32,7 @@ export function TaskAttemptHistory({
   courseId,
   courseSlug,
   deadlineAt,
-  maxScore,
+  maxGrade,
   studentId,
   taskId,
 }: {
@@ -35,7 +40,7 @@ export function TaskAttemptHistory({
   courseId: CourseId;
   courseSlug: string;
   deadlineAt: string;
-  maxScore: number;
+  maxGrade: Grade;
   studentId: UserId;
   taskId: string;
 }) {
@@ -92,7 +97,7 @@ export function TaskAttemptHistory({
               attempt={attempt}
               courseSlug={courseSlug}
               deadlineAt={deadlineAt}
-              maxScore={maxScore}
+              maxGrade={maxGrade}
               taskId={taskId}
               onOpenAttempt={markAttemptUpdatesSeen}
             />
@@ -109,14 +114,14 @@ function TaskAttemptHistoryItem({
   attempt,
   courseSlug,
   deadlineAt,
-  maxScore,
+  maxGrade,
   taskId,
   onOpenAttempt,
 }: {
   attempt: TaskAttempt;
   courseSlug: string;
   deadlineAt: string;
-  maxScore: number;
+  maxGrade: Grade;
   taskId: string;
   onOpenAttempt: (attempt: TaskAttempt) => void;
 }) {
@@ -161,7 +166,7 @@ function TaskAttemptHistoryItem({
         )}
       >
         {attempt.review.status === 'graded' && (
-          <ScoreBadge score={attempt.review.score} maxScore={maxScore} />
+          <GradeBadge grade={attempt.review.grade} maxGrade={maxGrade} />
         )}
 
         <Button asChild variant="outline" className="h-9 rounded-lg px-3">
@@ -274,17 +279,19 @@ function ReviewStatus({ attempt }: { attempt: TaskAttempt }) {
   );
 }
 
-function ScoreBadge({ score, maxScore }: { score: number; maxScore: number }) {
+function GradeBadge({ grade, maxGrade }: { grade: Grade; maxGrade: Grade }) {
   return (
     <span
       className={cn(
         'shrink-0 rounded-lg border px-2.5 py-1.5 text-base font-bold',
-        getScoreTone(score, maxScore)
+        getGradeTone(grade, maxGrade)
       )}
-      aria-label={`Результат: ${score} из ${maxScore}`}
+      aria-label={`Результат: ${formatGrade(grade)} из ${formatGrade(maxGrade)}`}
     >
-      {score}
-      <span className="text-sm text-muted-foreground">/{maxScore}</span>
+      {formatGrade(grade)}
+      <span className="text-sm text-muted-foreground">
+        /{formatGrade(maxGrade)}
+      </span>
     </span>
   );
 }
@@ -321,15 +328,15 @@ function getDeadlineRelationTone(timing: DeadlineRelation['timing']): string {
   return 'text-muted-foreground';
 }
 
-function getScoreTone(score: number, maxScore: number): string {
-  if (score === 0) {
+function getGradeTone(grade: Grade, maxGrade: Grade): string {
+  if (grade.thousandths === 0) {
     return cn(
       'border-rose-200 bg-rose-50 text-rose-700',
       'dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300'
     );
   }
 
-  if (score === maxScore) {
+  if (compareGrades(grade, maxGrade) === 0) {
     return cn(
       'border-emerald-200 bg-emerald-50 text-emerald-700',
       'dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300'

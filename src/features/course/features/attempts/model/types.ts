@@ -1,3 +1,4 @@
+import type { Grade } from '@/features/course/model/grade';
 import type { AttemptNumber, CourseId } from '@/features/course/model/identity';
 
 export type CourseAttemptGradedFilter = 'any' | 'no' | 'yes';
@@ -17,7 +18,7 @@ export type CourseAttemptsRouteSearch = {
 export type CourseAttemptTask = {
   id: string;
   title: string;
-  maxScore: number;
+  maxGrade: Grade;
 };
 
 export type CourseAttemptStudent = {
@@ -33,8 +34,7 @@ export type CourseAttemptDiffStats = {
 };
 
 export type CourseAttemptGrade = {
-  score: number;
-  maxScore: number;
+  value: Grade;
   gradedAt: string;
   gradedBy: string;
 };
@@ -66,6 +66,6 @@ export type SaveQuickGradesInput = {
   courseId: CourseId;
   updates: Array<{
     attemptId: string;
-    score: number;
+    grade: Grade;
   }>;
 };

@@ -3,6 +3,7 @@ import { MessageSquareText, PanelLeftOpen } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { AttemptReviewAttemptSelect } from './attempt-select';
 import { formatAttemptReviewDateTime } from '@/features/course/features/attempt-review/model/date-format';
+import { formatGrade } from '@/features/course/model/grade';
 import { AttemptReviewDiffViewToggle } from './diff-view-toggle';
 import type {
   AttemptReviewAggregate,
@@ -58,7 +59,7 @@ export function AttemptReviewHeader({
             )}
           >
             <span>{review.current.student.fullName}</span>
-            <span>Максимум: {review.current.task.maxScore}</span>
+            <span>Максимум: {formatGrade(review.current.task.maxGrade)}</span>
             <span>
               Отправлено{' '}
               {formatAttemptReviewDateTime(review.current.submittedAt)}

@@ -3,10 +3,10 @@ import { Map as ImmutableMap } from 'immutable';
 
 import {
   createQuickGradeUpdate,
-  scoreDraftValidationError,
-  scoreValue,
+  getQuickGradeDraftError,
+  savedGradeText,
   type QuickGradeUpdate,
-} from '@/features/course/features/grading';
+} from '@/features/course/features/attempts/model/quick-grade';
 import { isAttemptSelectable } from '@/features/course/features/attempts/model/selection';
 import type { CourseId } from '@/features/course/model/identity';
 import { useSaveQuickGradesMutation } from '@/features/course/features/attempts/api/queries';
@@ -16,17 +16,17 @@ type QuickGradingState =
   | { mode: 'idle' }
   | {
       mode: 'quick-grading';
-      draftScoresByAttemptId: ImmutableMap<string, string>;
+      draftGradesByAttemptId: ImmutableMap<string, string>;
     };
 
 type QuickGradingEvent =
   | { type: 'start' }
   | { type: 'exit' }
-  | { type: 'changeDraftScore'; attempt: CourseAttempt; score: string }
-  | { type: 'resetDraftScore'; attempt: CourseAttempt }
+  | { type: 'changeDraftGrade'; attempt: CourseAttempt; grade: string }
+  | { type: 'resetDraftGrade'; attempt: CourseAttempt }
   | { type: 'saved' };
 
-const EMPTY_DRAFT_SCORES = ImmutableMap<string, string>();
+const EMPTY_DRAFT_GRADES = ImmutableMap<string, string>();
 const INITIAL_QUICK_GRADING_STATE: QuickGradingState = { mode: 'idle' };
 
 function quickGradingReducer(
@@ -37,35 +37,35 @@ function quickGradingReducer(
     case 'start':
       return {
         mode: 'quick-grading',
-        draftScoresByAttemptId: EMPTY_DRAFT_SCORES,
+        draftGradesByAttemptId: EMPTY_DRAFT_GRADES,
       };
 
     case 'exit':
     case 'saved':
       return { mode: 'idle' };
 
-    case 'changeDraftScore': {
+    case 'changeDraftGrade': {
       if (state.mode !== 'quick-grading') {
         return state;
       }
 
       return {
         mode: 'quick-grading',
-        draftScoresByAttemptId:
-          event.score === scoreValue(event.attempt)
-            ? state.draftScoresByAttemptId.remove(event.attempt.id)
-            : state.draftScoresByAttemptId.set(event.attempt.id, event.score),
+        draftGradesByAttemptId:
+          event.grade === savedGradeText(event.attempt)
+            ? state.draftGradesByAttemptId.remove(event.attempt.id)
+            : state.draftGradesByAttemptId.set(event.attempt.id, event.grade),
       };
     }
 
-    case 'resetDraftScore': {
+    case 'resetDraftGrade': {
       if (state.mode !== 'quick-grading') {
         return state;
       }
 
       return {
         mode: 'quick-grading',
-        draftScoresByAttemptId: state.draftScoresByAttemptId.remove(
+        draftGradesByAttemptId: state.draftGradesByAttemptId.remove(
           event.attempt.id
         ),
       };
@@ -79,9 +79,9 @@ export function useCourseAttemptsQuickGradingState() {
     INITIAL_QUICK_GRADING_STATE
   );
   const quickGrading = state.mode === 'quick-grading';
-  const draftScoresByAttemptId = quickGrading
-    ? state.draftScoresByAttemptId
-    : EMPTY_DRAFT_SCORES;
+  const draftGradesByAttemptId = quickGrading
+    ? state.draftGradesByAttemptId
+    : EMPTY_DRAFT_GRADES;
 
   const startQuickGrading = useCallback(() => {
     dispatch({ type: 'start' });
@@ -91,15 +91,15 @@ export function useCourseAttemptsQuickGradingState() {
     dispatch({ type: 'exit' });
   }, []);
 
-  const changeDraftScore = useCallback(
-    (attempt: CourseAttempt, score: string) => {
-      dispatch({ type: 'changeDraftScore', attempt, score });
+  const changeDraftGrade = useCallback(
+    (attempt: CourseAttempt, grade: string) => {
+      dispatch({ type: 'changeDraftGrade', attempt, grade });
     },
     []
   );
 
-  const resetDraftScore = useCallback((attempt: CourseAttempt) => {
-    dispatch({ type: 'resetDraftScore', attempt });
+  const resetDraftGrade = useCallback((attempt: CourseAttempt) => {
+    dispatch({ type: 'resetDraftGrade', attempt });
   }, []);
 
   const markQuickGradesSaved = useCallback(() => {
@@ -108,11 +108,11 @@ export function useCourseAttemptsQuickGradingState() {
 
   return {
     quickGrading,
-    draftScoresByAttemptId,
+    draftGradesByAttemptId,
     startQuickGrading,
     exitQuickGrading,
-    changeDraftScore,
-    resetDraftScore,
+    changeDraftGrade,
+    resetDraftGrade,
     markQuickGradesSaved,
   };
 }
@@ -133,25 +133,25 @@ export function useCourseAttemptsGrading({
   const saveQuickGradesMutation = useSaveQuickGradesMutation();
   const {
     quickGrading,
-    draftScoresByAttemptId,
+    draftGradesByAttemptId,
     startQuickGrading: startQuickGradingState,
     exitQuickGrading,
-    changeDraftScore,
-    resetDraftScore,
+    changeDraftGrade,
+    resetDraftGrade,
     markQuickGradesSaved,
   } = quickGradingState;
 
-  const hasDraftChanges = !draftScoresByAttemptId.isEmpty();
+  const hasDraftChanges = !draftGradesByAttemptId.isEmpty();
   const hasDraftValidationErrors = useMemo(
     () =>
-      draftScoresByAttemptId.some((draftScore, attemptId) => {
+      draftGradesByAttemptId.some((draftGrade, attemptId) => {
         const attempt = attemptById.get(attemptId);
 
         return attempt
-          ? Boolean(scoreDraftValidationError(attempt, draftScore))
+          ? Boolean(getQuickGradeDraftError(attempt, draftGrade))
           : false;
       }),
-    [attemptById, draftScoresByAttemptId]
+    [attemptById, draftGradesByAttemptId]
   );
 
   const startQuickGrading = useCallback(() => {
@@ -159,10 +159,10 @@ export function useCourseAttemptsGrading({
     clearSelection();
   }, [clearSelection, startQuickGradingState]);
 
-  const getDraftScore = useCallback(
+  const getDraftGrade = useCallback(
     (attempt: CourseAttempt) =>
-      draftScoresByAttemptId.get(attempt.id) ?? scoreValue(attempt),
-    [draftScoresByAttemptId]
+      draftGradesByAttemptId.get(attempt.id) ?? savedGradeText(attempt),
+    [draftGradesByAttemptId]
   );
 
   const saveSelectedMaxGrade = useCallback(async () => {
@@ -170,7 +170,7 @@ export function useCourseAttemptsGrading({
       .filter(isAttemptSelectable)
       .map((attempt) => ({
         attemptId: attempt.id,
-        score: attempt.task.maxScore,
+        grade: attempt.task.maxGrade,
       }));
 
     if (updates.length === 0) {
@@ -189,13 +189,13 @@ export function useCourseAttemptsGrading({
       return;
     }
 
-    const updates = draftScoresByAttemptId
+    const updates = draftGradesByAttemptId
       .entrySeq()
-      .map(([attemptId, draftScore]) =>
+      .map(([attemptId, draftGrade]) =>
         createQuickGradeUpdate({
           attemptId,
           attempt: attemptById.get(attemptId),
-          draftScore,
+          draft: draftGrade,
         })
       )
       .filter((update): update is QuickGradeUpdate => update !== null)
@@ -213,7 +213,7 @@ export function useCourseAttemptsGrading({
   }, [
     attemptById,
     courseId,
-    draftScoresByAttemptId,
+    draftGradesByAttemptId,
     hasDraftValidationErrors,
     markQuickGradesSaved,
     saveQuickGradesMutation,
@@ -224,9 +224,9 @@ export function useCourseAttemptsGrading({
     hasDraftChanges,
     hasDraftValidationErrors,
     savePending: saveQuickGradesMutation.isPending,
-    getDraftScore,
-    changeDraftScore,
-    resetDraftScore,
+    getDraftGrade,
+    changeDraftGrade,
+    resetDraftGrade,
     startQuickGrading,
     exitQuickGrading,
     saveSelectedMaxGrade,
