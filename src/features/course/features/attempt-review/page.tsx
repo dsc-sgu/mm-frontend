@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import type { CodeViewHandle } from '@pierre/diffs/react';
 import { useQuery } from '@tanstack/react-query';
 
 import { sessionOptions } from '@/features/auth/api/queries';
@@ -9,7 +8,7 @@ import { canReplyToAttempt } from './model/permissions';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import type { AttemptReviewCodeViewAnnotation } from './model/code-view-annotation';
+import type { AttemptReviewCodeViewHandle } from './model/code-view-annotation';
 import { prepareLineCommentsForSave } from './model/comment-save';
 import { AttemptReviewDiff } from './ui/diff';
 import {
@@ -121,10 +120,7 @@ function AttemptReviewPageLoaded({
     getStoredDiffViewMode
   );
   const [unsentCommentText] = useState(createUnsentCommentTextStore);
-  const diffViewerRef = useRef<CodeViewHandle<
-    AttemptReviewCodeViewAnnotation,
-    undefined
-  > | null>(null);
+  const diffViewerRef = useRef<AttemptReviewCodeViewHandle | null>(null);
   const isDesktopReviewLayout = useMediaQuery('(min-width: 1024px)');
   const currentReviewer = useMemo(() => {
     if (sessionData?.status !== 'authorized') {
@@ -149,9 +145,7 @@ function AttemptReviewPageLoaded({
     resetToReview,
   } = useAttemptReviewDraft(review);
   const handleDiffViewerChange = useCallback(
-    (
-      viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation, undefined> | null
-    ) => {
+    (viewer: AttemptReviewCodeViewHandle | null) => {
       diffViewerRef.current = viewer;
     },
     []

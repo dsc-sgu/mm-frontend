@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import type { CodeViewOptions } from '@pierre/diffs';
-import { CodeView, type CodeViewHandle } from '@pierre/diffs/react';
+import { CodeView } from '@pierre/diffs/react';
 import { AttemptReviewCodeViewHeader } from './code-view-header';
 import {
   RenderedMarkdownDiffView,
@@ -11,7 +10,11 @@ import {
   createAttemptReviewCodeViewItems,
   groupAttemptReviewCommentsByFile,
 } from '@/features/course/features/attempt-review/model/code-view-item';
-import type { AttemptReviewCodeViewAnnotation } from '@/features/course/features/attempt-review/model/code-view-annotation';
+import type {
+  AttemptReviewCodeViewAnnotation,
+  AttemptReviewCodeViewHandle,
+  AttemptReviewCodeViewOptions,
+} from '@/features/course/features/attempt-review/model/code-view-annotation';
 import { getLineCommentStatus } from '@/features/course/features/attempt-review/model/comment-lifecycle';
 import {
   addLineComment,
@@ -60,9 +63,7 @@ type AttemptReviewDiffProps = {
     html: string
   ) => Promise<AttemptReviewLineCommentReply>;
   onReplyDelete?: (commentId: string, replyId: string) => Promise<void>;
-  onViewerChange?: (
-    viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation, undefined> | null
-  ) => void;
+  onViewerChange?: (viewer: AttemptReviewCodeViewHandle | null) => void;
 };
 
 const CODE_VIEW_LAYOUT = {
@@ -113,10 +114,7 @@ export function AttemptReviewDiff({
 }: AttemptReviewDiffProps) {
   const htmlThemeType = useHtmlThemeType();
   const codeViewContainerRef = useRef<HTMLDivElement | null>(null);
-  const codeViewHandleRef = useRef<CodeViewHandle<
-    AttemptReviewCodeViewAnnotation,
-    undefined
-  > | null>(null);
+  const codeViewHandleRef = useRef<AttemptReviewCodeViewHandle | null>(null);
   const [collapsedFilePaths, setCollapsedFilePaths] = useState<Set<string>>(
     () => new Set()
   );
@@ -147,9 +145,7 @@ export function AttemptReviewDiff({
     [collapsedFilePaths, commentsByFile, files, renderedFilePaths]
   );
 
-  const options = useMemo<
-    CodeViewOptions<AttemptReviewCodeViewAnnotation, undefined>
-  >(
+  const options = useMemo<AttemptReviewCodeViewOptions>(
     () => ({
       layout: CODE_VIEW_LAYOUT,
       itemMetrics: CODE_VIEW_ITEM_METRICS,
@@ -183,9 +179,7 @@ export function AttemptReviewDiff({
   );
 
   const handleViewerChange = useCallback(
-    (
-      viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation, undefined> | null
-    ) => {
+    (viewer: AttemptReviewCodeViewHandle | null) => {
       codeViewHandleRef.current = viewer;
       onViewerChange?.(viewer);
     },
