@@ -42,6 +42,14 @@
 5. Неожиданные HTTP-ответы ДОЛЖНЫ отклонять Promise типизированным HTTP-отказом.
 6. Network-, CORS-, request-construction-, body-reading- и body-decoding-отказы ДОЛЖНЫ нормализоваться только на уровне операции, выполняющей соответствующее внешнее действие.
 7. Прерывание через переданный `AbortSignal` ДОЛЖНО оставаться отменой и НЕ ДОЛЖНО преобразовываться в network-, HTTP- или domain-отказ.
+8. Application HTTP-операция ДОЛЖНА собирать URL запроса к backend API через `apiPath` из `src/app/remote-data/api-path.ts` независимо от длины пути, включая короткие статические пути.
+9. Операция ДОЛЖНА передавать в `apiPath` сырые, предварительно не закодированные сегменты. Ручной `encodeURIComponent`, template strings и конкатенация API-пути в операциях НЕ ДОЛЖНЫ использоваться.
+10. Описание endpoint и порядок его сегментов ДОЛЖНЫ оставаться в операции feature-владельца. Глобальный реестр endpoints НЕ ДОЛЖЕН создаваться.
+11. MSW route patterns и ожидаемые адреса в HTTP contract tests ДОЛЖНЫ записываться независимо от `apiPath`, чтобы тест мог обнаружить ошибку production-сборки URL.
+
+```ts
+url: apiPath('courses', courseId, 'repositories', studentUsername),
+```
 
 ## Проверка внешних данных
 
@@ -64,7 +72,7 @@
 
 ```ts
 const dto = await requestJson({
-  url: '/api/courses/42',
+  url: apiPath('courses', courseId),
   schema: CourseDtoSchema,
 });
 ```

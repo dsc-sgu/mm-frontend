@@ -1,3 +1,4 @@
+import { apiPath } from '@/app/remote-data/api-path';
 import {
   jsonBody,
   runHttpOperation,
@@ -18,7 +19,7 @@ export function register(input: RegisterInput): Promise<void> {
   return runHttpOperation(
     {
       name: 'register',
-      url: '/api/v1/auth/register',
+      url: apiPath('auth', 'register'),
       method: 'POST',
       ...jsonBody(input),
     },

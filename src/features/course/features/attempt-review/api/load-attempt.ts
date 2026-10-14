@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { apiPath } from '@/app/remote-data/api-path';
 import {
   readJson,
   runHttpOperation,
@@ -41,7 +42,15 @@ export function loadAttempt(
   return runHttpOperation<LoadAttemptResult>(
     {
       name: 'load-attempt',
-      url: `/api/v1/courses/${encodeURIComponent(courseId)}/tasks/${encodeURIComponent(taskId)}/attempts/${encodeURIComponent(studentUsername)}/${attemptNumber}`,
+      url: apiPath(
+        'courses',
+        courseId,
+        'tasks',
+        taskId,
+        'attempts',
+        studentUsername,
+        attemptNumber
+      ),
       credentials: 'include',
       signal,
     },

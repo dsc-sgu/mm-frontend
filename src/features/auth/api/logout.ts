@@ -1,10 +1,11 @@
+import { apiPath } from '@/app/remote-data/api-path';
 import { runHttpOperation, unexpectedHttpStatus } from '@/app/remote-data/http';
 
 export function logout(): Promise<void> {
   return runHttpOperation(
     {
       name: 'logout',
-      url: '/api/v1/auth/logout',
+      url: apiPath('auth', 'logout'),
       method: 'POST',
       credentials: 'include',
     },

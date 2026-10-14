@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { apiPath } from '@/app/remote-data/api-path';
 import {
   readJson,
   runHttpOperation,
@@ -31,7 +32,7 @@ export function loadRepository(
   return runHttpOperation<LoadRepositoryResult>(
     {
       name: 'load-repository',
-      url: `/api/v1/courses/${encodeURIComponent(courseId)}/repositories/${encodeURIComponent(studentUsername)}`,
+      url: apiPath('courses', courseId, 'repositories', studentUsername),
       credentials: 'include',
       signal,
     },

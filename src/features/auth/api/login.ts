@@ -1,3 +1,4 @@
+import { apiPath } from '@/app/remote-data/api-path';
 import {
   jsonBody,
   runHttpOperation,
@@ -17,7 +18,7 @@ export function login(input: LoginInput): Promise<LoginOutcome> {
   return runHttpOperation(
     {
       name: 'login',
-      url: '/api/v1/auth/login',
+      url: apiPath('auth', 'login'),
       method: 'POST',
       credentials: 'include',
       ...jsonBody(input),
