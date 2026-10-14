@@ -61,7 +61,7 @@ type AttemptReviewDiffProps = {
   ) => Promise<AttemptReviewLineCommentReply>;
   onReplyDelete?: (commentId: string, replyId: string) => Promise<void>;
   onViewerChange?: (
-    viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation> | null
+    viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation, undefined> | null
   ) => void;
 };
 
@@ -113,8 +113,10 @@ export function AttemptReviewDiff({
 }: AttemptReviewDiffProps) {
   const htmlThemeType = useHtmlThemeType();
   const codeViewContainerRef = useRef<HTMLDivElement | null>(null);
-  const codeViewHandleRef =
-    useRef<CodeViewHandle<AttemptReviewCodeViewAnnotation> | null>(null);
+  const codeViewHandleRef = useRef<CodeViewHandle<
+    AttemptReviewCodeViewAnnotation,
+    undefined
+  > | null>(null);
   const [collapsedFilePaths, setCollapsedFilePaths] = useState<Set<string>>(
     () => new Set()
   );
@@ -145,7 +147,9 @@ export function AttemptReviewDiff({
     [collapsedFilePaths, commentsByFile, files, renderedFilePaths]
   );
 
-  const options = useMemo<CodeViewOptions<AttemptReviewCodeViewAnnotation>>(
+  const options = useMemo<
+    CodeViewOptions<AttemptReviewCodeViewAnnotation, undefined>
+  >(
     () => ({
       layout: CODE_VIEW_LAYOUT,
       itemMetrics: CODE_VIEW_ITEM_METRICS,
@@ -179,7 +183,9 @@ export function AttemptReviewDiff({
   );
 
   const handleViewerChange = useCallback(
-    (viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation> | null) => {
+    (
+      viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation, undefined> | null
+    ) => {
       codeViewHandleRef.current = viewer;
       onViewerChange?.(viewer);
     },

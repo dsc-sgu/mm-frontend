@@ -4,7 +4,10 @@ import type { CodeViewHandle } from '@pierre/diffs/react';
 import type { AttemptReviewCodeViewAnnotation } from '@/features/course/features/attempt-review/model/code-view-annotation';
 
 type AttemptReviewFileScrollOptions = {
-  diffViewerRef: RefObject<CodeViewHandle<AttemptReviewCodeViewAnnotation> | null>;
+  diffViewerRef: RefObject<CodeViewHandle<
+    AttemptReviewCodeViewAnnotation,
+    undefined
+  > | null>;
   isDesktopReviewLayout: boolean;
   onCloseMobileFileTree: () => void;
 };

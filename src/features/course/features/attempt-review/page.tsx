@@ -121,8 +121,10 @@ function AttemptReviewPageLoaded({
     getStoredDiffViewMode
   );
   const [unsentCommentText] = useState(createUnsentCommentTextStore);
-  const diffViewerRef =
-    useRef<CodeViewHandle<AttemptReviewCodeViewAnnotation> | null>(null);
+  const diffViewerRef = useRef<CodeViewHandle<
+    AttemptReviewCodeViewAnnotation,
+    undefined
+  > | null>(null);
   const isDesktopReviewLayout = useMediaQuery('(min-width: 1024px)');
   const currentReviewer = useMemo(() => {
     if (sessionData?.status !== 'authorized') {
@@ -147,7 +149,9 @@ function AttemptReviewPageLoaded({
     resetToReview,
   } = useAttemptReviewDraft(review);
   const handleDiffViewerChange = useCallback(
-    (viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation> | null) => {
+    (
+      viewer: CodeViewHandle<AttemptReviewCodeViewAnnotation, undefined> | null
+    ) => {
       diffViewerRef.current = viewer;
     },
     []
