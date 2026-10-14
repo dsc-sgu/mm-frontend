@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { apiPath } from '@/app/remote-data/api-path';
 import {
   readJson,
   runHttpOperation,
@@ -28,7 +29,7 @@ export function checkSession(signal?: AbortSignal): Promise<SessionOutcome> {
   return runHttpOperation(
     {
       name: 'check-session',
-      url: '/api/v1/auth/session',
+      url: apiPath('auth', 'session'),
       credentials: 'include',
       signal,
     },

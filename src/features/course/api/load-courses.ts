@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { apiPath } from '@/app/remote-data/api-path';
 import {
   readJson,
   runHttpOperation,
@@ -39,7 +40,7 @@ export function loadCourses(signal?: AbortSignal): Promise<CourseSummary[]> {
   return runHttpOperation(
     {
       name: 'load-courses',
-      url: '/api/v1/courses',
+      url: apiPath('courses'),
       credentials: 'include',
       signal,
     },

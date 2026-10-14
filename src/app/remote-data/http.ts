@@ -76,7 +76,7 @@ export type HttpResponseContext = {
  * @example
  * ```ts
  * return runHttpOperation(
- *   { name: 'save-page', url: '/api/v1/page', method: 'PUT', ...jsonBody(page) },
+ *   { name: 'save-page', url: apiPath('page'), method: 'PUT', ...jsonBody(page) },
  *   async (context) => {
  *     if (context.response.status === 409) {
  *       const conflict = await readJson(context, ConflictDtoSchema);
