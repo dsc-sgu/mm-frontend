@@ -335,26 +335,13 @@ function getReviewSeries(params: LegacyParams): ReviewSeries {
     const submittedAt = new Date(
       baseSubmittedAt + index * 36 * 60 * 60 * 1000
     ).toISOString();
-    const savedGrade =
-      attemptNumber === params.attemptNumber && listAttempt?.grade
-        ? listAttempt.grade
-        : attemptNumber < params.attemptNumber
-          ? {
-              value: v.parse(
-                GradeSchema,
-                Number(
-                  (
-                    gradeToNumber(task.maxGrade) *
-                    (0.55 + index * 0.13)
-                  ).toFixed(1)
-                )
-              ),
-              gradedAt: new Date(
-                Date.parse(submittedAt) + 8 * 60 * 60 * 1000
-              ).toISOString(),
-              gradedBy: 'Елизавета Громова',
-            }
-          : null;
+    const savedGrade = seedSavedGrade({
+      attemptNumber,
+      submittedAt,
+      maxGrade: task.maxGrade,
+      reviewedAttemptNumber: params.attemptNumber,
+      reviewedGrade: listAttempt?.grade ?? null,
+    });
 
     return {
       attemptNumber,
@@ -370,6 +357,41 @@ function getReviewSeries(params: LegacyParams): ReviewSeries {
 
   reviewSeriesByKey.set(key, series);
   return series;
+}
+
+// The reviewed attempt keeps its list grade, earlier attempts get a seeded
+// grade, and later attempts are ungraded.
+function seedSavedGrade({
+  attemptNumber,
+  submittedAt,
+  maxGrade,
+  reviewedAttemptNumber,
+  reviewedGrade,
+}: {
+  attemptNumber: AttemptNumber;
+  submittedAt: string;
+  maxGrade: AttemptReviewTask['maxGrade'];
+  reviewedAttemptNumber: AttemptNumber;
+  reviewedGrade: AttemptReviewGrade | null;
+}): AttemptReviewGrade | null {
+  if (attemptNumber === reviewedAttemptNumber && reviewedGrade) {
+    return reviewedGrade;
+  }
+  if (attemptNumber >= reviewedAttemptNumber) {
+    return null;
+  }
+
+  const index = attemptNumber - 1;
+  return {
+    value: v.parse(
+      GradeSchema,
+      Number((gradeToNumber(maxGrade) * (0.55 + index * 0.13)).toFixed(1))
+    ),
+    gradedAt: new Date(
+      Date.parse(submittedAt) + 8 * 60 * 60 * 1000
+    ).toISOString(),
+    gradedBy: 'Елизавета Громова',
+  };
 }
 
 function seriesKey({ courseId, taskId, studentId }: LegacyParams): string {
@@ -440,12 +462,7 @@ function buildChangedFiles(
         return null;
       }
 
-      const status: AttemptReviewFileStatus =
-        !(path in previousFiles) && path in currentFiles
-          ? 'added'
-          : path in previousFiles && !(path in currentFiles)
-            ? 'deleted'
-            : 'changed';
+      const status = fileStatus(path in previousFiles, path in currentFiles);
       const diff = parseDiffFromFile(
         {
           name: path,
@@ -461,12 +478,7 @@ function buildChangedFiles(
       );
       const typedDiff: FileDiffMetadata = {
         ...diff,
-        type:
-          status === 'added'
-            ? 'new'
-            : status === 'deleted'
-              ? 'deleted'
-              : 'change',
+        type: diffTypes[status],
       };
 
       return {
@@ -500,6 +512,25 @@ function toHistoryItem(
     commentCount: attempt.lineComments.length,
   };
 }
+
+function fileStatus(
+  inPrevious: boolean,
+  inCurrent: boolean
+): AttemptReviewFileStatus {
+  if (!inPrevious && inCurrent) {
+    return 'added';
+  }
+  if (inPrevious && !inCurrent) {
+    return 'deleted';
+  }
+  return 'changed';
+}
+
+const diffTypes: Record<AttemptReviewFileStatus, FileDiffMetadata['type']> = {
+  added: 'new',
+  deleted: 'deleted',
+  changed: 'change',
+};
 
 function countAddedLines(diff: FileDiffMetadata): number {
   return diff.hunks.reduce((sum, hunk) => sum + hunk.additionLines, 0);

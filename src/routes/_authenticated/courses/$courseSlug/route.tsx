@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type QueryClient } from '@tanstack/react-query';
 import {
   Outlet,
   createFileRoute,
@@ -27,21 +27,11 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
   async beforeLoad({ context, params, cause }) {
     const courseSlug = requireCourseSlug(params.courseSlug);
     const options = courseContextOptions(context.session.userId, courseSlug);
-    const cached = context.queryClient.getQueryData(options.queryKey);
-    const query = context.queryClient.getQueryCache().find({
-      queryKey: options.queryKey,
-      exact: true,
-    });
-    const result =
-      cached?.status === 'found' && query?.state.status === 'success'
-        ? // Only an observed, exact identity/locator can be a reconciliation.
-          cause === 'stay' && query.isActive()
-          ? cached
-          : await context.queryClient.ensureQueryData({
-              ...options,
-              revalidateIfStale: true,
-            })
-        : await context.queryClient.fetchQuery(options);
+    const result = await loadCourseContext(
+      context.queryClient,
+      options,
+      cause === 'stay'
+    );
 
     if (result.status !== 'found') {
       throw notFound({ data: 'course-lookup' });
@@ -66,6 +56,26 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug')({
   },
   component: RouteComponent,
 });
+
+async function loadCourseContext(
+  queryClient: QueryClient,
+  options: ReturnType<typeof courseContextOptions>,
+  stay: boolean
+) {
+  const cached = queryClient.getQueryData(options.queryKey);
+  const query = queryClient.getQueryCache().find({
+    queryKey: options.queryKey,
+    exact: true,
+  });
+  if (cached?.status !== 'found' || query?.state.status !== 'success') {
+    return queryClient.fetchQuery(options);
+  }
+  // Only an observed, exact identity/locator can be a reconciliation.
+  if (stay && query.isActive()) {
+    return cached;
+  }
+  return queryClient.ensureQueryData({ ...options, revalidateIfStale: true });
+}
 
 function RouteComponent() {
   const matches = useMatches();

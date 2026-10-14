@@ -382,6 +382,8 @@ The project should enforce type aliases over interfaces:
 '@typescript-eslint/consistent-type-definitions': ['error', 'type']
 ```
 
+Nested ternaries are forbidden by `'no-nested-ternary': 'error'`. Rewrite a chain as early returns or a `switch` in a small function, an explicit map, a `cva` variant, or a component/function that returns the markup of each mode.
+
 ## Agent skills
 
 ### Issue tracker

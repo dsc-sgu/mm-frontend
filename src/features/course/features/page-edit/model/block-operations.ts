@@ -4,6 +4,7 @@ import { KEYS, type Path, type SlateEditor, type Value } from 'platejs';
 import {
   COURSE_ASSIGNMENT_NODE,
   COURSE_FILES_NODE,
+  COURSE_HEADING_NODES,
   COURSE_IMAGE_NODE,
   COURSE_SPOILER_TITLE_NODE,
   type CoursePlateElement,
@@ -264,8 +265,7 @@ export function createEmptyPlateBlock(
     case 'heading':
       return {
         id: createId('heading'),
-        type:
-          input.level === 1 ? KEYS.h1 : input.level === 2 ? KEYS.h2 : KEYS.h3,
+        type: COURSE_HEADING_NODES[input.level],
         children: [createEmptyText()],
       };
     case 'quote':

@@ -5,15 +5,21 @@ type AttemptReviewCommentPendingNoticeProps = {
   status: AttemptReviewLineComment['status'];
 };
 
+function pendingLabel(status: AttemptReviewLineComment['status']) {
+  switch (status) {
+    case 'pending-delete':
+      return 'Будет удалён после сохранения отзыва';
+    case 'pending-update':
+      return 'Сохраните отзыв, чтобы применить изменения';
+    default:
+      return 'Сохраните отзыв, чтобы комментарий стал виден';
+  }
+}
+
 export function AttemptReviewCommentPendingNotice({
   status,
 }: AttemptReviewCommentPendingNoticeProps) {
-  const label =
-    status === 'pending-delete'
-      ? 'Будет удалён после сохранения отзыва'
-      : status === 'pending-update'
-        ? 'Сохраните отзыв, чтобы применить изменения'
-        : 'Сохраните отзыв, чтобы комментарий стал виден';
+  const label = pendingLabel(status);
 
   return (
     <span

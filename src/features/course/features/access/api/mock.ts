@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import * as v from 'valibot';
-import { mockBackend } from '@/app/mock-backend/state';
+import { mockBackend, type MockCourse } from '@/app/mock-backend/state';
 import {
   CourseIdSchema,
   CourseSlugSchema,
@@ -11,6 +11,19 @@ import {
 // GET by locator resolves UUID as CourseId, otherwise a non-UUID CourseSlug.
 // Both access denials use 404 with a validated discriminator, but no metadata.
 // An unauthenticated request returns 401, an undeclared operation failure.
+function findCourse(courses: MockCourse[], locator: unknown) {
+  const parsedId = v.safeParse(CourseIdSchema, locator);
+  if (parsedId.success) {
+    const courseId = parsedId.output.toLowerCase();
+    return courses.find((course) => course.id.toLowerCase() === courseId);
+  }
+  const slug = v.safeParse(CourseSlugSchema, locator);
+  if (slug.success) {
+    return courses.find((course) => course.slug === slug.output);
+  }
+  return undefined;
+}
+
 export const courseContextHandlers = [
   http.get('/api/v1/courses/:locator', ({ params }) => {
     const { users, session, courses, memberships } = mockBackend.state;
@@ -18,16 +31,7 @@ export const courseContextHandlers = [
       return new HttpResponse(null, { status: 401 });
     }
 
-    const parsedId = v.safeParse(CourseIdSchema, params.locator);
-    const courseId = parsedId.success ? parsedId.output.toLowerCase() : null;
-    const slug = parsedId.success
-      ? null
-      : v.safeParse(CourseSlugSchema, params.locator);
-    const course = parsedId.success
-      ? courses.find((course) => course.id.toLowerCase() === courseId)
-      : slug?.success
-        ? courses.find((course) => course.slug === slug.output)
-        : undefined;
+    const course = findCourse(courses, params.locator);
     if (!course) {
       return HttpResponse.json({ status: 'course-not-found' }, { status: 404 });
     }

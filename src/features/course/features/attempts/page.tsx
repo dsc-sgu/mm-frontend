@@ -100,6 +100,86 @@ export function CourseAttemptsPage({
     onResetFilters: filters.resetFilters,
   };
 
+  function renderAttempts() {
+    switch (pageMode) {
+      case 'loading':
+        return <AttemptsSkeleton />;
+      case 'empty':
+        return <AttemptsEmpty />;
+      case 'quick-grading':
+        return (
+          <VirtualizedAttemptsList
+            attempts={attempts}
+            renderAttempt={(attempt) => (
+              <AttemptCard
+                mode="quick-grading"
+                attempt={attempt}
+                draftGrade={grading.getDraftGrade(attempt)}
+                onDraftGradeChange={(grade) =>
+                  grading.changeDraftGrade(attempt, grade)
+                }
+                onDraftGradeReset={() => grading.resetDraftGrade(attempt)}
+              />
+            )}
+          />
+        );
+      case 'selection':
+      case 'idle':
+        return (
+          <VirtualizedAttemptsList
+            attempts={attempts}
+            renderAttempt={(attempt) => (
+              <AttemptCard
+                mode="default"
+                attempt={attempt}
+                courseSlug={courseSlug}
+                selected={selection.isAttemptSelected(attempt)}
+                onSelectedChange={(checked) =>
+                  selection.setAttemptSelected(attempt, checked)
+                }
+              />
+            )}
+          />
+        );
+    }
+  }
+
+  function renderBottomActions() {
+    switch (pageMode) {
+      case 'quick-grading':
+        return (
+          <QuickGradingBottomActions
+            hasDraftChanges={grading.hasDraftChanges}
+            hasDraftValidationErrors={grading.hasDraftValidationErrors}
+            savePending={grading.savePending}
+            onExitQuickGrading={grading.exitQuickGrading}
+            onSaveQuickGrades={grading.saveQuickGrades}
+          />
+        );
+      case 'selection':
+        return (
+          <SelectionBottomActions
+            selectedCount={selectedAttemptsCount}
+            savePending={grading.savePending}
+            onClearSelection={selection.clearSelection}
+            onSaveSelectedMaxGrade={grading.saveSelectedMaxGrade}
+          />
+        );
+      case 'loading':
+      case 'empty':
+      case 'idle':
+        return (
+          <IdleBottomActions
+            hasAttempts={attempts.length > 0}
+            hasSelectableAttempts={hasSelectableAttempts}
+            onSelectAll={selection.selectAll}
+            onStartQuickGradingAll={grading.startQuickGrading}
+            onOpenFilters={() => setFiltersDrawerOpen(true)}
+          />
+        );
+    }
+  }
+
   return (
     <main
       className={cn(
@@ -116,61 +196,7 @@ export function CourseAttemptsPage({
         <AttemptsFilterSidebar panel={filtersPanel} />
 
         <section className="min-w-0 overflow-hidden pb-44 sm:pb-36">
-          {pageMode === 'loading' ? (
-            <div className="space-y-3" aria-busy="true">
-              {[0, 1, 2].map((item) => (
-                <div
-                  key={item}
-                  className={cn(
-                    'h-44 animate-pulse rounded-3xl border border-border',
-                    'bg-muted'
-                  )}
-                />
-              ))}
-            </div>
-          ) : pageMode === 'empty' ? (
-            <div
-              className={cn(
-                'rounded-3xl border border-dashed border-border bg-card p-10',
-                'text-center'
-              )}
-            >
-              <h2 className="text-xl font-semibold">Попытки не найдены</h2>
-              <p className="mt-2 text-muted-foreground">
-                Измените фильтры и нажмите «Применить».
-              </p>
-            </div>
-          ) : pageMode === 'quick-grading' ? (
-            <VirtualizedAttemptsList
-              attempts={attempts}
-              renderAttempt={(attempt) => (
-                <AttemptCard
-                  mode="quick-grading"
-                  attempt={attempt}
-                  draftGrade={grading.getDraftGrade(attempt)}
-                  onDraftGradeChange={(grade) =>
-                    grading.changeDraftGrade(attempt, grade)
-                  }
-                  onDraftGradeReset={() => grading.resetDraftGrade(attempt)}
-                />
-              )}
-            />
-          ) : (
-            <VirtualizedAttemptsList
-              attempts={attempts}
-              renderAttempt={(attempt) => (
-                <AttemptCard
-                  mode="default"
-                  attempt={attempt}
-                  courseSlug={courseSlug}
-                  selected={selection.isAttemptSelected(attempt)}
-                  onSelectedChange={(checked) =>
-                    selection.setAttemptSelected(attempt, checked)
-                  }
-                />
-              )}
-            />
-          )}
+          {renderAttempts()}
 
           <div className="lg:hidden">
             <Drawer
@@ -223,34 +249,41 @@ export function CourseAttemptsPage({
             </Drawer>
           </div>
 
-          <BottomActionBar>
-            {pageMode === 'quick-grading' ? (
-              <QuickGradingBottomActions
-                hasDraftChanges={grading.hasDraftChanges}
-                hasDraftValidationErrors={grading.hasDraftValidationErrors}
-                savePending={grading.savePending}
-                onExitQuickGrading={grading.exitQuickGrading}
-                onSaveQuickGrades={grading.saveQuickGrades}
-              />
-            ) : pageMode === 'selection' ? (
-              <SelectionBottomActions
-                selectedCount={selectedAttemptsCount}
-                savePending={grading.savePending}
-                onClearSelection={selection.clearSelection}
-                onSaveSelectedMaxGrade={grading.saveSelectedMaxGrade}
-              />
-            ) : (
-              <IdleBottomActions
-                hasAttempts={attempts.length > 0}
-                hasSelectableAttempts={hasSelectableAttempts}
-                onSelectAll={selection.selectAll}
-                onStartQuickGradingAll={grading.startQuickGrading}
-                onOpenFilters={() => setFiltersDrawerOpen(true)}
-              />
-            )}
-          </BottomActionBar>
+          <BottomActionBar>{renderBottomActions()}</BottomActionBar>
         </section>
       </div>
     </main>
+  );
+}
+
+function AttemptsSkeleton() {
+  return (
+    <div className="space-y-3" aria-busy="true">
+      {[0, 1, 2].map((item) => (
+        <div
+          key={item}
+          className={cn(
+            'h-44 animate-pulse rounded-3xl border border-border',
+            'bg-muted'
+          )}
+        />
+      ))}
+    </div>
+  );
+}
+
+function AttemptsEmpty() {
+  return (
+    <div
+      className={cn(
+        'rounded-3xl border border-dashed border-border bg-card p-10',
+        'text-center'
+      )}
+    >
+      <h2 className="text-xl font-semibold">Попытки не найдены</h2>
+      <p className="mt-2 text-muted-foreground">
+        Измените фильтры и нажмите «Применить».
+      </p>
+    </div>
   );
 }

@@ -62,6 +62,19 @@ export function buildRenderedMarkdownDiff(
   return diff;
 }
 
+function blockChange(change: {
+  added: boolean;
+  removed: boolean;
+}): RenderedMarkdownBlockChange {
+  if (change.added) {
+    return 'added';
+  }
+  if (change.removed) {
+    return 'deleted';
+  }
+  return 'unchanged';
+}
+
 function renderDiff(oldText: string, newText: string): RenderedMarkdownDiff {
   try {
     const changes = diffArrays(splitBlocks(oldText), splitBlocks(newText), {
@@ -72,11 +85,7 @@ function renderDiff(oldText: string, newText: string): RenderedMarkdownDiff {
       status: 'rendered',
       blocks: changes.flatMap((change) =>
         change.value.map((block) => ({
-          change: change.added
-            ? 'added'
-            : change.removed
-              ? 'deleted'
-              : 'unchanged',
+          change: blockChange(change),
           html: block.html,
         }))
       ),

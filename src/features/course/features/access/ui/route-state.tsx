@@ -19,6 +19,13 @@ import { useRequestedCourseSlug } from '@/features/course/routing/requested-slug
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 
+const titles: Record<CourseAccessRouteState, string> = {
+  'check-failed': 'Не удалось проверить доступ',
+  forbidden: 'Нет доступа',
+  'course-not-found': 'Страница не найдена',
+  'resource-not-found': 'Страница не найдена',
+};
+
 export function CourseContextLoading() {
   return <main className="flex-1" aria-busy="true" />;
 }
@@ -43,13 +50,7 @@ export function CourseAccessState({
         'gap-4 p-6 text-center'
       )}
     >
-      <h1 className="text-2xl font-semibold">
-        {failed
-          ? 'Не удалось проверить доступ'
-          : forbidden
-            ? 'Нет доступа'
-            : 'Страница не найдена'}
-      </h1>
+      <h1 className="text-2xl font-semibold">{titles[state]}</h1>
       {forbidden && (
         <p className="text-muted-foreground">
           Этот раздел доступен только преподавателям курса.

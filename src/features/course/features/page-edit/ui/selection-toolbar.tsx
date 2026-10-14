@@ -95,6 +95,16 @@ function requiresExplicitClipboardRead() {
   );
 }
 
+function initialClipboardState(
+  currentHref: string | null,
+  shouldReadClipboard: boolean
+): ClipboardLinkState {
+  if (currentHref) {
+    return { status: 'hidden' };
+  }
+  return shouldReadClipboard ? { status: 'loading' } : { status: 'idle' };
+}
+
 function readClipboardLinks({
   openPicker = false,
 }: { openPicker?: boolean } = {}): Promise<ClipboardLinkState> {
@@ -416,11 +426,7 @@ export function CoursePageSelectionToolbar() {
     clipboardRequestRef.current = requestId;
     setLinkEditor({
       status: 'open',
-      clipboard: currentHref
-        ? { status: 'hidden' }
-        : shouldReadClipboard
-          ? { status: 'loading' }
-          : { status: 'idle' },
+      clipboard: initialClipboardState(currentHref, shouldReadClipboard),
       currentHref,
       error: null,
       selection,

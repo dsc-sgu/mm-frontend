@@ -5,6 +5,12 @@ import { cn } from '@/shadcn/lib/utils';
 
 type CopyState = 'idle' | 'copied' | 'failed';
 
+const copyLabels: Record<CopyState, string> = {
+  idle: 'Скопировать',
+  copied: 'Скопировано',
+  failed: 'Не удалось',
+};
+
 type CodeBlockCopyBtnProps = {
   code: string;
 };
@@ -61,11 +67,7 @@ export function CodeBlockCopyBtn({ code }: CodeBlockCopyBtnProps) {
       ) : (
         <Copy className="size-3.5" aria-hidden="true" />
       )}
-      {copyState === 'copied'
-        ? 'Скопировано'
-        : copyState === 'failed'
-          ? 'Не удалось'
-          : 'Скопировать'}
+      {copyLabels[copyState]}
     </button>
   );
 }

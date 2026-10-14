@@ -27,6 +27,48 @@ function RouteComponent() {
     refetch,
   } = useCoursesQuery(session.userId);
 
+  function renderCourses() {
+    if (isPending) {
+      return <CourseListSkeleton />;
+    }
+    if (isError) {
+      return (
+        <div role="alert" className="py-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            {coursesFailureText(error)}
+          </p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+          >
+            Повторить
+          </Button>
+        </div>
+      );
+    }
+    if (courses.length === 0) {
+      return (
+        <SectionPlaceholder>
+          Вы пока не состоите ни в одном курсе. Когда курсы появятся, они
+          отобразятся здесь.
+        </SectionPlaceholder>
+      );
+    }
+    return (
+      <div className="grid gap-4">
+        {courses.map((course) => (
+          <CourseCard
+            key={course.id}
+            {...course}
+            className="min-h-full w-full shadow-xs"
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <main
       className={cn(
@@ -37,38 +79,7 @@ function RouteComponent() {
       <div className="box-border h-full px-4 py-6 md:px-6 lg:px-8">
         <div className="grid w-full gap-6 xl:h-full xl:min-h-0 xl:grid-cols-2">
           <DashboardSection title="Мои курсы" bordered scrollable>
-            {isPending ? (
-              <CourseListSkeleton />
-            ) : isError ? (
-              <div role="alert" className="py-10 text-center">
-                <p className="text-sm text-muted-foreground">
-                  {coursesFailureText(error)}
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  disabled={isFetching}
-                  onClick={() => void refetch()}
-                >
-                  Повторить
-                </Button>
-              </div>
-            ) : courses.length > 0 ? (
-              <div className="grid gap-4">
-                {courses.map((course) => (
-                  <CourseCard
-                    key={course.id}
-                    {...course}
-                    className="min-h-full w-full shadow-xs"
-                  />
-                ))}
-              </div>
-            ) : (
-              <SectionPlaceholder>
-                Вы пока не состоите ни в одном курсе. Когда курсы появятся, они
-                отобразятся здесь.
-              </SectionPlaceholder>
-            )}
+            {renderCourses()}
           </DashboardSection>
 
           <DeadlinesCalendar

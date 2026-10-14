@@ -112,7 +112,9 @@ export function AttemptReviewCommentReplies({
             </Button>
           </div>
         </div>
-      ) : canReply ? (
+      ) : null}
+
+      {!isReplying && canReply ? (
         <div className="flex justify-start">
           <Button
             type="button"

@@ -338,6 +338,51 @@ export function FilterMultiSelect({
     )
   );
 
+  function renderOptions() {
+    if (loading) {
+      return <FilterOptionsSkeleton />;
+    }
+    if (availableOptions.length === 0) {
+      return (
+        <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+          {emptyMessage}
+        </p>
+      );
+    }
+    return (
+      <div className="space-y-1">
+        {availableOptions.map((option, index) => {
+          const active = index === selectableActiveIndex;
+
+          return (
+            <button
+              key={option.value}
+              ref={(element) => {
+                optionRefs.current[index] = element;
+              }}
+              id={`${id}-option-${index}`}
+              type="button"
+              role="option"
+              tabIndex={-1}
+              aria-selected={false}
+              className={cn(
+                'flex w-full min-w-0 cursor-pointer items-center gap-2',
+                'rounded-md px-2 py-1.5 text-left text-sm outline-none',
+                'transition-colors hover:bg-accent',
+                active && 'bg-accent text-accent-foreground'
+              )}
+              onMouseDown={keepInputFocused}
+              onMouseMove={() => setActiveIndex(index)}
+              onClick={() => selectValue(option.value)}
+            >
+              <span className="min-w-0 truncate">{option.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <Popover
       open={open}
@@ -405,55 +450,20 @@ export function FilterMultiSelect({
           aria-multiselectable="true"
           className={cn('overflow-y-auto overscroll-contain', listClassName)}
         >
-          {loading ? (
-            <FilterOptionsSkeleton />
-          ) : availableOptions.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-              {emptyMessage}
-            </p>
-          ) : (
-            <div className="space-y-1">
-              {availableOptions.map((option, index) => {
-                const active = index === selectableActiveIndex;
-
-                return (
-                  <button
-                    key={option.value}
-                    ref={(element) => {
-                      optionRefs.current[index] = element;
-                    }}
-                    id={`${id}-option-${index}`}
-                    type="button"
-                    role="option"
-                    tabIndex={-1}
-                    aria-selected={false}
-                    className={cn(
-                      'flex w-full min-w-0 cursor-pointer items-center gap-2',
-                      'rounded-md px-2 py-1.5 text-left text-sm outline-none',
-                      'transition-colors hover:bg-accent',
-                      active && 'bg-accent text-accent-foreground'
-                    )}
-                    onMouseDown={keepInputFocused}
-                    onMouseMove={() => setActiveIndex(index)}
-                    onClick={() => selectValue(option.value)}
-                  >
-                    <span className="min-w-0 truncate">{option.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          {renderOptions()}
         </div>
       </PopoverContent>
     </Popover>
   );
 }
 
+const SKELETON_ROW_WIDTHS = [78, 92, 64];
+
 function FilterOptionsSkeleton({ rows = 7 }: { rows?: number }) {
   return (
     <div className="space-y-1" aria-label="Загрузка вариантов">
       {Array.from({ length: rows }).map((_, index) => {
-        const width = index % 3 === 0 ? 78 : index % 3 === 1 ? 92 : 64;
+        const width = SKELETON_ROW_WIDTHS[index % SKELETON_ROW_WIDTHS.length];
 
         return (
           <div

@@ -95,6 +95,13 @@ function getGradeInputTextSize(
   return 'overflow';
 }
 
+function gradeFieldState(error: GradeInputError | null, changed: boolean) {
+  if (error) {
+    return 'error';
+  }
+  return changed ? 'changed' : 'default';
+}
+
 export function GradeField({
   value,
   maxGrade,
@@ -125,7 +132,7 @@ export function GradeField({
           placeholder="—"
           className={cn(
             gradeFieldInputVariants({
-              state: error ? 'error' : changed ? 'changed' : 'default',
+              state: gradeFieldState(error, changed),
               size: getGradeInputTextSize(value),
             }),
             inputClassName

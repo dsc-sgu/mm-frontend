@@ -7,6 +7,7 @@ import {
 import { sortRankedContent } from '@/features/course/features/page/model/rank';
 import type {
   CourseContentBlockItem,
+  CourseHeadingBlock,
   CourseListBlock,
   RichTextMark,
   RichTextNode,
@@ -16,6 +17,25 @@ export const COURSE_IMAGE_NODE = 'course_image';
 export const COURSE_FILES_NODE = 'course_files';
 export const COURSE_ASSIGNMENT_NODE = 'course_assignment';
 export const COURSE_SPOILER_TITLE_NODE = 'course_spoiler_title';
+
+type HeadingLevel = CourseHeadingBlock['level'];
+
+export const COURSE_HEADING_NODES: Record<HeadingLevel, string> = {
+  1: KEYS.h1,
+  2: KEYS.h2,
+  3: KEYS.h3,
+};
+
+function headingLevel(type: string): HeadingLevel {
+  switch (type) {
+    case KEYS.h1:
+      return 1;
+    case KEYS.h2:
+      return 2;
+    default:
+      return 3;
+  }
+}
 
 export type CoursePlateText = {
   text: string;
@@ -203,8 +223,7 @@ function deserializeBlock(block: CourseContentBlockItem): CoursePlateElement[] {
       return [
         {
           id: block.id,
-          type:
-            block.level === 1 ? KEYS.h1 : block.level === 2 ? KEYS.h2 : KEYS.h3,
+          type: COURSE_HEADING_NODES[block.level],
           children: deserializeRichText(block.children),
         },
       ];
@@ -349,7 +368,7 @@ function serializeStandaloneBlock(
       return {
         ...base,
         type: 'heading',
-        level: element.type === KEYS.h1 ? 1 : element.type === KEYS.h2 ? 2 : 3,
+        level: headingLevel(element.type),
         children: serializeRichText(element.children),
       };
     case KEYS.blockquote:
