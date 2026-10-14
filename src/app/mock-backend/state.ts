@@ -275,46 +275,65 @@ export const reviewWorld = {
 
 type MockWorld = 'dev' | 'world:access' | 'world:review';
 
-function seed(world: MockWorld): MockBackendState {
-  const isAccessWorld = world !== 'dev';
-  const users = isAccessWorld
-    ? Object.values(accessUsers)
-    : Object.values(seededUsers);
-  return structuredClone({
+function createDevState(): MockBackendState {
+  const users = Object.values(seededUsers);
+  return {
     users,
-    courses: isAccessWorld ? Object.values(accessWorld.courses) : seededCourses,
-    memberships: isAccessWorld ? accessMemberships : devMemberships,
-    tasks: isAccessWorld
-      ? world === 'world:review'
-        ? [reviewWorld.task]
-        : []
-      : seededCourses.map(({ id }) => ({
-          courseId: id,
-          id: '1',
-          title: 'Вводное практическое задание',
-        })),
-    attempts: isAccessWorld
-      ? world === 'world:review'
-        ? reviewWorld.attempts
-        : []
-      : devMemberships
-          .filter(({ role }) => role === 'student')
-          .flatMap(({ courseId, userId }, index) =>
-            Array.from({ length: 4 }, (_, number) =>
-              mockAttempt(
-                100 + index * 4 + number,
-                courseId,
-                userId,
-                number + 1
-              )
-            )
-          ),
+    courses: seededCourses,
+    memberships: devMemberships,
+    tasks: seededCourses.map(({ id }) => ({
+      courseId: id,
+      id: '1',
+      title: 'Вводное практическое задание',
+    })),
+    attempts: devMemberships
+      .filter(({ role }) => role === 'student')
+      .flatMap(({ courseId, userId }, index) =>
+        Array.from({ length: 4 }, (_, number) =>
+          mockAttempt(100 + index * 4 + number, courseId, userId, number + 1)
+        )
+      ),
     session: {
-      userId: isAccessWorld ? accessUsers.anna.id : seededUsers.mitTeacher.id,
+      userId: seededUsers.mitTeacher.id,
       expiresAt: SESSION_EXPIRES_AT,
     },
     nextUserNumber: users.length + 1,
-  });
+  };
+}
+
+function createAccessState(): MockBackendState {
+  const users = Object.values(accessWorld.users);
+  return {
+    users,
+    courses: Object.values(accessWorld.courses),
+    memberships: accessMemberships,
+    tasks: [],
+    attempts: [],
+    session: {
+      userId: accessWorld.users.anna.id,
+      expiresAt: SESSION_EXPIRES_AT,
+    },
+    nextUserNumber: users.length + 1,
+  };
+}
+
+function createReviewState(): MockBackendState {
+  return {
+    ...createAccessState(),
+    tasks: [reviewWorld.task],
+    attempts: reviewWorld.attempts,
+  };
+}
+
+function seed(world: MockWorld): MockBackendState {
+  switch (world) {
+    case 'dev':
+      return structuredClone(createDevState());
+    case 'world:access':
+      return structuredClone(createAccessState());
+    case 'world:review':
+      return structuredClone(createReviewState());
+  }
 }
 
 let state = seed('dev');
