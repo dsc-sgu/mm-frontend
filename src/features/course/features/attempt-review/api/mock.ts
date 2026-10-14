@@ -2,7 +2,11 @@ import { parseDiffFromFile, type FileDiffMetadata } from '@pierre/diffs';
 import * as v from 'valibot';
 import { http, HttpResponse } from 'msw';
 import { resolveStudentAccess } from '@/app/mock-backend/participant-access';
-import { GradeSchema, gradesEqual } from '@/features/course/model/grade';
+import {
+  GradeSchema,
+  gradesEqual,
+  gradeToNumber,
+} from '@/features/course/model/grade';
 import {
   AttemptNumberSchema,
   type AttemptNumber,
@@ -340,7 +344,7 @@ function getReviewSeries(params: LegacyParams): ReviewSeries {
                 GradeSchema,
                 Number(
                   (
-                    (task.maxGrade.thousandths / 1000) *
+                    gradeToNumber(task.maxGrade) *
                     (0.55 + index * 0.13)
                   ).toFixed(1)
                 )

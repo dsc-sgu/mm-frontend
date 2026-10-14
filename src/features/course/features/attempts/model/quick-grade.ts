@@ -1,5 +1,6 @@
 import {
   formatGrade,
+  gradeInputMatches,
   parseGradeInput,
   type Grade,
   type GradeInputError,
@@ -22,17 +23,17 @@ export function savedGradeText(attempt: QuickGradeAttempt): string {
 
 export function isQuickGradeDraftChanged(
   attempt: QuickGradeAttempt,
-  draft: string | undefined
+  draft: string
 ): boolean {
-  return (draft ?? '') !== savedGradeText(attempt);
+  return !gradeInputMatches(draft, attempt.grade?.value ?? null);
 }
 
 /** An untouched field is never an error; an existing Grade cannot be erased. */
 export function getQuickGradeDraftError(
   attempt: QuickGradeAttempt,
-  draft: string | undefined
+  draft: string
 ): GradeInputError | null {
-  if (draft === undefined || !isQuickGradeDraftChanged(attempt, draft)) {
+  if (!isQuickGradeDraftChanged(attempt, draft)) {
     return null;
   }
 

@@ -80,7 +80,7 @@ const ATTACHMENTS = [
   },
 ] satisfies Array<Omit<TaskAttachment, 'id'>>;
 
-const grade = (value: number): Grade => v.parse(GradeSchema, value);
+const mockGrade = (value: number): Grade => v.parse(GradeSchema, value);
 
 const ATTEMPTS = [
   {
@@ -95,7 +95,7 @@ const ATTEMPTS = [
     submittedAt: '2026-03-02T09:15:00+03:00',
     review: {
       status: 'graded',
-      grade: grade(8),
+      grade: mockGrade(8),
       gradedAt: '2026-03-02T11:10:00+03:00',
       graderName: 'Громова Елизавета Андреевна',
     },
@@ -106,7 +106,7 @@ const ATTEMPTS = [
     submittedAt: '2026-03-01T18:42:00+03:00',
     review: {
       status: 'graded',
-      grade: grade(10),
+      grade: mockGrade(10),
       gradedAt: '2026-03-01T20:06:00+03:00',
       graderName: 'Ковалёв Павел Сергеевич',
     },
@@ -117,7 +117,7 @@ const ATTEMPTS = [
     submittedAt: '2026-02-28T16:30:00+03:00',
     review: {
       status: 'graded',
-      grade: grade(6),
+      grade: mockGrade(6),
       gradedAt: '2026-02-28T18:12:00+03:00',
       graderName: 'Батраева Инна Олеговна',
     },
@@ -128,7 +128,7 @@ const ATTEMPTS = [
     submittedAt: '2026-02-28T09:24:00+03:00',
     review: {
       status: 'graded',
-      grade: grade(0),
+      grade: mockGrade(0),
       gradedAt: '2026-02-28T11:48:00+03:00',
       graderName: 'Морозов Андрей Викторович',
     },
@@ -139,7 +139,7 @@ const ATTEMPTS = [
     submittedAt: '2026-02-27T10:20:00+03:00',
     review: {
       status: 'graded',
-      grade: grade(9),
+      grade: mockGrade(9),
       gradedAt: '2026-02-27T12:02:00+03:00',
       graderName: 'Семёнова Дарья Михайловна',
     },
@@ -150,7 +150,7 @@ const ATTEMPTS = [
     submittedAt: '2026-02-27T03:03:00+03:00',
     review: {
       status: 'graded',
-      grade: grade(4),
+      grade: mockGrade(4),
       gradedAt: '2026-02-27T05:10:00+03:00',
       graderName: 'Левченко Анна Игоревна',
     },
@@ -161,7 +161,7 @@ const ATTEMPTS = [
     submittedAt: '2026-02-26T23:59:00+03:00',
     review: {
       status: 'graded',
-      grade: grade(7),
+      grade: mockGrade(7),
       gradedAt: '2026-02-27T00:34:00+03:00',
       graderName: 'Титов Егор Алексеевич',
     },
@@ -172,7 +172,7 @@ const ATTEMPTS = [
     submittedAt: '2026-02-26T20:18:00+03:00',
     review: {
       status: 'graded',
-      grade: grade(10),
+      grade: mockGrade(10),
       gradedAt: '2026-02-26T21:05:00+03:00',
       graderName: 'Сафрончик Мария Павловна',
     },
@@ -183,7 +183,7 @@ const ATTEMPTS = [
     submittedAt: '2026-02-25T02:07:00+03:00',
     review: {
       status: 'graded',
-      grade: grade(0),
+      grade: mockGrade(0),
       gradedAt: '2026-02-25T03:47:00+03:00',
       graderName: 'Кудяков Артём Александрович',
     },
@@ -227,7 +227,7 @@ export async function fetchTaskPage({
       description:
         'Работа скрипта должна заключаться в объединении текстов всех песен. Для решения подразумевается использование масок.',
       deadlineAt: '2026-02-26T23:59:00+03:00',
-      maxGrade: grade(10),
+      maxGrade: mockGrade(10),
       attachments: ATTACHMENTS.map((attachment) => ({
         ...attachment,
         id: `${courseId}:${taskId}:attachment:${attachment.name}`,

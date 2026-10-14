@@ -140,6 +140,7 @@ function AttemptReviewPageLoaded({
     draft,
     hasChanges,
     gradeError,
+    gradeChanged,
     savableGrade,
     setGrade,
     setOverallFeedbackHtml,
@@ -279,6 +280,7 @@ function AttemptReviewPageLoaded({
               draft={draft}
               mode={mode}
               gradeError={gradeError}
+              gradeChanged={gradeChanged}
               hasChanges={hasChanges}
               canSave={canSave}
               savePending={saveMutation.isPending}
@@ -360,6 +362,7 @@ function AttemptReviewPageLoaded({
                 draft={draft}
                 mode={mode}
                 gradeError={gradeError}
+                gradeChanged={gradeChanged}
                 hasChanges={hasChanges}
                 canSave={canSave}
                 savePending={saveMutation.isPending}

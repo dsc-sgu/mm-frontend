@@ -1,5 +1,9 @@
 import * as v from 'valibot';
-import { GradeSchema, type Grade } from '@/features/course/model/grade';
+import {
+  GradeSchema,
+  gradeToNumber,
+  type Grade,
+} from '@/features/course/model/grade';
 import {
   AttemptNumberSchema,
   type AttemptNumber,
@@ -19,25 +23,29 @@ import type {
   SaveQuickGradesInput,
 } from '@/features/course/features/attempts/model/types';
 
-const grade = (value: number): Grade => v.parse(GradeSchema, value);
+const mockGrade = (value: number): Grade => v.parse(GradeSchema, value);
 
 const MOCK_TASKS: CourseAttemptTask[] = [
-  { id: '1', title: 'Вводное практическое задание', maxGrade: grade(10) },
-  { id: '2', title: 'Анализ pull request и диффов', maxGrade: grade(10) },
-  { id: '3', title: 'Работа с ветками Git', maxGrade: grade(8) },
-  { id: '4', title: 'Покрытие кода тестами', maxGrade: grade(12) },
-  { id: '5', title: 'Проектирование REST API', maxGrade: grade(15) },
-  { id: '6', title: 'Рефакторинг legacy-модуля', maxGrade: grade(15) },
-  { id: '7', title: 'Оптимизация SQL-запросов', maxGrade: grade(20) },
-  { id: '8', title: 'Интеграция с очередью сообщений', maxGrade: grade(20) },
-  { id: '9', title: 'Настройка CI/CD pipeline', maxGrade: grade(10) },
+  { id: '1', title: 'Вводное практическое задание', maxGrade: mockGrade(10) },
+  { id: '2', title: 'Анализ pull request и диффов', maxGrade: mockGrade(10) },
+  { id: '3', title: 'Работа с ветками Git', maxGrade: mockGrade(8) },
+  { id: '4', title: 'Покрытие кода тестами', maxGrade: mockGrade(12) },
+  { id: '5', title: 'Проектирование REST API', maxGrade: mockGrade(15) },
+  { id: '6', title: 'Рефакторинг legacy-модуля', maxGrade: mockGrade(15) },
+  { id: '7', title: 'Оптимизация SQL-запросов', maxGrade: mockGrade(20) },
+  {
+    id: '8',
+    title: 'Интеграция с очередью сообщений',
+    maxGrade: mockGrade(20),
+  },
+  { id: '9', title: 'Настройка CI/CD pipeline', maxGrade: mockGrade(10) },
   {
     id: '10',
     title: 'Безопасность пользовательского ввода',
-    maxGrade: grade(18),
+    maxGrade: mockGrade(18),
   },
-  { id: '11', title: 'Наблюдаемость и логирование', maxGrade: grade(12) },
-  { id: '12', title: 'Итоговый мини-проект', maxGrade: grade(25) },
+  { id: '11', title: 'Наблюдаемость и логирование', maxGrade: mockGrade(12) },
+  { id: '12', title: 'Итоговый мини-проект', maxGrade: mockGrade(25) },
 ];
 
 const FIRST_NAMES = [
@@ -134,8 +142,8 @@ function buildAttempts(courseId: CourseId): CourseAttempt[] {
       const locked = !graded && (studentIndex + attemptIndex) % 17 === 0;
       const gradeRatio =
         0.55 + ((studentIndex * 7 + attemptIndex * 11) % 40) / 100;
-      const gradeValue = grade(
-        Number(((task.maxGrade.thousandths / 1000) * gradeRatio).toFixed(1))
+      const gradeValue = mockGrade(
+        Number((gradeToNumber(task.maxGrade) * gradeRatio).toFixed(1))
       );
 
       attempts.push({

@@ -43,8 +43,14 @@ async function existingReview(): Promise<AttemptReviewAggregate> {
 }
 
 function ReviewPanel({ review }: { review: AttemptReviewAggregate }) {
-  const { draft, gradeError, hasChanges, savableGrade, setGrade } =
-    useAttemptReviewDraft(review);
+  const {
+    draft,
+    gradeError,
+    gradeChanged,
+    hasChanges,
+    savableGrade,
+    setGrade,
+  } = useAttemptReviewDraft(review);
 
   return (
     <AttemptReviewReviewPanel
@@ -52,6 +58,7 @@ function ReviewPanel({ review }: { review: AttemptReviewAggregate }) {
       draft={draft}
       mode="editable"
       gradeError={gradeError}
+      gradeChanged={gradeChanged}
       hasChanges={hasChanges}
       canSave={savableGrade !== null}
       savePending={false}
@@ -127,6 +134,21 @@ test('REV-03, A11Y-02: extra fraction digits are shown at the field', async () =
   expect(field.getAttribute('aria-invalid')).toBe('false');
   expect(field.getAttribute('aria-describedby')).toBeNull();
   expect(save).toHaveProperty('disabled', false);
+});
+
+test('the same Grade spelled differently is not a change', async () => {
+  const user = userEvent.setup();
+  render(<ReviewPanel review={await existingReview()} />);
+  const field = screen.getByRole('textbox', { name: 'Оценка за попытку' });
+
+  await user.clear(field);
+  await user.type(field, '7.50');
+
+  expect(screen.getByRole('button', { name: /Сохранить/ })).toHaveProperty(
+    'disabled',
+    true
+  );
+  expect(screen.queryByText('Есть изменения')).toBeNull();
 });
 
 test('REV-03: Save has no command to clear a Grade', () => {

@@ -21,6 +21,7 @@ type AttemptReviewReviewPanelProps = {
   draft: AttemptReviewDraft;
   mode: AttemptReviewMode;
   gradeError: GradeInputError | null;
+  gradeChanged: boolean;
   hasChanges: boolean;
   canSave: boolean;
   savePending: boolean;
@@ -37,6 +38,7 @@ export function AttemptReviewReviewPanel({
   draft,
   mode,
   gradeError,
+  gradeChanged,
   hasChanges,
   canSave,
   savePending,
@@ -89,12 +91,7 @@ export function AttemptReviewReviewPanel({
             <GradeField
               value={draft.grade}
               maxGrade={review.current.task.maxGrade}
-              changed={
-                draft.grade !==
-                (review.current.grade
-                  ? formatGrade(review.current.grade.value)
-                  : '')
-              }
+              changed={gradeChanged}
               error={gradeError}
               ariaLabel="Оценка за попытку"
               onChange={onGradeChange}

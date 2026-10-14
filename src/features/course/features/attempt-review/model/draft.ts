@@ -2,6 +2,7 @@ import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 
 import {
   formatGrade,
+  gradeInputMatches,
   parseGradeInput,
   type GradeInputError,
   type GradeInputResult,
@@ -22,7 +23,13 @@ export function useAttemptReviewDraft(review: AttemptReviewAggregate) {
   );
   const savedDraft = useMemo(() => createAttemptReviewDraft(review), [review]);
   const gradeInput = parseGradeInput(draft.grade, review.current.task.maxGrade);
-  const hasChanges = !areAttemptReviewDraftsEqual(draft, savedDraft);
+  // Compared as Grades: `7.50` over a saved 7,5 is not a change.
+  const gradeChanged = !gradeInputMatches(
+    draft.grade,
+    review.current.grade?.value ?? null
+  );
+  const hasChanges =
+    gradeChanged || !areAttemptReviewDraftsEqual(draft, savedDraft);
 
   return {
     draft,
@@ -32,6 +39,7 @@ export function useAttemptReviewDraft(review: AttemptReviewAggregate) {
     /** The Grade to save, or null while the edits cannot be saved. */
     savableGrade:
       hasChanges && gradeInput.status === 'valid' ? gradeInput.grade : null,
+    gradeChanged,
     hasChanges,
     setGrade: createDraftSetter(setDraft, 'grade'),
     setOverallFeedbackHtml: createDraftSetter(setDraft, 'overallFeedbackHtml'),
@@ -86,12 +94,12 @@ function createDraftSetter<Key extends keyof AttemptReviewDraft>(
   };
 }
 
+/** Compares everything but the Grade field, which is compared as a Grade. */
 function areAttemptReviewDraftsEqual(
   first: AttemptReviewDraft,
   second: AttemptReviewDraft
 ): boolean {
   return (
-    first.grade === second.grade &&
     first.overallFeedbackHtml === second.overallFeedbackHtml &&
     areLineCommentsEqual(first.lineComments, second.lineComments)
   );

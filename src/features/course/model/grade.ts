@@ -88,6 +88,29 @@ export const GradeSchema = v.pipe(
   })
 );
 
+/** The JSON number GradeSchema reads back to the same Grade. */
+export function gradeToNumber(grade: Grade): number {
+  return grade.thousandths / THOUSANDTHS_PER_UNIT;
+}
+
+/**
+ * Whether the field's text still means the saved Grade: `7.5` and `7,50`
+ * match a saved 7,5, and an empty field matches no Grade.
+ */
+export function gradeInputMatches(input: string, saved: Grade | null): boolean {
+  const result = parseDecimal(input.trim());
+
+  if (result.status === 'valid') {
+    return saved !== null && gradesEqual(result.grade, saved);
+  }
+
+  return result.error === 'empty' && saved === null;
+}
+
+export function isZeroGrade(grade: Grade): boolean {
+  return grade.thousandths === 0;
+}
+
 export function compareGrades(first: Grade, second: Grade): number {
   return first.thousandths - second.thousandths;
 }

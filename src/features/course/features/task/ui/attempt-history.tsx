@@ -22,6 +22,7 @@ import type { TaskAttempt } from '@/features/course/features/task/model/types';
 import {
   compareGrades,
   formatGrade,
+  isZeroGrade,
   type Grade,
 } from '@/features/course/model/grade';
 import { Button } from '@/shadcn/components/ui/button';
@@ -329,7 +330,7 @@ function getDeadlineRelationTone(timing: DeadlineRelation['timing']): string {
 }
 
 function getGradeTone(grade: Grade, maxGrade: Grade): string {
-  if (grade.thousandths === 0) {
+  if (isZeroGrade(grade)) {
     return cn(
       'border-rose-200 bg-rose-50 text-rose-700',
       'dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300'
