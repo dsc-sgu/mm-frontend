@@ -2,18 +2,19 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { Set as ImmutableSetType } from 'immutable';
 import { toast } from 'sonner';
 
+import type { CourseId } from '@/features/course/model/identity';
 import { useCourseAttemptReviewLockUpdates } from './use-lock-updates';
 import type { CourseAttemptReviewLockUpdate } from '@/features/course/features/attempts/model/lock-updates';
 import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
 
 export function useCourseAttemptsReviewLockSelectionSync({
-  courseSlug,
+  courseId,
   enabled,
   selectedAttemptIds,
   attemptById,
   removeAttemptIds,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   enabled: boolean;
   selectedAttemptIds: ImmutableSetType<string>;
   attemptById: Map<string, CourseAttempt>;
@@ -60,7 +61,7 @@ export function useCourseAttemptsReviewLockSelectionSync({
   );
 
   useCourseAttemptReviewLockUpdates({
-    courseSlug,
+    courseId,
     enabled,
     onUpdates: handleReviewLockUpdates,
   });

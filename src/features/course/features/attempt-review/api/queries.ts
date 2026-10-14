@@ -6,6 +6,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 
+import { courseKeys } from '@/features/course/api/queries';
 import { courseAttemptsKeys } from '@/features/course/features/attempts/api/queries';
 import type { UserId } from '@/features/auth/model/identity';
 import type { CourseId } from '@/features/course/model/identity';
@@ -25,8 +26,8 @@ import type {
 } from '@/features/course/features/attempt-review/model/types';
 
 export const attemptReviewKeys = {
-  all: ['attempt-review'] as const,
-  course: (courseId: CourseId) => [...attemptReviewKeys.all, courseId] as const,
+  course: (courseId: CourseId) =>
+    [...courseKeys.byId(courseId), 'attempt-review'] as const,
   attempt: (params: AttemptReviewIdentity) =>
     [
       ...attemptReviewKeys.course(params.courseId),
@@ -61,11 +62,12 @@ export function useSaveAttemptReviewMutation() {
 
   return useMutation({
     mutationFn: (input: SaveAttemptReviewInput) => saveAttemptReview(input),
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
+      // A saved grade changes the Course's attempt list projections.
       await Promise.all([
         invalidateAttemptReviewQuery(queryClient, variables),
         queryClient.invalidateQueries({
-          queryKey: courseAttemptsKeys.course(data.courseSlug),
+          queryKey: courseAttemptsKeys.course(variables.courseId),
         }),
       ]);
     },

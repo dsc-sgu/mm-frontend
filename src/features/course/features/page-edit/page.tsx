@@ -19,6 +19,7 @@ import { CoursePageEditApplyBar } from '@/features/course/features/page-edit/ui/
 import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui/content-editor';
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
 import type { CoursePage } from '@/features/course/features/page/model/types';
+import type { CourseId, CourseSlug } from '@/features/course/model/identity';
 
 import styles from './page.module.css';
 
@@ -40,7 +41,13 @@ function focusFirstInvalidField(errors: Record<string, string | undefined>) {
   document.getElementById(fieldId)?.focus();
 }
 
-function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
+function CoursePageEditContent({
+  courseId,
+  courseSlug,
+}: {
+  courseId: CourseId;
+  courseSlug: CourseSlug;
+}) {
   const navigate = useNavigate();
   const router = useRouter();
   const saveMutation = useSaveCoursePageMutation();
@@ -77,8 +84,9 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
     const submittedWorkingCopy = structuredClone(workingCopy);
 
     await saveMutation.mutateAsync({
-      courseSlug,
-      courseId: submittedWorkingCopy.courseId,
+      courseId,
+      previousSlug: courseSlug,
+      slug: submittedWorkingCopy.courseId,
       title: submittedWorkingCopy.title,
       shortTitle: submittedWorkingCopy.shortTitle,
       description: submittedWorkingCopy.description,
@@ -103,6 +111,7 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
     toast.success('Изменения применены');
   }, [
     canApply,
+    courseId,
     courseSlug,
     errors,
     isDirty,
@@ -180,23 +189,31 @@ function CoursePageEditContent({ courseSlug }: { courseSlug: string }) {
 }
 
 function CoursePageEditLoaded({
+  courseId,
   courseSlug,
   course,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
+  courseSlug: CourseSlug;
   course: CoursePage;
 }) {
   const [editStore] = useState(() => createCoursePageEditStore({ course }));
 
   return (
     <CoursePageEditStoreProvider store={editStore}>
-      <CoursePageEditContent courseSlug={courseSlug} />
+      <CoursePageEditContent courseId={courseId} courseSlug={courseSlug} />
     </CoursePageEditStoreProvider>
   );
 }
 
-export function CoursePageEditPage({ courseSlug }: { courseSlug: string }) {
-  const { data: course, isPending } = useCoursePageQuery(courseSlug);
+export function CoursePageEditPage({
+  courseId,
+  courseSlug,
+}: {
+  courseId: CourseId;
+  courseSlug: CourseSlug;
+}) {
+  const { data: course, isPending } = useCoursePageQuery(courseId);
 
   if (isPending) {
     return <CoursePageLoading />;
@@ -209,8 +226,11 @@ export function CoursePageEditPage({ courseSlug }: { courseSlug: string }) {
   return (
     <CoursePageEditLoaded
       key={courseSlug}
+      courseId={courseId}
       courseSlug={courseSlug}
-      course={course}
+      // A Page cached by CourseId may predate a slug change; the working copy
+      // starts from the slug the route has just confirmed.
+      course={{ ...course, courseId: courseSlug }}
     />
   );
 }

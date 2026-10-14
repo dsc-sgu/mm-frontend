@@ -4,6 +4,8 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { courseKeys } from '@/features/course/api/queries';
+import type { CourseId } from '@/features/course/model/identity';
 import { fetchCourseAttemptsList, saveQuickGrades } from './mock';
 import type {
   CourseAttemptsFilters,
@@ -11,39 +13,38 @@ import type {
 } from '@/features/course/features/attempts/model/types';
 
 export const courseAttemptsKeys = {
-  all: ['course-attempts'] as const,
-  course: (courseSlug: string) =>
-    [...courseAttemptsKeys.all, courseSlug] as const,
-  list: (courseSlug: string, filters: CourseAttemptsFilters) =>
-    [...courseAttemptsKeys.course(courseSlug), filters] as const,
+  course: (courseId: CourseId) =>
+    [...courseKeys.byId(courseId), 'attempts'] as const,
+  list: (courseId: CourseId, filters: CourseAttemptsFilters) =>
+    [...courseAttemptsKeys.course(courseId), { filters }] as const,
 };
 
 export function courseAttemptsQueryOptions({
-  courseSlug,
+  courseId,
   filters,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   filters: CourseAttemptsFilters;
 }) {
   return queryOptions({
-    queryKey: courseAttemptsKeys.list(courseSlug, filters),
-    queryFn: () => fetchCourseAttemptsList({ courseSlug, filters }),
+    queryKey: courseAttemptsKeys.list(courseId, filters),
+    queryFn: () => fetchCourseAttemptsList({ courseId, filters }),
     staleTime: 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
 export function useCourseAttemptsQuery({
-  courseSlug,
+  courseId,
   filters,
   refetchPaused = false,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   filters: CourseAttemptsFilters;
   refetchPaused?: boolean;
 }) {
   return useQuery({
-    ...courseAttemptsQueryOptions({ courseSlug, filters }),
+    ...courseAttemptsQueryOptions({ courseId, filters }),
     enabled: !refetchPaused,
     refetchOnMount: !refetchPaused,
     refetchOnReconnect: !refetchPaused,
@@ -58,7 +59,7 @@ export function useSaveQuickGradesMutation() {
     mutationFn: (input: SaveQuickGradesInput) => saveQuickGrades(input),
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({
-        queryKey: courseAttemptsKeys.course(variables.courseSlug),
+        queryKey: courseAttemptsKeys.course(variables.courseId),
       });
     },
   });

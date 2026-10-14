@@ -18,7 +18,7 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { courseSlug } = Route.useParams();
+  const { course, courseSlug } = Route.useRouteContext();
 
-  return <CoursePageEditPage courseSlug={courseSlug} />;
+  return <CoursePageEditPage courseId={course.id} courseSlug={courseSlug} />;
 }

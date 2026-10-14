@@ -190,7 +190,11 @@ function AuthorizedPart({
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-10 w-10 rounded-full p-0">
+          <Button
+            variant="ghost"
+            className="h-10 w-10 rounded-full p-0"
+            aria-label="Меню пользователя"
+          >
             <Avatar className="h-9 w-9">
               <AvatarImage src={session.avatarURL} alt={session.username} />
               <AvatarFallback className="text-xs text-foreground">

@@ -8,6 +8,7 @@ import {
   type QuickGradeUpdate,
 } from '@/features/course/features/grading';
 import { isAttemptSelectable } from '@/features/course/features/attempts/model/selection';
+import type { CourseId } from '@/features/course/model/identity';
 import { useSaveQuickGradesMutation } from '@/features/course/features/attempts/api/queries';
 import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
 
@@ -117,13 +118,13 @@ export function useCourseAttemptsQuickGradingState() {
 }
 
 export function useCourseAttemptsGrading({
-  courseSlug,
+  courseId,
   attemptById,
   selectedAttempts,
   clearSelection,
   quickGradingState,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   attemptById: Map<string, CourseAttempt>;
   selectedAttempts: CourseAttempt[];
   clearSelection: () => void;
@@ -177,11 +178,11 @@ export function useCourseAttemptsGrading({
     }
 
     await saveQuickGradesMutation.mutateAsync({
-      courseSlug,
+      courseId,
       updates,
     });
     clearSelection();
-  }, [clearSelection, courseSlug, saveQuickGradesMutation, selectedAttempts]);
+  }, [clearSelection, courseId, saveQuickGradesMutation, selectedAttempts]);
 
   const saveQuickGrades = useCallback(async () => {
     if (hasDraftValidationErrors) {
@@ -205,13 +206,13 @@ export function useCourseAttemptsGrading({
     }
 
     await saveQuickGradesMutation.mutateAsync({
-      courseSlug,
+      courseId,
       updates,
     });
     markQuickGradesSaved();
   }, [
     attemptById,
-    courseSlug,
+    courseId,
     draftScoresByAttemptId,
     hasDraftValidationErrors,
     markQuickGradesSaved,

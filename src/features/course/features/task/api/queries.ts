@@ -5,51 +5,37 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
+import type { UserId } from '@/features/auth/model/identity';
+import { courseKeys } from '@/features/course/api/queries';
 import type { TaskPageData } from '@/features/course/features/task/model/types';
+import type { CourseId } from '@/features/course/model/identity';
 import { fetchTaskPage, markTaskAttemptUpdatesSeen } from './mock';
 
-const TASK_PAGE_QUERY_KEY = ['course-task-page'] as const;
-
-export const taskPageKeys = {
-  all: TASK_PAGE_QUERY_KEY,
-  detail: (courseSlug: string, taskId: string, studentUsername?: string) =>
-    [
-      ...TASK_PAGE_QUERY_KEY,
-      courseSlug,
-      taskId,
-      studentUsername ?? null,
-    ] as const,
+type TaskPageParams = {
+  courseId: CourseId;
+  taskId: string;
+  /** The Student whose attempts the page shows; null for the Teacher view. */
+  studentId: UserId | null;
 };
 
-export function taskPageQueryOptions({
-  courseSlug,
-  taskId,
-  studentUsername,
-}: {
-  courseSlug: string;
-  taskId: string;
-  studentUsername?: string;
-}) {
+export const taskPageKeys = {
+  course: (courseId: CourseId) =>
+    [...courseKeys.byId(courseId), 'task-page'] as const,
+  detail: ({ courseId, taskId, studentId }: TaskPageParams) =>
+    [...taskPageKeys.course(courseId), taskId, studentId] as const,
+};
+
+export function taskPageQueryOptions(params: TaskPageParams) {
   return queryOptions({
-    queryKey: taskPageKeys.detail(courseSlug, taskId, studentUsername),
-    queryFn: () => fetchTaskPage({ courseSlug, taskId, studentUsername }),
+    queryKey: taskPageKeys.detail(params),
+    queryFn: () => fetchTaskPage(params),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-export function useTaskPageQuery({
-  courseSlug,
-  taskId,
-  studentUsername,
-}: {
-  courseSlug: string;
-  taskId: string;
-  studentUsername?: string;
-}) {
-  return useQuery(
-    taskPageQueryOptions({ courseSlug, taskId, studentUsername })
-  );
+export function useTaskPageQuery(params: TaskPageParams) {
+  return useQuery(taskPageQueryOptions(params));
 }
 
 export function useMarkTaskAttemptUpdatesSeenMutation() {
@@ -58,11 +44,7 @@ export function useMarkTaskAttemptUpdatesSeenMutation() {
   return useMutation({
     mutationFn: markTaskAttemptUpdatesSeen,
     onMutate: async (variables) => {
-      const queryKey = taskPageKeys.detail(
-        variables.courseSlug,
-        variables.taskId,
-        variables.studentUsername
-      );
+      const queryKey = taskPageKeys.detail(variables);
 
       await queryClient.cancelQueries({ queryKey });
 
@@ -80,8 +62,7 @@ export function useMarkTaskAttemptUpdatesSeenMutation() {
           task: {
             ...currentData.task,
             attempts: currentData.task.attempts.map((attempt) =>
-              attempt.attemptNumber === variables.attemptNumber &&
-              attempt.studentUsername === variables.studentUsername
+              attempt.attemptNumber === variables.attemptNumber
                 ? { ...attempt, attention: { status: 'seen' } }
                 : attempt
             ),
@@ -98,11 +79,7 @@ export function useMarkTaskAttemptUpdatesSeenMutation() {
     },
     onSettled: (_data, _error, variables) =>
       queryClient.invalidateQueries({
-        queryKey: taskPageKeys.detail(
-          variables.courseSlug,
-          variables.taskId,
-          variables.studentUsername
-        ),
+        queryKey: taskPageKeys.detail(variables),
       }),
   });
 }

@@ -1,10 +1,13 @@
 import { queryOptions } from '@tanstack/react-query';
 import type { UserId, Username } from '@/features/auth/model/identity';
 import type { AttemptNumber, CourseId } from '@/features/course/model/identity';
+import { courseKeys } from '@/features/course/api/queries';
 import { loadAttempt } from './load-attempt';
 
+// The username is the locator's lookup input, like a slug for Course context.
 export const attemptLocatorKeys = {
-  all: ['attempt-locator'] as const,
+  course: (courseId: CourseId) =>
+    [...courseKeys.byId(courseId), 'attempt-locator'] as const,
   byNumber: (
     userId: UserId,
     courseId: CourseId,
@@ -13,9 +16,8 @@ export const attemptLocatorKeys = {
     number: AttemptNumber
   ) =>
     [
-      ...attemptLocatorKeys.all,
+      ...attemptLocatorKeys.course(courseId),
       userId,
-      courseId,
       taskId,
       username,
       number,

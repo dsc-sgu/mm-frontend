@@ -30,6 +30,7 @@ import { renderRoutes } from '@/app/testing/render-routes';
 const LOOKUP_URL = '/api/v1/courses/:locator';
 const ALGORITHMS_PATH = '/courses/algorithms';
 const DATABASES_PATH = '/courses/databases';
+const DATABASES_ID = accessWorld.courses.databases.id;
 const NOT_FOUND_DESCRIPTION =
   'Возможно, ссылка устарела или страница больше недоступна.';
 
@@ -260,7 +261,7 @@ test('saved Course metadata replaces the confirmed Header title without changing
   });
   await screen.findByRole('heading', { name: 'Базы данных' });
   const page = await queryClient.ensureQueryData(
-    coursePageQueryOptions('databases')
+    coursePageQueryOptions(DATABASES_ID)
   );
   if (!page) throw new Error('The Course fixture has no published Page');
   const mutation = renderHook(() => useSaveCoursePageMutation(), {
@@ -272,7 +273,9 @@ test('saved Course metadata replaces the confirmed Header title without changing
   await act(async () => {
     await mutation.result.current.mutateAsync({
       ...page,
-      courseSlug: 'databases',
+      courseId: DATABASES_ID,
+      previousSlug: 'databases',
+      slug: 'databases',
       title: 'Базы данных — обновлённое название',
     });
     await router.invalidate();
@@ -289,7 +292,7 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
   const { queryClient } = renderRoutes([], DATABASES_PATH, { appRoutes: true });
   await screen.findByRole('heading', { name: 'Базы данных' });
   const page = await queryClient.ensureQueryData(
-    coursePageQueryOptions('databases')
+    coursePageQueryOptions(DATABASES_ID)
   );
   if (!page) throw new Error('The Course fixture has no published Page');
   const mutation = renderHook(() => useSaveCoursePageMutation(), {
@@ -302,15 +305,16 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
     await expect(
       mutation.result.current.mutateAsync({
         ...page,
-        courseSlug: 'databases',
-        courseId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        courseId: DATABASES_ID,
+        previousSlug: 'databases',
+        slug: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
         title: 'Rejected UUID rename',
       })
     ).rejects.toBeInstanceOf(Error);
   });
 
   await expect(
-    queryClient.fetchQuery(coursePageQueryOptions('databases'))
+    queryClient.fetchQuery(coursePageQueryOptions(DATABASES_ID))
   ).resolves.toMatchObject({ courseId: 'databases', title: 'Базы данных' });
   await queryClient.invalidateQueries();
   await screen.findByRole('heading', { name: 'Базы данных' });

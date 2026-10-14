@@ -2,6 +2,7 @@ import * as v from 'valibot';
 import {
   AttemptNumberSchema,
   type AttemptNumber,
+  type CourseId,
 } from '@/features/course/model/identity';
 import { mockBackend } from '@/app/mock-backend/state';
 import {
@@ -83,7 +84,8 @@ const TEACHERS = [
 ];
 
 export const MOCK_STUDENTS = buildMockStudents();
-const attemptsByCourse = new Map<string, CourseAttempt[]>();
+// RAM attempts are addressed by the CourseId the Course lookup returns.
+const attemptsByCourse = new Map<CourseId, CourseAttempt[]>();
 
 function buildMockStudents(): CourseAttemptStudent[] {
   return Array.from({ length: 60 }, (_, index) => ({
@@ -99,7 +101,7 @@ function getStudents(): CourseAttemptStudent[] {
   return MOCK_STUDENTS;
 }
 
-function buildAttempts(courseSlug: string): CourseAttempt[] {
+function buildAttempts(courseId: CourseId): CourseAttempt[] {
   const attempts: CourseAttempt[] = [];
   const students = getStudents();
   const baseSubmittedMs = Date.UTC(2026, 4, 20, 9, 30, 0);
@@ -128,7 +130,7 @@ function buildAttempts(courseSlug: string): CourseAttempt[] {
       const score = Number((task.maxScore * scoreRatio).toFixed(1));
 
       attempts.push({
-        id: `${courseSlug}:attempt:${serial}`,
+        id: `${courseId}:attempt:${serial}`,
         attemptNumber: v.parse(
           AttemptNumberSchema,
           ((studentIndex + attemptIndex) % 3) + 1
@@ -167,15 +169,15 @@ function buildAttempts(courseSlug: string): CourseAttempt[] {
   return attempts;
 }
 
-function getCourseAttempts(courseSlug: string): CourseAttempt[] {
-  const stored = attemptsByCourse.get(courseSlug);
+function getCourseAttempts(courseId: CourseId): CourseAttempt[] {
+  const stored = attemptsByCourse.get(courseId);
 
   if (stored) {
     return stored;
   }
 
-  const attempts = buildAttempts(courseSlug);
-  attemptsByCourse.set(courseSlug, attempts);
+  const attempts = buildAttempts(courseId);
+  attemptsByCourse.set(courseId, attempts);
   return attempts;
 }
 
@@ -200,15 +202,15 @@ function filterAttempts(
 }
 
 export async function fetchCourseAttemptsList({
-  courseSlug,
+  courseId,
   filters,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   filters: CourseAttemptsFilters;
 }): Promise<CourseAttemptsListResult> {
   await new Promise((resolve) => setTimeout(resolve, 180));
 
-  const attempts = getCourseAttempts(courseSlug);
+  const attempts = getCourseAttempts(courseId);
 
   return {
     attempts: filterAttempts(attempts, filters),
@@ -218,9 +220,9 @@ export async function fetchCourseAttemptsList({
 }
 
 export function createMockReviewLockUpdates(
-  courseSlug: string
+  courseId: CourseId
 ): CourseAttemptReviewLockUpdate[] {
-  const attempts = getCourseAttempts(courseSlug);
+  const attempts = getCourseAttempts(courseId);
   const lockedAttempts = attempts.filter((attempt) => attempt.reviewLock);
   const unlockedAttempts = attempts.filter(
     (attempt) => !attempt.grade && !attempt.reviewLock
@@ -248,7 +250,7 @@ export function createMockReviewLockUpdates(
   ];
 
   attemptsByCourse.set(
-    courseSlug,
+    courseId,
     applyReviewLockUpdatesToAttempts(attempts, updates)
   );
 
@@ -256,17 +258,17 @@ export function createMockReviewLockUpdates(
 }
 
 export function findMockCourseAttempt({
-  courseSlug,
+  courseId,
   taskId,
   studentUsername,
   attemptNumber,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   taskId: string;
   studentUsername: string;
   attemptNumber: AttemptNumber;
 }): CourseAttempt | undefined {
-  return getCourseAttempts(courseSlug).find(
+  return getCourseAttempts(courseId).find(
     (attempt) =>
       attempt.task.id === taskId &&
       attempt.student.username === studentUsername &&
@@ -275,7 +277,7 @@ export function findMockCourseAttempt({
 }
 
 export function upsertMockCourseAttemptGrade({
-  courseSlug,
+  courseId,
   taskId,
   studentUsername,
   attemptNumber,
@@ -283,7 +285,7 @@ export function upsertMockCourseAttemptGrade({
   gradedAt,
   gradedBy,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   taskId: string;
   studentUsername: string;
   attemptNumber: AttemptNumber;
@@ -291,7 +293,7 @@ export function upsertMockCourseAttemptGrade({
   gradedAt: string;
   gradedBy: string;
 }): void {
-  const updatedAttempts = getCourseAttempts(courseSlug).map((attempt) => {
+  const updatedAttempts = getCourseAttempts(courseId).map((attempt) => {
     if (
       attempt.task.id !== taskId ||
       attempt.student.username !== studentUsername ||
@@ -311,11 +313,11 @@ export function upsertMockCourseAttemptGrade({
     };
   });
 
-  attemptsByCourse.set(courseSlug, updatedAttempts);
+  attemptsByCourse.set(courseId, updatedAttempts);
 }
 
 export async function saveQuickGrades({
-  courseSlug,
+  courseId,
   updates,
 }: SaveQuickGradesInput): Promise<CourseAttempt[]> {
   await new Promise((resolve) => setTimeout(resolve, 220));
@@ -329,7 +331,7 @@ export async function saveQuickGrades({
     updates.map((update) => [update.attemptId, update])
   );
 
-  const updatedAttempts = getCourseAttempts(courseSlug).map((attempt) => {
+  const updatedAttempts = getCourseAttempts(courseId).map((attempt) => {
     const update = updateById.get(attempt.id);
     if (!update || attempt.reviewLock) {
       return attempt;
@@ -348,6 +350,6 @@ export async function saveQuickGrades({
     };
   });
 
-  attemptsByCourse.set(courseSlug, updatedAttempts);
+  attemptsByCourse.set(courseId, updatedAttempts);
   return updatedAttempts;
 }

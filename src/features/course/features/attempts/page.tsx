@@ -31,15 +31,18 @@ import {
 import { AttemptsFilterSidebar, AttemptsFiltersContent } from './ui/sidebar';
 import { VirtualizedAttemptsList } from './ui/virtualized-list';
 import type { CourseAttemptsFilters } from './model/types';
+import type { CourseId } from '@/features/course/model/identity';
 import { cn } from '@/shadcn/lib/utils';
 
 type CourseAttemptsPageProps = {
+  courseId: CourseId;
   courseSlug: string;
   appliedFilters: CourseAttemptsFilters;
   onApplyFilters: (filters: CourseAttemptsFilters) => void;
 };
 
 export function CourseAttemptsPage({
+  courseId,
   courseSlug,
   appliedFilters,
   onApplyFilters,
@@ -49,7 +52,7 @@ export function CourseAttemptsPage({
   const [filtersDrawerOpen, setFiltersDrawerOpen] = useState(false);
 
   const attemptsQuery = useCourseAttemptsQuery({
-    courseSlug,
+    courseId,
     filters: filters.normalizedAppliedFilters,
     refetchPaused: quickGradingState.quickGrading,
   });
@@ -58,7 +61,7 @@ export function CourseAttemptsPage({
   );
   const selection = useCourseAttemptsSelection(attempts);
   const grading = useCourseAttemptsGrading({
-    courseSlug,
+    courseId,
     attemptById,
     selectedAttempts: selection.selectedAttempts,
     clearSelection: selection.clearSelection,
@@ -66,7 +69,7 @@ export function CourseAttemptsPage({
   });
 
   useCourseAttemptsReviewLockSelectionSync({
-    courseSlug,
+    courseId,
     enabled: !attemptsQuery.isPending,
     selectedAttemptIds: selection.selectedAttemptIds,
     attemptById,

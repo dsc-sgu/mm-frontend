@@ -26,7 +26,7 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const { courseSlug } = Route.useParams();
+  const { course, courseSlug } = Route.useRouteContext();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
 
@@ -43,6 +43,7 @@ function RouteComponent() {
 
   return (
     <CourseAttemptsPage
+      courseId={course.id}
       courseSlug={courseSlug}
       appliedFilters={appliedFilters}
       onApplyFilters={handleApplyFilters}

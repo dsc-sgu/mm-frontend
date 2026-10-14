@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
+import type { CourseId } from '@/features/course/model/identity';
 import { createMockReviewLockUpdates } from '@/features/course/features/attempts/api/mock';
 import { courseAttemptsKeys } from '@/features/course/features/attempts/api/queries';
 import {
@@ -12,11 +13,11 @@ import type { CourseAttemptsListResult } from '@/features/course/features/attemp
 const MOCK_REVIEW_LOCK_UPDATE_INTERVAL = 4_500;
 
 export function useCourseAttemptReviewLockUpdates({
-  courseSlug,
+  courseId,
   enabled = true,
   onUpdates,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   enabled?: boolean;
   onUpdates?: (updates: CourseAttemptReviewLockUpdate[]) => void;
 }) {
@@ -28,14 +29,14 @@ export function useCourseAttemptReviewLockUpdates({
     }
 
     const intervalId = window.setInterval(() => {
-      const updates = createMockReviewLockUpdates(courseSlug);
+      const updates = createMockReviewLockUpdates(courseId);
 
       if (updates.length === 0) {
         return;
       }
 
       queryClient.setQueriesData<CourseAttemptsListResult>(
-        { queryKey: courseAttemptsKeys.course(courseSlug) },
+        { queryKey: courseAttemptsKeys.course(courseId) },
         (current) => {
           if (!current) {
             return current;
@@ -54,5 +55,5 @@ export function useCourseAttemptReviewLockUpdates({
     }, MOCK_REVIEW_LOCK_UPDATE_INTERVAL);
 
     return () => window.clearInterval(intervalId);
-  }, [courseSlug, enabled, onUpdates, queryClient]);
+  }, [courseId, enabled, onUpdates, queryClient]);
 }

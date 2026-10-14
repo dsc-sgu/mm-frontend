@@ -116,7 +116,6 @@ export type AttemptReviewHistoryItem = {
 };
 
 export type AttemptReviewAggregate = {
-  courseSlug: string;
   baselineAttemptNumber: AttemptNumber | null;
   current: AttemptReviewAttemptDetail;
   attempts: AttemptReviewHistoryItem[];

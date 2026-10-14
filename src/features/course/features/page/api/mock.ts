@@ -6,7 +6,10 @@ import type {
   CoursePageResources,
   SaveCoursePageInput,
 } from '@/features/course/features/page/model/types';
-import { CourseSlugSchema } from '@/features/course/model/identity';
+import {
+  CourseSlugSchema,
+  type CourseId,
+} from '@/features/course/model/identity';
 
 type CoursePageSummary = Omit<
   CoursePage,
@@ -57,10 +60,8 @@ function createCoursePage(course: MockCourse): CoursePage {
   };
 }
 
-function ensureCoursePage(courseSlug: string): CoursePage | null {
-  const course = mockBackend.state.courses.find(
-    (item) => item.slug === courseSlug
-  );
+function ensureCoursePage(courseId: CourseId): CoursePage | null {
+  const course = findCourse(courseId);
   if (!course) {
     return null;
   }
@@ -73,6 +74,11 @@ function ensureCoursePage(courseSlug: string): CoursePage | null {
   const page = createCoursePage(course);
   COURSE_PAGE_STORE.set(course, page);
   return page;
+}
+
+// RAM operations address the same CourseId the Course lookup returns.
+function findCourse(courseId: CourseId): MockCourse | undefined {
+  return mockBackend.state.courses.find(({ id }) => id === courseId);
 }
 
 function buildCourseResources(course: CoursePageSummary): CoursePageResources {
@@ -399,11 +405,11 @@ function buildCourseContent(
 }
 
 export async function fetchCoursePage(
-  courseSlug: string
+  courseId: CourseId
 ): Promise<CoursePage | null> {
   await new Promise((resolve) => setTimeout(resolve, 150));
 
-  const page = ensureCoursePage(courseSlug);
+  const page = ensureCoursePage(courseId);
 
   return page ? cloneCoursePage(page) : null;
 }
@@ -413,17 +419,15 @@ export async function saveCoursePage(
 ): Promise<CoursePage> {
   await new Promise((resolve) => setTimeout(resolve, 250));
 
-  const currentPage = ensureCoursePage(input.courseSlug);
-  const currentCourse = mockBackend.state.courses.find(
-    (course) => course.slug === input.courseSlug
-  );
+  const currentPage = ensureCoursePage(input.courseId);
+  const currentCourse = findCourse(input.courseId);
 
   if (!currentPage || !currentCourse) {
-    throw new Error(`Course page not found: ${input.courseSlug}`);
+    throw new Error(`Course page not found: ${input.courseId}`);
   }
 
   const nextCourseSummary: CoursePageSummary = {
-    courseId: input.courseId,
+    courseId: input.slug,
     title: input.title,
     shortTitle: input.shortTitle,
     color: input.color,
@@ -442,7 +446,7 @@ export async function saveCoursePage(
   // Only card metadata and the route slug change. Stable Course identity and
   // every membership remain attached to the same canonical Course.
   Object.assign(currentCourse, {
-    slug: v.parse(CourseSlugSchema, input.courseId),
+    slug: v.parse(CourseSlugSchema, input.slug),
     title: input.title,
     shortTitle: input.shortTitle,
     color: input.color,

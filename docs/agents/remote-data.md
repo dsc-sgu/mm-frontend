@@ -112,6 +112,8 @@ Generic `Result<T, E>` МОЖЕТ использоваться вне remote-dat
 7. Общий registry всех query keys НЕ ДОЛЖЕН создаваться. Key factory принадлежит feature, владеющему соответствующими server data.
 8. Semantic cache helper ДОЛЖЕН создаваться только тогда, когда он скрывает повторяемое, многосоставное или инвариантное cache behavior. Однострочная обёртка над одной очевидной операцией `QueryClient` НЕ ДОЛЖНА создаваться только ради сокрытия TanStack Query.
 9. UI и domain model НЕ ДОЛЖНЫ зависеть от представления query keys.
+10. Каждое course-scoped семейство ДОЛЖНО расширять Course prefix `courseKeys.byId(courseId)` из `src/features/course/api/queries.ts` и адресовать Course стабильным `CourseId`. Slug НЕ ДОЛЖЕН входить в course-scoped key. Вне prefix остаются семейства, чей вход не `CourseId`: Course context (вход — slug), список курсов (вход — User) и дедлайны (поперёк Course).
+11. Session-bound семейства — Course context, список курсов и всё под Course prefix — удаляются при login, logout и замене session до появления следующего экрана; подтверждённая потеря Course Membership удаляет `courseKeys.byId(courseId)` одним вызовом. Новое session-bound семейство вне Course prefix ДОЛЖНО быть добавлено в эту очистку.
 
 Минимальная форма для семейства с одним key:
 
@@ -125,9 +127,8 @@ export const sessionKeys = {
 
 ```ts
 export const courseAttemptsKeys = {
-  all: ['course-attempts'] as const,
   course: (courseId: CourseId) =>
-    [...courseAttemptsKeys.all, courseId] as const,
+    [...courseKeys.byId(courseId), 'attempts'] as const,
   list: (courseId: CourseId, filters: CourseAttemptsFilters) =>
     [...courseAttemptsKeys.course(courseId), { filters }] as const,
 };

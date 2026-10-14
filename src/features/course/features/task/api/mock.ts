@@ -1,7 +1,10 @@
 import * as v from 'valibot';
+import { mockBackend } from '@/app/mock-backend/state';
+import type { UserId } from '@/features/auth/model/identity';
 import {
   AttemptNumberSchema,
   type AttemptNumber,
+  type CourseId,
 } from '@/features/course/model/identity';
 import type {
   TaskAttachment,
@@ -188,24 +191,32 @@ const INITIAL_UNSEEN_ATTEMPT_NUMBERS = new Set([7, 9]);
 const seenAttemptUpdates = new Set<string>();
 
 export async function fetchTaskPage({
-  courseSlug,
+  courseId,
   taskId,
-  studentUsername,
+  studentId,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   taskId: string;
-  studentUsername?: string;
+  studentId: UserId | null;
 }): Promise<TaskPageData | null> {
   await new Promise((resolve) => setTimeout(resolve, 180));
 
   const taskNumber = Number(taskId);
+  const course = mockBackend.state.courses.find(({ id }) => id === courseId);
 
-  if (!Number.isInteger(taskNumber) || taskNumber < 1) {
+  if (!course || !Number.isInteger(taskNumber) || taskNumber < 1) {
+    return null;
+  }
+
+  const student =
+    studentId === null
+      ? null
+      : mockBackend.state.users.find(({ id }) => id === studentId);
+  if (student === undefined) {
     return null;
   }
 
   return {
-    courseSlug,
     task: {
       id: taskId,
       number: taskNumber,
@@ -216,21 +227,21 @@ export async function fetchTaskPage({
       maxScore: 10,
       attachments: ATTACHMENTS.map((attachment) => ({
         ...attachment,
-        id: `${courseSlug}:${taskId}:attachment:${attachment.name}`,
+        id: `${courseId}:${taskId}:attachment:${attachment.name}`,
       })),
       attempts: ATTEMPTS.map((attempt) => ({
         ...attempt,
-        studentUsername: studentUsername ?? attempt.studentUsername,
-        id: `${courseSlug}:${taskId}:attempt:${attempt.attemptNumber}`,
+        studentUsername: student?.username ?? attempt.studentUsername,
+        id: `${courseId}:${taskId}:attempt:${attempt.attemptNumber}`,
         review: { ...attempt.review },
         attention: {
           status:
             INITIAL_UNSEEN_ATTEMPT_NUMBERS.has(attempt.attemptNumber) &&
             !seenAttemptUpdates.has(
               getAttemptUpdatesKey({
-                courseSlug,
+                courseId,
                 taskId,
-                studentUsername: studentUsername ?? attempt.studentUsername,
+                student: studentId ?? attempt.studentUsername,
                 attemptNumber: attempt.attemptNumber,
               })
             )
@@ -243,38 +254,38 @@ export async function fetchTaskPage({
 }
 
 export async function markTaskAttemptUpdatesSeen({
-  courseSlug,
+  courseId,
   taskId,
-  studentUsername,
+  studentId,
   attemptNumber,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   taskId: string;
-  studentUsername: string;
+  studentId: UserId;
   attemptNumber: AttemptNumber;
 }): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 120));
 
   seenAttemptUpdates.add(
     getAttemptUpdatesKey({
-      courseSlug,
+      courseId,
       taskId,
-      studentUsername,
+      student: studentId,
       attemptNumber,
     })
   );
 }
 
 function getAttemptUpdatesKey({
-  courseSlug,
+  courseId,
   taskId,
-  studentUsername,
+  student,
   attemptNumber,
 }: {
-  courseSlug: string;
+  courseId: CourseId;
   taskId: string;
-  studentUsername: string;
+  student: string;
   attemptNumber: AttemptNumber;
 }): string {
-  return `${courseSlug}:${taskId}:${studentUsername}:${attemptNumber}`;
+  return `${courseId}:${taskId}:${student}:${attemptNumber}`;
 }
