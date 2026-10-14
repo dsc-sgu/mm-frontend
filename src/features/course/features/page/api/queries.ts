@@ -8,7 +8,7 @@ import {
 import { courseKeys, coursesKeys } from '@/features/course/api/queries';
 import { invalidateCourseContextsAfterMetadataSave } from '@/features/course/features/access/api/queries';
 import type { SaveCoursePageInput } from '@/features/course/features/page/model/types';
-import type { CourseId } from '@/features/course/model/identity';
+import type { CourseId, CourseSlug } from '@/features/course/model/identity';
 import { deadlinesKeys } from '@/features/deadlines-calendar/api/queries';
 import { fetchCoursePage, saveCoursePage } from './mock';
 
@@ -32,7 +32,7 @@ export function useCoursePageQuery(courseId: CourseId) {
 
 type SaveCoursePageVariables = SaveCoursePageInput & {
   /** The confirmed slug the editor was opened at, a shell context locator. */
-  previousSlug: string;
+  previousSlug: CourseSlug;
 };
 
 /**
