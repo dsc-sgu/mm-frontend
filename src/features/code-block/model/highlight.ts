@@ -18,10 +18,21 @@ async function createCodeBlockHighlighter() {
   });
 }
 
-let highlighterPromise: ReturnType<typeof createCodeBlockHighlighter> | null =
-  null;
-let bundledLanguagesPromise: Promise<typeof import('shiki/langs')> | null =
-  null;
+function cacheUntilRejected<T>(load: () => Promise<T>) {
+  let promise: Promise<T> | null = null;
+
+  return () => {
+    promise ??= load().catch((error: unknown) => {
+      promise = null;
+      throw error;
+    });
+
+    return promise;
+  };
+}
+
+const getCodeBlockHighlighter = cacheUntilRejected(createCodeBlockHighlighter);
+const getBundledLanguages = cacheUntilRejected(() => import('shiki/langs'));
 
 export type HighlightCodeResult =
   | {
@@ -39,16 +50,6 @@ type HighlightCodeFailureReason =
   | 'highlight-error';
 
 const languageLoadPromises = new Map<string, Promise<boolean>>();
-
-function getCodeBlockHighlighter() {
-  highlighterPromise ??= createCodeBlockHighlighter();
-  return highlighterPromise;
-}
-
-function getBundledLanguages() {
-  bundledLanguagesPromise ??= import('shiki/langs');
-  return bundledLanguagesPromise;
-}
 
 async function ensureLanguageLoaded(language: string) {
   const cachedPromise = languageLoadPromises.get(language);
@@ -71,7 +72,10 @@ async function ensureLanguageLoaded(language: string) {
 
     await highlighter.loadLanguage(loadLanguage);
     return true;
-  })();
+  })().catch((error: unknown) => {
+    languageLoadPromises.delete(language);
+    throw error;
+  });
 
   languageLoadPromises.set(language, loadPromise);
   return loadPromise;
