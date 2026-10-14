@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
-  createDiffReadiness,
+  createDiffReadinessStore,
   type DiffWorkerPool,
   type DiffWorkerPoolStatus,
 } from './diff-readiness';
@@ -40,20 +40,20 @@ function fakePools() {
 describe('diff readiness', () => {
   test('creates no Workers until it starts', () => {
     const pools = fakePools();
-    const readiness = createDiffReadiness(pools.createPool);
+    const store = createDiffReadinessStore(pools.createPool);
 
-    expect(readiness.getSnapshot()).toEqual({ status: 'loading' });
+    expect(store.getSnapshot()).toEqual({ status: 'loading' });
     expect(pools.created).toHaveLength(0);
   });
 
   test('loading becomes ready with the pool that reported it', () => {
     const pools = fakePools();
-    const readiness = createDiffReadiness(pools.createPool);
-    readiness.start();
+    const store = createDiffReadinessStore(pools.createPool);
+    store.start();
 
     pools.created[0].report('ready');
 
-    expect(readiness.getSnapshot()).toEqual({
+    expect(store.getSnapshot()).toEqual({
       status: 'ready',
       pool: pools.created[0],
     });
@@ -61,60 +61,60 @@ describe('diff readiness', () => {
 
   test('an unavailable Worker or WASM is failed, not endless loading', () => {
     const pools = fakePools();
-    const readiness = createDiffReadiness(pools.createPool);
-    readiness.start();
+    const store = createDiffReadinessStore(pools.createPool);
+    store.start();
 
     pools.created[0].report('failed');
 
-    expect(readiness.getSnapshot()).toEqual({ status: 'failed' });
+    expect(store.getSnapshot()).toEqual({ status: 'failed' });
   });
 
   test('retry after a failure recreates the Workers', () => {
     const pools = fakePools();
-    const readiness = createDiffReadiness(pools.createPool);
-    readiness.start();
+    const store = createDiffReadinessStore(pools.createPool);
+    store.start();
     pools.created[0].report('failed');
 
-    readiness.retry();
+    store.retry();
 
     expect(pools.created).toHaveLength(2);
     expect(pools.created[0].terminated).toBe(true);
-    expect(readiness.getSnapshot()).toEqual({ status: 'loading' });
+    expect(store.getSnapshot()).toEqual({ status: 'loading' });
     pools.created[1].report('ready');
-    expect(readiness.getSnapshot()).toMatchObject({ status: 'ready' });
+    expect(store.getSnapshot()).toMatchObject({ status: 'ready' });
   });
 
   test('retry is a no-op unless the diff failed', () => {
     const pools = fakePools();
-    const readiness = createDiffReadiness(pools.createPool);
-    readiness.start();
+    const store = createDiffReadinessStore(pools.createPool);
+    store.start();
 
-    readiness.retry();
+    store.retry();
     pools.created[0].report('ready');
-    readiness.retry();
+    store.retry();
 
     expect(pools.created).toHaveLength(1);
-    expect(readiness.getSnapshot()).toMatchObject({ status: 'ready' });
+    expect(store.getSnapshot()).toMatchObject({ status: 'ready' });
   });
 
   test('a stopped pool is terminated and its late reports are ignored', () => {
     const pools = fakePools();
-    const readiness = createDiffReadiness(pools.createPool);
-    readiness.start();
+    const store = createDiffReadinessStore(pools.createPool);
+    store.start();
 
-    readiness.stop();
+    store.stop();
     pools.created[0].report('ready');
 
     expect(pools.created[0].terminated).toBe(true);
-    expect(readiness.getSnapshot()).toEqual({ status: 'loading' });
+    expect(store.getSnapshot()).toEqual({ status: 'loading' });
   });
 
   test('notifies subscribers only when readiness changes', () => {
     const pools = fakePools();
-    const readiness = createDiffReadiness(pools.createPool);
+    const store = createDiffReadinessStore(pools.createPool);
     let notifications = 0;
-    readiness.subscribe(() => notifications++);
-    readiness.start();
+    store.subscribe(() => notifications++);
+    store.start();
 
     pools.created[0].report('loading');
     pools.created[0].report('ready');
