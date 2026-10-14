@@ -4,6 +4,7 @@ import { Map as ImmutableMap } from 'immutable';
 import {
   createQuickGradeUpdate,
   getQuickGradeDraftError,
+  isQuickGradeDraftChanged,
   savedGradeText,
   type QuickGradeUpdate,
 } from '@/features/course/features/attempts/model/quick-grade';
@@ -141,7 +142,16 @@ export function useCourseAttemptsGrading({
     markQuickGradesSaved,
   } = quickGradingState;
 
-  const hasDraftChanges = !draftGradesByAttemptId.isEmpty();
+  // `7.50` over a saved 7,5 stays in the field but changes nothing.
+  const hasDraftChanges = useMemo(
+    () =>
+      draftGradesByAttemptId.some((draftGrade, attemptId) => {
+        const attempt = attemptById.get(attemptId);
+
+        return attempt ? isQuickGradeDraftChanged(attempt, draftGrade) : false;
+      }),
+    [attemptById, draftGradesByAttemptId]
+  );
   const hasDraftValidationErrors = useMemo(
     () =>
       draftGradesByAttemptId.some((draftGrade, attemptId) => {

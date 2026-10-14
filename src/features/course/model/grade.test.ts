@@ -4,8 +4,10 @@ import {
   addGrades,
   compareGrades,
   formatGrade,
+  gradeInputMatches,
   GradeSchema,
   gradesEqual,
+  gradeToNumber,
   parseGradeInput,
   type Grade,
 } from './grade';
@@ -99,4 +101,27 @@ describe('Grade arithmetic', () => {
     expect(formatGrade(grade(7.01))).toBe('7,01');
     expect(formatGrade(grade(12))).toBe('12');
   });
+});
+
+describe('gradeInputMatches', () => {
+  test.each([
+    ['7,5', 7.5, true],
+    ['7.5', 7.5, true],
+    ['7,50', 7.5, true],
+    ['7,51', 7.5, false],
+    ['', null, true],
+    ['', 7.5, false],
+    ['7', null, false],
+    ['abc', null, false],
+  ])('%j against %j is %s', (input, saved, expected) => {
+    expect(gradeInputMatches(input, saved === null ? null : grade(saved))).toBe(
+      expected
+    );
+  });
+});
+
+test('a Grade round-trips through its JSON number', () => {
+  for (const value of [0, 0.001, 7.125, 25]) {
+    expect(gradeToNumber(grade(value))).toBe(value);
+  }
 });

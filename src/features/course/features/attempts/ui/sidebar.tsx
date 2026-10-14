@@ -355,13 +355,13 @@ function TasksFilterSection({
         emptyMessage="Задания не найдены"
         options={tasks.map((task) => ({
           value: task.id,
-          label: `${task.title} · ${formatGrade(task.maxGrade)} б.`,
+          label: `${task.title} · макс. ${formatGrade(task.maxGrade)}`,
         }))}
         selectedOptions={context.tasks
           .filter((task) => selectedTaskIds.includes(task.id))
           .map((task) => ({
             value: task.id,
-            label: `${task.title} · ${formatGrade(task.maxGrade)} б.`,
+            label: `${task.title} · макс. ${formatGrade(task.maxGrade)}`,
           }))}
         selectedValues={selectedTaskIds}
         loading={loading}

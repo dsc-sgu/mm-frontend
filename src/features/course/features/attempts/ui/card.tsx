@@ -4,7 +4,11 @@ import { Eye, FileCheck2, LockKeyhole } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import { cn } from '@/shadcn/lib/utils';
-import { compareGrades, formatGrade } from '@/features/course/model/grade';
+import {
+  compareGrades,
+  formatGrade,
+  isZeroGrade,
+} from '@/features/course/model/grade';
 import { GradeField } from '@/features/course/ui/grade-field';
 import {
   getQuickGradeDraftError,
@@ -181,7 +185,7 @@ function getGradeClassName(attempt: CourseAttempt): string {
     return '';
   }
 
-  if (attempt.grade.value.thousandths === 0) {
+  if (isZeroGrade(attempt.grade.value)) {
     return 'font-semibold text-rose-700 dark:text-rose-300';
   }
 

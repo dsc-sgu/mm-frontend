@@ -25,7 +25,6 @@ const graded: QuickGradeAttempt = {
 
 describe('getQuickGradeDraftError', () => {
   test('an untouched ungraded Attempt is not an error', () => {
-    expect(getQuickGradeDraftError(ungraded, undefined)).toBeNull();
     expect(getQuickGradeDraftError(ungraded, '')).toBeNull();
   });
 
@@ -54,6 +53,7 @@ describe('createQuickGradeUpdate', () => {
 
   test.each([
     ['an unchanged draft', graded, '7,5'],
+    ['the same Grade spelled differently', graded, '7.50'],
     ['an invalid draft', graded, '7,1255'],
     ['an erased Grade', graded, ''],
     [

@@ -548,7 +548,7 @@ export function CourseAssignmentElement({
                   </div>
                 )}
               </div>
-              {(assignment.dueDate || assignment.maxGrade) && (
+              {(assignment.dueDate || assignment.maxGrade !== undefined) && (
                 <div className="grid gap-2 text-sm text-muted-foreground md:min-w-48">
                   {assignment.dueDate && (
                     <span className="flex items-center gap-2">
