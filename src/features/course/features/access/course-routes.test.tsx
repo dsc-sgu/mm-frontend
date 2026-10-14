@@ -274,7 +274,7 @@ test('saved Course metadata replaces the confirmed Header title without changing
     await mutation.result.current.mutateAsync({
       ...page,
       courseId: DATABASES_ID,
-      previousSlug: 'databases',
+      previousSlug: accessWorld.courses.databases.slug,
       slug: 'databases',
       title: 'Базы данных — обновлённое название',
     });
@@ -306,7 +306,7 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
       mutation.result.current.mutateAsync({
         ...page,
         courseId: DATABASES_ID,
-        previousSlug: 'databases',
+        previousSlug: accessWorld.courses.databases.slug,
         slug: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
         title: 'Rejected UUID rename',
       })
