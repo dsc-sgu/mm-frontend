@@ -192,10 +192,7 @@ function AttemptReviewPageLoaded({
     canReplyToAttempt(courseRole, sessionData.session.userId, studentId);
   const saveBlockedReason = getSaveBlockedReason(diffReadiness);
   const canSave =
-    mode === 'editable' &&
-    savableGrade !== null &&
-    saveBlockedReason === null &&
-    !saveMutation.isPending;
+    mode === 'editable' && savableGrade !== null && !saveMutation.isPending;
   const totalAdded = review.changedFiles.reduce(
     (sum, file) => sum + file.addedLines,
     0

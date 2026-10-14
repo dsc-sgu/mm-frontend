@@ -32,7 +32,7 @@ export type DiffReadinessStore = {
 const LOADING: DiffReadiness = { status: 'loading' };
 const FAILED: DiffReadiness = { status: 'failed' };
 
-export function createDiffReadiness(
+export function createDiffReadinessStore(
   createPool: DiffWorkerPoolFactory
 ): DiffReadinessStore {
   let readiness = LOADING;

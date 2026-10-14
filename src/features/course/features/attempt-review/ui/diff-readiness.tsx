@@ -1,6 +1,6 @@
 import { WorkerPoolContext } from '@pierre/diffs/react';
 import { AlertCircle } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 
 import { Button } from '@/shadcn/components/ui/button';
 import { Spinner } from '@/shadcn/components/ui/spinner';
@@ -21,6 +21,8 @@ export function DiffReadinessGate({
   onRetry,
   children,
 }: DiffReadinessGateProps) {
+  const failedTitleId = useId();
+
   switch (readiness.status) {
     case 'loading':
       return (
@@ -41,17 +43,14 @@ export function DiffReadinessGate({
         <div className={cn('grid place-items-center p-6', className)}>
           <section
             role="alert"
-            aria-labelledby="attempt-review-diff-failed-title"
+            aria-labelledby={failedTitleId}
             className="max-w-md rounded-2xl border border-dashed p-6 text-center"
           >
             <AlertCircle
               className="mx-auto size-8 text-destructive"
               aria-hidden="true"
             />
-            <h2
-              id="attempt-review-diff-failed-title"
-              className="mt-3 text-lg font-semibold"
-            >
+            <h2 id={failedTitleId} className="mt-3 text-lg font-semibold">
               Не удалось показать изменения
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">

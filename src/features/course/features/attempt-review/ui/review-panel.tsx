@@ -1,4 +1,5 @@
 import { Check, RotateCcw, Save } from 'lucide-react';
+import { useId } from 'react';
 
 import {
   formatGrade,
@@ -23,9 +24,10 @@ type AttemptReviewReviewPanelProps = {
   gradeError: GradeInputError | null;
   gradeChanged: boolean;
   hasChanges: boolean;
+  /** The Working Copy can be saved. */
   canSave: boolean;
   /** Why Save is unavailable regardless of the Working Copy. */
-  saveBlockedReason?: string | null;
+  saveBlockedReason: string | null;
   savePending: boolean;
   id?: string;
   className?: string;
@@ -35,8 +37,6 @@ type AttemptReviewReviewPanelProps = {
   onSave: () => Promise<void>;
 };
 
-const SAVE_BLOCKED_REASON_ID = 'attempt-review-save-blocked-reason';
-
 export function AttemptReviewReviewPanel({
   review,
   draft,
@@ -45,7 +45,7 @@ export function AttemptReviewReviewPanel({
   gradeChanged,
   hasChanges,
   canSave,
-  saveBlockedReason = null,
+  saveBlockedReason,
   savePending,
   id,
   className,
@@ -54,6 +54,8 @@ export function AttemptReviewReviewPanel({
   onDiscard,
   onSave,
 }: AttemptReviewReviewPanelProps) {
+  const saveBlockedReasonId = useId();
+
   return (
     <section
       id={id}
@@ -135,9 +137,9 @@ export function AttemptReviewReviewPanel({
               <Button
                 type="button"
                 className="w-full rounded-xl"
-                disabled={!canSave}
+                disabled={!canSave || saveBlockedReason !== null}
                 aria-describedby={
-                  saveBlockedReason ? SAVE_BLOCKED_REASON_ID : undefined
+                  saveBlockedReason === null ? undefined : saveBlockedReasonId
                 }
                 onClick={onSave}
               >
@@ -155,14 +157,14 @@ export function AttemptReviewReviewPanel({
                 Сбросить
               </Button>
             </div>
-            {saveBlockedReason ? (
+            {saveBlockedReason === null ? null : (
               <p
-                id={SAVE_BLOCKED_REASON_ID}
+                id={saveBlockedReasonId}
                 className="text-sm text-muted-foreground"
               >
                 {saveBlockedReason}
               </p>
-            ) : null}
+            )}
           </div>
         ) : null}
       </div>

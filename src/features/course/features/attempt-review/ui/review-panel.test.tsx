@@ -61,6 +61,7 @@ function ReviewPanel({ review }: { review: AttemptReviewAggregate }) {
       gradeChanged={gradeChanged}
       hasChanges={hasChanges}
       canSave={savableGrade !== null}
+      saveBlockedReason={null}
       savePending={false}
       onGradeChange={setGrade}
       onFeedbackChange={() => {}}

@@ -97,4 +97,13 @@ test('REV-11: only the Attempt page and the Review editor run diff Workers', asy
   await page.goto(ATTEMPT_PATH);
   await expect(changedFileDiffs(page).first()).toBeVisible(COLD_START);
   expect(workers.length).toBeGreaterThan(0);
+  const closed = workers.map((worker) => worker.waitForEvent('close'));
+
+  // Leaving the Attempt page in the app terminates its Workers.
+  await page
+    .getByRole('navigation', { name: 'Разделы страницы' })
+    .getByRole('link', { name: 'Курс' })
+    .click();
+  await expect(page.getByRole('heading', { name: COURSE_TITLE })).toBeVisible();
+  await Promise.all(closed);
 });
