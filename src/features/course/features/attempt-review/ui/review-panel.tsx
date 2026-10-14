@@ -24,6 +24,8 @@ type AttemptReviewReviewPanelProps = {
   gradeChanged: boolean;
   hasChanges: boolean;
   canSave: boolean;
+  /** Why Save is unavailable regardless of the Working Copy. */
+  saveBlockedReason?: string | null;
   savePending: boolean;
   id?: string;
   className?: string;
@@ -33,6 +35,8 @@ type AttemptReviewReviewPanelProps = {
   onSave: () => Promise<void>;
 };
 
+const SAVE_BLOCKED_REASON_ID = 'attempt-review-save-blocked-reason';
+
 export function AttemptReviewReviewPanel({
   review,
   draft,
@@ -41,6 +45,7 @@ export function AttemptReviewReviewPanel({
   gradeChanged,
   hasChanges,
   canSave,
+  saveBlockedReason = null,
   savePending,
   id,
   className,
@@ -131,6 +136,9 @@ export function AttemptReviewReviewPanel({
                 type="button"
                 className="w-full rounded-xl"
                 disabled={!canSave}
+                aria-describedby={
+                  saveBlockedReason ? SAVE_BLOCKED_REASON_ID : undefined
+                }
                 onClick={onSave}
               >
                 {savePending ? <Spinner /> : <Save className="size-4" />}
@@ -147,6 +155,14 @@ export function AttemptReviewReviewPanel({
                 Сбросить
               </Button>
             </div>
+            {saveBlockedReason ? (
+              <p
+                id={SAVE_BLOCKED_REASON_ID}
+                className="text-sm text-muted-foreground"
+              >
+                {saveBlockedReason}
+              </p>
+            ) : null}
           </div>
         ) : null}
       </div>

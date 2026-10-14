@@ -31,7 +31,9 @@ import {
   useSaveAttemptReviewMutation,
   useUpdateAttemptReviewCommentReplyMutation,
 } from './api/queries';
-import { useAttemptReviewWorkerPoolReady } from './hooks/use-worker-pool';
+import { useDiffReadiness } from './hooks/use-diff-readiness';
+import type { DiffReadiness } from './model/diff-readiness';
+import { DiffReadinessGate } from './ui/diff-readiness';
 import type {
   AttemptReviewAggregate,
   AttemptReviewDiffViewMode,
@@ -54,11 +56,22 @@ type AttemptReviewMobileDrawerState = 'none' | 'file-tree' | 'review-panel';
 
 const REVIEW_PANEL_ID = 'attempt-review-review-panel';
 
+// REV6.2 turns these into reasons of the publish gate.
+function getSaveBlockedReason(readiness: DiffReadiness): string | null {
+  switch (readiness.status) {
+    case 'loading':
+      return 'Сохранить можно, когда загрузятся изменения.';
+    case 'failed':
+      return 'Сохранить нельзя: изменения не загрузились.';
+    case 'ready':
+      return null;
+  }
+}
+
 export function AttemptReviewPage(props: AttemptReviewPageProps) {
   const reviewQuery = useAttemptReviewQuery(props.viewerId, props);
-  const isWorkerPoolReady = useAttemptReviewWorkerPoolReady();
 
-  if (reviewQuery.isLoading || !isWorkerPoolReady) {
+  if (reviewQuery.isLoading) {
     return (
       <main
         className={cn(
@@ -109,6 +122,7 @@ function AttemptReviewPageLoaded({
   const updateReplyMutation = useUpdateAttemptReviewCommentReplyMutation();
   const deleteReplyMutation = useDeleteAttemptReviewCommentReplyMutation();
   const { data: sessionData } = useQuery(sessionOptions);
+  const { readiness: diffReadiness, retry: retryDiff } = useDiffReadiness();
   const [activeFilePath, setActiveFilePath] = useState<string | null>(
     review.changedFiles[0]?.path ?? null
   );
@@ -176,8 +190,12 @@ function AttemptReviewPageLoaded({
   const canReplyToComments =
     sessionData?.status === 'authorized' &&
     canReplyToAttempt(courseRole, sessionData.session.userId, studentId);
+  const saveBlockedReason = getSaveBlockedReason(diffReadiness);
   const canSave =
-    mode === 'editable' && savableGrade !== null && !saveMutation.isPending;
+    mode === 'editable' &&
+    savableGrade !== null &&
+    saveBlockedReason === null &&
+    !saveMutation.isPending;
   const totalAdded = review.changedFiles.reduce(
     (sum, file) => sum + file.addedLines,
     0
@@ -281,6 +299,7 @@ function AttemptReviewPageLoaded({
               gradeChanged={gradeChanged}
               hasChanges={hasChanges}
               canSave={canSave}
+              saveBlockedReason={saveBlockedReason}
               savePending={saveMutation.isPending}
               className="mx-0 border-0 sm:mx-0 lg:mx-0"
               onGradeChange={setGrade}
@@ -314,27 +333,33 @@ function AttemptReviewPageLoaded({
         </aside>
 
         <div className="relative flex min-h-0 min-w-0 flex-col overflow-hidden">
-          <UnsentCommentTextContext value={unsentCommentText}>
-            <AttemptReviewDiff
-              files={review.changedFiles}
-              comments={draft.lineComments}
-              savedComments={review.lineComments}
-              mode={mode}
-              currentReviewer={currentReviewer}
-              canReplyToComments={canReplyToComments}
-              viewMode={diffViewMode}
-              onViewerChange={handleDiffViewerChange}
-              className="min-h-0 min-w-0 flex-1 bg-card"
-              onCommentsChange={(lineComments) => {
-                if (mode === 'editable' || canReplyToComments) {
-                  setLineComments(lineComments);
-                }
-              }}
-              onReplySubmit={submitCommentReply}
-              onReplyUpdate={updateCommentReply}
-              onReplyDelete={deleteCommentReply}
-            />
-          </UnsentCommentTextContext>
+          <DiffReadinessGate
+            readiness={diffReadiness}
+            className="min-h-0 min-w-0 flex-1 bg-card"
+            onRetry={retryDiff}
+          >
+            <UnsentCommentTextContext value={unsentCommentText}>
+              <AttemptReviewDiff
+                files={review.changedFiles}
+                comments={draft.lineComments}
+                savedComments={review.lineComments}
+                mode={mode}
+                currentReviewer={currentReviewer}
+                canReplyToComments={canReplyToComments}
+                viewMode={diffViewMode}
+                onViewerChange={handleDiffViewerChange}
+                className="min-h-0 min-w-0 flex-1 bg-card"
+                onCommentsChange={(lineComments) => {
+                  if (mode === 'editable' || canReplyToComments) {
+                    setLineComments(lineComments);
+                  }
+                }}
+                onReplySubmit={submitCommentReply}
+                onReplyUpdate={updateCommentReply}
+                onReplyDelete={deleteCommentReply}
+              />
+            </UnsentCommentTextContext>
+          </DiffReadinessGate>
 
           {isDesktopReviewLayout ? (
             <div
@@ -363,6 +388,7 @@ function AttemptReviewPageLoaded({
                 gradeChanged={gradeChanged}
                 hasChanges={hasChanges}
                 canSave={canSave}
+                saveBlockedReason={saveBlockedReason}
                 savePending={saveMutation.isPending}
                 className={cn(
                   'h-[clamp(14rem,35dvh,18rem)] min-h-0',

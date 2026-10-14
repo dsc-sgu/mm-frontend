@@ -14,6 +14,8 @@ import { createQueryClient } from '@/app/remote-data/query-client';
 import { RouteError } from '@/app/route-error';
 import { Toaster } from '@/shadcn/components/ui/sonner';
 import { routeTree as appRouteTree } from '@/routeTree.gen';
+import { DiffWorkerPoolFactoryContext } from '@/features/course/features/attempt-review/providers/diff-worker-pool';
+import { createFakeDiffWorkers, type FakeDiffWorkers } from './diff-workers';
 
 export type TestRoute = {
   path: string;
@@ -26,6 +28,8 @@ export type RenderRoutesOptions = {
   layout?: RouteComponent;
   /** Use the application's real routes, including its Header and auth loaders. */
   appRoutes?: boolean;
+  /** Replaces the diff Workers; by default every pool is ready at once. */
+  diffWorkers?: FakeDiffWorkers;
 };
 
 /**
@@ -35,7 +39,11 @@ export type RenderRoutesOptions = {
 export function renderRoutes(
   routes: TestRoute[],
   initialPath: string,
-  { layout: Layout, appRoutes = false }: RenderRoutesOptions = {}
+  {
+    layout: Layout,
+    appRoutes = false,
+    diffWorkers = createFakeDiffWorkers(),
+  }: RenderRoutesOptions = {}
 ) {
   const queryClient = createQueryClient();
   const rootRoute = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -67,10 +75,12 @@ export function renderRoutes(
 
   const app = (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <DiffWorkerPoolFactoryContext value={diffWorkers.createPool}>
+        <RouterProvider router={router} />
+      </DiffWorkerPoolFactoryContext>
     </QueryClientProvider>
   );
   render(appRoutes ? <StrictMode>{app}</StrictMode> : app);
 
-  return { queryClient, router };
+  return { queryClient, router, diffWorkers };
 }

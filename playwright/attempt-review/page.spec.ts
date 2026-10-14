@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-// The review page waits for the `@pierre/diffs` Web Workers. With the MSW
+// The review diff waits for the `@pierre/diffs` Web Workers. With the MSW
 // mock backend, a service worker controls the page and its workers; Firefox
 // never runs a module worker whose script a service worker answered
-// (mswjs/msw#2654), and the page stayed on its loading state.
+// (mswjs/msw#2654), and the diff stayed on its loading state.
 test('страница проверки попытки открывается с mock backend', async ({
   page,
 }) => {
