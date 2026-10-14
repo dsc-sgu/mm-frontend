@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { GradeSchema, type Grade } from '@/features/course/model/grade';
 import {
   AttemptNumberSchema,
   type AttemptNumber,
@@ -18,19 +19,25 @@ import type {
   SaveQuickGradesInput,
 } from '@/features/course/features/attempts/model/types';
 
+const grade = (value: number): Grade => v.parse(GradeSchema, value);
+
 const MOCK_TASKS: CourseAttemptTask[] = [
-  { id: '1', title: 'Вводное практическое задание', maxScore: 10 },
-  { id: '2', title: 'Анализ pull request и диффов', maxScore: 10 },
-  { id: '3', title: 'Работа с ветками Git', maxScore: 8 },
-  { id: '4', title: 'Покрытие кода тестами', maxScore: 12 },
-  { id: '5', title: 'Проектирование REST API', maxScore: 15 },
-  { id: '6', title: 'Рефакторинг legacy-модуля', maxScore: 15 },
-  { id: '7', title: 'Оптимизация SQL-запросов', maxScore: 20 },
-  { id: '8', title: 'Интеграция с очередью сообщений', maxScore: 20 },
-  { id: '9', title: 'Настройка CI/CD pipeline', maxScore: 10 },
-  { id: '10', title: 'Безопасность пользовательского ввода', maxScore: 18 },
-  { id: '11', title: 'Наблюдаемость и логирование', maxScore: 12 },
-  { id: '12', title: 'Итоговый мини-проект', maxScore: 25 },
+  { id: '1', title: 'Вводное практическое задание', maxGrade: grade(10) },
+  { id: '2', title: 'Анализ pull request и диффов', maxGrade: grade(10) },
+  { id: '3', title: 'Работа с ветками Git', maxGrade: grade(8) },
+  { id: '4', title: 'Покрытие кода тестами', maxGrade: grade(12) },
+  { id: '5', title: 'Проектирование REST API', maxGrade: grade(15) },
+  { id: '6', title: 'Рефакторинг legacy-модуля', maxGrade: grade(15) },
+  { id: '7', title: 'Оптимизация SQL-запросов', maxGrade: grade(20) },
+  { id: '8', title: 'Интеграция с очередью сообщений', maxGrade: grade(20) },
+  { id: '9', title: 'Настройка CI/CD pipeline', maxGrade: grade(10) },
+  {
+    id: '10',
+    title: 'Безопасность пользовательского ввода',
+    maxGrade: grade(18),
+  },
+  { id: '11', title: 'Наблюдаемость и логирование', maxGrade: grade(12) },
+  { id: '12', title: 'Итоговый мини-проект', maxGrade: grade(25) },
 ];
 
 const FIRST_NAMES = [
@@ -125,9 +132,11 @@ function buildAttempts(courseId: CourseId): CourseAttempt[] {
         submittedMs + (submittedLate ? -6 : 28) * 60 * 60 * 1000;
       const graded = (studentIndex + attemptIndex) % 3 === 0;
       const locked = !graded && (studentIndex + attemptIndex) % 17 === 0;
-      const scoreRatio =
+      const gradeRatio =
         0.55 + ((studentIndex * 7 + attemptIndex * 11) % 40) / 100;
-      const score = Number((task.maxScore * scoreRatio).toFixed(1));
+      const gradeValue = grade(
+        Number(((task.maxGrade.thousandths / 1000) * gradeRatio).toFixed(1))
+      );
 
       attempts.push({
         id: `${courseId}:attempt:${serial}`,
@@ -145,8 +154,7 @@ function buildAttempts(courseId: CourseId): CourseAttempt[] {
         },
         grade: graded
           ? {
-              score,
-              maxScore: task.maxScore,
+              value: gradeValue,
               gradedAt: new Date(
                 submittedMs + 18 * 60 * 60 * 1000
               ).toISOString(),
@@ -281,7 +289,7 @@ export function upsertMockCourseAttemptGrade({
   taskId,
   studentUsername,
   attemptNumber,
-  score,
+  grade,
   gradedAt,
   gradedBy,
 }: {
@@ -289,7 +297,7 @@ export function upsertMockCourseAttemptGrade({
   taskId: string;
   studentUsername: string;
   attemptNumber: AttemptNumber;
-  score: number;
+  grade: Grade;
   gradedAt: string;
   gradedBy: string;
 }): void {
@@ -305,8 +313,7 @@ export function upsertMockCourseAttemptGrade({
     return {
       ...attempt,
       grade: {
-        score,
-        maxScore: attempt.task.maxScore,
+        value: grade,
         gradedAt,
         gradedBy,
       },
@@ -340,8 +347,7 @@ export async function saveQuickGrades({
     return {
       ...attempt,
       grade: {
-        score: update.score,
-        maxScore: attempt.task.maxScore,
+        value: update.grade,
         gradedAt: now,
         gradedBy: [user.lastName, user.firstName, user.patronymic]
           .filter(Boolean)

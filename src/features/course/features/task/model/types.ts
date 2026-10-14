@@ -1,3 +1,4 @@
+import type { Grade } from '@/features/course/model/grade';
 import type { AttemptNumber } from '@/features/course/model/identity';
 
 export type TaskAttachmentKind =
@@ -23,7 +24,7 @@ export type TaskAttemptReview =
   | { status: 'pending' }
   | {
       status: 'graded';
-      score: number;
+      grade: Grade;
       gradedAt: string;
       graderName: string;
     };
@@ -47,7 +48,7 @@ export type Task = {
   title: string;
   description: string;
   deadlineAt: string;
-  maxScore: number;
+  maxGrade: Grade;
   attachments: TaskAttachment[];
   attempts: TaskAttempt[];
 };

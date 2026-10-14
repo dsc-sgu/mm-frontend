@@ -212,7 +212,7 @@ function normalizeResources(resources: CoursePageResources) {
           ? normalizeRichText(assignment.description)
           : [],
         dueDate: normalizeOptionalText(assignment.dueDate),
-        maxScore: assignment.maxScore,
+        maxGrade: assignment.maxGrade,
       })),
   };
 }

@@ -1,11 +1,17 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 
-import { scoreDraftMaxScoreError } from '@/features/course/features/grading';
+import {
+  formatGrade,
+  parseGradeInput,
+  type GradeInputError,
+  type GradeInputResult,
+} from '@/features/course/model/grade';
 import { getLineCommentStatus } from './comment-lifecycle';
 import type { AttemptReviewAggregate, AttemptReviewLineComment } from './types';
 
 export type AttemptReviewDraft = {
-  score: string;
+  /** The Grade field's text; it becomes a Grade only by parsing on Save. */
+  grade: string;
   overallFeedbackHtml: string;
   lineComments: AttemptReviewLineComment[];
 };
@@ -15,19 +21,19 @@ export function useAttemptReviewDraft(review: AttemptReviewAggregate) {
     createAttemptReviewDraft(review)
   );
   const savedDraft = useMemo(() => createAttemptReviewDraft(review), [review]);
-  const scoreError = scoreDraftMaxScoreError(
-    review.current.task.maxScore,
-    draft.score
-  );
+  const gradeInput = parseGradeInput(draft.grade, review.current.task.maxGrade);
   const hasChanges = !areAttemptReviewDraftsEqual(draft, savedDraft);
 
   return {
     draft,
     setDraft,
     savedDraft,
-    scoreError,
+    gradeError: getDraftGradeError(gradeInput, hasChanges),
+    /** The Grade to save, or null while the edits cannot be saved. */
+    savableGrade:
+      hasChanges && gradeInput.status === 'valid' ? gradeInput.grade : null,
     hasChanges,
-    setScore: createDraftSetter(setDraft, 'score'),
+    setGrade: createDraftSetter(setDraft, 'grade'),
     setOverallFeedbackHtml: createDraftSetter(setDraft, 'overallFeedbackHtml'),
     setLineComments: createDraftSetter(setDraft, 'lineComments'),
     discard: () => setDraft(savedDraft),
@@ -40,10 +46,26 @@ export function createAttemptReviewDraft(
   review: AttemptReviewAggregate
 ): AttemptReviewDraft {
   return {
-    score: review.current.grade ? String(review.current.grade.score) : '',
+    grade: review.current.grade ? formatGrade(review.current.grade.value) : '',
     overallFeedbackHtml: review.overallFeedback.html,
     lineComments: review.lineComments.map(cloneLineComment),
   };
+}
+
+/**
+ * Every Save carries a Grade, so an empty field invalidates the edits of a
+ * first and an existing Review alike. An untouched empty field stays quiet:
+ * there is nothing to save yet.
+ */
+function getDraftGradeError(
+  gradeInput: GradeInputResult,
+  hasChanges: boolean
+): GradeInputError | null {
+  if (gradeInput.status === 'valid') {
+    return null;
+  }
+
+  return gradeInput.error === 'empty' && !hasChanges ? null : gradeInput.error;
 }
 
 function cloneLineComment(
@@ -69,7 +91,7 @@ function areAttemptReviewDraftsEqual(
   second: AttemptReviewDraft
 ): boolean {
   return (
-    first.score === second.score &&
+    first.grade === second.grade &&
     first.overallFeedbackHtml === second.overallFeedbackHtml &&
     areLineCommentsEqual(first.lineComments, second.lineComments)
   );

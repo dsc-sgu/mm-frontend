@@ -137,8 +137,9 @@ function AttemptReviewPageLoaded({
   const {
     draft,
     hasChanges,
-    scoreError,
-    setScore,
+    gradeError,
+    savableGrade,
+    setGrade,
     setOverallFeedbackHtml,
     setLineComments,
     discard,
@@ -175,7 +176,7 @@ function AttemptReviewPageLoaded({
     sessionData?.status === 'authorized' &&
     canReplyToAttempt(courseRole, sessionData.session.userId, studentId);
   const canSave =
-    mode === 'editable' && hasChanges && !scoreError && !saveMutation.isPending;
+    mode === 'editable' && savableGrade !== null && !saveMutation.isPending;
   const totalAdded = review.changedFiles.reduce(
     (sum, file) => sum + file.addedLines,
     0
@@ -210,9 +211,13 @@ function AttemptReviewPageLoaded({
   }
 
   async function saveReview() {
+    if (savableGrade === null) {
+      return;
+    }
+
     const savedReview = await saveMutation.mutateAsync({
       ...params,
-      score: draft.score ? Number(draft.score) : null,
+      grade: savableGrade,
       overallFeedbackHtml: draft.overallFeedbackHtml,
       lineComments: prepareLineCommentsForSave(draft.lineComments),
     });
@@ -271,12 +276,12 @@ function AttemptReviewPageLoaded({
               review={review}
               draft={draft}
               mode={mode}
-              scoreError={scoreError}
+              gradeError={gradeError}
               hasChanges={hasChanges}
               canSave={canSave}
               savePending={saveMutation.isPending}
               className="mx-0 border-0 sm:mx-0 lg:mx-0"
-              onScoreChange={setScore}
+              onGradeChange={setGrade}
               onFeedbackChange={setOverallFeedbackHtml}
               onDiscard={discard}
               onSave={saveReview}
@@ -352,7 +357,7 @@ function AttemptReviewPageLoaded({
                 review={review}
                 draft={draft}
                 mode={mode}
-                scoreError={scoreError}
+                gradeError={gradeError}
                 hasChanges={hasChanges}
                 canSave={canSave}
                 savePending={saveMutation.isPending}
@@ -361,7 +366,7 @@ function AttemptReviewPageLoaded({
                   'border-r-0 border-b-0 border-l-0',
                   isReviewPanelCollapsed && 'hidden'
                 )}
-                onScoreChange={setScore}
+                onGradeChange={setGrade}
                 onFeedbackChange={setOverallFeedbackHtml}
                 onDiscard={discard}
                 onSave={saveReview}

@@ -2,6 +2,7 @@ import { parseDiffFromFile, type FileDiffMetadata } from '@pierre/diffs';
 import * as v from 'valibot';
 import { http, HttpResponse } from 'msw';
 import { resolveStudentAccess } from '@/app/mock-backend/participant-access';
+import { GradeSchema, gradesEqual } from '@/features/course/model/grade';
 import {
   AttemptNumberSchema,
   type AttemptNumber,
@@ -154,19 +155,8 @@ export async function saveAttemptReview(
   const author = currentUserAuthor();
   const gradedBy = author.name;
 
-  if (input.score === null) {
-    current.grade = null;
-  } else if (
-    !current.grade ||
-    current.grade.score !== input.score ||
-    current.grade.maxScore !== series.task.maxScore
-  ) {
-    current.grade = {
-      score: input.score,
-      maxScore: series.task.maxScore,
-      gradedAt: now,
-      gradedBy,
-    };
+  if (!current.grade || !gradesEqual(current.grade.value, input.grade)) {
+    current.grade = { value: input.grade, gradedAt: now, gradedBy };
   }
   current.overallFeedback = {
     html: input.overallFeedbackHtml,
@@ -201,7 +191,7 @@ export async function saveAttemptReview(
       taskId: params.taskId,
       studentUsername: params.studentUsername,
       attemptNumber: params.attemptNumber,
-      score: current.grade.score,
+      grade: current.grade.value,
       gradedAt: current.grade.gradedAt,
       gradedBy: current.grade.gradedBy,
     });
@@ -320,7 +310,7 @@ function getReviewSeries(params: LegacyParams): ReviewSeries {
   const task: AttemptReviewTask = listAttempt?.task ?? {
     id: params.taskId,
     title: params.taskTitle,
-    maxScore: 10,
+    maxGrade: v.parse(GradeSchema, 10),
   };
   const student: AttemptReviewStudent = listAttempt?.student ?? {
     username: params.studentUsername,
@@ -346,8 +336,15 @@ function getReviewSeries(params: LegacyParams): ReviewSeries {
         ? listAttempt.grade
         : attemptNumber < params.attemptNumber
           ? {
-              score: Number((task.maxScore * (0.55 + index * 0.13)).toFixed(1)),
-              maxScore: task.maxScore,
+              value: v.parse(
+                GradeSchema,
+                Number(
+                  (
+                    (task.maxGrade.thousandths / 1000) *
+                    (0.55 + index * 0.13)
+                  ).toFixed(1)
+                )
+              ),
               gradedAt: new Date(
                 Date.parse(submittedAt) + 8 * 60 * 60 * 1000
               ).toISOString(),
@@ -490,8 +487,7 @@ function toHistoryItem(
   return {
     attemptNumber: attempt.attemptNumber,
     submittedAt: attempt.submittedAt,
-    score: attempt.grade?.score ?? null,
-    maxScore: series.task.maxScore,
+    grade: attempt.grade?.value ?? null,
     addedLines: changedFiles.reduce((sum, file) => sum + file.addedLines, 0),
     deletedLines: changedFiles.reduce(
       (sum, file) => sum + file.deletedLines,

@@ -5,15 +5,19 @@ import { RotateCcw } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { Input } from '@/shadcn/components/ui/input';
 import { cn } from '@/shadcn/lib/utils';
-import { normalizeScoreDraftInput } from '@/features/course/features/grading/model/grading';
+import {
+  formatGrade,
+  type Grade,
+  type GradeInputError,
+} from '@/features/course/model/grade';
 
-type CourseScoreFieldProps = {
+type GradeFieldProps = {
   value: string;
-  maxScore: number;
+  maxGrade: Grade;
   changed?: boolean;
   disabled?: boolean;
   ariaLabel?: string;
-  error?: string | null;
+  error?: GradeInputError | null;
   resetAriaLabel?: string;
   className?: string;
   inputClassName?: string;
@@ -21,7 +25,7 @@ type CourseScoreFieldProps = {
   onReset?: () => void;
 };
 
-const scoreFieldInputVariants = cva(
+const gradeFieldInputVariants = cva(
   [
     'h-12 w-24 rounded-xl px-2',
     'text-center font-semibold',
@@ -60,7 +64,20 @@ const scoreFieldInputVariants = cva(
   }
 );
 
-function getScoreDraftTextSize(
+function getGradeErrorMessage(error: GradeInputError, maxGrade: Grade): string {
+  switch (error) {
+    case 'empty':
+      return 'Введите оценку';
+    case 'not-a-number':
+      return 'Введите число, например 7,5';
+    case 'too-precise':
+      return 'Не больше трёх знаков после запятой';
+    case 'above-max':
+      return `Не больше ${formatGrade(maxGrade)}`;
+  }
+}
+
+function getGradeInputTextSize(
   value: string
 ): 'default' | 'compact' | 'dense' | 'overflow' {
   if (value.length <= 4) {
@@ -78,21 +95,20 @@ function getScoreDraftTextSize(
   return 'overflow';
 }
 
-export function CourseScoreField({
+export function GradeField({
   value,
-  maxScore,
+  maxGrade,
   changed = false,
   disabled = false,
-  ariaLabel = 'Балл',
+  ariaLabel = 'Оценка',
   error = null,
-  resetAriaLabel = 'Вернуть прежний балл',
+  resetAriaLabel = 'Вернуть прежнюю оценку',
   className,
   inputClassName,
   onChange,
   onReset,
-}: CourseScoreFieldProps) {
-  const generatedErrorId = useId();
-  const errorId = `${generatedErrorId}-score-error`;
+}: GradeFieldProps) {
+  const errorId = useId();
 
   return (
     <div className={cn('grid min-h-12 min-w-0 gap-y-1', className)}>
@@ -100,32 +116,23 @@ export function CourseScoreField({
         <Input
           type="text"
           inputMode="decimal"
-          min={0}
-          max={maxScore}
-          step={1}
           value={value}
           disabled={disabled}
           aria-label={ariaLabel}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : undefined}
-          onChange={(event) => {
-            const nextDraftScore = normalizeScoreDraftInput(event.target.value);
-
-            if (nextDraftScore !== null) {
-              onChange(nextDraftScore);
-            }
-          }}
+          onChange={(event) => onChange(event.target.value)}
           placeholder="—"
           className={cn(
-            scoreFieldInputVariants({
+            gradeFieldInputVariants({
               state: error ? 'error' : changed ? 'changed' : 'default',
-              size: getScoreDraftTextSize(value),
+              size: getGradeInputTextSize(value),
             }),
             inputClassName
           )}
         />
         <span className="shrink-0 text-xl font-semibold text-muted-foreground">
-          / {maxScore}
+          / {formatGrade(maxGrade)}
         </span>
         {onReset ? (
           <Button
@@ -150,11 +157,9 @@ export function CourseScoreField({
             'text-destructive'
           )}
         >
-          {error}
+          {getGradeErrorMessage(error, maxGrade)}
         </span>
       ) : null}
     </div>
   );
 }
-
-export { CourseScoreField as CourseAttemptsScoreField };

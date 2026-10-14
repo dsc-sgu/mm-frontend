@@ -100,7 +100,7 @@ function TaskPageContent({
           courseId={courseId}
           courseSlug={courseSlug}
           deadlineAt={task.deadlineAt}
-          maxScore={task.maxScore}
+          maxGrade={task.maxGrade}
           studentId={viewerId}
           taskId={task.id}
         />

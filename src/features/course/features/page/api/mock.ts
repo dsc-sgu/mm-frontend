@@ -1,5 +1,6 @@
 import * as v from 'valibot';
 import { mockBackend, type MockCourse } from '@/app/mock-backend/state';
+import { GradeSchema } from '@/features/course/model/grade';
 import type {
   CourseContentBlockItem,
   CoursePage,
@@ -125,7 +126,7 @@ function buildCourseResources(course: CoursePageSummary): CoursePageResources {
           },
         ],
         dueDate: '2026-06-01T20:59:00Z',
-        maxScore: 10,
+        maxGrade: v.parse(GradeSchema, 10),
       },
     ],
   };

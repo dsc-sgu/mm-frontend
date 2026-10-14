@@ -4,15 +4,13 @@ import { Eye, FileCheck2, LockKeyhole } from 'lucide-react';
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import { cn } from '@/shadcn/lib/utils';
+import { compareGrades, formatGrade } from '@/features/course/model/grade';
+import { GradeField } from '@/features/course/ui/grade-field';
 import {
-  CourseAttemptsScoreField,
-  scoreDraftChanged,
-  scoreDraftValidationError,
-} from '@/features/course/features/grading';
-import type {
-  CourseAttempt,
-  CourseAttemptGrade,
-} from '@/features/course/features/attempts/model/types';
+  getQuickGradeDraftError,
+  isQuickGradeDraftChanged,
+} from '@/features/course/features/attempts/model/quick-grade';
+import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
 
 type AttemptCardProps =
   | {
@@ -25,21 +23,21 @@ type AttemptCardProps =
   | {
       mode: 'quick-grading';
       attempt: CourseAttempt;
-      draftScore: string;
-      onDraftScoreChange: (score: string) => void;
-      onDraftScoreReset: () => void;
+      draftGrade: string;
+      onDraftGradeChange: (grade: string) => void;
+      onDraftGradeReset: () => void;
     };
 
 export function AttemptCard(props: AttemptCardProps) {
   const canSelect = props.mode === 'default' && !props.attempt.reviewLock;
   const selected = canSelect ? props.selected : false;
-  const draftScoreChanged =
+  const draftGradeChanged =
     props.mode === 'quick-grading'
-      ? scoreDraftChanged(props.attempt, props.draftScore)
+      ? isQuickGradeDraftChanged(props.attempt, props.draftGrade)
       : false;
-  const draftScoreError =
+  const draftGradeError =
     props.mode === 'quick-grading'
-      ? scoreDraftValidationError(props.attempt, props.draftScore)
+      ? getQuickGradeDraftError(props.attempt, props.draftGrade)
       : null;
 
   return (
@@ -152,16 +150,16 @@ export function AttemptCard(props: AttemptCardProps) {
             </Link>
           </Button>
         ) : (
-          <CourseAttemptsScoreField
-            value={props.draftScore}
-            maxScore={props.attempt.task.maxScore}
-            changed={draftScoreChanged}
+          <GradeField
+            value={props.draftGrade}
+            maxGrade={props.attempt.task.maxGrade}
+            changed={draftGradeChanged}
             disabled={Boolean(props.attempt.reviewLock)}
-            ariaLabel={`Балл за попытку ${props.attempt.task.title}`}
-            error={draftScoreError}
-            resetAriaLabel={`Вернуть прежний балл за попытку`}
-            onChange={props.onDraftScoreChange}
-            onReset={draftScoreChanged ? props.onDraftScoreReset : undefined}
+            ariaLabel={`Оценка за попытку ${props.attempt.task.title}`}
+            error={draftGradeError}
+            resetAriaLabel="Вернуть прежнюю оценку за попытку"
+            onChange={props.onDraftGradeChange}
+            onReset={draftGradeChanged ? props.onDraftGradeReset : undefined}
           />
         )}
       </div>
@@ -178,12 +176,16 @@ export function AttemptTitle({ attempt }: { attempt: CourseAttempt }) {
   );
 }
 
-function getGradeClassName(grade: CourseAttemptGrade): string {
-  if (grade.score === 0) {
+function getGradeClassName(attempt: CourseAttempt): string {
+  if (!attempt.grade) {
+    return '';
+  }
+
+  if (attempt.grade.value.thousandths === 0) {
     return 'font-semibold text-rose-700 dark:text-rose-300';
   }
 
-  if (grade.score === grade.maxScore) {
+  if (compareGrades(attempt.grade.value, attempt.task.maxGrade) === 0) {
     return 'font-semibold text-emerald-700 dark:text-emerald-300';
   }
 
@@ -251,8 +253,9 @@ export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
           </span>
           <span className="-mt-0.5 whitespace-nowrap sm:mt-0">
             преподавателем {attempt.grade.gradedBy}{' '}
-            <span className={getGradeClassName(attempt.grade)}>
-              ({attempt.grade.score}/{attempt.grade.maxScore})
+            <span className={getGradeClassName(attempt)}>
+              ({formatGrade(attempt.grade.value)}/
+              {formatGrade(attempt.task.maxGrade)})
             </span>
           </span>
         </p>
