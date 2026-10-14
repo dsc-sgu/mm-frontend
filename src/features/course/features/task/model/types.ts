@@ -53,6 +53,5 @@ export type Task = {
 };
 
 export type TaskPageData = {
-  courseSlug: string;
   task: Task;
 };

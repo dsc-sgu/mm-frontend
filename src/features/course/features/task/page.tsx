@@ -1,3 +1,5 @@
+import type { UserId } from '@/features/auth/model/identity';
+import type { CourseId } from '@/features/course/model/identity';
 import type { CourseRole } from '@/features/course/features/access/model/types';
 import { useTaskPageQuery } from '@/features/course/features/task/api/queries';
 import type { TaskPageData } from '@/features/course/features/task/model/types';
@@ -13,20 +15,22 @@ import { TaskTeacherActions } from '@/features/course/features/task/ui/teacher-a
 import { cn } from '@/shadcn/lib/utils';
 
 export function CourseTaskPage({
+  courseId,
   courseSlug,
   taskId,
   role,
-  username,
+  viewerId,
 }: {
+  courseId: CourseId;
   courseSlug: string;
   taskId: string;
   role: CourseRole;
-  username: string;
+  viewerId: UserId;
 }) {
   const taskPageQuery = useTaskPageQuery({
-    courseSlug,
+    courseId,
     taskId,
-    studentUsername: role === 'student' ? username : undefined,
+    studentId: role === 'student' ? viewerId : null,
   });
 
   if (taskPageQuery.isPending) {
@@ -41,18 +45,30 @@ export function CourseTaskPage({
     return <TaskPageNotFound />;
   }
 
-  return <TaskPageContent data={taskPageQuery.data} role={role} />;
+  return (
+    <TaskPageContent
+      data={taskPageQuery.data}
+      courseId={courseId}
+      courseSlug={courseSlug}
+      role={role}
+      viewerId={viewerId}
+    />
+  );
 }
 
 function TaskPageContent({
-  data,
+  data: { task },
+  courseId,
+  courseSlug,
   role,
+  viewerId,
 }: {
   data: TaskPageData;
+  courseId: CourseId;
+  courseSlug: string;
   role: CourseRole;
+  viewerId: UserId;
 }) {
-  const { courseSlug, task } = data;
-
   return (
     <main
       className={cn(
@@ -81,9 +97,11 @@ function TaskPageContent({
       {role === 'student' ? (
         <TaskAttemptHistory
           attempts={task.attempts}
+          courseId={courseId}
           courseSlug={courseSlug}
           deadlineAt={task.deadlineAt}
           maxScore={task.maxScore}
+          studentId={viewerId}
           taskId={task.id}
         />
       ) : null}

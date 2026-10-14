@@ -119,7 +119,6 @@ export async function fetchAttemptReview(
   const changedFiles = buildChangedFiles(previous?.files ?? {}, current.files);
 
   return {
-    courseSlug: params.courseSlug,
     baselineAttemptNumber: previous?.attemptNumber ?? null,
     current: {
       id: identity.attemptId,
@@ -198,7 +197,7 @@ export async function saveAttemptReview(
 
   if (current.grade) {
     upsertMockCourseAttemptGrade({
-      courseSlug: params.courseSlug,
+      courseId: params.courseId,
       taskId: params.taskId,
       studentUsername: params.studentUsername,
       attemptNumber: params.attemptNumber,
@@ -292,7 +291,6 @@ function resolveLegacyParams(identity: AttemptReviewIdentity) {
     throw new Error('Resolved Attempt is unavailable');
   return {
     ...identity,
-    courseSlug: course.slug,
     taskId: attempt.taskId,
     taskTitle: task.title,
     studentUsername: student.username,
@@ -314,7 +312,7 @@ function getReviewSeries(params: LegacyParams): ReviewSeries {
   }
 
   const listAttempt = findMockCourseAttempt({
-    courseSlug: params.courseSlug,
+    courseId: params.courseId,
     taskId: params.taskId,
     studentUsername: params.studentUsername,
     attemptNumber: params.attemptNumber,

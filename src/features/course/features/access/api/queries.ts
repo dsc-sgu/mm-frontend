@@ -1,5 +1,6 @@
 import { queryOptions, type QueryClient } from '@tanstack/react-query';
 import type { UserId } from '@/features/auth/model/identity';
+import { courseKeys } from '@/features/course/api/queries';
 import type { CourseSlug } from '@/features/course/model/identity';
 import { loadCourse, type LoadCourseResult } from './load-course';
 
@@ -13,7 +14,17 @@ export const courseContextKeys = {
 export function courseContextOptions(userId: UserId, courseSlug: CourseSlug) {
   return queryOptions({
     queryKey: courseContextKeys.bySlug(userId, courseSlug),
-    queryFn: ({ signal }) => loadCourse(courseSlug, signal),
+    queryFn: async ({ client, queryKey, signal }) => {
+      const result = await loadCourse(courseSlug, signal);
+      // A lookup that confirmed membership before and now denies it is a lost
+      // Membership: nothing loaded under that Course may outlive it. A slug
+      // that stops resolving is not one; the Course keeps its CourseId cache.
+      const previous = client.getQueryData<LoadCourseResult>(queryKey);
+      if (previous?.status === 'found' && result.status === 'not-member') {
+        client.removeQueries({ queryKey: courseKeys.byId(previous.course.id) });
+      }
+      return result;
+    },
     staleTime: 0,
     retry: false,
     refetchOnMount: 'always',

@@ -1,7 +1,12 @@
 import { useIsFetching, useQuery } from '@tanstack/react-query';
 import { fetchDeadlines } from './mock';
 
-export const DEADLINES_QUERY_KEY = ['deadlines'] as const;
+// Deadlines cross Courses, so the family stays outside the Course prefix.
+export const deadlinesKeys = {
+  all: ['deadlines'] as const,
+  week: (weekStart: Date) =>
+    [...deadlinesKeys.all, weekStart.toISOString()] as const,
+};
 
 export function getWeekBounds(date: Date): { start: Date; end: Date } {
   const start = new Date(date);
@@ -17,10 +22,6 @@ export function getWeekBounds(date: Date): { start: Date; end: Date } {
   return { start, end };
 }
 
-export function getWeekQueryKey(weekStart: Date): string[] {
-  return [...DEADLINES_QUERY_KEY, weekStart.toISOString()];
-}
-
 type UseDeadlinesQueryOptions = {
   weekStart: Date;
 };
@@ -29,7 +30,7 @@ export function useDeadlinesQuery({ weekStart }: UseDeadlinesQueryOptions) {
   const { start, end } = getWeekBounds(weekStart);
 
   return useQuery({
-    queryKey: getWeekQueryKey(weekStart),
+    queryKey: deadlinesKeys.week(weekStart),
     queryFn: () => fetchDeadlines(start, end),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -37,5 +38,5 @@ export function useDeadlinesQuery({ weekStart }: UseDeadlinesQueryOptions) {
 }
 
 export function useDeadlinesIsFetching(): boolean {
-  return useIsFetching({ queryKey: DEADLINES_QUERY_KEY }) > 0;
+  return useIsFetching({ queryKey: deadlinesKeys.all }) > 0;
 }

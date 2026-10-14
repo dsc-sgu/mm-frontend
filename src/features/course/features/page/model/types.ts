@@ -1,3 +1,4 @@
+import type { CourseId } from '@/features/course/model/identity';
 import type { CourseSummary } from '@/features/course/model/types';
 
 export type RichTextMark = 'bold' | 'italic' | 'code';
@@ -137,8 +138,9 @@ export type CoursePage = Pick<
 };
 
 export type SaveCoursePageInput = {
-  courseSlug: string;
-  courseId: string;
+  /** The stable address; the slug below is only editable metadata. */
+  courseId: CourseId;
+  slug: string;
   title: string;
   shortTitle: string;
   description: string;

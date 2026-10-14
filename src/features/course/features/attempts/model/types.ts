@@ -1,4 +1,4 @@
-import type { AttemptNumber } from '@/features/course/model/identity';
+import type { AttemptNumber, CourseId } from '@/features/course/model/identity';
 
 export type CourseAttemptGradedFilter = 'any' | 'no' | 'yes';
 
@@ -63,7 +63,7 @@ export type CourseAttemptsListResult = {
 };
 
 export type SaveQuickGradesInput = {
-  courseSlug: string;
+  courseId: CourseId;
   updates: Array<{
     attemptId: string;
     score: number;

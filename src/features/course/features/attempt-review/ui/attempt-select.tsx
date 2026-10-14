@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { ChevronsUpDown, MessageSquare } from 'lucide-react';
 import type { AttemptNumber } from '@/features/course/model/identity';
 
@@ -31,6 +31,10 @@ export function AttemptReviewAttemptSelect({
 }: AttemptReviewAttemptSelectProps) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  // The Review is cached by CourseId; links follow the confirmed route slug.
+  const { courseSlug } = useParams({
+    from: '/_authenticated/courses/$courseSlug',
+  });
   const attempts = useMemo(() => getAttemptOptions(review), [review]);
   const currentAttempt =
     attempts.find(
@@ -101,7 +105,7 @@ export function AttemptReviewAttemptSelect({
                             ? '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
                             : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/',
                         params: {
-                          courseSlug: review.courseSlug,
+                          courseSlug,
                           taskId: review.current.task.id,
                           studentUsername: review.current.student.username,
                           attemptNumber: String(attempt.attemptNumber),

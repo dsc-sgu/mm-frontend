@@ -10,14 +10,15 @@ export const Route = createFileRoute(
 
 function TaskRoute() {
   const params = Route.useParams();
-  const { courseRole, session } = Route.useRouteContext();
+  const { course, courseSlug, courseRole, session } = Route.useRouteContext();
 
   return (
     <CourseTaskPage
-      courseSlug={params.courseSlug}
+      courseId={course.id}
+      courseSlug={courseSlug}
       taskId={params.taskId}
       role={courseRole}
-      username={session.username}
+      viewerId={session.userId}
     />
   );
 }

@@ -10,6 +10,8 @@ import {
   TextAlignStart,
 } from 'lucide-react';
 
+import type { UserId } from '@/features/auth/model/identity';
+import type { CourseId } from '@/features/course/model/identity';
 import { useMarkTaskAttemptUpdatesSeenMutation } from '@/features/course/features/task/api/queries';
 import {
   formatTaskDateTime,
@@ -22,15 +24,19 @@ import { cn } from '@/shadcn/lib/utils';
 
 export function TaskAttemptHistory({
   attempts,
+  courseId,
   courseSlug,
   deadlineAt,
   maxScore,
+  studentId,
   taskId,
 }: {
   attempts: TaskAttempt[];
+  courseId: CourseId;
   courseSlug: string;
   deadlineAt: string;
   maxScore: number;
+  studentId: UserId;
   taskId: string;
 }) {
   const markUpdatesSeenMutation = useMarkTaskAttemptUpdatesSeenMutation();
@@ -44,9 +50,9 @@ export function TaskAttemptHistory({
     }
 
     markUpdatesSeenMutation.mutate({
-      courseSlug,
+      courseId,
       taskId,
-      studentUsername: attempt.studentUsername,
+      studentId,
       attemptNumber: attempt.attemptNumber,
     });
   }
