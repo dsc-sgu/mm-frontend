@@ -6,6 +6,7 @@ import {
   CourseResourceNotFound,
   CourseResourceCheckFailed,
 } from '@/features/course/features/access/ui/route-state';
+import { DiffWorkers } from '@/features/course/features/attempt-review/providers/diff-workers';
 import { attemptLocatorOptions } from '@/features/course/features/attempt-review/api/locator-queries';
 import { recheckCourseContextAfterAccessDenial } from '@/features/course/features/access/api/queries';
 import { Outlet, createFileRoute, notFound } from '@tanstack/react-router';
@@ -40,6 +41,11 @@ export const Route = createFileRoute(
   errorComponent: CourseResourceCheckFailed,
 });
 
+// The Attempt page and the Review editor share one diff Worker pool.
 function RouteComponent() {
-  return <Outlet />;
+  return (
+    <DiffWorkers>
+      <Outlet />
+    </DiffWorkers>
+  );
 }
