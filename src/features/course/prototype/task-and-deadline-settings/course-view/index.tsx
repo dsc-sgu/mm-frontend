@@ -17,7 +17,6 @@ import {
   usePanelSessionState,
 } from '@/features/course/prototype/task-and-deadline-settings/panel/session';
 import { TaskPanel } from '@/features/course/prototype/task-and-deadline-settings/panel/task-panel';
-import { SandboxBar } from '@/features/course/prototype/task-and-deadline-settings/sandbox-bar';
 import {
   usePrototypeSettings,
   useUpdatePrototypeSearch,
@@ -108,7 +107,6 @@ export function PrototypeCourseView({
               />
             </PanelFrame>
           ) : null}
-          <SandboxBar courseSlug={courseSlug} />
         </div>
       </PanelSessionContext.Provider>
     </PrototypeAssignmentContext.Provider>

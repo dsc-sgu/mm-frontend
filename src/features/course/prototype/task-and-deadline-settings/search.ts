@@ -1,42 +1,15 @@
-// PROTOTYPE (#181): URL switches shared by every route of the sandbox.
+// PROTOTYPE (#181): the variant on screen and the open Task. The URL carries
+// only `?variant` (to pick between variants of one route) and `?task`; a
+// route without `?variant` shows its default variant while #181 is switched
+// on in the prototype bar.
 import { useCallback } from 'react';
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { useMatches, useNavigate, useSearch } from '@tanstack/react-router';
 
-export type ApplyMode = 'instant' | 'batch';
-/**
- * How Task edits are applied (#129): A — through the Course Draft Snapshot;
- * D — a Task publication with a version check; `contract` — the contract
- * from #129: D for published Tasks, new Tasks live in the draft.
- */
-export type TaskApplyMode = 'course' | 'task' | 'contract';
-export type DeadlineFieldMode = 'counter' | 'full';
-export type StatementMode = 'panel' | 'inline' | 'expanded';
-export type ShiftVariant = 'question' | 'sentence' | 'undo' | 'table';
-export type PickerLayout = 'stack' | 'split';
-export type PanelLook = 'list' | 'cards';
-
-export const SHIFT_VARIANTS: ReadonlyArray<{
-  value: ShiftVariant;
-  label: string;
-}> = [
-  { value: 'question', label: 'Вопрос' },
-  { value: 'sentence', label: 'Фраза' },
-  { value: 'undo', label: 'Сразу' },
-  { value: 'table', label: 'Таблица' },
-];
+import { usePrototypeActive } from '@/app/prototypes/active';
+import { useSandboxSwitches, type SandboxSwitches } from './settings';
 
 export type PrototypeSearch = {
   variant?: string;
-  apply?: ApplyMode;
-  taskApply?: TaskApplyMode;
-  deadlineField?: DeadlineFieldMode;
-  statement?: StatementMode;
-  /** Which mass-shift window to show. */
-  shift?: ShiftVariant;
-  /** How the date popover of a deadline or an opening time is laid out. */
-  picker?: PickerLayout;
-  /** Task panel sections: divided by lines or as cards. */
-  panelLook?: PanelLook;
   /** The Task whose panel is open. */
   task?: string;
 };
@@ -62,107 +35,118 @@ export const VARIANTS = [
 
 export type VariantKey = (typeof VARIANTS)[number]['key'];
 
-function pick<T extends string>(
-  value: unknown,
-  allowed: readonly T[]
-): T | undefined {
-  return allowed.includes(value as T) ? (value as T) : undefined;
-}
+/** What a route shows without `?variant`; the course page follows the verdict. */
+const DEFAULT_VARIANT: Record<VariantRoute, VariantKey> = {
+  course: 'dock',
+  deadlines: 'A',
+  tasks: 'B',
+  edit: 'C',
+};
+
+const ROUTE_IDS: Partial<Record<string, VariantRoute>> = {
+  '/_authenticated/courses/$courseSlug/': 'course',
+  '/_authenticated/courses/$courseSlug/deadlines': 'deadlines',
+  '/_authenticated/courses/$courseSlug/tasks/': 'tasks',
+  '/_authenticated/courses/$courseSlug/edit': 'edit',
+};
 
 export function validatePrototypeSearch(
   search: Record<string, unknown>
 ): PrototypeSearch {
-  const variant =
-    typeof search.variant === 'string' ? search.variant : undefined;
-
   return {
-    ...(variant ? { variant } : {}),
-    ...withValue('apply', pick(search.apply, ['instant', 'batch'] as const)),
-    ...withValue(
-      'taskApply',
-      pick(search.taskApply, ['course', 'task', 'contract'] as const)
-    ),
-    ...withValue(
-      'deadlineField',
-      pick(search.deadlineField, ['counter', 'full'] as const)
-    ),
-    ...withValue(
-      'statement',
-      pick(search.statement, ['panel', 'inline', 'expanded'] as const)
-    ),
-    ...withValue(
-      'shift',
-      pick(search.shift, ['question', 'sentence', 'undo', 'table'] as const)
-    ),
-    ...withValue('picker', pick(search.picker, ['stack', 'split'] as const)),
-    ...withValue(
-      'panelLook',
-      pick(search.panelLook, ['list', 'cards'] as const)
-    ),
-    ...withValue(
-      'task',
-      typeof search.task === 'string' ? search.task : undefined
-    ),
+    ...(typeof search.variant === 'string' ? { variant: search.variant } : {}),
+    ...(typeof search.task === 'string' ? { task: search.task } : {}),
   };
 }
 
-function withValue<K extends string, V>(key: K, value: V | undefined) {
-  return value === undefined ? {} : ({ [key]: value } as Record<K, V>);
+function useVariantRoute(): VariantRoute | undefined {
+  return useMatches({
+    select: (matches) =>
+      matches
+        .map((match) => ROUTE_IDS[match.routeId])
+        .find((route) => route !== undefined),
+  });
 }
 
-export type PrototypeSettings = {
-  variant: string | undefined;
-  apply: ApplyMode;
-  taskApply: TaskApplyMode;
-  deadlineField: DeadlineFieldMode;
-  statement: StatementMode;
-  shift: ShiftVariant;
-  picker: PickerLayout;
-  panelLook: PanelLook;
+/** The variant shown on the current page, or undefined when #181 is off. */
+export function useCurrentVariant(): VariantKey | undefined {
+  const active = usePrototypeActive('task-deadlines');
+  const route = useVariantRoute();
+  const search = useSearch({ strict: false }) as PrototypeSearch;
+
+  if (!active || !route) {
+    return undefined;
+  }
+
+  const requested = VARIANTS.find(
+    (variant) => variant.key === search.variant && variant.route === route
+  );
+
+  return requested?.key ?? DEFAULT_VARIANT[route];
+}
+
+export type PrototypeSettings = SandboxSwitches & {
+  variant: VariantKey | undefined;
   task: string | undefined;
 };
 
 export function usePrototypeSettings(): PrototypeSettings {
   const search = useSearch({ strict: false }) as PrototypeSearch;
+  const variant = useCurrentVariant();
+  const apply = useSandboxSwitches((state) => state.apply);
+  const taskApply = useSandboxSwitches((state) => state.taskApply);
+  const deadlineField = useSandboxSwitches((state) => state.deadlineField);
+  const statement = useSandboxSwitches((state) => state.statement);
+  const shift = useSandboxSwitches((state) => state.shift);
+  const picker = useSandboxSwitches((state) => state.picker);
+  const panelLook = useSandboxSwitches((state) => state.panelLook);
 
   return {
-    variant: search.variant,
-    apply: search.apply ?? 'batch',
-    taskApply: search.taskApply ?? 'course',
-    // Verdict 13.10.2026: a Task's overrides are visible in its panel too.
-    deadlineField: search.deadlineField ?? 'full',
-    statement: search.statement ?? 'panel',
-    shift: search.shift ?? 'question',
-    // Verdict 13.10.2026: the two-column date popover.
-    picker: search.picker ?? 'split',
-    // Verdict 13.10.2026: panel sections divided by lines.
-    panelLook: search.panelLook ?? 'list',
+    variant,
+    apply,
+    taskApply,
+    deadlineField,
+    statement,
+    shift,
+    picker,
+    panelLook,
     task: search.task,
   };
 }
 
-/** Changes switches on the current route, keeping the rest of the URL. */
+type PrototypePatch = Partial<SandboxSwitches> & { task?: string };
+
+/**
+ * Changes sandbox switches and the open Task; the Task goes to the URL of
+ * the current route, keeping the rest of it.
+ */
 export function useUpdatePrototypeSearch() {
   const navigate = useNavigate();
+  const setSwitches = useSandboxSwitches((state) => state.setSwitches);
 
   return useCallback(
-    (patch: Partial<PrototypeSearch>) => {
+    (patch: PrototypePatch) => {
+      const { task, ...switches } = patch;
+      setSwitches(switches);
+
+      if (!('task' in patch)) {
+        return;
+      }
+
       void navigate({
         to: '.',
         replace: true,
         resetScroll: false,
-        search: ((previous: PrototypeSearch) => {
-          const next: Record<string, unknown> = { ...previous, ...patch };
-          for (const key of Object.keys(next)) {
-            if (next[key] === undefined) {
-              delete next[key];
-            }
+        search: ((previous: Record<string, unknown>) => {
+          const next = { ...previous, task };
+          if (task === undefined) {
+            delete next.task;
           }
           return next;
         }) as never,
       });
     },
-    [navigate]
+    [navigate, setSwitches]
   );
 }
 
@@ -177,22 +161,13 @@ export function useOpenVariant(courseSlug: string) {
   const navigate = useNavigate();
 
   return useCallback(
-    (key: VariantKey, extra: Partial<PrototypeSearch> = {}) => {
+    (key: VariantKey, extra: PrototypeSearch = {}) => {
       const variant = VARIANTS.find((item) => item.key === key)!;
 
       void navigate({
         to: ROUTE_PATHS[variant.route],
         params: { courseSlug },
         search: ((previous: PrototypeSearch) => ({
-          ...(previous.apply ? { apply: previous.apply } : {}),
-          ...(previous.taskApply ? { taskApply: previous.taskApply } : {}),
-          ...(previous.deadlineField
-            ? { deadlineField: previous.deadlineField }
-            : {}),
-          ...(previous.statement ? { statement: previous.statement } : {}),
-          ...(previous.shift ? { shift: previous.shift } : {}),
-          ...(previous.picker ? { picker: previous.picker } : {}),
-          ...(previous.panelLook ? { panelLook: previous.panelLook } : {}),
           // The same Task stays selected across variants.
           ...(previous.task ? { task: previous.task } : {}),
           ...extra,

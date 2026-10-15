@@ -10,7 +10,6 @@ import {
   dockOffset,
   dockPadding,
 } from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
-import { SandboxBar } from '@/features/course/prototype/task-and-deadline-settings/sandbox-bar';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import { BulkBar } from '@/features/course/prototype/task-and-deadline-settings/ui/bulk-bar';
 import { ExtendDialog } from '@/features/course/prototype/task-and-deadline-settings/ui/extend/dialog';
@@ -123,7 +122,6 @@ export function DeadlinesPrototypePage({ courseSlug }: { courseSlug: string }) {
         onClose={() => setExtend(null)}
         onApplied={() => setSelection(new Set())}
       />
-      <SandboxBar courseSlug={courseSlug} />
     </main>
   );
 }

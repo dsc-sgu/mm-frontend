@@ -6,10 +6,8 @@ import type {
   Task,
   TaskProps,
 } from '@/features/course/prototype/task-and-deadline-settings/fixture';
-import {
-  usePrototypeSettings,
-  type TaskApplyMode,
-} from '@/features/course/prototype/task-and-deadline-settings/search';
+import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
+import type { TaskApplyMode } from '@/features/course/prototype/task-and-deadline-settings/settings';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
 
 export type PanelContext = 'view' | 'edit';

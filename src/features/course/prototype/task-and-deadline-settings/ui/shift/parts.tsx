@@ -16,10 +16,10 @@ import {
 } from '@/shadcn/components/ui/popover';
 import { cn } from '@/shadcn/lib/utils';
 import {
-  SHIFT_VARIANTS,
   usePrototypeSettings,
   useUpdatePrototypeSearch,
 } from '@/features/course/prototype/task-and-deadline-settings/search';
+import { SHIFT_VARIANTS } from '@/features/course/prototype/task-and-deadline-settings/settings';
 import {
   formatMoment,
   parseMomentInput,
