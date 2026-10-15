@@ -9,6 +9,10 @@ import { UserIdSchema } from '@/features/auth/model/identity';
 import { GradeSchema } from '@/features/course/model/grade';
 import type { AttemptId, CourseId } from '@/features/course/model/identity';
 import { ReviewRevisionSchema } from '@/features/course/features/review/model/revision';
+import {
+  readResourceDenial,
+  type ResourceDenial,
+} from '@/features/course/features/access/api/resource-denial';
 import type { ReviewResult } from '@/features/course/features/review/model/types';
 
 // Working Review wire contract pending backend confirmation #113: the latest
@@ -54,13 +58,15 @@ const ReviewResultSchema = v.variant('status', [
   v.object({ status: v.literal('none') }),
 ]);
 
+export type LoadReviewResult = ReviewResult | ResourceDenial;
+
 /** The published Review of an Attempt, or the declared absence of one. */
 export function loadReview(
   courseId: CourseId,
   attemptId: AttemptId,
   signal?: AbortSignal
-): Promise<ReviewResult> {
-  return runHttpOperation<ReviewResult>(
+): Promise<LoadReviewResult> {
+  return runHttpOperation<LoadReviewResult>(
     {
       name: 'load-review',
       url: apiPath('courses', courseId, 'attempts', attemptId, 'review'),
@@ -68,6 +74,8 @@ export function loadReview(
       signal,
     },
     async (context) => {
+      const denial = readResourceDenial(context);
+      if (denial) return denial;
       if (context.response.status !== 200) throw unexpectedHttpStatus(context);
       return readJson(context, ReviewResultSchema);
     }

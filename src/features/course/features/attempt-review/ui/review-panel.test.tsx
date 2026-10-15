@@ -7,6 +7,7 @@ import {
   reviewWorld,
   SESSION_EXPIRES_AT,
 } from '@/app/mock-backend/state';
+import { isResourceDenial } from '@/features/course/features/access/api/resource-denial';
 import { loadReview } from '@/features/course/features/review/api/load-review';
 import type { ReviewEdits } from '@/features/course/features/review/api/mutations';
 import type { ReviewResult } from '@/features/course/features/review/model/types';
@@ -16,8 +17,12 @@ import { AttemptReviewReviewPanel } from './review-panel';
 const [sashaFirst, , petyaFirst] = reviewWorld.attempts;
 const { maxGrade } = reviewWorld.task;
 
-function review(attempt: (typeof reviewWorld.attempts)[number]) {
-  return loadReview(attempt.courseId, attempt.id);
+async function review(
+  attempt: (typeof reviewWorld.attempts)[number]
+): Promise<ReviewResult> {
+  const result = await loadReview(attempt.courseId, attempt.id);
+  if (isResourceDenial(result)) throw new Error('Expected a readable Review');
+  return result;
 }
 
 /** Sasha's Attempt #1 has Review revision 2 with Grade 7,5. */

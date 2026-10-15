@@ -38,6 +38,8 @@ import {
   publishedReview,
   type ReviewResult,
 } from '@/features/course/features/review/model/types';
+import { isResourceDenial } from '@/features/course/features/access/api/resource-denial';
+import { CourseResourceDenied } from '@/features/course/features/access/ui/route-state';
 import { useDiffReadiness } from './hooks/use-diff-readiness';
 import type { DiffReadiness } from './model/diff-readiness';
 import { DiffReadinessGate } from './ui/diff-readiness';
@@ -98,6 +100,13 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
   );
   const queries = [summaryQuery, reviewQuery, materialQuery, attemptsQuery];
 
+  // Access is rechecked by every read, a background refetch included: a denial
+  // replaces the page even with unsaved edits, since they can't be saved.
+  const denial = queries
+    .map((query) => query.data)
+    .find((data) => data !== undefined && isResourceDenial(data));
+  if (denial) return <CourseResourceDenied denial={denial} />;
+
   // A failed background refetch keeps the loaded data and the unsaved edits.
   if (queries.some((query) => query.isError && query.data === undefined)) {
     return (
@@ -113,10 +122,11 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
   }
 
   if (
-    !summaryQuery.data ||
+    summaryQuery.data?.status !== 'found' ||
     !reviewQuery.data ||
-    !materialQuery.data ||
-    !attemptsQuery.data
+    isResourceDenial(reviewQuery.data) ||
+    materialQuery.data?.status !== 'found' ||
+    attemptsQuery.data?.status !== 'found'
   ) {
     return (
       <main
@@ -135,10 +145,10 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
     <AttemptReviewPageLoaded
       key={`${viewerId}:${attemptId}`}
       {...props}
-      summary={summaryQuery.data}
+      summary={summaryQuery.data.summary}
       review={reviewQuery.data}
-      material={materialQuery.data}
-      attempts={attemptsQuery.data}
+      material={materialQuery.data.material}
+      attempts={attemptsQuery.data.attempts}
     />
   );
 }
@@ -286,7 +296,8 @@ function AttemptReviewPageLoaded({
       overallFeedbackHtml: draft.overallFeedbackHtml,
       comments: prepareLineCommentsForSave(draft.lineComments),
     });
-    resetToReview(savedReview);
+    // A denial replaces the cached Review, and with it this whole page.
+    if (!isResourceDenial(savedReview)) resetToReview(savedReview);
   }
 
   return (
