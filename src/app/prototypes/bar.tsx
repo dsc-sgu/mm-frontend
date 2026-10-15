@@ -84,9 +84,10 @@ export function PrototypeBar() {
 
     if (next && !onScreen(next.id)) {
       open(next.id);
+      return;
     }
 
-    // Routes that exist only for a prototype close with it.
+    // Routes that exist only for #181 close with it.
     if (
       courseSlug &&
       routeIds.some((routeId) => PROTOTYPE_ONLY_ROUTES.includes(routeId)) &&

@@ -212,24 +212,34 @@ export function useExtendDraft(preset: ExtendPreset) {
   const periodInvalid =
     parsedFrom.status === 'invalid' || parsedTo.status === 'invalid';
 
-  const blocked =
-    studentIds.length === 0
-      ? 'Выберите хотя бы одного студента'
-      : periodInvalid
-        ? 'Период: формат 20.10'
-        : range && range.from > range.to
-          ? 'Период начинается позже, чем заканчивается'
-          : orderedTaskIds.length === 0
-            ? range
-              ? 'В этот период у выбранных студентов нет дедлайнов'
-              : 'Выберите хотя бы одно задание'
-            : by.kind === 'days' && by.days === 0
-              ? 'Выберите, на сколько продлить'
-              : by.kind === 'days' && by.days < 0
-                ? 'Продлить можно только на более поздний дедлайн'
-                : plan.commands.length === 0
-                  ? 'Ничего не изменится: дедлайна нет или он уже позже'
-                  : null;
+  function blockedReason(): string | null {
+    if (studentIds.length === 0) {
+      return 'Выберите хотя бы одного студента';
+    }
+    if (periodInvalid) {
+      return 'Период: формат 20.10';
+    }
+    if (range && range.from > range.to) {
+      return 'Период начинается позже, чем заканчивается';
+    }
+    if (orderedTaskIds.length === 0) {
+      return range
+        ? 'В этот период у выбранных студентов нет дедлайнов'
+        : 'Выберите хотя бы одно задание';
+    }
+    if (by.kind === 'days' && by.days === 0) {
+      return 'Выберите, на сколько продлить';
+    }
+    if (by.kind === 'days' && by.days < 0) {
+      return 'Продлить можно только на более поздний дедлайн';
+    }
+    if (plan.commands.length === 0) {
+      return 'Ничего не изменится: дедлайна нет или он уже позже';
+    }
+    return null;
+  }
+
+  const blocked = blockedReason();
 
   function submit() {
     const who =

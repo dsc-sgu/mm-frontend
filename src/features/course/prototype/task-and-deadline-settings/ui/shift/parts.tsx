@@ -156,7 +156,11 @@ export function DaysStepper({
 
 /** Positive numbers always carry «+», so «+3» and «−3» read alike. */
 function signed(days: number) {
-  return days > 0 ? `+${days}` : days < 0 ? `−${-days}` : '0';
+  if (days === 0) {
+    return '0';
+  }
+
+  return days > 0 ? `+${days}` : `−${-days}`;
 }
 
 /**

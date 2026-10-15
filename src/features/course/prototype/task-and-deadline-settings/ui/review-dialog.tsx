@@ -107,13 +107,7 @@ function ReviewBody({ onClose }: { onClose: () => void }) {
               <th className="w-10 py-2 pl-5">
                 <Checkbox
                   aria-label="Отметить все"
-                  checked={
-                    excluded.size === 0
-                      ? true
-                      : selected.length === 0
-                        ? false
-                        : 'indeterminate'
-                  }
+                  checked={allChecked(excluded.size, selected.length)}
                   onCheckedChange={() =>
                     setExcluded(
                       excluded.size === 0
@@ -203,4 +197,13 @@ function ReviewBody({ onClose }: { onClose: () => void }) {
       </DialogFooter>
     </DialogContent>
   );
+}
+
+/** The «Отметить все» box: all rows, none of them, or some. */
+function allChecked(excludedCount: number, selectedCount: number) {
+  if (excludedCount === 0) {
+    return true;
+  }
+
+  return selectedCount === 0 ? false : 'indeterminate';
 }

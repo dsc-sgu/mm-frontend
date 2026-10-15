@@ -494,17 +494,19 @@ export const TASKS: Record<string, Task> = Object.fromEntries(
 
 const LAB_DAY_REASON = 'Лабораторные у подгруппы по четвергам';
 
+/** Lab-day deadlines of the second subgroups, by Task. */
+const LAB_DAY_DEADLINES: Record<string, string> = {
+  branching: '2026-10-01',
+  http: '2026-10-08',
+  docker: '2026-10-29',
+};
+
 const GROUP_OVERRIDES: DeadlineOverride[] = [
-  ...['branching', 'http', 'docker'].flatMap((taskId) =>
+  ...Object.entries(LAB_DAY_DEADLINES).flatMap(([taskId, day]) =>
     ['g151-2', 'g111-2'].map((groupId) => ({
       taskId,
       target: { kind: 'group', groupId } as const,
-      value:
-        taskId === 'branching'
-          ? deadline('2026-10-01')
-          : taskId === 'http'
-            ? deadline('2026-10-08')
-            : deadline('2026-10-29'),
+      value: deadline(day),
       reason: LAB_DAY_REASON,
     }))
   ),

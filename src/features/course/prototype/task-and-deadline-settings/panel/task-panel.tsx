@@ -26,11 +26,65 @@ import {
   TitleInput,
 } from './fields';
 import { PublishFooter } from './publish-footer';
-import { changedFields, editsOf, type PanelSession } from './session';
+import {
+  changedFields,
+  editsOf,
+  type PanelResult,
+  type PanelSession,
+} from './session';
 import { StatementEditor } from '@/features/course/prototype/task-and-deadline-settings/panel/statement/editor';
 import { validateKey } from './task-key';
 
 type Status = { label: string; tone: string };
+
+function maxGradeError(maxGrade: number | null): string | undefined {
+  if (maxGrade === null) {
+    return 'Введите максимальный балл: по умолчанию его нет';
+  }
+
+  return Number.isInteger(maxGrade) && maxGrade > 0
+    ? undefined
+    : 'Целое число больше нуля';
+}
+
+function panelStatus({
+  removed,
+  readOnly,
+  visibleErrors,
+  changedCount,
+  result,
+}: {
+  removed: boolean;
+  readOnly: boolean;
+  visibleErrors: boolean;
+  changedCount: number;
+  result: PanelResult;
+}): Status {
+  if (removed) {
+    return { label: 'Удалено', tone: 'bg-red-500' };
+  }
+  if (readOnly) {
+    return { label: 'Только чтение', tone: 'bg-muted-foreground' };
+  }
+  if (visibleErrors) {
+    return { label: 'Есть ошибки', tone: 'bg-red-500' };
+  }
+  if (changedCount > 0) {
+    return { label: `Изменено полей: ${changedCount}`, tone: 'bg-amber-500' };
+  }
+
+  switch (result.kind) {
+    case 'applied':
+      return {
+        label: `Применено в ${formatClock(result.at)}`,
+        tone: 'bg-emerald-500',
+      };
+    case 'draft':
+      return { label: 'В черновике курса', tone: 'bg-violet-500' };
+    default:
+      return { label: 'Без изменений', tone: 'bg-border' };
+  }
+}
 
 export function TaskPanel({
   session,
@@ -72,12 +126,7 @@ export function TaskPanel({
   const allErrors: Partial<Record<string, string>> = {
     title: form.title.trim() ? undefined : 'Введите название',
     key: validateKey(form.key, takenKeys) ?? undefined,
-    maxGrade:
-      form.maxGrade === null
-        ? 'Введите максимальный балл: по умолчанию его нет'
-        : !Number.isInteger(form.maxGrade) || form.maxGrade <= 0
-          ? 'Целое число больше нуля'
-          : undefined,
+    maxGrade: maxGradeError(form.maxGrade),
   };
   const hasErrors = Object.values(allErrors).some(Boolean);
   const errors = Object.fromEntries(
@@ -87,22 +136,13 @@ export function TaskPanel({
   );
   const visibleErrors = Object.values(errors).some(Boolean);
 
-  const status: Status = removed
-    ? { label: 'Удалено', tone: 'bg-red-500' }
-    : readOnly
-      ? { label: 'Только чтение', tone: 'bg-muted-foreground' }
-      : visibleErrors
-        ? { label: 'Есть ошибки', tone: 'bg-red-500' }
-        : fields.length > 0
-          ? { label: `Изменено полей: ${fields.length}`, tone: 'bg-amber-500' }
-          : session.result.kind === 'applied'
-            ? {
-                label: `Применено в ${formatClock(session.result.at)}`,
-                tone: 'bg-emerald-500',
-              }
-            : session.result.kind === 'draft'
-              ? { label: 'В черновике курса', tone: 'bg-violet-500' }
-              : { label: 'Без изменений', tone: 'bg-border' };
+  const status = panelStatus({
+    removed,
+    readOnly,
+    visibleErrors,
+    changedCount: fields.length,
+    result: session.result,
+  });
 
   const fieldProps = { session, readOnly, locked, errors };
   const expanded = statement === 'expanded' && session.expanded;

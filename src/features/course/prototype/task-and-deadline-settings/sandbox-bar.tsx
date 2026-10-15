@@ -19,10 +19,14 @@ import {
   VARIANTS,
   type VariantKey,
 } from './search';
-import { SHIFT_VARIANTS, useSandboxSwitches } from './settings';
+import {
+  SHIFT_VARIANTS,
+  useSandboxSwitches,
+  type TaskApplyMode,
+} from './settings';
 import { useSandbox, type LogTone } from './store';
 import { formatClock } from './time';
-import { useEffectiveLease } from './use-lease';
+import { useEffectiveLease, type EffectiveLease } from './use-lease';
 import { Segmented } from './ui/segmented';
 
 const LOG_TONE: Record<LogTone, string> = {
@@ -229,11 +233,10 @@ function SandboxSettings() {
           >
             5 · {OTHER_TEACHER.shortName} правит то же задание
             <span className="block text-xs text-muted-foreground">
-              {settings.taskApply === 'course'
-                ? sandbox.lease.holder === 'me'
-                  ? 'В A невозможно: блокировка у вас, он не может начать правку'
-                  : 'В A это значит, что блокировка редактирования курса у него'
-                : `В ${settings.taskApply === 'task' ? 'D' : 'контракте'} блокировка не нужна: второй получит конфликт версий`}
+              {concurrentEditHint(
+                settings.taskApply,
+                sandbox.lease.holder === 'me'
+              )}
             </span>
           </Toggle>
           <Toggle
@@ -268,13 +271,7 @@ function SandboxSettings() {
       <Row label="Состояние">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
           <dt className="text-muted-foreground">Блокировка</dt>
-          <dd>
-            {effectiveLease.lease.holder === 'nobody'
-              ? 'свободна'
-              : effectiveLease.lease.holder === 'me'
-                ? 'у вас'
-                : `${OTHER_TEACHER.shortName}${effectiveLease.sameTask ? ', правит это же задание' : ''}`}
-          </dd>
+          <dd>{leaseText(effectiveLease)}</dd>
           <dt className="text-muted-foreground">Черновик</dt>
           <dd>
             {sandbox.draft
@@ -327,4 +324,29 @@ function SandboxSettings() {
       </div>
     </div>
   );
+}
+
+/** Why scenario 5 means what it means under the chosen apply mode. */
+function concurrentEditHint(taskApply: TaskApplyMode, leaseIsMine: boolean) {
+  switch (taskApply) {
+    case 'course':
+      return leaseIsMine
+        ? 'В A невозможно: блокировка у вас, он не может начать правку'
+        : 'В A это значит, что блокировка редактирования курса у него';
+    case 'task':
+      return 'В D блокировка не нужна: второй получит конфликт версий';
+    case 'contract':
+      return 'В контракте блокировка не нужна: второй получит конфликт версий';
+  }
+}
+
+function leaseText({ lease, sameTask }: EffectiveLease) {
+  switch (lease.holder) {
+    case 'nobody':
+      return 'свободна';
+    case 'me':
+      return 'у вас';
+    case 'other':
+      return `${OTHER_TEACHER.shortName}${sameTask ? ', правит это же задание' : ''}`;
+  }
 }

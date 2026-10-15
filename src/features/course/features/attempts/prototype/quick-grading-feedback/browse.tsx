@@ -19,6 +19,7 @@ import type {
 import { FilterBar } from './filter-bar';
 import { FixedRowsList, ListHeader } from './list';
 import { withRealisticNames, withRealisticStudentNames } from './names';
+import { rowLayoutFor } from './columns';
 import { QuickRow, type RowLayout } from './row';
 import { StickyTop } from './top-bar';
 import { useFixedRowsVirtualizer } from './use-fixed-rows';
@@ -65,11 +66,7 @@ export function BrowsePrototype({
   const navigate = useNavigate();
   const wideTier = useMediaQuery(BROWSE_TIER_FROM.wide);
   const mediumTier = useMediaQuery(BROWSE_TIER_FROM.medium);
-  const layout: RowLayout = wideTier
-    ? 'wide'
-    : mediumTier
-      ? 'medium'
-      : 'stacked';
+  const layout = rowLayoutFor(wideTier, mediumTier);
   const rowHeight = ROW_HEIGHT[layout];
 
   const attempts = useMemo(
@@ -124,51 +121,61 @@ export function BrowsePrototype({
           {showListHeader ? <ListHeader feedbackColumn="none" /> : null}
         </StickyTop>
 
-        <section className="min-w-0 pb-24">
-          {loading ? (
-            <div
-              aria-busy="true"
-              className="h-96 animate-pulse rounded-2xl border bg-muted"
-            />
-          ) : attempts.length === 0 ? (
-            <div
-              className={cn(
-                'rounded-2xl border border-dashed bg-card p-10 text-center'
-              )}
-            >
-              <h2 className="text-lg font-semibold">Попытки не найдены</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Измените или сбросьте фильтры.
-              </p>
-            </div>
-          ) : (
-            <FixedRowsList
-              attempts={attempts}
-              rowHeight={rowHeight}
-              virtualizer={virtualizer}
-              setListRef={setListRef}
-              scrollMargin={scrollMargin}
-              renderRow={(attempt) => (
-                <QuickRow
-                  layout={layout}
-                  feedbackColumn="none"
-                  attempt={attempt}
-                  entry={undefined}
-                  outcome={undefined}
-                  error={null}
-                  saving={false}
-                  gradeable={false}
-                  gradeInputRef={() => {}}
-                  onGradeChange={() => {}}
-                  onGradeKeyDown={() => {}}
-                  onActivate={() => openAttempt(attempt)}
-                  feedbackCell={null}
-                />
-              )}
-            />
-          )}
-        </section>
+        <section className="min-w-0 pb-24">{renderList()}</section>
       </div>
     </main>
   );
+
+  function renderList() {
+    if (loading) {
+      return (
+        <div
+          aria-busy="true"
+          className="h-96 animate-pulse rounded-2xl border bg-muted"
+        />
+      );
+    }
+
+    if (attempts.length === 0) {
+      return (
+        <div
+          className={cn(
+            'rounded-2xl border border-dashed bg-card p-10 text-center'
+          )}
+        >
+          <h2 className="text-lg font-semibold">Попытки не найдены</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Измените или сбросьте фильтры.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <FixedRowsList
+        attempts={attempts}
+        rowHeight={rowHeight}
+        virtualizer={virtualizer}
+        setListRef={setListRef}
+        scrollMargin={scrollMargin}
+        renderRow={(attempt) => (
+          <QuickRow
+            layout={layout}
+            feedbackColumn="none"
+            attempt={attempt}
+            entry={undefined}
+            outcome={undefined}
+            error={null}
+            saving={false}
+            gradeable={false}
+            gradeInputRef={() => {}}
+            onGradeChange={() => {}}
+            onGradeKeyDown={() => {}}
+            onActivate={() => openAttempt(attempt)}
+            feedbackCell={null}
+          />
+        )}
+      />
+    );
+  }
 }

@@ -111,11 +111,11 @@ export function TaskListView({
                         key={task.id}
                         className={cn(
                           'flex items-center gap-3 border-b px-3 last:border-b-0',
-                          open
-                            ? 'bg-primary/6'
-                            : selection.has(task.id)
-                              ? 'bg-primary/3'
-                              : 'hover:bg-muted/40'
+                          open && 'bg-primary/6',
+                          !open && selection.has(task.id) && 'bg-primary/3',
+                          !open &&
+                            !selection.has(task.id) &&
+                            'hover:bg-muted/40'
                         )}
                       >
                         <Checkbox

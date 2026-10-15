@@ -177,13 +177,10 @@ export function FilterBar({
       />
       <GradedFilter
         value={draft.graded}
-        state={
-          draft.graded !== applied.graded
-            ? 'pending'
-            : draft.graded === 'any'
-              ? 'idle'
-              : 'active'
-        }
+        state={pillState(
+          draft.graded !== applied.graded,
+          draft.graded !== 'any'
+        )}
         onPick={(graded) => onDraftChange({ ...draft, graded })}
       />
       {anyDraft ? <ResetAllButton onClick={onReset} /> : null}
@@ -228,13 +225,10 @@ function DraftListFilter({
         <FilterPill
           label={label}
           selection={values.length > 0 ? summary(values) : null}
-          state={
-            !sameValues(values, appliedValues)
-              ? 'pending'
-              : values.length > 0
-                ? 'active'
-                : 'idle'
-          }
+          state={pillState(
+            !sameValues(values, appliedValues),
+            values.length > 0
+          )}
         />
       </PopoverTrigger>
       <PopoverContent
@@ -279,6 +273,15 @@ function DraftListFilter({
 type Option = { value: string; label: string; hint?: string };
 
 type PillState = 'idle' | 'active' | 'pending';
+
+/** A draft that differs from the applied filter wins over its value. */
+function pillState(pending: boolean, active: boolean): PillState {
+  if (pending) {
+    return 'pending';
+  }
+
+  return active ? 'active' : 'idle';
+}
 
 const pillTone: Record<PillState, string | null> = {
   idle: null,

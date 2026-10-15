@@ -182,11 +182,7 @@ export function EditorTaskReference({
     return (
       <div className="flex gap-2 rounded-xl border border-dashed border-destructive/50 bg-destructive/5 p-4 text-sm">
         <CircleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
-        {removed
-          ? 'Задание удалено при публикации курса: блок вернулся, а задания уже нет. Удалите блок.'
-          : courseAccess === 'open'
-            ? 'Курс открыт, новые задания не создаются (#180). Удалите блок или верните курс в подготовку в «Песочнице».'
-            : 'Задание создаётся…'}
+        {missingTaskMessage(Boolean(removed), courseAccess === 'open')}
       </div>
     );
   }
@@ -388,4 +384,14 @@ export function EditorTaskReference({
       </div>
     </div>
   );
+}
+
+function missingTaskMessage(removed: boolean, courseOpen: boolean) {
+  if (removed) {
+    return 'Задание удалено при публикации курса: блок вернулся, а задания уже нет. Удалите блок.';
+  }
+
+  return courseOpen
+    ? 'Курс открыт, новые задания не создаются (#180). Удалите блок или верните курс в подготовку в «Песочнице».'
+    : 'Задание создаётся…';
 }

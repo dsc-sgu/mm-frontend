@@ -27,6 +27,7 @@ import {
   findOverride,
   type DeadlineValue,
   type ShiftRow,
+  type TaskSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
 import {
@@ -138,6 +139,32 @@ function groupState(draft: KindsDraft, single: string | null, groupId: string) {
   return { override, inherits, none, follows, locked: none || follows };
 }
 
+type GroupState = ReturnType<typeof groupState>;
+
+/** What a group's button says next to its name when one Task is shifted. */
+function groupHint(
+  { override, inherits, none, follows }: GroupState,
+  single: string | null,
+  selected: boolean
+): string | null {
+  if (!single) {
+    return null;
+  }
+  if (none) {
+    return 'без дедлайна';
+  }
+  if (follows) {
+    return 'вместе с общим';
+  }
+  if (inherits) {
+    return selected ? 'получит свой' : 'как общий';
+  }
+
+  return override?.value.kind === 'at'
+    ? formatCompactMoment(override.value.at)
+    : null;
+}
+
 function GroupButtons({ draft }: { draft: KindsDraft }) {
   const single =
     draft.orderedTaskIds.length === 1 ? draft.orderedTaskIds[0]! : null;
@@ -164,25 +191,10 @@ function GroupButtons({ draft }: { draft: KindsDraft }) {
       <div className="flex flex-wrap gap-1.5">
         {STUDENT_GROUPS.map((group) => {
           // Locked groups are not toggled but still show their explanation.
-          const { override, inherits, none, follows, locked } = groupState(
-            draft,
-            single,
-            group.id
-          );
+          const state = groupState(draft, single, group.id);
+          const { none, follows, locked } = state;
           const selected = draft.groupIds.has(group.id) && !none;
-          const hint = !single
-            ? null
-            : none
-              ? 'без дедлайна'
-              : follows
-                ? 'вместе с общим'
-                : inherits
-                  ? selected
-                    ? 'получит свой'
-                    : 'как общий'
-                  : override?.value.kind === 'at'
-                    ? formatCompactMoment(override.value.at)
-                    : null;
+          const hint = groupHint(state, single, selected);
           const explanation = groupExplanation(hint, draft.days);
 
           const button = (
@@ -197,20 +209,20 @@ function GroupButtons({ draft }: { draft: KindsDraft }) {
               }}
               className={cn(
                 'inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-sm transition-colors',
-                locked
-                  ? cn(
-                      'cursor-help border-dashed text-muted-foreground',
-                      none && 'text-muted-foreground/60'
-                    )
-                  : selected
-                    ? cn(
-                        'cursor-pointer border-sky-500/50 bg-sky-500/10 text-sky-950',
-                        'hover:border-sky-500/80 hover:bg-sky-500/20 dark:text-sky-100'
-                      )
-                    : cn(
-                        'cursor-pointer text-muted-foreground',
-                        'hover:border-foreground/30 hover:bg-muted hover:text-foreground'
-                      )
+                locked && [
+                  'cursor-help border-dashed text-muted-foreground',
+                  none && 'text-muted-foreground/60',
+                ],
+                !locked &&
+                  selected && [
+                    'cursor-pointer border-sky-500/50 bg-sky-500/10 text-sky-950',
+                    'hover:border-sky-500/80 hover:bg-sky-500/20 dark:text-sky-100',
+                  ],
+                !locked &&
+                  !selected && [
+                    'cursor-pointer text-muted-foreground',
+                    'hover:border-foreground/30 hover:bg-muted hover:text-foreground',
+                  ]
               )}
             >
               {group.name}
@@ -255,6 +267,15 @@ function valueText(value: DeadlineValue, defaultTime: string) {
     : 'без дедлайна';
 }
 
+/** The groups that move with the general deadline. */
+function followersNote(follows: string[]): string | undefined {
+  if (follows.length === STUDENT_GROUPS.length) {
+    return 'и все подгруппы';
+  }
+
+  return follows.length ? `и ${follows.join(', ')}` : undefined;
+}
+
 function ShiftLine({ row, follows }: { row: ShiftRow; follows: string[] }) {
   const time = row.level === 'opening' ? '00:00' : '23:59';
   const change =
@@ -269,16 +290,7 @@ function ShiftLine({ row, follows }: { row: ShiftRow; follows: string[] }) {
 
   if (row.level === 'task') {
     return (
-      <ChangeLine
-        who="Общий"
-        note={
-          follows.length === STUDENT_GROUPS.length
-            ? 'и все подгруппы'
-            : follows.length
-              ? `и ${follows.join(', ')}`
-              : undefined
-        }
-      >
+      <ChangeLine who="Общий" note={followersNote(follows)}>
         {change}
       </ChangeLine>
     );
@@ -367,14 +379,7 @@ export function QuestionBody({
       ? single.openingTime
       : null;
 
-  const generalMeta =
-    single?.deadline.kind === 'at'
-      ? `${formatCompactMoment(single.deadline.at)} → ${formatCompactMoment(shiftDays(single.deadline.at, draft.days))}`
-      : single
-        ? 'без дедлайна'
-        : ids.length > 1
-          ? taskCount(ids.length)
-          : null;
+  const generalMeta = generalDeadlineMeta(single, draft.days, ids.length);
 
   return (
     <DialogContent className="flex max-h-[92dvh] flex-col gap-0 p-0 sm:max-w-xl">
@@ -436,13 +441,7 @@ export function QuestionBody({
               kind="students"
               label="Индивидуальные дедлайны студентов"
               disabled={ids.length > 0 && draft.counts.personalTotal === 0}
-              meta={
-                ids.length === 0
-                  ? null
-                  : draft.counts.personalTotal === 0
-                    ? 'нет'
-                    : `${draft.counts.personalTotal} ${plural(draft.counts.personalTotal, 'студент', 'студента', 'студентов')}`
-              }
+              meta={personalMeta(ids.length, draft.counts.personalTotal)}
             />
             {draft.hasOpening ? (
               <KindRow
@@ -503,4 +502,30 @@ export function QuestionBody({
       </DialogFooter>
     </DialogContent>
   );
+}
+
+/** «было → стало» for one Task, «без дедлайна», or how many Tasks move. */
+function generalDeadlineMeta(
+  single: TaskSchedule | undefined,
+  days: number,
+  taskTotal: number
+): string | null {
+  if (single?.deadline.kind === 'at') {
+    return `${formatCompactMoment(single.deadline.at)} → ${formatCompactMoment(shiftDays(single.deadline.at, days))}`;
+  }
+  if (single) {
+    return 'без дедлайна';
+  }
+
+  return taskTotal > 1 ? taskCount(taskTotal) : null;
+}
+
+function personalMeta(taskTotal: number, personalTotal: number) {
+  if (taskTotal === 0) {
+    return null;
+  }
+
+  return personalTotal === 0
+    ? 'нет'
+    : `${personalTotal} ${plural(personalTotal, 'студент', 'студента', 'студентов')}`;
 }

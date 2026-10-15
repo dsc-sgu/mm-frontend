@@ -165,12 +165,7 @@ export function parseMomentInput(
   } else if (ru) {
     day = Number(ru[1]);
     month = Number(ru[2]);
-    year =
-      ru[3] === undefined
-        ? undefined
-        : ru[3].length === 2
-          ? 2000 + Number(ru[3])
-          : Number(ru[3]);
+    year = parseRuYear(ru[3]);
     hours = ru[4] === undefined ? undefined : Number(ru[4]);
     minutes = ru[5] === undefined ? undefined : Number(ru[5]);
   } else {
@@ -220,4 +215,13 @@ export function parseMomentInput(
   }
 
   return { status: 'valid', at, usedDefaultTime };
+}
+
+/** «25» means 2025; a missing year stays missing. */
+function parseRuYear(text: string | undefined) {
+  if (text === undefined) {
+    return undefined;
+  }
+
+  return text.length === 2 ? 2000 + Number(text) : Number(text);
 }

@@ -59,12 +59,8 @@ export function LevelEditor({
     ]);
   }
 
-  const base =
-    value.kind === 'at'
-      ? value.at
-      : inherited?.kind === 'at'
-        ? inherited.at
-        : endOfToday();
+  const inheritedAt = inherited?.kind === 'at' ? inherited.at : undefined;
+  const base = value.kind === 'at' ? value.at : (inheritedAt ?? endOfToday());
 
   return (
     <MomentPicker
@@ -85,13 +81,7 @@ export function LevelEditor({
               selected={value.kind === 'inherit'}
               icon={<CornerDownRight />}
               label={inheritLabel}
-              detail={
-                inherited?.kind === 'at'
-                  ? formatCompactMoment(inherited.at)
-                  : inherited
-                    ? 'без дедлайна'
-                    : undefined
-              }
+              detail={inheritedDetail(inherited)}
               onSelect={() =>
                 onCommands([{ type: 'reset-override', taskId, target }])
               }
@@ -155,4 +145,14 @@ function ReasonInput({
       </span>
     </label>
   );
+}
+
+function inheritedDetail(inherited: DeadlineValue | undefined) {
+  if (!inherited) {
+    return undefined;
+  }
+
+  return inherited.kind === 'at'
+    ? formatCompactMoment(inherited.at)
+    : 'без дедлайна';
 }

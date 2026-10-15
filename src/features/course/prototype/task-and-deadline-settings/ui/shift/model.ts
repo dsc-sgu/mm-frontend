@@ -33,6 +33,16 @@ export type ShiftPreset = {
 
 export type ShiftScope = 'everything' | 'general-only' | 'groups';
 
+/** How a shift's scope is named in the log. */
+const SCOPE_LABEL: Record<
+  ShiftScope,
+  (groupIds: ReadonlySet<string>) => string
+> = {
+  everything: () => 'весь курс',
+  'general-only': () => 'только общий дедлайн',
+  groups: (groupIds) => [...groupIds].map(groupName).join(', '),
+};
+
 export function plural(count: number, one: string, few: string, many: string) {
   const abs = Math.abs(count);
   if (abs % 10 === 1 && abs % 100 !== 11) {
@@ -234,12 +244,7 @@ export function useShiftDraft(preset: ShiftPreset) {
     (scope !== 'groups' || groupIds.size > 0);
 
   function label() {
-    const who =
-      scope === 'groups'
-        ? [...groupIds].map(groupName).join(', ')
-        : scope === 'general-only'
-          ? 'только общий дедлайн'
-          : 'весь курс';
+    const who = SCOPE_LABEL[scope](groupIds);
     return `сдвиг ${daysLabel(days)}: ${taskCount(orderedTaskIds.length)}, ${who}`;
   }
 

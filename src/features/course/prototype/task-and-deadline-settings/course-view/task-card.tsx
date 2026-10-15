@@ -69,11 +69,9 @@ export function TaskReferenceCard({
       className={cn(
         'group/card relative my-4 scroll-mt-24 rounded-xl border bg-primary/3 transition-shadow',
         'md:rounded-2xl dark:border-white/10',
-        selected
-          ? 'border-primary ring-2 ring-primary/40'
-          : remembered
-            ? 'border-primary/40 ring-1 ring-primary/20'
-            : 'border-black/10'
+        selected && 'border-primary ring-2 ring-primary/40',
+        !selected && remembered && 'border-primary/40 ring-1 ring-primary/20',
+        !selected && !remembered && 'border-black/10'
       )}
     >
       <button

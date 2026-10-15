@@ -59,14 +59,7 @@ export function PanelFrame({
       style={phone ? undefined : { top }}
       className={cn(
         'fixed z-40 flex flex-col border-border bg-background',
-        phone
-          ? 'inset-0 z-[60]'
-          : expanded
-            ? 'right-0 bottom-0 left-0 border-t shadow-2xl'
-            : cn(
-                'right-0 bottom-0 w-[26rem] border-l xl:w-[30rem]',
-                layout === 'overlay' ? 'shadow-2xl' : 'z-30'
-              )
+        placementClasses({ phone, expanded, layout })
       )}
     >
       {children}
@@ -78,4 +71,26 @@ const HEADER_HEIGHT = 56;
 
 function headerOffset() {
   return Math.max(0, HEADER_HEIGHT - window.scrollY);
+}
+
+function placementClasses({
+  phone,
+  expanded,
+  layout,
+}: {
+  phone: boolean;
+  expanded: boolean;
+  layout: PanelLayout;
+}) {
+  if (phone) {
+    return 'inset-0 z-[60]';
+  }
+  if (expanded) {
+    return 'right-0 bottom-0 left-0 border-t shadow-2xl';
+  }
+
+  return cn(
+    'right-0 bottom-0 w-[26rem] border-l xl:w-[30rem]',
+    layout === 'overlay' ? 'shadow-2xl' : 'z-30'
+  );
 }

@@ -268,16 +268,23 @@ export function useKindsDraft(preset: ShiftPreset) {
     (id) => schedule.tasks[id]?.openingTime !== null
   );
 
-  const blocked =
-    orderedTaskIds.length === 0
-      ? 'Выберите хотя бы одно задание'
-      : !kinds.general && !kinds.groups && !kinds.students && !kinds.opening
-        ? 'Отметьте, какие дедлайны сдвинуть'
-        : days === 0
-          ? 'Выберите, на сколько дней'
-          : plan.commands.length === 0
-            ? 'Ничего не изменится: у выбранного нет дат'
-            : null;
+  function blockedReason(): string | null {
+    if (orderedTaskIds.length === 0) {
+      return 'Выберите хотя бы одно задание';
+    }
+    if (!kinds.general && !kinds.groups && !kinds.students && !kinds.opening) {
+      return 'Отметьте, какие дедлайны сдвинуть';
+    }
+    if (days === 0) {
+      return 'Выберите, на сколько дней';
+    }
+    if (plan.commands.length === 0) {
+      return 'Ничего не изменится: у выбранного нет дат';
+    }
+    return null;
+  }
+
+  const blocked = blockedReason();
 
   function submit() {
     edit(
