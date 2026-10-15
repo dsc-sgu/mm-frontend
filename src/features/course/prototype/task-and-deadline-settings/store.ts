@@ -693,16 +693,18 @@ export const useSandbox = create<Sandbox>()((set, get) => {
     let groups = taskGroups;
     if (props.groupId !== task.groupId) {
       groups = taskGroups
-        .map((group) =>
-          group.id === task.groupId
-            ? {
-                ...group,
-                taskIds: group.taskIds.filter((id) => id !== taskId),
-              }
-            : group.id === props.groupId
-              ? { ...group, taskIds: [...group.taskIds, taskId] }
-              : group
-        )
+        .map((group) => {
+          if (group.id === task.groupId) {
+            return {
+              ...group,
+              taskIds: group.taskIds.filter((id) => id !== taskId),
+            };
+          }
+
+          return group.id === props.groupId
+            ? { ...group, taskIds: [...group.taskIds, taskId] }
+            : group;
+        })
         // A Task Group exists only while it has Tasks.
         .filter((group) => group.taskIds.length > 0);
     }

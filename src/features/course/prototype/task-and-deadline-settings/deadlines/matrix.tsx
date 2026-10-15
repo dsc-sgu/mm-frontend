@@ -377,11 +377,13 @@ function TaskRows({
     keys.has(overrideKey(task.id, item.target))
   );
   // Opaque tints: the sticky Task cell must hide what scrolls under it.
-  const rowTone = focused
-    ? 'bg-[color-mix(in_oklab,var(--color-sky-500)_8%,var(--card))]'
-    : selected
-      ? 'bg-[color-mix(in_oklab,var(--primary)_5%,var(--card))]'
-      : 'bg-card';
+  const rowTone = cn(
+    focused && 'bg-[color-mix(in_oklab,var(--color-sky-500)_8%,var(--card))]',
+    !focused &&
+      selected &&
+      'bg-[color-mix(in_oklab,var(--primary)_5%,var(--card))]',
+    !focused && !selected && 'bg-card'
+  );
 
   return (
     <>

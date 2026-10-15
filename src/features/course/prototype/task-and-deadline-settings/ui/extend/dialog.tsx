@@ -330,11 +330,13 @@ function ExtendBody({
           className={cn(
             // Two lines reserved, so a wrapping line does not resize the window.
             'flex min-h-10 items-center gap-1.5 text-sm',
-            draft.blocked
-              ? 'text-muted-foreground'
-              : draft.flipsKind === 'warn'
-                ? 'text-amber-800 dark:text-amber-300'
-                : 'text-emerald-700 dark:text-emerald-300'
+            draft.blocked && 'text-muted-foreground',
+            !draft.blocked &&
+              draft.flipsKind === 'warn' &&
+              'text-amber-800 dark:text-amber-300',
+            !draft.blocked &&
+              draft.flipsKind !== 'warn' &&
+              'text-emerald-700 dark:text-emerald-300'
           )}
         >
           {draft.blocked ??
@@ -363,14 +365,20 @@ function ExtendBody({
             {save.status === 'saving' ? (
               <LoaderCircle className="animate-spin" />
             ) : null}
-            {apply === 'batch'
-              ? 'Добавить к неприменённым'
-              : count > 0
-                ? `Продлить ${count} ${plural(count, 'дедлайн', 'дедлайна', 'дедлайнов')}`
-                : 'Продлить'}
+            {extendButtonLabel(apply === 'batch', count)}
           </Button>
         </div>
       </DialogFooter>
     </DialogContent>
   );
+}
+
+function extendButtonLabel(batch: boolean, count: number) {
+  if (batch) {
+    return 'Добавить к неприменённым';
+  }
+
+  return count > 0
+    ? `Продлить ${count} ${plural(count, 'дедлайн', 'дедлайна', 'дедлайнов')}`
+    : 'Продлить';
 }

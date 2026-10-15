@@ -33,6 +33,7 @@ import { RecoveryDialog } from './recovery';
 import { ExitDialog } from './exit-dialog';
 import { getModKeyLabel, isExitShortcut, isSaveShortcut } from './shortcuts';
 import { QuickGradingTopBar, StickyTop } from './top-bar';
+import { rowLayoutFor } from './columns';
 import { QuickRow, type RowLayout } from './row';
 import {
   INITIAL_QUICK_SESSION,
@@ -84,11 +85,7 @@ export function QuickGradingFeedbackPrototype({
 
   const wideTier = useMediaQuery(QUICK_TIER_FROM.wide);
   const mediumTier = useMediaQuery(QUICK_TIER_FROM.medium);
-  const layout: RowLayout = wideTier
-    ? 'wide'
-    : mediumTier
-      ? 'medium'
-      : 'stacked';
+  const layout = rowLayoutFor(wideTier, mediumTier);
   const desktop = layout !== 'stacked';
   const rowHeight = ROW_HEIGHT[layout];
 
@@ -339,11 +336,9 @@ export function QuickGradingFeedbackPrototype({
     const outcome = session.outcomes.get(attempt.id);
     const editable =
       canGrade(attempt, session) && !session.saving.has(attempt.id);
-    const feedback = editable
-      ? (entry?.feedback ?? '')
-      : outcome?.status === 'saved'
-        ? outcome.feedback
-        : (entry?.feedback ?? '');
+    const savedFeedback =
+      !editable && outcome?.status === 'saved' ? outcome.feedback : undefined;
+    const feedback = savedFeedback ?? entry?.feedback ?? '';
     const common = {
       layout,
       attempt,

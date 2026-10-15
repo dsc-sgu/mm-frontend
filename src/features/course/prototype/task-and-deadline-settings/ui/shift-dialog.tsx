@@ -43,6 +43,7 @@ import {
   type ShiftRow,
 } from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
+import type { ShiftVariant } from '@/features/course/prototype/task-and-deadline-settings/settings';
 import {
   ATTEMPTS,
   STUDENT_GROUPS,
@@ -124,14 +125,9 @@ export function ShiftDialog({
 
   return (
     <Dialog open={preset !== null} onOpenChange={(open) => !open && onClose()}>
-      {preset === null ? null : shift === 'question' ? (
-        <QuestionBody preset={preset} onClose={onClose} onApplied={applied} />
-      ) : shift === 'sentence' ? (
-        <SentenceBody preset={preset} onClose={onClose} onApplied={applied} />
-      ) : shift === 'undo' ? (
-        <QuickShiftBody preset={preset} onApplied={applied} />
-      ) : (
-        <ShiftDialogBody
+      {preset === null ? null : (
+        <ShiftBody
+          shift={shift}
           preset={preset}
           onClose={onClose}
           onApplied={applied}
@@ -139,6 +135,39 @@ export function ShiftDialog({
       )}
     </Dialog>
   );
+}
+
+function ShiftBody({
+  shift,
+  preset,
+  onClose,
+  onApplied,
+}: {
+  shift: ShiftVariant;
+  preset: ShiftPreset;
+  onClose: () => void;
+  onApplied: () => void;
+}) {
+  switch (shift) {
+    case 'question':
+      return (
+        <QuestionBody preset={preset} onClose={onClose} onApplied={onApplied} />
+      );
+    case 'sentence':
+      return (
+        <SentenceBody preset={preset} onClose={onClose} onApplied={onApplied} />
+      );
+    case 'undo':
+      return <QuickShiftBody preset={preset} onApplied={onApplied} />;
+    case 'table':
+      return (
+        <ShiftDialogBody
+          preset={preset}
+          onClose={onClose}
+          onApplied={onApplied}
+        />
+      );
+  }
 }
 
 function ShiftDialogBody({
@@ -241,12 +270,17 @@ function ShiftDialogBody({
     onApplied();
   }
 
-  const taskSummary =
-    orderedTaskIds.length === 0
-      ? 'Выберите задания'
-      : orderedTaskIds.length === 1
-        ? tasks[orderedTaskIds[0]!]?.title
-        : taskCount(orderedTaskIds.length);
+  function summarizeTasks() {
+    if (orderedTaskIds.length === 0) {
+      return 'Выберите задания';
+    }
+
+    return orderedTaskIds.length === 1
+      ? tasks[orderedTaskIds[0]!]?.title
+      : taskCount(orderedTaskIds.length);
+  }
+
+  const taskSummary = summarizeTasks();
 
   return (
     <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-4xl">

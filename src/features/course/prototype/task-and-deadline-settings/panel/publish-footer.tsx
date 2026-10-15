@@ -35,6 +35,7 @@ import {
   editsOf,
   FIELD_LABEL,
   pickProps,
+  type PanelResult,
   type PanelSession,
 } from './session';
 import { CreateAnotherButton } from './create-another';
@@ -179,17 +180,7 @@ export function PublishFooter({
     </Disclosure>
   ) : null;
 
-  const result =
-    session.result.kind === 'applied' ? (
-      <Note tone="ok" icon={<Check className="size-3.5" />}>
-        Применено в {formatClock(session.result.at)}: {session.result.text}
-      </Note>
-    ) : session.result.kind === 'draft' ? (
-      <Note tone="ok" icon={<FileStack className="size-3.5" />}>
-        В черновике курса с {formatClock(session.result.at)}. Опубликуется
-        вместе с курсом.
-      </Note>
-    ) : null;
+  const result = <ResultNote result={session.result} />;
 
   // ---------------------------------------------------------------- A
   if (taskApply === 'course') {
@@ -263,11 +254,7 @@ export function PublishFooter({
               onClick={writeToDraft}
             >
               {busy ? <LoaderCircle className="animate-spin" /> : null}
-              {scheduleDirty
-                ? dirty
-                  ? 'В черновик и применить дедлайны'
-                  : 'Применить дедлайны'
-                : 'В черновик'}
+              {draftButtonLabel(dirty, scheduleDirty)}
             </Button>
           </Buttons>
         </FooterShell>
@@ -319,11 +306,11 @@ export function PublishFooter({
           somethingToPublish
             ? `опубликован курс целиком${alsoPublished.length ? ` (+${alsoPublished.length} других правок)` : ''}`
             : null,
-          scheduleDirty
-            ? scheduleOk
-              ? 'дедлайны применены отдельно'
-              : 'дедлайны не применены'
-            : null,
+          scheduleNote(
+            scheduleDirty,
+            scheduleOk,
+            'дедлайны применены отдельно'
+          ),
         ]
           .filter(Boolean)
           .join('; '),
@@ -414,11 +401,7 @@ export function PublishFooter({
             onClick={publish}
           >
             {busy ? <LoaderCircle className="animate-spin" /> : null}
-            {somethingToPublish && scheduleDirty
-              ? 'Опубликовать курс и применить дедлайны'
-              : !somethingToPublish && scheduleDirty
-                ? 'Применить дедлайны'
-                : 'Опубликовать курс'}
+            {publishCourseLabel(somethingToPublish, scheduleDirty)}
           </Button>
         </Buttons>
       </FooterShell>
@@ -435,11 +418,7 @@ export function PublishFooter({
     return (
       <FooterShell>
         <Note tone="ok" icon={<FileStack className="size-3.5" />}>
-          {dirty
-            ? 'Сохраняется в черновик курса…'
-            : session.result.kind === 'draft'
-              ? `Сохранено в черновике курса в ${formatClock(session.result.at)}`
-              : 'Хранится в черновике курса'}
+          {draftNoteText(dirty, session.result)}
         </Note>
         <Note>
           Новое задание — часть черновика курса: свойства и дедлайны сохраняются
@@ -464,12 +443,7 @@ export function PublishFooter({
 
   // ------------------------------------------- D, contract for a published Task
   const conflict = session.result.kind === 'conflict' ? session.result : null;
-  const deleted =
-    session.result.kind === 'deleted'
-      ? session.result
-      : removed
-        ? { kind: 'deleted' as const, at: null }
-        : null;
+  const deleted = deletedOutcome(session.result, removed);
   const version = conflict ? conflict.theirs.version : session.baseVersion;
 
   async function publishTask(baseVersion: number) {
@@ -521,11 +495,7 @@ export function PublishFooter({
       published !== null
         ? `Задание опубликовано, версия ${published} (${fieldList})`
         : null,
-      scheduleDirty
-        ? scheduleOk
-          ? 'дедлайны применены'
-          : 'дедлайны не применены'
-        : null,
+      scheduleNote(scheduleDirty, scheduleOk, 'дедлайны применены'),
     ].filter(Boolean);
     session.setResult({
       kind: 'applied',
@@ -639,13 +609,7 @@ export function PublishFooter({
           onClick={() => void publishTask(session.baseVersion)}
         >
           {busy ? <LoaderCircle className="animate-spin" /> : null}
-          {dirty
-            ? scheduleDirty
-              ? 'Опубликовать задание и дедлайны'
-              : isNew
-                ? 'Создать задание'
-                : 'Опубликовать задание'
-            : 'Применить дедлайны'}
+          {publishTaskLabel({ dirty, scheduleDirty, isNew })}
         </Button>
       </Buttons>
     </FooterShell>
@@ -662,4 +626,96 @@ function FooterShell({ children }: { children: ReactNode }) {
 
 function Buttons({ children }: { children: ReactNode }) {
   return <div className="flex flex-wrap justify-end gap-2">{children}</div>;
+}
+
+function ResultNote({ result }: { result: PanelResult }) {
+  switch (result.kind) {
+    case 'applied':
+      return (
+        <Note tone="ok" icon={<Check className="size-3.5" />}>
+          Применено в {formatClock(result.at)}: {result.text}
+        </Note>
+      );
+    case 'draft':
+      return (
+        <Note tone="ok" icon={<FileStack className="size-3.5" />}>
+          В черновике курса с {formatClock(result.at)}. Опубликуется вместе с
+          курсом.
+        </Note>
+      );
+    default:
+      return null;
+  }
+}
+
+function draftButtonLabel(dirty: boolean, scheduleDirty: boolean) {
+  if (!scheduleDirty) {
+    return 'В черновик';
+  }
+
+  return dirty ? 'В черновик и применить дедлайны' : 'Применить дедлайны';
+}
+
+function publishCourseLabel(
+  somethingToPublish: boolean,
+  scheduleDirty: boolean
+) {
+  if (!scheduleDirty) {
+    return 'Опубликовать курс';
+  }
+
+  return somethingToPublish
+    ? 'Опубликовать курс и применить дедлайны'
+    : 'Применить дедлайны';
+}
+
+function publishTaskLabel({
+  dirty,
+  scheduleDirty,
+  isNew,
+}: {
+  dirty: boolean;
+  scheduleDirty: boolean;
+  isNew: boolean;
+}) {
+  if (!dirty) {
+    return 'Применить дедлайны';
+  }
+  if (scheduleDirty) {
+    return 'Опубликовать задание и дедлайны';
+  }
+
+  return isNew ? 'Создать задание' : 'Опубликовать задание';
+}
+
+/** The schedule part of a result line, or null when nothing was pending. */
+function scheduleNote(
+  scheduleDirty: boolean,
+  scheduleOk: boolean,
+  okText: string
+) {
+  if (!scheduleDirty) {
+    return null;
+  }
+
+  return scheduleOk ? okText : 'дедлайны не применены';
+}
+
+function draftNoteText(dirty: boolean, result: PanelResult) {
+  if (dirty) {
+    return 'Сохраняется в черновик курса…';
+  }
+
+  return result.kind === 'draft'
+    ? `Сохранено в черновике курса в ${formatClock(result.at)}`
+    : 'Хранится в черновике курса';
+}
+
+/** A Task deleted by another Teacher, seen on publish or already removed. */
+function deletedOutcome(result: PanelResult, removed: boolean) {
+  if (result.kind === 'deleted') {
+    return result;
+  }
+
+  return removed ? { kind: 'deleted' as const, at: null } : null;
 }

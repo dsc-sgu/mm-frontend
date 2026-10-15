@@ -286,16 +286,7 @@ function compactRelation({
   const minutes = Math.max(1, Math.round(Math.abs(difference) / 60_000));
   const days = Math.floor(minutes / 1440);
   const hours = Math.floor((minutes % 1440) / 60);
-  const duration =
-    days >= 3
-      ? `${days} д`
-      : days > 0
-        ? hours > 0
-          ? `${days} д ${hours} ч`
-          : `${days} д`
-        : hours > 0
-          ? `${hours} ч`
-          : `${minutes} мин`;
+  const duration = formatDuration(days, hours, minutes);
 
   return difference < 0
     ? `за ${duration} до дедлайна`
@@ -340,15 +331,13 @@ function GradeZoneContent({
           className={cn(
             'h-9 w-14 rounded-lg px-1 text-center text-base font-bold',
             'md:text-base',
-            error
-              ? 'border-destructive bg-destructive/10 text-destructive'
-              : entry?.grade
-                ? [
-                    'border-orange-400 bg-orange-50 text-orange-950',
-                    'dark:border-orange-500/70 dark:bg-orange-950/35',
-                    'dark:text-orange-100',
-                  ]
-                : null
+            error && 'border-destructive bg-destructive/10 text-destructive',
+            !error &&
+              entry?.grade && [
+                'border-orange-400 bg-orange-50 text-orange-950',
+                'dark:border-orange-500/70 dark:bg-orange-950/35',
+                'dark:text-orange-100',
+              ]
           )}
         />
         <span className="text-sm text-muted-foreground">/{maxScore}</span>
@@ -493,16 +482,50 @@ function shortName(fullName: string) {
   return fullName;
 }
 
+/** Whole days past three; otherwise days and hours, hours, or minutes. */
+function formatDuration(days: number, hours: number, minutes: number) {
+  if (days >= 3 || (days > 0 && hours === 0)) {
+    return `${days} д`;
+  }
+
+  if (days > 0) {
+    return `${days} д ${hours} ч`;
+  }
+
+  return hours > 0 ? `${hours} ч` : `${minutes} мин`;
+}
+
+type ScoreTone = 'zero' | 'full' | 'partial';
+
+const SCORE_TONE: Record<ScoreTone, string[]> = {
+  zero: [
+    'border-rose-200 bg-rose-50 text-rose-700',
+    'dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300',
+  ],
+  full: [
+    'border-emerald-200 bg-emerald-50 text-emerald-700',
+    'dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300',
+  ],
+  partial: [
+    'border-amber-200 bg-amber-50 text-amber-700',
+    'dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-300',
+  ],
+};
+
+function scoreTone(score: number, maxScore: number): ScoreTone {
+  if (score === 0) {
+    return 'zero';
+  }
+
+  return score === maxScore ? 'full' : 'partial';
+}
+
 function ScoreBadge({ score, maxScore }: { score: number; maxScore: number }) {
   return (
     <span
       className={cn(
         'shrink-0 rounded-lg border px-2 py-1 text-sm font-bold',
-        score === 0
-          ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300'
-          : score === maxScore
-            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300'
-            : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-300'
+        SCORE_TONE[scoreTone(score, maxScore)]
       )}
     >
       {score}

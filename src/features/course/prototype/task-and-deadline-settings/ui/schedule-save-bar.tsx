@@ -21,21 +21,31 @@ export function ScheduleStatus({ className }: { className?: string }) {
   const save = useSandbox((state) => state.save);
   const { changes } = usePendingChanges();
 
-  const text =
-    save.status === 'saving' ? (
-      <>
-        <LoaderCircle className="size-3.5 animate-spin" />
-        Сохраняется…
-      </>
-    ) : apply === 'batch' && changes.length > 0 ? null : save.status ===
-      'saved' ? (
-      <>
-        <Check className="size-3.5 text-emerald-600" />
-        Сохранено в {formatClock(save.at)}
-      </>
-    ) : apply === 'instant' ? (
-      'Изменения сохраняются сразу'
-    ) : null;
+  function statusText() {
+    if (save.status === 'saving') {
+      return (
+        <>
+          <LoaderCircle className="size-3.5 animate-spin" />
+          Сохраняется…
+        </>
+      );
+    }
+    // Pending batch changes speak for themselves in the dock.
+    if (apply === 'batch' && changes.length > 0) {
+      return null;
+    }
+    if (save.status === 'saved') {
+      return (
+        <>
+          <Check className="size-3.5 text-emerald-600" />
+          Сохранено в {formatClock(save.at)}
+        </>
+      );
+    }
+    return apply === 'instant' ? 'Изменения сохраняются сразу' : null;
+  }
+
+  const text = statusText();
 
   if (!text) {
     return null;
@@ -97,7 +107,8 @@ export function ScheduleDock({
             Повторить
           </Button>
         </div>
-      ) : apply === 'batch' && changes.length > 0 ? (
+      ) : null}
+      {save.status !== 'failed' && apply === 'batch' && changes.length > 0 ? (
         <div className={BAR}>
           <span className="size-2 rounded-full bg-amber-500" />
           <span className="min-w-0 flex-1">
