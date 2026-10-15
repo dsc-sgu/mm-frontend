@@ -33,12 +33,17 @@ import { VirtualizedAttemptsList } from './ui/virtualized-list';
 import type { CourseAttemptsFilters } from './model/types';
 import type { CourseId } from '@/features/course/model/identity';
 import { cn } from '@/shadcn/lib/utils';
+// PROTOTYPE (#121): throwaway quick-grading and filter bar prototype, see the
+// prototype folder.
+import { QuickGradingFeedbackPrototype } from './prototype/quick-grading-feedback';
+import { BrowsePrototype } from './prototype/quick-grading-feedback/browse';
 
 type CourseAttemptsPageProps = {
   courseId: CourseId;
   courseSlug: string;
   appliedFilters: CourseAttemptsFilters;
   onApplyFilters: (filters: CourseAttemptsFilters) => void;
+  prototypeVariant?: string;
 };
 
 export function CourseAttemptsPage({
@@ -46,6 +51,7 @@ export function CourseAttemptsPage({
   courseSlug,
   appliedFilters,
   onApplyFilters,
+  prototypeVariant,
 }: CourseAttemptsPageProps) {
   const filters = useCourseAttemptsFilters({ appliedFilters, onApplyFilters });
   const quickGradingState = useCourseAttemptsQuickGradingState();
@@ -86,6 +92,38 @@ export function CourseAttemptsPage({
   });
   const filterActionsDisabledReason =
     getCourseAttemptsFilterActionsDisabledReason(pageMode);
+
+  // PROTOTYPE (#121): quick grading always renders the prototype; with
+  // `?variant=` normal mode renders the top-bar filter prototype too.
+  if (pageMode === 'quick-grading') {
+    return (
+      <QuickGradingFeedbackPrototype
+        attempts={attempts}
+        filters={filters.normalizedAppliedFilters}
+        tasks={tasks}
+        students={students}
+        onExit={grading.exitQuickGrading}
+      />
+    );
+  }
+
+  if (prototypeVariant) {
+    return (
+      <BrowsePrototype
+        courseSlug={courseSlug}
+        attempts={attempts}
+        loading={attemptsQuery.isPending}
+        tasks={tasks}
+        students={students}
+        applied={filters.normalizedAppliedFilters}
+        draft={filters.draftFilters}
+        onDraftChange={filters.setDraftFilters}
+        onApplyDraft={filters.applyDraftFilters}
+        onReset={filters.resetFilters}
+        onStartQuickGrading={grading.startQuickGrading}
+      />
+    );
+  }
 
   const filtersPanel = {
     appliedFilters: filters.normalizedAppliedFilters,
