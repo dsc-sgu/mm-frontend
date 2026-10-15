@@ -198,6 +198,10 @@ function SandboxSettings() {
             { value: 'panel', label: 'В панели' },
             { value: 'inline', label: 'В документе' },
             { value: 'expanded', label: 'Развёрнутая панель' },
+            {
+              value: 'expanded-page',
+              label: 'Развёрнутая, редактор страницы',
+            },
           ]}
         />
       </Row>

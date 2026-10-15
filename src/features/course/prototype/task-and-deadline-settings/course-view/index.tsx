@@ -21,6 +21,7 @@ import {
   usePrototypeSettings,
   useUpdatePrototypeSearch,
 } from '@/features/course/prototype/task-and-deadline-settings/search';
+import { isExpandedStatement } from '@/features/course/prototype/task-and-deadline-settings/settings';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { NEW_TASK_ID } from '@/features/course/prototype/task-and-deadline-settings/editor/new-task';
 import { revealTaskReference } from './reveal';
@@ -94,7 +95,9 @@ export function PrototypeCourseView({
           {session ? (
             <PanelFrame
               layout={layout}
-              expanded={session.expanded && settings.statement === 'expanded'}
+              expanded={
+                session.expanded && isExpandedStatement(settings.statement)
+              }
               label="Настройка задания"
               onEscape={close}
             >

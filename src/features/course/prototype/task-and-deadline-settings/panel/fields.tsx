@@ -24,6 +24,7 @@ import {
   useOpenVariant,
   usePrototypeSettings,
 } from '@/features/course/prototype/task-and-deadline-settings/search';
+import { isExpandedStatement } from '@/features/course/prototype/task-and-deadline-settings/settings';
 import {
   useSandbox,
   useViewSchedule,
@@ -555,7 +556,7 @@ export function StatementBlock({
     );
   }
 
-  if (statement === 'expanded') {
+  if (isExpandedStatement(statement)) {
     // The expanded layout puts the editor in its own column.
     return session.expanded ? null : (
       <Block

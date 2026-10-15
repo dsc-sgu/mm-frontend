@@ -9,6 +9,7 @@ import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 import { OTHER_TEACHER } from '@/features/course/prototype/task-and-deadline-settings/fixture';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
+import { isExpandedStatement } from '@/features/course/prototype/task-and-deadline-settings/settings';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { useEffectiveLease } from '@/features/course/prototype/task-and-deadline-settings/use-lease';
 import { formatClock } from '@/features/course/prototype/task-and-deadline-settings/time';
@@ -33,6 +34,7 @@ import {
   type PanelSession,
 } from './session';
 import { StatementEditor } from '@/features/course/prototype/task-and-deadline-settings/panel/statement/editor';
+import { PageStatementEditor } from '@/features/course/prototype/task-and-deadline-settings/panel/statement/page-editor';
 import { validateKey } from './task-key';
 
 type Status = { label: string; tone: string };
@@ -145,7 +147,7 @@ export function TaskPanel({
   });
 
   const fieldProps = { session, readOnly, locked, errors };
-  const expanded = statement === 'expanded' && session.expanded;
+  const expanded = isExpandedStatement(statement) && session.expanded;
 
   const body = (
     <div
@@ -231,14 +233,27 @@ export function TaskPanel({
                 <Minimize2 /> Свернуть
               </Button>
             </div>
-            <StatementEditor
-              autoFocus
-              value={form.statement}
-              disabled={readOnly}
-              onChange={(value) => session.setField('statement', value)}
-              className="min-h-64 flex-1 overflow-hidden"
-              contentClassName="flex-1 overflow-y-auto"
-            />
+            {statement === 'expanded-page' ? (
+              // The Course Page editor, as on the page: blocks with handles
+              // to the left of the text need room, hence the side padding.
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <PageStatementEditor
+                  value={form.statement}
+                  disabled={readOnly}
+                  onChange={(value) => session.setField('statement', value)}
+                  className="mx-auto w-full max-w-3xl px-8 pb-24"
+                />
+              </div>
+            ) : (
+              <StatementEditor
+                autoFocus
+                value={form.statement}
+                disabled={readOnly}
+                onChange={(value) => session.setField('statement', value)}
+                className="min-h-64 flex-1 overflow-hidden"
+                contentClassName="flex-1 overflow-y-auto"
+              />
+            )}
           </div>
           <div className="flex min-h-0 flex-col">{body}</div>
         </div>
