@@ -41,10 +41,11 @@ export function isApplyShortcut(
   );
 }
 
-// Alt+G ("grading") starts quick grading from normal mode. Mod+G is the
-// browser's "find next", and a bare letter is too easy to hit by accident.
-// Matches the physical key, so it works on the Russian layout ("п").
-export function isStartQuickGradingShortcut(event: KeyboardEvent) {
+// Alt+G ("grading") toggles quick grading: it starts the session from
+// normal mode and leaves it like Esc. Mod+G is the browser's "find next", and
+// a bare letter is too easy to hit by accident. Matches the physical key, so
+// it works on the Russian layout ("п") and from inside a grade field.
+export function isQuickGradingToggleShortcut(event: KeyboardEvent) {
   return (
     !event.isComposing &&
     event.code === 'KeyG' &&
