@@ -26,6 +26,7 @@ import {
   usePrototypeSettings,
   useUpdatePrototypeSearch,
 } from '@/features/course/prototype/task-and-deadline-settings/search';
+import { isExpandedStatement } from '@/features/course/prototype/task-and-deadline-settings/settings';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { ScheduleDock } from '@/features/course/prototype/task-and-deadline-settings/ui/schedule-save-bar';
 import { useContractPageEditSlot } from './apply-slot';
@@ -100,7 +101,9 @@ export function PrototypeEditor({
             {session ? (
               <PanelFrame
                 layout="dock"
-                expanded={session.expanded && settings.statement === 'expanded'}
+                expanded={
+                  session.expanded && isExpandedStatement(settings.statement)
+                }
                 label="Настройка задания"
                 onEscape={close}
               >

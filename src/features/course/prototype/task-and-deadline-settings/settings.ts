@@ -11,7 +11,17 @@ export type ApplyMode = 'instant' | 'batch';
  */
 export type TaskApplyMode = 'course' | 'task' | 'contract';
 export type DeadlineFieldMode = 'counter' | 'full';
-export type StatementMode = 'panel' | 'inline' | 'expanded';
+/**
+ * Where the statement is edited. `expanded` — the panel grows and the
+ * statement gets its own column with the compact editor; `expanded-page` —
+ * the same, but the editor is the one of the Course Page.
+ */
+export type StatementMode = 'panel' | 'inline' | 'expanded' | 'expanded-page';
+
+/** The statement has its own column once the panel is expanded. */
+export function isExpandedStatement(mode: StatementMode) {
+  return mode === 'expanded' || mode === 'expanded-page';
+}
 export type ShiftVariant = 'question' | 'sentence' | 'undo' | 'table';
 export type PickerLayout = 'stack' | 'split';
 export type PanelLook = 'list' | 'cards';
