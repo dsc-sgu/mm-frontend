@@ -9,7 +9,8 @@ import { loadReview, type LoadReviewResult } from './load-review';
 import { createReply, deleteReply, saveReview, updateReply } from './mock';
 import { reviewKeys } from './queries';
 
-// Temporary mutations over the canonical mock backend state; REV5 and REV6.2
+// Temporary mutations over the canonical mock backend state, not a reference
+// for new operations (their failures are plain Errors); REV5 and REV6.2
 // replace them with HTTP operations.
 
 export type ReviewedAttempt = {

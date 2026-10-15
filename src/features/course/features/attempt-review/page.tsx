@@ -86,6 +86,8 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
 
   // Access is rechecked by every read, a background refetch included: a denial
   // replaces the page even with unsaved edits, since they can't be saved.
+  // Wired by hand for now; #243 moves this reaction into the Course shell, so
+  // new pages should not copy it.
   const denial = queries
     .map((query) => query.data)
     .find((data) => data !== undefined && isResourceDenial(data));

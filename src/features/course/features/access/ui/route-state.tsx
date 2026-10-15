@@ -94,6 +94,7 @@ export function CourseResourceNotFound() {
  * Replaces a participant-bound page whose read was denied after its locator
  * resolved. A `forbidden` denial makes Membership suspect: the recheck lets the
  * Course route close itself on a lost Membership or a changed role.
+ * Pages render it by hand until #243 applies it from the Course shell.
  */
 export function CourseResourceDenied({ denial }: { denial: ResourceDenial }) {
   const queryClient = useQueryClient();
