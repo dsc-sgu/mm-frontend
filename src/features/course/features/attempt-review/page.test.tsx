@@ -63,7 +63,7 @@ test(
       )
     );
     await user.click(screen.getByRole('button', { name: 'Выбрать попытку' }));
-    await user.click(await screen.findByRole('button', { name: /Попытка #2/ }));
+    await user.click(await screen.findByRole('link', { name: /Попытка #2/ }));
     await held.requested;
 
     // The new Attempt's Review is on its way: nothing of Attempt #1 remains.
@@ -197,6 +197,38 @@ test('the route starts every page read before the page mounts', async () => {
     expect(
       screen.queryByRole('heading', { name: /Попытка #\d: Сортировки/ })
     ).toBeNull();
+  } finally {
+    server.events.removeListener('request:start', onRequest);
+  }
+});
+
+test('hovering another Attempt in the selector preloads its reads without switching', async () => {
+  const requested: string[] = [];
+  const onRequest = ({ request }: { request: Request }) => {
+    requested.push(new URL(request.url).pathname);
+  };
+  server.events.on('request:start', onRequest);
+  try {
+    const user = userEvent.setup();
+    renderRoutes([], SASHA_FIRST_URL, { appRoutes: true });
+    await screen.findByRole('heading', { name: 'Попытка #1: Сортировки' });
+    await user.click(screen.getByRole('button', { name: 'Выбрать попытку' }));
+
+    await user.hover(await screen.findByRole('link', { name: /Попытка #2/ }));
+
+    const second = `/api/v1/courses/${COURSE}/attempts/${sashaSecond.id}`;
+    await waitFor(() =>
+      expect(requested).toEqual(
+        expect.arrayContaining([
+          second,
+          `${second}/review`,
+          `${second}/material`,
+        ])
+      )
+    );
+    expect(
+      screen.getByRole('heading', { name: 'Попытка #1: Сортировки' })
+    ).toBeTruthy();
   } finally {
     server.events.removeListener('request:start', onRequest);
   }

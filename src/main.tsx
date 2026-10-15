@@ -6,6 +6,7 @@ import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@/app/remote-data/query-client';
 import { RouteError } from '@/app/route-error';
+import { routerPreloadOptions } from '@/app/router-preload';
 
 const queryClient = createQueryClient();
 
@@ -25,6 +26,7 @@ const router = createRouter({
   routeTree,
   context: { queryClient },
   defaultErrorComponent: RouteError,
+  ...routerPreloadOptions,
 });
 
 // The first render already checks the session, so the worker must be running
