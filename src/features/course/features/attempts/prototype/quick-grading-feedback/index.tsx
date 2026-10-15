@@ -18,7 +18,7 @@ import {
 } from '@/shadcn/components/ui/popover';
 import { cn } from '@/shadcn/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { PrototypeSwitcher } from '@/app/prototype-switcher';
+import { PrototypeBarControls } from '@/app/prototypes/bar-controls';
 import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
 import type {
   CourseAttemptStudent,
@@ -42,8 +42,6 @@ import {
   simulateSave,
   type QuickEntry,
 } from './session';
-
-const VARIANTS = [{ key: 'B', name: 'Быстрая оценка · поле в строке' }];
 
 // One fixed height per layout tier, so the virtualizer never measures rows.
 const ROW_HEIGHT: Record<RowLayout, number> = {
@@ -506,7 +504,7 @@ export function QuickGradingFeedbackPrototype({
         }
       />
 
-      <PrototypeSwitcher variants={VARIANTS} current="B" onChange={() => {}}>
+      <PrototypeBarControls>
         <label className="flex cursor-pointer items-center gap-1 px-1 text-xs">
           <input
             type="checkbox"
@@ -554,7 +552,7 @@ export function QuickGradingFeedbackPrototype({
         >
           state
         </button>
-      </PrototypeSwitcher>
+      </PrototypeBarControls>
 
       {showState ? (
         <pre

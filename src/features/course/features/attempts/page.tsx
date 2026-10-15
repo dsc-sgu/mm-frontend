@@ -34,7 +34,8 @@ import type { CourseAttemptsFilters } from './model/types';
 import type { CourseId } from '@/features/course/model/identity';
 import { cn } from '@/shadcn/lib/utils';
 // PROTOTYPE (#121): throwaway quick-grading and filter bar prototype, see the
-// prototype folder.
+// prototype folder. It shows while #121 is on in the prototype bar.
+import { usePrototypeActive } from '@/app/prototypes/active';
 import { QuickGradingFeedbackPrototype } from './prototype/quick-grading-feedback';
 import { BrowsePrototype } from './prototype/quick-grading-feedback/browse';
 
@@ -43,7 +44,6 @@ type CourseAttemptsPageProps = {
   courseSlug: string;
   appliedFilters: CourseAttemptsFilters;
   onApplyFilters: (filters: CourseAttemptsFilters) => void;
-  prototypeVariant?: string;
 };
 
 export function CourseAttemptsPage({
@@ -51,8 +51,8 @@ export function CourseAttemptsPage({
   courseSlug,
   appliedFilters,
   onApplyFilters,
-  prototypeVariant,
 }: CourseAttemptsPageProps) {
+  const prototype = usePrototypeActive('quick-grading');
   const filters = useCourseAttemptsFilters({ appliedFilters, onApplyFilters });
   const quickGradingState = useCourseAttemptsQuickGradingState();
   const [filtersDrawerOpen, setFiltersDrawerOpen] = useState(false);
@@ -93,9 +93,8 @@ export function CourseAttemptsPage({
   const filterActionsDisabledReason =
     getCourseAttemptsFilterActionsDisabledReason(pageMode);
 
-  // PROTOTYPE (#121): quick grading always renders the prototype; with
-  // `?variant=` normal mode renders the top-bar filter prototype too.
-  if (pageMode === 'quick-grading') {
+  // PROTOTYPE (#121): quick grading and the top-bar filters of the prototype.
+  if (prototype && pageMode === 'quick-grading') {
     return (
       <QuickGradingFeedbackPrototype
         attempts={attempts}
@@ -107,7 +106,7 @@ export function CourseAttemptsPage({
     );
   }
 
-  if (prototypeVariant) {
+  if (prototype) {
     return (
       <BrowsePrototype
         courseSlug={courseSlug}

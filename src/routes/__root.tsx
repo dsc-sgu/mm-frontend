@@ -1,6 +1,8 @@
 import { Header } from '@/app/header/ui/header';
 import { CourseContextLoading } from '@/features/course/features/access/ui/route-state';
 import { RouterPending } from '@/app/router-pending';
+// PROTOTYPE: the prototype bar, dev builds only.
+import { PrototypeBar } from '@/app/prototypes/bar';
 import { Toaster } from '@/shadcn/components/ui/sonner';
 import type { QueryClient } from '@tanstack/react-query';
 import {
@@ -37,6 +39,7 @@ function RootComponent() {
       {showHeader && <Header />}
       <Outlet />
       <Toaster position="top-right" />
+      {import.meta.env.DEV && showHeader ? <PrototypeBar /> : null}
     </>
   );
 }

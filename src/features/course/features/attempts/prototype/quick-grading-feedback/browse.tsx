@@ -1,9 +1,10 @@
 // PROTOTYPE (#121): normal-mode Course Attempts with the page-wide, pinned
 // top bar in place of the filter sidebar and the bottom action bar (bulk
-// selection is gone, #114). Any `?variant=` turns it on. The list is the
-// compact row from quick grading without the Grade field; the whole row opens
-// the Attempt (#117). "Быстрая оценка" (Alt+G) starts quick grading over the
-// applied filters, and the same bar then shows them as locked chips.
+// selection is gone, #114). It shows while #121 is on in the prototype bar.
+// The list is the compact row from quick grading without the Grade field; the
+// whole row opens the Attempt (#117). "Быстрая оценка" (Alt+G) starts quick
+// grading over the applied filters, and the same bar then shows them as
+// locked chips.
 import { useEffect, useMemo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 

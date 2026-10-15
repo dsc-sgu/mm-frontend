@@ -1,8 +1,8 @@
-// PROTOTYPE (#181): the floating bar — variants across routes plus sandbox
-// switches (`?apply`, `?taskApply`, panel options) and scenario world.
+// PROTOTYPE (#181): controls in the prototype bar — variants across routes
+// plus sandbox switches, the Course state and scenario world.
 import { RotateCcw, Settings2 } from 'lucide-react';
 
-import { PrototypeSwitcher } from '@/app/prototype-switcher';
+import { VariantStepper } from '@/app/prototypes/variant-stepper';
 import { Button } from '@/shadcn/components/ui/button';
 import { Checkbox } from '@/shadcn/components/ui/checkbox';
 import {
@@ -13,13 +13,13 @@ import {
 import { cn } from '@/shadcn/lib/utils';
 import { OTHER_TEACHER } from './fixture';
 import {
-  SHIFT_VARIANTS,
   useOpenVariant,
   usePrototypeSettings,
   useUpdatePrototypeSearch,
   VARIANTS,
   type VariantKey,
 } from './search';
+import { SHIFT_VARIANTS, useSandboxSwitches } from './settings';
 import { useSandbox, type LogTone } from './store';
 import { formatClock } from './time';
 import { useEffectiveLease } from './use-lease';
@@ -33,21 +33,22 @@ const LOG_TONE: Record<LogTone, string> = {
   world: 'text-muted-foreground',
 };
 
-export function SandboxBar({ courseSlug }: { courseSlug: string }) {
+export function SandboxControls({ courseSlug }: { courseSlug: string }) {
   const settings = usePrototypeSettings();
   const openVariant = useOpenVariant(courseSlug);
 
   return (
-    <PrototypeSwitcher
-      variants={VARIANTS}
-      current={settings.variant ?? ''}
-      onChange={(key) => openVariant(key as VariantKey)}
-    >
+    <>
+      <VariantStepper
+        variants={VARIANTS}
+        current={settings.variant}
+        onChange={(key) => openVariant(key as VariantKey)}
+      />
       <Popover>
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex h-8 items-center gap-1.5 rounded-full px-2.5 hover:bg-white/15"
+            className="flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 hover:bg-white/15"
           >
             <Settings2 className="size-4" />
             <span className="hidden sm:inline">Песочница</span>
@@ -62,7 +63,7 @@ export function SandboxBar({ courseSlug }: { courseSlug: string }) {
           <SandboxSettings />
         </PopoverContent>
       </Popover>
-    </PrototypeSwitcher>
+    </>
   );
 }
 
@@ -112,14 +113,16 @@ function SandboxSettings() {
   const update = useUpdatePrototypeSearch();
   const sandbox = useSandbox();
   const effectiveLease = useEffectiveLease();
+  const resetSwitches = useSandboxSwitches((state) => state.resetSwitches);
 
   return (
     <div className="grid gap-4 p-4">
       <p className="rounded-md bg-fuchsia-500/10 px-2 py-1.5 text-xs text-fuchsia-900 dark:text-fuchsia-200">
-        Прототип #181. Всё в памяти: перезагрузка возвращает исходные данные.
+        Прототип #181. Данные песочницы живут в памяти: перезагрузка возвращает
+        исходные. Переключатели ниже запоминаются в браузере.
       </p>
 
-      <Row label="Применение дедлайнов" hint="?apply">
+      <Row label="Применение дедлайнов">
         <Segmented
           value={settings.apply}
           onChange={(apply) => update({ apply })}
@@ -130,7 +133,7 @@ function SandboxSettings() {
         />
       </Row>
 
-      <Row label="Применение правок задания" hint="?taskApply, #129">
+      <Row label="Применение правок задания" hint="#129">
         <Segmented
           value={settings.taskApply}
           onChange={(taskApply) => update({ taskApply })}
@@ -142,7 +145,7 @@ function SandboxSettings() {
         />
       </Row>
 
-      <Row label="Поле дедлайна в панели" hint="?deadlineField">
+      <Row label="Поле дедлайна в панели">
         <Segmented
           value={settings.deadlineField}
           onChange={(deadlineField) => update({ deadlineField })}
@@ -153,7 +156,7 @@ function SandboxSettings() {
         />
       </Row>
 
-      <Row label="Окно сдвига дедлайнов" hint="?shift">
+      <Row label="Окно сдвига дедлайнов">
         <Segmented
           value={settings.shift}
           onChange={(shift) => update({ shift })}
@@ -161,7 +164,7 @@ function SandboxSettings() {
         />
       </Row>
 
-      <Row label="Окно даты в ячейке" hint="?picker">
+      <Row label="Окно даты в ячейке">
         <Segmented
           value={settings.picker}
           onChange={(picker) => update({ picker })}
@@ -172,7 +175,7 @@ function SandboxSettings() {
         />
       </Row>
 
-      <Row label="Разделы панели задания" hint="?panelLook">
+      <Row label="Разделы панели задания">
         <Segmented
           value={settings.panelLook}
           onChange={(panelLook) => update({ panelLook })}
@@ -183,7 +186,7 @@ function SandboxSettings() {
         />
       </Row>
 
-      <Row label="Где править условие" hint="?statement">
+      <Row label="Где править условие">
         <Segmented
           value={settings.statement}
           onChange={(statement) => update({ statement })}
@@ -314,9 +317,14 @@ function SandboxSettings() {
         )}
       </Row>
 
-      <Button variant="outline" size="sm" onClick={sandbox.reset}>
-        <RotateCcw /> Сбросить песочницу
-      </Button>
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="outline" size="sm" onClick={sandbox.reset}>
+          <RotateCcw /> Сбросить песочницу
+        </Button>
+        <Button variant="outline" size="sm" onClick={resetSwitches}>
+          Переключатели по вердиктам
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,12 @@
 import { CoursePageEditPage } from '@/features/course/features/page-edit/page';
 import { createCourseSectionBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
-// PROTOTYPE (#181): `?variant=C` shows deadlines inside the editor.
+// PROTOTYPE (#181): with #181 on, deadlines show inside the editor (C).
 import { PrototypeEditor } from '@/features/course/prototype/task-and-deadline-settings/editor';
-import { validatePrototypeSearch } from '@/features/course/prototype/task-and-deadline-settings/search';
+import {
+  useCurrentVariant,
+  validatePrototypeSearch,
+} from '@/features/course/prototype/task-and-deadline-settings/search';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/edit'
@@ -23,7 +26,7 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { course, courseSlug } = Route.useRouteContext();
-  const { variant } = Route.useSearch();
+  const variant = useCurrentVariant();
 
   if (variant === 'C') {
     return (

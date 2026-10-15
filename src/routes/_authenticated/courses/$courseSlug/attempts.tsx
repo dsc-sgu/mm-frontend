@@ -7,16 +7,7 @@ import {
 import { createCourseSectionBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useMemo } from 'react';
-import type {
-  CourseAttemptsFilters,
-  CourseAttemptsRouteSearch,
-} from '@/features/course/features/attempts/model/types';
-
-// PROTOTYPE (#121): any `variant` turns on the top-bar prototype. The router
-// parses `?variant=2` as a number, so accept both.
-type PrototypeSearch = CourseAttemptsRouteSearch & {
-  variant?: string | number;
-};
+import type { CourseAttemptsFilters } from '@/features/course/features/attempts/model/types';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/attempts'
@@ -30,12 +21,7 @@ export const Route = createFileRoute(
       ),
     },
   },
-  validateSearch: (search: Record<string, unknown>): PrototypeSearch => ({
-    ...validateCourseAttemptsSearch(search),
-    ...(typeof search.variant === 'string' || typeof search.variant === 'number'
-      ? { variant: search.variant }
-      : {}),
-  }),
+  validateSearch: validateCourseAttemptsSearch,
   component: RouteComponent,
 });
 
@@ -50,24 +36,17 @@ function RouteComponent() {
   );
   const handleApplyFilters = useCallback(
     (filters: CourseAttemptsFilters) => {
-      void navigate({
-        search: (previous: PrototypeSearch) => ({
-          ...searchFromCourseAttemptsFilters(filters),
-          ...(previous.variant != null ? { variant: previous.variant } : {}),
-        }),
-      });
+      void navigate({ search: searchFromCourseAttemptsFilters(filters) });
     },
     [navigate]
   );
+
   return (
     <CourseAttemptsPage
       courseId={course.id}
       courseSlug={courseSlug}
       appliedFilters={appliedFilters}
       onApplyFilters={handleApplyFilters}
-      prototypeVariant={
-        search.variant == null ? undefined : String(search.variant)
-      }
     />
   );
 }

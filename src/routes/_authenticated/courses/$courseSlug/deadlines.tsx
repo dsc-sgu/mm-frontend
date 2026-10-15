@@ -1,10 +1,14 @@
 // PROTOTYPE (#181): throwaway route for deadline screen variants A and D.
-// It exists only with `?variant=A|D`.
-import { createFileRoute, notFound } from '@tanstack/react-router';
+// It exists only while #181 is on in the prototype bar.
+import { createFileRoute } from '@tanstack/react-router';
 
+import { CourseRouteOutcome } from '@/features/course/features/access/ui/route-state';
 import { createCourseSectionBreadcrumb } from '@/features/course/routing/header';
 import { DeadlinesPrototypePage } from '@/features/course/prototype/task-and-deadline-settings/deadlines/page';
-import { validatePrototypeSearch } from '@/features/course/prototype/task-and-deadline-settings/search';
+import {
+  useCurrentVariant,
+  validatePrototypeSearch,
+} from '@/features/course/prototype/task-and-deadline-settings/search';
 
 export const Route = createFileRoute(
   '/_authenticated/courses/$courseSlug/deadlines'
@@ -20,16 +24,16 @@ export const Route = createFileRoute(
       ),
     },
   },
-  beforeLoad({ search }) {
-    if (search.variant !== 'A' && search.variant !== 'D') {
-      throw notFound();
-    }
-  },
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const { courseSlug } = Route.useRouteContext();
+  const variant = useCurrentVariant();
+
+  if (!variant) {
+    return <CourseRouteOutcome kind="resource" />;
+  }
 
   return <DeadlinesPrototypePage courseSlug={courseSlug} />;
 }
