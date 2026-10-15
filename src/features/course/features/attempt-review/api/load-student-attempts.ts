@@ -13,6 +13,10 @@ import {
   type CourseId,
 } from '@/features/course/model/identity';
 import { ReviewRevisionSchema } from '@/features/course/features/review/model/revision';
+import {
+  readResourceDenial,
+  type ResourceDenial,
+} from '@/features/course/features/access/api/resource-denial';
 import type { StudentAttempt } from '@/features/course/features/attempt-review/model/types';
 
 const CountSchema = v.pipe(v.number(), v.integer(), v.minValue(0));
@@ -35,14 +39,18 @@ const StudentAttemptsSchema = v.object({
   ),
 });
 
+export type LoadStudentAttemptsResult =
+  | { status: 'found'; attempts: StudentAttempt[] }
+  | ResourceDenial;
+
 /** The Student's Attempts at the Task, newest first. */
 export function loadStudentAttempts(
   courseId: CourseId,
   taskId: string,
   studentId: UserId,
   signal?: AbortSignal
-): Promise<StudentAttempt[]> {
-  return runHttpOperation(
+): Promise<LoadStudentAttemptsResult> {
+  return runHttpOperation<LoadStudentAttemptsResult>(
     {
       name: 'load-student-attempts',
       url: apiPath(
@@ -58,9 +66,11 @@ export function loadStudentAttempts(
       signal,
     },
     async (context) => {
+      const denial = readResourceDenial(context);
+      if (denial) return denial;
       if (context.response.status !== 200) throw unexpectedHttpStatus(context);
       const { attempts } = await readJson(context, StudentAttemptsSchema);
-      return attempts;
+      return { status: 'found', attempts };
     }
   );
 }

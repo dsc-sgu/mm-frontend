@@ -7,6 +7,7 @@ import {
   unreadableBody,
 } from '@/app/mock-backend/failures';
 import { server } from '@/app/mock-backend/node';
+import { accessDenial } from '@/app/mock-backend/participant-access';
 import {
   accessWorld,
   mockBackend,
@@ -15,6 +16,7 @@ import {
 } from '@/app/mock-backend/state';
 import { reply } from '@/app/testing/reply';
 import { GradeSchema } from '@/features/course/model/grade';
+import type { AttemptId } from '@/features/course/model/identity';
 import { loadAttemptMaterial } from './load-material';
 import { loadStudentAttempts } from './load-student-attempts';
 import { loadAttemptSummary } from './load-summary';
@@ -94,6 +96,12 @@ const operations: Operation[] = [
   },
 ];
 
+async function material(attemptId: AttemptId) {
+  const result = await loadAttemptMaterial(COURSE, attemptId);
+  if (result.status !== 'found') throw new Error('Expected the material');
+  return result.material;
+}
+
 beforeEach(() => {
   mockBackend.reset('world:review');
   mockBackend.state.session = {
@@ -109,7 +117,7 @@ describe.each(operations)('TR-05: $name statuses', (operation) => {
     await expect(operation.run()).resolves.toBeDefined();
   });
 
-  test.each([401, 403, 404, 500])('undeclared %i rejects', async (status) => {
+  test.each([401, 500])('undeclared %i rejects', async (status) => {
     server.use(http.get(operation.url, undeclaredStatus(status)));
 
     await expect(operation.run()).rejects.toMatchObject({
@@ -118,6 +126,15 @@ describe.each(operations)('TR-05: $name statuses', (operation) => {
       reason: { kind: 'unexpected-http-status', status },
     });
   });
+
+  test.each(['forbidden', 'not-found'] as const)(
+    'a body-less %s denial resolves as declared',
+    async (status) => {
+      server.use(http.get(operation.url, () => accessDenial(status)));
+
+      await expect(operation.run()).resolves.toEqual({ status });
+    }
+  );
 
   test('an unreadable body rejects', async () => {
     server.use(http.get(operation.url, unreadableBody));
@@ -146,18 +163,21 @@ describe.each(operations)('TR-05: $name statuses', (operation) => {
 describe('Attempt projections from the canonical state', () => {
   test('the header names the Task, Student, number and times of the Attempt', async () => {
     await expect(loadAttemptSummary(COURSE, sashaSecond.id)).resolves.toEqual({
-      id: sashaSecond.id,
-      attemptNumber: 2,
-      submittedAt: '2026-05-22T09:00:00.000Z',
-      deadlineAt: '2026-05-25T20:59:59.000Z',
-      task: { title: 'Сортировки', maxGrade: v.parse(GradeSchema, 10) },
-      student: { id: sasha.id, name: 'Саша' },
+      status: 'found',
+      summary: {
+        id: sashaSecond.id,
+        attemptNumber: 2,
+        submittedAt: '2026-05-22T09:00:00.000Z',
+        deadlineAt: '2026-05-25T20:59:59.000Z',
+        task: { title: 'Сортировки', maxGrade: v.parse(GradeSchema, 10) },
+        student: { id: sasha.id, name: 'Саша' },
+      },
     });
   });
 
   test('the material compares an Attempt with the previous one of the Student', async () => {
-    const second = await loadAttemptMaterial(COURSE, sashaSecond.id);
-    const first = await loadAttemptMaterial(COURSE, sashaFirst.id);
+    const second = await material(sashaSecond.id);
+    const first = await material(sashaFirst.id);
 
     expect(second.baselineAttemptNumber).toBe(1);
     expect(second.changedFiles.map(({ path }) => path)).toEqual([
