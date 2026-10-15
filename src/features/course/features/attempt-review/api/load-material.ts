@@ -1,4 +1,4 @@
-import { parseDiffFromFile, type FileDiffMetadata } from '@pierre/diffs';
+import type { FileDiffMetadata } from '@pierre/diffs';
 import * as v from 'valibot';
 import { apiPath } from '@/app/remote-data/api-path';
 import {
@@ -60,11 +60,15 @@ export function loadAttemptMaterial(
       if (denial) return denial;
       if (context.response.status !== 200) throw unexpectedHttpStatus(context);
       const material = await readJson(context, AttemptMaterialSchema);
+      // Loaded lazily: the route loader starts this read from the main bundle.
+      const { parseDiffFromFile } = await import('@pierre/diffs');
       return {
         status: 'found',
         material: {
           baselineAttemptNumber: material.baselineAttemptNumber,
-          changedFiles: material.files.map(toChangedFile),
+          changedFiles: material.files.map((file) =>
+            toChangedFile(file, parseDiffFromFile)
+          ),
         },
       };
     }
@@ -77,12 +81,12 @@ const DIFF_TYPES: Record<AttemptReviewFileStatus, FileDiffMetadata['type']> = {
   changed: 'change',
 };
 
-function toChangedFile({
-  path,
-  status,
-  oldText,
-  newText,
-}: ChangedFileDto): AttemptReviewChangedFile {
+type ParseDiffFromFile = typeof import('@pierre/diffs').parseDiffFromFile;
+
+function toChangedFile(
+  { path, status, oldText, newText }: ChangedFileDto,
+  parseDiffFromFile: ParseDiffFromFile
+): AttemptReviewChangedFile {
   const diff: FileDiffMetadata = {
     ...parseDiffFromFile(
       {
