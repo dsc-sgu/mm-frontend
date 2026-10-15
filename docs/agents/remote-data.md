@@ -89,6 +89,32 @@ const dto = await requestJson({
 
 Generic `Result<T, E>` МОЖЕТ использоваться вне remote-data-пути TanStack Query, только если его error-вариант намеренно входит в объявленный interface соответствующего module. `Result<T, E>` НЕ ДОЛЖЕН вводиться только для упаковки отказа операции непосредственно перед обратным преобразованием в rejected Promise.
 
+## Загрузка данных страницы
+
+Компонент страницы маршрута загружается ленивым чанком (`autoCodeSplitting`). Чтение, запущенное из `useQuery` в этом компоненте, стартует только после загрузки чанка и монтирования. Router выполняет `loader` маршрута параллельно с загрузкой чанка, поэтому чтения, запущенные из `loader`, грузятся одновременно с кодом страницы.
+
+1. Если страница маршрута читает удалённые данные, `loader` маршрута ДОЛЖЕН запускать эти чтения через функцию feature-владельца `prefetch<Page>` из его `api/`.
+2. Страница и её `prefetch<Page>` ДОЛЖНЫ брать query options из одного списка `<page>Queries`. Перечислять чтения страницы во втором месте НЕ ДОЛЖНО: новое чтение страницы должно автоматически попадать в prefetch.
+3. `loader` НЕ ДОЛЖЕН ожидать чтений страницы. Ожидание удерживает на экране предыдущую страницу под новым URL, пока данные не придут. Страница сама показывает своё состояние загрузки. Данные, от которых зависит решение route (доступ, разрешение locator), загружаются в `beforeLoad`.
+4. `prefetch<Page>` ДОЛЖНА запускать чтения через `queryClient.query(options).catch(noop)`: отказ остаётся в состоянии query, где его отображает страница. `prefetchQuery` устарел и НЕ ДОЛЖЕН использоваться.
+5. `loader` не выделяется в ленивый чанк, поэтому всё, что импортируют запущенные им операции, попадает в основной bundle. Тяжёлую зависимость, нужную операции только для преобразования ответа, СЛЕДУЕТ импортировать динамически внутри операции.
+6. Контракт route ДОЛЖЕН проверять, что `router.preloadRoute` к маршруту запускает все чтения страницы, не отрисовывая её.
+
+Эталон — страница попытки: `attemptPageQueries` и `prefetchAttemptPage` в `src/features/course/features/attempt-review/api/prefetch.ts`, `loader` в `src/routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/route.tsx`, динамический импорт парсера diff в `load-material.ts`, контракт в `attempt-review/page.test.tsx`.
+
+```ts
+loader({ context }) {
+  const { attempt, course, queryClient, session } = context;
+  prefetchAttemptPage(queryClient, {
+    viewerId: session.userId,
+    courseId: course.id,
+    taskId: attempt.taskId,
+    studentId: attempt.studentId,
+    attemptId: attempt.id,
+  });
+},
+```
+
 ## MSW
 
 1. MSW ДОЛЖЕН быть основным HTTP seam для мокирования удалённых операций в development и tests.
