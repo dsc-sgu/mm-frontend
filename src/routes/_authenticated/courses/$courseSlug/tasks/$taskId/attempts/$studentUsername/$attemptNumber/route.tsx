@@ -7,6 +7,7 @@ import {
   CourseResourceCheckFailed,
 } from '@/features/course/features/access/ui/route-state';
 import { attemptLocatorOptions } from '@/features/course/features/attempt-review/api/locator-queries';
+import { prefetchAttemptPage } from '@/features/course/features/attempt-review/api/prefetch';
 import { recheckCourseContextAfterAccessDenial } from '@/features/course/features/access/api/queries';
 import { Outlet, createFileRoute, notFound } from '@tanstack/react-router';
 
@@ -34,6 +35,17 @@ export const Route = createFileRoute(
     }
     if (result.status !== 'found') throw notFound();
     return { attempt: result.attempt };
+  },
+  // Starts the page reads alongside its lazy chunk; deliberately not awaited.
+  loader({ context }) {
+    const { attempt, course, queryClient, session } = context;
+    prefetchAttemptPage(queryClient, {
+      viewerId: session.userId,
+      courseId: course.id,
+      taskId: attempt.taskId,
+      studentId: attempt.studentId,
+      attemptId: attempt.id,
+    });
   },
   component: RouteComponent,
   notFoundComponent: CourseResourceNotFound,

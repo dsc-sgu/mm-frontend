@@ -24,12 +24,7 @@ import { AttemptReviewHeader } from './ui/header';
 import { AttemptReviewMobileDrawer } from './ui/mobile-drawer';
 import { AttemptReviewReviewPanel } from './ui/review-panel';
 import { AttemptReviewReviewPanelToggle } from './ui/review-panel-toggle';
-import {
-  attemptMaterialOptions,
-  attemptSummaryOptions,
-  studentAttemptsOptions,
-} from './api/queries';
-import { reviewOptions } from '@/features/course/features/review/api/queries';
+import { attemptPageQueries } from './api/prefetch';
 import {
   useReplyMutations,
   useSaveReviewMutation,
@@ -74,16 +69,18 @@ const REVIEW_PANEL_ID = 'attempt-review-review-panel';
  */
 export function AttemptReviewPage(props: AttemptReviewPageProps) {
   const { viewerId, courseId, taskId, studentId, attemptId } = props;
-  const summaryQuery = useQuery(
-    attemptSummaryOptions(viewerId, courseId, attemptId)
-  );
-  const reviewQuery = useQuery(reviewOptions(viewerId, courseId, attemptId));
-  const materialQuery = useQuery(
-    attemptMaterialOptions(viewerId, courseId, attemptId)
-  );
-  const attemptsQuery = useQuery(
-    studentAttemptsOptions(viewerId, courseId, taskId, studentId)
-  );
+  // The route loader has already started these reads.
+  const pageQueries = attemptPageQueries({
+    viewerId,
+    courseId,
+    taskId,
+    studentId,
+    attemptId,
+  });
+  const summaryQuery = useQuery(pageQueries.summary);
+  const reviewQuery = useQuery(pageQueries.review);
+  const materialQuery = useQuery(pageQueries.material);
+  const attemptsQuery = useQuery(pageQueries.attempts);
   const isWorkerPoolReady = useAttemptReviewWorkerPoolReady();
   const queries = [summaryQuery, reviewQuery, materialQuery, attemptsQuery];
 

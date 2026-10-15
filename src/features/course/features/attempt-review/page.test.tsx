@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http } from 'msw';
 import { beforeEach, expect, test } from 'vitest';
@@ -159,3 +159,45 @@ test(
   },
   PAGE_SWITCH_TIMEOUT
 );
+
+test('the route starts every page read before the page mounts', async () => {
+  const requested: string[] = [];
+  const onRequest = ({ request }: { request: Request }) => {
+    requested.push(new URL(request.url).pathname);
+  };
+  server.events.on('request:start', onRequest);
+  try {
+    const { router } = renderRoutes([], '/courses/algorithms', {
+      appRoutes: true,
+    });
+    await screen.findByRole('link', { name: 'Попытки' });
+
+    // Preloading runs beforeLoad and loader without rendering the page.
+    await router.preloadRoute({
+      to: '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review',
+      params: {
+        courseSlug: 'algorithms',
+        taskId: '1',
+        studentUsername: 'sasha',
+        attemptNumber: '1',
+      },
+    });
+
+    const attempt = `/api/v1/courses/${COURSE}/attempts/${sashaFirst.id}`;
+    await waitFor(() =>
+      expect(requested).toEqual(
+        expect.arrayContaining([
+          attempt,
+          `${attempt}/review`,
+          `${attempt}/material`,
+          `/api/v1/courses/${COURSE}/tasks/1/students/${sashaFirst.studentId}/attempts`,
+        ])
+      )
+    );
+    expect(
+      screen.queryByRole('heading', { name: /Попытка #\d: Сортировки/ })
+    ).toBeNull();
+  } finally {
+    server.events.removeListener('request:start', onRequest);
+  }
+});
