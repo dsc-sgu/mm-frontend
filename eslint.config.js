@@ -32,20 +32,39 @@ const mswImports = {
   message: 'Only mock API and tests may use MSW.',
 };
 
-function restrictedImports(...patterns) {
-  return [
-    'error',
-    {
-      paths: [
-        {
-          name: 'axios',
-          message: `Use runHttpOperation from ${TRANSPORT_MODULE}.`,
-        },
-      ],
-      patterns: [parentRelativeImports, ...patterns],
-    },
-  ];
+const axiosPath = {
+  name: 'axios',
+  message: `Use runHttpOperation from ${TRANSPORT_MODULE}.`,
+};
+
+// A pattern, unlike a path with importNames, ignores `import * as React`.
+const syncExternalStorePattern = {
+  group: ['react'],
+  importNamePattern: '^useSyncExternalStore$',
+  message:
+    "State outside React → zustand/vanilla store in the feature's model/ (AGENTS.md: State modeling). useSyncExternalStore is only for browser API adapters.",
+};
+
+function restrictedImportsWithPaths(paths, patterns) {
+  return ['error', { paths, patterns: [parentRelativeImports, ...patterns] }];
 }
+
+function restrictedImports(...patterns) {
+  return restrictedImportsWithPaths(
+    [axiosPath],
+    [syncExternalStorePattern, ...patterns]
+  );
+}
+
+// Browser API adapters, the only legitimate users of useSyncExternalStore.
+// Generated shadcn components use `import * as React`, which the rule flags.
+const BROWSER_API_ADAPTERS = [
+  'src/shadcn/components/ui/**',
+  'src/hooks/use-media-query.ts',
+  // The theme class on <html> is set by an inline script before the bundle
+  // loads, so the DOM stays the source of truth and React observes it.
+  'src/features/course/features/attempt-review/hooks/use-html-theme.ts',
+];
 
 const fetchMessage = `Call Fetch only through runHttpOperation from ${TRANSPORT_MODULE}.`;
 
@@ -129,6 +148,15 @@ export default defineConfig([
     files: RAM_MOCK_IMPORTERS,
     rules: {
       'no-restricted-imports': restrictedImports(mswImports),
+    },
+  },
+  {
+    files: BROWSER_API_ADAPTERS,
+    rules: {
+      'no-restricted-imports': restrictedImportsWithPaths(
+        [axiosPath],
+        [mockApiImports, mswImports]
+      ),
     },
   },
   {

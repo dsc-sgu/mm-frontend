@@ -279,7 +279,29 @@ function transitionComment(
 }
 ```
 
-Do not add FSM libraries such as `xstate` or `robot` by default. Consider them only when local reducers/transition functions are no longer enough, for example with nested states, parallel states, long-running actors, retries, or complex async workflows.
+Do not add FSM libraries such as `xstate` or `robot` by default. This does not apply to Zustand: it is not an FSM library but the project's state container (see "Where state lives"); transitions inside it are still explicit functions following the ADT/FSM rules above. Consider them only when local reducers/transition functions are no longer enough, for example with nested states, parallel states, long-running actors, retries, or complex async workflows.
+
+#### Where state lives
+
+- **State of one component** (or a component and its direct children): `useState` / `useReducer`. If the state has a lifecycle, the transitions are a pure function in `model/`.
+- **Server data**: TanStack Query (see `docs/agents/remote-data.md`).
+- **Zustand vanilla store**: for state that is rendered and must be reacted to, when at least one of these holds:
+  - several components share it and would otherwise need props or callbacks threaded through multiple levels;
+  - it outlives the component that shows it;
+  - it changes from outside React (Workers, timers, subscriptions, external objects with callbacks);
+  - its transition logic must be tested without React.
+- **How a store is built:**
+  - `createStore` from `zustand/vanilla` in the feature's `model/`, next to the transitions;
+  - one instance per route/page lifetime, passed through context;
+  - read with `useStore(store, selector)` inside `hooks/`;
+  - resources that are not rendered (Workers, subscriptions) live in the store's closure, not in its state.
+  - Examples: `page-edit/model/editor-store` + `page-edit/hooks/use-editor-store.ts`, `attempt-review/model/diff-readiness.ts` + `hooks/use-diff-readiness.ts`.
+- **Non-reactive cell or cache is not a store.** If data is written on change and read only on mount (e.g. an initial `useState` value), there are no subscribers: use a plain object (`Map`) in context or a `useRef` lifted above the unmount point. Zustand adds nothing here, and a `set` per change would copy the data. Example: `attempt-review/model/unsent-comment-text.ts`.
+- **Do not hand-write** `listeners` / `subscribe` / `getSnapshot` / subscriber fan-out.
+- **`useSyncExternalStore`** is only for adapters to browser APIs (`matchMedia`, `MutationObserver`, …), like `src/hooks/use-media-query.ts`. ESLint enforces this with `no-restricted-imports`, the same way `no-nested-ternary` is enforced.
+- **State needed before the bundle loads** (e.g. the theme set by the inline script in `index.html`) lives in the DOM / `localStorage`; React reads it through an adapter instead of duplicating it in a store.
+
+A store is not needed for the state of a single component.
 
 ### Remote data
 
