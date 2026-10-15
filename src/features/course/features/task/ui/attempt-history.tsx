@@ -180,6 +180,7 @@ function TaskAttemptHistoryItem({
               attemptNumber: String(attempt.attemptNumber),
             }}
             onClick={() => onOpenAttempt(attempt)}
+            preload="intent"
           >
             {pending ? (
               <TextAlignStart className="size-4" aria-hidden="true" />

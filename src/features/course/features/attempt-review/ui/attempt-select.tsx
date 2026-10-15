@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { Link, useParams } from '@tanstack/react-router';
 import { ChevronsUpDown, MessageSquare } from 'lucide-react';
 import { formatGrade, type Grade } from '@/features/course/model/grade';
 import type {
@@ -39,7 +39,6 @@ export function AttemptReviewAttemptSelect({
   className,
 }: AttemptReviewAttemptSelectProps) {
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
   // Data is addressed by identities; links follow the confirmed route locators.
   const { courseSlug, taskId, studentUsername } = useParams({
     from: '/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber',
@@ -92,43 +91,48 @@ export function AttemptReviewAttemptSelect({
             <div className="divide-y">
               {attempts.map((attempt) => {
                 const selected = attempt.id === current.id;
+                const card = (
+                  <AttemptOptionCard
+                    attempt={attempt}
+                    selected={selected}
+                    variant="menu-item"
+                  />
+                );
 
+                if (selected) {
+                  return (
+                    <button
+                      key={attempt.id}
+                      type="button"
+                      className={menuItemClassName}
+                      onClick={() => setOpen(false)}
+                    >
+                      {card}
+                    </button>
+                  );
+                }
+
+                // A link, so hover and focus preload the Attempt's route.
                 return (
-                  <button
+                  <Link
                     key={attempt.id}
-                    type="button"
-                    className={cn(
-                      'block w-full cursor-pointer text-left',
-                      'transition-colors outline-none hover:bg-muted/60',
-                      'focus-visible:bg-muted/60'
-                    )}
-                    onClick={() => {
-                      setOpen(false);
-
-                      if (selected) {
-                        return;
-                      }
-
-                      void navigate({
-                        to:
-                          mode === 'editable'
-                            ? '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
-                            : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/',
-                        params: {
-                          courseSlug,
-                          taskId,
-                          studentUsername,
-                          attemptNumber: String(attempt.attemptNumber),
-                        },
-                      });
+                    to={
+                      mode === 'editable'
+                        ? '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
+                        : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/'
+                    }
+                    params={{
+                      courseSlug,
+                      taskId,
+                      studentUsername,
+                      attemptNumber: String(attempt.attemptNumber),
                     }}
+                    preload="intent"
+                    className={menuItemClassName}
+                    onClick={() => setOpen(false)}
                   >
-                    <AttemptOptionCard
-                      attempt={attempt}
-                      selected={selected}
-                      variant="menu-item"
-                    />
-                  </button>
+                    {card}
+                  </Link>
                 );
               })}
             </div>
@@ -138,6 +142,12 @@ export function AttemptReviewAttemptSelect({
     </div>
   );
 }
+
+const menuItemClassName = cn(
+  'block w-full cursor-pointer text-left',
+  'transition-colors outline-none hover:bg-muted/60',
+  'focus-visible:bg-muted/60'
+);
 
 type AttemptSelectOption = {
   id: AttemptId;
