@@ -396,6 +396,8 @@ Write issues, issue comments, ADRs and prototype documents in Russian, for a hum
 
 - Name domain and engineering concepts by their `_По-русски_` rendering from `CONTEXT.md`, not by the English term: «преподаватель публикует версию проверки», not «Teacher публикует Review Revision». Decline Russian terms normally; do not attach Russian endings to English words («Student'а»).
 - Keep in English only what a reader would search for or copy: code identifiers, statuses and file paths in backticks, library and technology names (Plate, MSW, Playwright, Web Worker), issue and contract ids (REV-12, TAB-08).
+- Write backend and frontend in Cyrillic and decline them: «бэкенд», «фронтенд» («вопросы к бэкенду», «решение фронтенда»). Keep the Latin spelling only inside code, paths, repository names (`mm-backend`) and quoted titles of existing issues.
+- Call an issue «тикет» when it means a unit of work («связанные тикеты», «тикет бэкенда»). Keep «issues» only where GitHub Issues as a place is meant («поиск по issues репозитория»).
 - Quote UI text exactly as shown, in «».
 - If a concept has no Russian rendering in `CONTEXT.md`, choose one with the user and add it to the glossary before using it, instead of falling back to English.
 
