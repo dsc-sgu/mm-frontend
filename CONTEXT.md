@@ -236,7 +236,7 @@ Where a test contract is checked: Model/Static, Stateful, Boundary, Component, o
 _По-русски_: уровень тестирования: модельный, с состоянием, на границе API, компонентный, в браузере (E2E)
 
 **Seam**:
-A place where a test attaches to code and can change its behavior without editing that place (Feathers, *Working Effectively with Legacy Code*), such as a pure function, a hook rendered with `renderHook`, or a Worker factory replaced by a fake.
+A place where a test attaches to code and can change its behavior without editing that place (Feathers, _Working Effectively with Legacy Code_), such as a pure function, a hook rendered with `renderHook`, or a Worker factory replaced by a fake.
 _По-русски_: шов
 
 **Trust seam**:
