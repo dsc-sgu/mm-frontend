@@ -31,7 +31,13 @@ import { useFixedRowsVirtualizer } from './use-fixed-rows';
 import { withRealisticNames, withRealisticStudentNames } from './names';
 import { RecoveryDialog } from './recovery';
 import { ExitDialog } from './exit-dialog';
-import { getModKeyLabel, isExitShortcut, isSaveShortcut } from './shortcuts';
+import {
+  getAltKeyLabel,
+  getModKeyLabel,
+  isExitShortcut,
+  isQuickGradingToggleShortcut,
+  isSaveShortcut,
+} from './shortcuts';
 import { QuickGradingTopBar, StickyTop } from './top-bar';
 import { rowLayoutFor } from './columns';
 import { QuickRow, type RowLayout } from './row';
@@ -298,8 +304,9 @@ export function QuickGradingFeedbackPrototype({
 
   // Mod+S saves (and never opens the browser's "Save page"); with invalid
   // values it jumps to the first error instead. Esc leaves the session unless
-  // a popover, drawer or dialog consumed it first. Re-subscribes every render
-  // to see the latest session; fine for a prototype.
+  // a popover, drawer or dialog consumed it first; Alt+G, which started the
+  // session, leaves it too, even from a field. Re-subscribes every render to
+  // see the latest session; fine for a prototype.
   useEffect(() => {
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (isSaveShortcut(event)) {
@@ -315,7 +322,7 @@ export function QuickGradingFeedbackPrototype({
       }
 
       if (
-        isExitShortcut(event) &&
+        (isExitShortcut(event) || isQuickGradingToggleShortcut(event)) &&
         !recoveryOpen &&
         !exitOpen &&
         !document.querySelector('[role="dialog"]')
@@ -588,6 +595,7 @@ function KeyHintsButton({ modKeyLabel }: { modKeyLabel: string }) {
     { keys: ['Enter'], action: 'в отзыве — следующий балл' },
     { keys: [modKeyLabel, 'S'], action: 'сохранить' },
     { keys: ['Esc'], action: 'выйти' },
+    { keys: [getAltKeyLabel(), 'G'], action: 'выйти тем же, чем вошли' },
   ];
 
   return (

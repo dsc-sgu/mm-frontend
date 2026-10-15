@@ -52,7 +52,7 @@ import {
   getAltKeyLabel,
   getModKeyLabel,
   isApplyShortcut,
-  isStartQuickGradingShortcut,
+  isQuickGradingToggleShortcut,
 } from './shortcuts';
 import { BarFrame } from './top-bar';
 
@@ -95,7 +95,7 @@ export function FilterBar({
         return;
       }
 
-      if (canStartQuickGrading && isStartQuickGradingShortcut(event)) {
+      if (canStartQuickGrading && isQuickGradingToggleShortcut(event)) {
         event.preventDefault();
         onStartQuickGrading();
       }
