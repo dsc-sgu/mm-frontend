@@ -12,6 +12,7 @@ import {
 import { render } from '@testing-library/react';
 import { createQueryClient } from '@/app/remote-data/query-client';
 import { RouteError } from '@/app/route-error';
+import { routerPreloadOptions } from '@/app/router-preload';
 import { Toaster } from '@/shadcn/components/ui/sonner';
 import { routeTree as appRouteTree } from '@/routeTree.gen';
 
@@ -63,6 +64,7 @@ export function renderRoutes(
     context: { queryClient },
     history: createMemoryHistory({ initialEntries: [initialPath] }),
     defaultErrorComponent: RouteError,
+    ...routerPreloadOptions,
   });
 
   const app = (

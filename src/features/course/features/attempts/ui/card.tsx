@@ -144,6 +144,7 @@ export function AttemptCard(props: AttemptCardProps) {
                   : '/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/review'
               }
               params={getAttemptRouteParams(props.courseSlug, props.attempt)}
+              preload="intent"
             >
               {selected ? (
                 <Eye className="size-4" />
