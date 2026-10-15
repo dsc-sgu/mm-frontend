@@ -3,12 +3,13 @@
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
+import { PROTOTYPES_ENABLED } from './enabled';
 import { useBarSlot } from './slot';
 
 export function PrototypeBarControls({ children }: { children: ReactNode }) {
   const element = useBarSlot((state) => state.element);
 
-  if (!import.meta.env.DEV || !element) {
+  if (!PROTOTYPES_ENABLED || !element) {
     return null;
   }
 

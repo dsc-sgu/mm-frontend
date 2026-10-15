@@ -20,9 +20,10 @@ const BYPASS_WORKER_SCRIPTS = `
   }
 `;
 
-// Serves the MSW worker from the dev server only: production builds ship no
-// mock service worker, and the worker always matches the installed msw.
-function mockServiceWorker(): Plugin {
+// Serves the MSW worker from the dev server. Production builds ship no mock
+// service worker, except a prototype demo build that asks for the mock
+// backend (PROTOTYPE). The worker always matches the installed msw.
+function mockServiceWorker({ emit }: { emit: boolean }): Plugin {
   const workerPath = createRequire(import.meta.url).resolve(
     'msw/mockServiceWorker.js'
   );
@@ -44,7 +45,15 @@ function mockServiceWorker(): Plugin {
 
   return {
     name: 'mock-service-worker',
-    apply: 'serve',
+    generateBundle() {
+      if (emit) {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'mockServiceWorker.js',
+          source: readWorkerScript(),
+        });
+      }
+    },
     configureServer(server) {
       const workerScript = readWorkerScript();
 
@@ -61,6 +70,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
+    // PROTOTYPE: the demo build is served under a path, e.g. /mergeminds/.
+    base: env.VITE_BASE_PATH || '/',
     plugins: [
       tanstackRouter({
         target: 'react',
@@ -72,7 +83,11 @@ export default defineConfig(({ mode }) => {
         },
       }),
       tailwindcss(),
-      mockServiceWorker(),
+      mockServiceWorker({
+        emit:
+          env.VITE_PROTOTYPE_DEMO === 'true' &&
+          env.VITE_MOCK_BACKEND === 'true',
+      }),
     ],
     server: {
       proxy: {

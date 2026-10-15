@@ -8,5 +8,9 @@ export async function startMockBackend() {
     const { installTestControl } = await import('./test-control');
     installTestControl(worker);
   }
-  await worker.start({ onUnhandledRequest: 'bypass' });
+  await worker.start({
+    onUnhandledRequest: 'bypass',
+    // Under the base path of a prototype demo build, e.g. /mergeminds/.
+    serviceWorker: { url: `${import.meta.env.BASE_URL}mockServiceWorker.js` },
+  });
 }
