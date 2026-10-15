@@ -4,11 +4,16 @@ import {
   formatGrade,
   gradeInputMatches,
   parseGradeInput,
+  type Grade,
   type GradeInputError,
   type GradeInputResult,
 } from '@/features/course/model/grade';
+import {
+  publishedReview,
+  type ReviewResult,
+} from '@/features/course/features/review/model/types';
 import { getLineCommentStatus } from './comment-lifecycle';
-import type { AttemptReviewAggregate, AttemptReviewLineComment } from './types';
+import type { AttemptReviewLineComment } from './types';
 
 export type AttemptReviewDraft = {
   /** The Grade field's text; it becomes a Grade only by parsing on Save. */
@@ -17,16 +22,16 @@ export type AttemptReviewDraft = {
   lineComments: AttemptReviewLineComment[];
 };
 
-export function useAttemptReviewDraft(review: AttemptReviewAggregate) {
+export function useAttemptReviewDraft(review: ReviewResult, maxGrade: Grade) {
   const [draft, setDraft] = useState<AttemptReviewDraft>(() =>
     createAttemptReviewDraft(review)
   );
   const savedDraft = useMemo(() => createAttemptReviewDraft(review), [review]);
-  const gradeInput = parseGradeInput(draft.grade, review.current.task.maxGrade);
+  const gradeInput = parseGradeInput(draft.grade, maxGrade);
   // Compared as Grades: `7.50` over a saved 7,5 is not a change.
   const gradeChanged = !gradeInputMatches(
     draft.grade,
-    review.current.grade?.value ?? null
+    publishedReview(review)?.grade ?? null
   );
   const hasChanges =
     gradeChanged || !areAttemptReviewDraftsEqual(draft, savedDraft);
@@ -45,18 +50,22 @@ export function useAttemptReviewDraft(review: AttemptReviewAggregate) {
     setOverallFeedbackHtml: createDraftSetter(setDraft, 'overallFeedbackHtml'),
     setLineComments: createDraftSetter(setDraft, 'lineComments'),
     discard: () => setDraft(savedDraft),
-    resetToReview: (nextReview: AttemptReviewAggregate) =>
+    resetToReview: (nextReview: ReviewResult) =>
       setDraft(createAttemptReviewDraft(nextReview)),
   };
 }
 
 export function createAttemptReviewDraft(
-  review: AttemptReviewAggregate
+  review: ReviewResult
 ): AttemptReviewDraft {
+  if (review.status === 'none') {
+    return { grade: '', overallFeedbackHtml: '', lineComments: [] };
+  }
+
   return {
-    grade: review.current.grade ? formatGrade(review.current.grade.value) : '',
-    overallFeedbackHtml: review.overallFeedback.html,
-    lineComments: review.lineComments.map(cloneLineComment),
+    grade: formatGrade(review.review.grade),
+    overallFeedbackHtml: review.review.overallFeedbackHtml,
+    lineComments: review.review.comments.map(cloneLineComment),
   };
 }
 
@@ -128,8 +137,8 @@ function areLineCommentsEqual(
       comment.endSide === other.endSide &&
       comment.endLineNumber === other.endLineNumber &&
       comment.html === other.html &&
-      comment.authorName === other.authorName &&
-      comment.authorUsername === other.authorUsername &&
+      comment.author.id === other.author.id &&
+      comment.author.name === other.author.name &&
       comment.createdAt === other.createdAt &&
       comment.updatedAt === other.updatedAt &&
       getLineCommentStatus(comment) === getLineCommentStatus(other) &&
@@ -153,8 +162,8 @@ function areRepliesEqual(
       other !== undefined &&
       reply.id === other.id &&
       reply.html === other.html &&
-      reply.authorName === other.authorName &&
-      reply.authorUsername === other.authorUsername &&
+      reply.author.id === other.author.id &&
+      reply.author.name === other.author.name &&
       reply.createdAt === other.createdAt &&
       reply.updatedAt === other.updatedAt
     );

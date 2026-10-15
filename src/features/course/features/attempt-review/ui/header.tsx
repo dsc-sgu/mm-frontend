@@ -6,15 +6,20 @@ import { formatAttemptReviewDateTime } from '@/features/course/features/attempt-
 import { formatGrade } from '@/features/course/model/grade';
 import { AttemptReviewDiffViewToggle } from './diff-view-toggle';
 import type {
-  AttemptReviewAggregate,
+  AttemptMaterial,
   AttemptReviewDiffViewMode,
   AttemptReviewMode,
+  AttemptSummary,
+  StudentAttempt,
 } from '@/features/course/features/attempt-review/model/types';
 import { cn } from '@/shadcn/lib/utils';
 
 type AttemptReviewHeaderProps = {
   mode: AttemptReviewMode;
-  review: AttemptReviewAggregate;
+  summary: AttemptSummary;
+  material: AttemptMaterial;
+  attempts: StudentAttempt[];
+  currentAttempt: StudentAttempt;
   diffViewMode: AttemptReviewDiffViewMode;
   hasChanges: boolean;
   totalAdded: number;
@@ -26,7 +31,10 @@ type AttemptReviewHeaderProps = {
 
 export function AttemptReviewHeader({
   mode,
-  review,
+  summary,
+  material,
+  attempts,
+  currentAttempt,
   diffViewMode,
   hasChanges,
   totalAdded,
@@ -50,7 +58,7 @@ export function AttemptReviewHeader({
               'text-lg leading-6 font-semibold tracking-tight break-words'
             )}
           >
-            Попытка #{review.current.attemptNumber}: {review.current.task.title}
+            Попытка #{summary.attemptNumber}: {summary.task.title}
           </h1>
           <p
             className={cn(
@@ -58,11 +66,13 @@ export function AttemptReviewHeader({
               'text-muted-foreground'
             )}
           >
-            <span>{review.current.student.fullName}</span>
-            <span>Максимум: {formatGrade(review.current.task.maxGrade)}</span>
+            <span>{summary.student.name}</span>
+            <span>Максимум: {formatGrade(summary.task.maxGrade)}</span>
             <span>
-              Отправлено{' '}
-              {formatAttemptReviewDateTime(review.current.submittedAt)}
+              Отправлено {formatAttemptReviewDateTime(summary.submittedAt)}
+            </span>
+            <span>
+              Дедлайн {formatAttemptReviewDateTime(summary.deadlineAt)}
             </span>
             <span
               className={cn(
@@ -77,8 +87,8 @@ export function AttemptReviewHeader({
               </span>
             </span>
             <span>
-              {review.baselineAttemptNumber
-                ? `Сравнение с попыткой #${review.baselineAttemptNumber}`
+              {material.baselineAttemptNumber
+                ? `Сравнение с попыткой #${material.baselineAttemptNumber}`
                 : 'Сравнение с пустой базой'}
             </span>
           </p>
@@ -128,7 +138,9 @@ export function AttemptReviewHeader({
               onChange={onDiffViewModeChange}
             />
             <AttemptReviewAttemptSelect
-              review={review}
+              attempts={attempts}
+              current={currentAttempt}
+              maxGrade={summary.task.maxGrade}
               mode={mode}
               variant="header"
               className="min-w-0 flex-1 lg:w-[21rem] lg:flex-none lg:shrink-0"

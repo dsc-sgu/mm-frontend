@@ -12,8 +12,8 @@ import { renderRoutes } from '@/app/testing/render-routes';
 import { AttemptReviewPage } from '@/features/course/features/attempt-review/page';
 import { reply } from '@/app/testing/reply';
 
-// Content is still on the legacy source (REV2). This contract exercises the
-// real Router, HTTP operation, Query and Course shell up to the content seam.
+// This contract exercises the real Router, HTTP operation, Query and Course
+// shell up to the content seam; the page's own contracts render the content.
 vi.mock('@/features/course/features/attempt-review/page', () => ({
   AttemptReviewPage: vi.fn(() => <h1>Resolved Attempt content</h1>),
 }));
@@ -91,6 +91,7 @@ test.each(['readonly', 'editable'] as const)(
       courseRole: 'teacher',
       viewerId: accessWorld.users.anna.id,
       courseId: accessWorld.courses.algorithms.id,
+      taskId: '1',
       studentId: accessWorld.users.petya.id,
       attemptId: mockBackend.state.attempts[2].id,
     });

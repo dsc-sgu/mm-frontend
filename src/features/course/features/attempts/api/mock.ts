@@ -273,25 +273,6 @@ export function createMockReviewLockUpdates(
   return updates;
 }
 
-export function findMockCourseAttempt({
-  courseId,
-  taskId,
-  studentUsername,
-  attemptNumber,
-}: {
-  courseId: CourseId;
-  taskId: string;
-  studentUsername: string;
-  attemptNumber: AttemptNumber;
-}): CourseAttempt | undefined {
-  return getCourseAttempts(courseId).find(
-    (attempt) =>
-      attempt.task.id === taskId &&
-      attempt.student.username === studentUsername &&
-      attempt.attemptNumber === attemptNumber
-  );
-}
-
 export function upsertMockCourseAttemptGrade({
   courseId,
   taskId,

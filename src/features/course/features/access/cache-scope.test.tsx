@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import {
   accessWorld,
   mockBackend,
+  reviewWorld,
   SESSION_EXPIRES_AT,
 } from '@/app/mock-backend/state';
 import { createQueryClient } from '@/app/remote-data/query-client';
@@ -29,7 +30,7 @@ import {
 } from '@/features/course/features/page/api/queries';
 import { repositoryLocatorKeys } from '@/features/course/features/repository/api/queries';
 import { taskPageKeys } from '@/features/course/features/task/api/queries';
-import type { AttemptReviewIdentity } from '@/features/course/features/attempt-review/model/types';
+import { reviewKeys } from '@/features/course/features/review/api/queries';
 import {
   CourseSlugSchema,
   type AttemptNumber,
@@ -264,11 +265,7 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
 
   test('every course-scoped family extends the one Course prefix', () => {
     const prefix = courseKeys.byId(algorithms.id);
-    const identity: AttemptReviewIdentity = {
-      courseId: algorithms.id,
-      studentId: sasha.id,
-      attemptId: mockBackend.state.attempts[0]?.id ?? ('' as never),
-    };
+    const attemptId = reviewWorld.attempts[0].id;
     const one = 1 as AttemptNumber;
     const keys = [
       coursePageKeys.detail(algorithms.id),
@@ -282,7 +279,10 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
         students: [],
         graded: 'any',
       }),
-      attemptReviewKeys.detail(vera.id, identity),
+      reviewKeys.detail(vera.id, algorithms.id, attemptId),
+      attemptReviewKeys.summary(vera.id, algorithms.id, attemptId),
+      attemptReviewKeys.material(vera.id, algorithms.id, attemptId),
+      attemptReviewKeys.studentAttempts(vera.id, algorithms.id, '1', sasha.id),
       attemptLocatorKeys.byNumber(
         vera.id,
         algorithms.id,
