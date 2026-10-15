@@ -11,6 +11,10 @@ import {
   type AttemptId,
   type CourseId,
 } from '@/features/course/model/identity';
+import {
+  readResourceDenial,
+  type ResourceDenial,
+} from '@/features/course/features/access/api/resource-denial';
 import type {
   AttemptMaterial,
   AttemptReviewChangedFile,
@@ -35,12 +39,16 @@ type ChangedFileDto = v.InferOutput<
   typeof AttemptMaterialSchema
 >['files'][number];
 
+export type LoadAttemptMaterialResult =
+  | { status: 'found'; material: AttemptMaterial }
+  | ResourceDenial;
+
 export function loadAttemptMaterial(
   courseId: CourseId,
   attemptId: AttemptId,
   signal?: AbortSignal
-): Promise<AttemptMaterial> {
-  return runHttpOperation(
+): Promise<LoadAttemptMaterialResult> {
+  return runHttpOperation<LoadAttemptMaterialResult>(
     {
       name: 'load-attempt-material',
       url: apiPath('courses', courseId, 'attempts', attemptId, 'material'),
@@ -48,11 +56,16 @@ export function loadAttemptMaterial(
       signal,
     },
     async (context) => {
+      const denial = readResourceDenial(context);
+      if (denial) return denial;
       if (context.response.status !== 200) throw unexpectedHttpStatus(context);
       const material = await readJson(context, AttemptMaterialSchema);
       return {
-        baselineAttemptNumber: material.baselineAttemptNumber,
-        changedFiles: material.files.map(toChangedFile),
+        status: 'found',
+        material: {
+          baselineAttemptNumber: material.baselineAttemptNumber,
+          changedFiles: material.files.map(toChangedFile),
+        },
       };
     }
   );

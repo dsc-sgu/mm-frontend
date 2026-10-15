@@ -7,6 +7,7 @@ import {
   unreadableBody,
 } from '@/app/mock-backend/failures';
 import { server } from '@/app/mock-backend/node';
+import { accessDenial } from '@/app/mock-backend/participant-access';
 import {
   accessWorld,
   mockBackend,
@@ -18,6 +19,12 @@ import type { UserId } from '@/features/auth/model/identity';
 import { GradeSchema } from '@/features/course/model/grade';
 import { loadStudentAttempts } from '@/features/course/features/attempt-review/api/load-student-attempts';
 import { loadReview } from './load-review';
+
+async function studentAttempts(studentId: UserId) {
+  const result = await loadStudentAttempts(COURSE, '1', studentId);
+  if (result.status !== 'found') throw new Error('Expected the Attempts');
+  return result.attempts;
+}
 import { createReply, saveReview } from './mock';
 
 const { anna, boris, sasha, petya } = accessWorld.users;
@@ -74,7 +81,7 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
   });
 
   test('the selector carries the same Grade with the same revision', async () => {
-    const attempts = await loadStudentAttempts(COURSE, '1', sasha.id);
+    const attempts = await studentAttempts(sasha.id);
     const review = await loadReview(COURSE, sashaFirst.id);
 
     expect(attempts.map(({ attemptNumber }) => attemptNumber)).toEqual([2, 1]);
@@ -104,7 +111,7 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
     });
 
     const review = await loadReview(COURSE, sashaFirst.id);
-    const [, first] = await loadStudentAttempts(COURSE, '1', sasha.id);
+    const [, first] = await studentAttempts(sasha.id);
     expect(review).toMatchObject({
       status: 'published',
       review: {
@@ -157,18 +164,17 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
     }
   );
 
-  test("another Student's Review is not readable", async () => {
+  test("another Student's Review is a declared denial", async () => {
     signIn(petya.id);
 
-    await expect(loadReview(COURSE, sashaFirst.id)).rejects.toMatchObject({
-      operation: 'load-review',
-      reason: { kind: 'unexpected-http-status', status: 403 },
+    await expect(loadReview(COURSE, sashaFirst.id)).resolves.toEqual({
+      status: 'forbidden',
     });
   });
 });
 
 describe('TR-05: load-review statuses', () => {
-  test.each([401, 403, 404, 500])('undeclared %i rejects', async (status) => {
+  test.each([401, 500])('undeclared %i rejects', async (status) => {
     server.use(http.get(REVIEW_URL, undeclaredStatus(status)));
 
     await expect(loadReview(COURSE, sashaFirst.id)).rejects.toMatchObject({
@@ -177,6 +183,17 @@ describe('TR-05: load-review statuses', () => {
       reason: { kind: 'unexpected-http-status', status },
     });
   });
+
+  test.each(['forbidden', 'not-found'] as const)(
+    'a body-less %s denial resolves as declared',
+    async (status) => {
+      server.use(http.get(REVIEW_URL, () => accessDenial(status)));
+
+      await expect(loadReview(COURSE, sashaFirst.id)).resolves.toEqual({
+        status,
+      });
+    }
+  );
 
   test('an unreadable body rejects', async () => {
     server.use(http.get(REVIEW_URL, unreadableBody));

@@ -3,12 +3,9 @@ import type { UserId } from '@/features/auth/model/identity';
 import type { AttemptId, CourseId } from '@/features/course/model/identity';
 import { attemptReviewKeys } from '@/features/course/features/attempt-review/api/queries';
 import { courseAttemptsKeys } from '@/features/course/features/attempts/api/queries';
-import type {
-  ReviewCommentInput,
-  ReviewResult,
-} from '@/features/course/features/review/model/types';
+import type { ReviewCommentInput } from '@/features/course/features/review/model/types';
 import type { Grade } from '@/features/course/model/grade';
-import { loadReview } from './load-review';
+import { loadReview, type LoadReviewResult } from './load-review';
 import { createReply, deleteReply, saveReview, updateReply } from './mock';
 import { reviewKeys } from './queries';
 
@@ -29,13 +26,16 @@ export type ReviewEdits = {
   comments: ReviewCommentInput[];
 };
 
-/** Saves the next Review Revision and resolves with the published Review. */
+/**
+ * Saves the next Review Revision and resolves with the published Review, or
+ * with the denial that replaced it.
+ */
 export function useSaveReviewMutation(attempt: ReviewedAttempt) {
   const queryClient = useQueryClient();
   const { viewerId, courseId, taskId, studentId, attemptId } = attempt;
 
   return useMutation({
-    mutationFn: async (edits: ReviewEdits): Promise<ReviewResult> => {
+    mutationFn: async (edits: ReviewEdits): Promise<LoadReviewResult> => {
       await saveReview({ courseId, attemptId, ...edits });
       return loadReview(courseId, attemptId);
     },

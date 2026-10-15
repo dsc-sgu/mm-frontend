@@ -4,6 +4,7 @@ import { http } from 'msw';
 import { beforeEach, expect, test } from 'vitest';
 import { holdResponse } from '@/app/mock-backend/failures';
 import { server } from '@/app/mock-backend/node';
+import { accessDenial } from '@/app/mock-backend/participant-access';
 import {
   accessWorld,
   mockBackend,
@@ -11,8 +12,12 @@ import {
   SESSION_EXPIRES_AT,
 } from '@/app/mock-backend/state';
 import { renderRoutes } from '@/app/testing/render-routes';
+import { reviewKeys } from '@/features/course/features/review/api/queries';
 
-const [, sashaSecond] = reviewWorld.attempts;
+const [sashaFirst, sashaSecond] = reviewWorld.attempts;
+const { anna } = accessWorld.users;
+const SASHA_FIRST_URL = '/courses/algorithms/tasks/1/attempts/sasha/1/review';
+const SASHA_FIRST_API = `/api/v1/courses/${accessWorld.courses.algorithms.id}/attempts/${sashaFirst.id}`;
 const COURSE = accessWorld.courses.algorithms.id;
 const FIRST_FEEDBACK = /пустой список не обработан/;
 // The real review page (diff viewer, rich-text editors) renders twice.
@@ -79,6 +84,77 @@ test(
       screen.getByRole('textbox', { name: 'Оценка за попытку' })
     ).toHaveProperty('value', '');
     expect(screen.getByText('Попытка ещё не оценена')).toBeTruthy();
+    expect(screen.queryByText(FIRST_FEEDBACK)).toBeNull();
+  },
+  PAGE_SWITCH_TIMEOUT
+);
+
+/** Anna leaves the Course: every read by AttemptId is denied from now on. */
+function removeAnnaFromCourse() {
+  mockBackend.state.memberships = mockBackend.state.memberships.filter(
+    ({ userId, courseId }) => userId !== anna.id || courseId !== COURSE
+  );
+}
+
+test(
+  'a read denied after the locator resolved closes the Course with lost Membership',
+  async () => {
+    server.use(
+      http.get(`${SASHA_FIRST_API}/material`, () => {
+        removeAnnaFromCourse();
+        return accessDenial('forbidden');
+      })
+    );
+    renderRoutes([], SASHA_FIRST_URL, { appRoutes: true });
+
+    await screen.findByRole('link', { name: 'К моим курсам' });
+    expect(
+      screen.getByRole('heading', { name: 'Страница не найдена' })
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('heading', { name: /Попытка #\d: Сортировки/ })
+    ).toBeNull();
+  },
+  PAGE_SWITCH_TIMEOUT
+);
+
+test(
+  'a missing resource read shows the resource 404 inside the Course',
+  async () => {
+    server.use(
+      http.get(`${SASHA_FIRST_API}/material`, () => accessDenial('not-found'))
+    );
+    renderRoutes([], SASHA_FIRST_URL, { appRoutes: true });
+
+    await screen.findByRole('link', { name: 'На страницу курса' });
+    expect(
+      screen.getByRole('heading', { name: 'Страница не найдена' })
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('heading', { name: /Попытка #\d: Сортировки/ })
+    ).toBeNull();
+  },
+  PAGE_SWITCH_TIMEOUT
+);
+
+test(
+  'a denied background refetch removes the loaded Attempt and its edits',
+  async () => {
+    const { queryClient } = renderRoutes([], SASHA_FIRST_URL, {
+      appRoutes: true,
+    });
+    await screen.findByRole('heading', { name: 'Попытка #1: Сортировки' });
+    expect(screen.getByText(FIRST_FEEDBACK)).toBeTruthy();
+
+    removeAnnaFromCourse();
+    await queryClient.invalidateQueries({
+      queryKey: reviewKeys.attempt(COURSE, sashaFirst.id),
+    });
+
+    await screen.findByRole('link', { name: 'К моим курсам' });
+    expect(
+      screen.queryByRole('heading', { name: 'Попытка #1: Сортировки' })
+    ).toBeNull();
     expect(screen.queryByText(FIRST_FEEDBACK)).toBeNull();
   },
   PAGE_SWITCH_TIMEOUT

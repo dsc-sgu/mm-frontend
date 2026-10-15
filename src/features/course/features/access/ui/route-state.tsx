@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Link,
   useParams,
@@ -11,7 +11,11 @@ import {
   courseAccessRouteState,
   type CourseAccessRouteState,
 } from '@/features/course/features/access/model/route-state';
-import { courseContextOptions } from '@/features/course/features/access/api/queries';
+import {
+  courseContextOptions,
+  recheckCourseContextAfterAccessDenial,
+} from '@/features/course/features/access/api/queries';
+import type { ResourceDenial } from '@/features/course/features/access/api/resource-denial';
 import type { UserId } from '@/features/auth/model/identity';
 import type { CourseSlug } from '@/features/course/model/identity';
 import { parseCourseSlug } from '@/features/course/routing/params';
@@ -84,6 +88,30 @@ export function CourseResourceNotFound() {
   return (
     <CourseAccessState state="resource-not-found" courseSlug={courseSlug} />
   );
+}
+
+/**
+ * Replaces a participant-bound page whose read was denied after its locator
+ * resolved. A `forbidden` denial makes Membership suspect: the recheck lets the
+ * Course route close itself on a lost Membership or a changed role.
+ */
+export function CourseResourceDenied({ denial }: { denial: ResourceDenial }) {
+  const queryClient = useQueryClient();
+  const { session, courseSlug } = useRouteContext({
+    from: '/_authenticated/courses/$courseSlug',
+  });
+
+  useEffect(() => {
+    if (denial.status !== 'forbidden') return;
+    // The Course route renders the recheck's own failure from its query.
+    recheckCourseContextAfterAccessDenial(
+      queryClient,
+      session.userId,
+      courseSlug
+    ).catch(() => undefined);
+  }, [denial.status, queryClient, session.userId, courseSlug]);
+
+  return <CourseResourceNotFound />;
 }
 
 export function CourseResourceCheckFailed() {
