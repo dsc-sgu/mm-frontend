@@ -1,6 +1,9 @@
 import { Header } from '@/app/header/ui/header';
 import { CourseContextLoading } from '@/features/course/features/access/ui/route-state';
 import { RouterPending } from '@/app/router-pending';
+// PROTOTYPE: the prototype bar, in dev and prototype demo builds.
+import { PrototypeBar } from '@/app/prototypes/bar';
+import { PROTOTYPES_ENABLED } from '@/app/prototypes/enabled';
 import { Toaster } from '@/shadcn/components/ui/sonner';
 import type { QueryClient } from '@tanstack/react-query';
 import {
@@ -37,6 +40,7 @@ function RootComponent() {
       {showHeader && <Header />}
       <Outlet />
       <Toaster position="top-right" />
+      {PROTOTYPES_ENABLED && showHeader ? <PrototypeBar /> : null}
     </>
   );
 }

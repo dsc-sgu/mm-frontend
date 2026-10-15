@@ -20,6 +20,8 @@ import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
 import type { CoursePage } from '@/features/course/features/page/model/types';
 import type { CourseId, CourseSlug } from '@/features/course/model/identity';
+// PROTOTYPE (#181): `?taskApply=contract` publishes Tasks with the page.
+import { usePrototypePageEdit } from '@/features/course/prototype/task-and-deadline-settings/page-edit-slot';
 
 import styles from './page.module.css';
 
@@ -64,6 +66,7 @@ function CoursePageEditContent({
     (state) => state.setWorkingCopy
   );
   const workingCopy = useCoursePageEditStore((state) => state.workingCopy);
+  const prototypeSlot = usePrototypePageEdit();
 
   const apply = useCallback(async () => {
     if (!isDirty) {
@@ -81,6 +84,11 @@ function CoursePageEditContent({
       return;
     }
 
+    // PROTOTYPE (#181): an unfinished new Task stops the publication.
+    if (prototypeSlot && !prototypeSlot.beforeApply(workingCopy.content)) {
+      return;
+    }
+
     const submittedWorkingCopy = structuredClone(workingCopy);
 
     await saveMutation.mutateAsync({
@@ -95,6 +103,8 @@ function CoursePageEditContent({
       content: submittedWorkingCopy.content,
       resources: submittedWorkingCopy.resources,
     });
+    // PROTOTYPE (#181): Tasks are created and deleted in the same publication.
+    await prototypeSlot?.afterApply(submittedWorkingCopy.content);
 
     markWorkingCopySaved(submittedWorkingCopy);
 
@@ -117,6 +127,7 @@ function CoursePageEditContent({
     isDirty,
     markWorkingCopySaved,
     navigate,
+    prototypeSlot,
     router,
     saveMutation,
     workingCopy,
@@ -173,6 +184,8 @@ function CoursePageEditContent({
         >
           <CoursePageContentEditor />
         </article>
+
+        {prototypeSlot?.render()}
 
         <CoursePageEditApplyBar
           isDirty={isDirty}

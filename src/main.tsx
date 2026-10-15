@@ -23,14 +23,20 @@ if (import.meta.env.DEV) {
 
 const router = createRouter({
   routeTree,
+  // PROTOTYPE: the demo build lives under a path such as /mergeminds/.
+  basepath: import.meta.env.BASE_URL,
   context: { queryClient },
   defaultErrorComponent: RouteError,
 });
 
 // The first render already checks the session, so the worker must be running
-// before it. Production builds drop this branch together with MSW.
+// before it. Production builds drop this branch together with MSW, except
+// the prototype demo build (PROTOTYPE).
 async function enableMockBackend() {
-  if (import.meta.env.DEV && import.meta.env.VITE_MOCK_BACKEND === 'true') {
+  if (
+    (import.meta.env.DEV || import.meta.env.VITE_PROTOTYPE_DEMO === 'true') &&
+    import.meta.env.VITE_MOCK_BACKEND === 'true'
+  ) {
     const { startMockBackend } = await import('@/app/mock-backend/browser');
     await startMockBackend();
   }
