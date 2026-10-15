@@ -30,7 +30,11 @@ export function CoursePageEditApplyBar({
   const slugChanged = oldSlug !== newSlug;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-6xl px-3 pb-3 sm:px-6 sm:py-6 lg:px-8">
+    <div
+      // PROTOTYPE (#181): leave room for a docked Task panel.
+      style={{ right: 'var(--prototype-dock-offset, 0px)', width: 'auto' }}
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-6xl px-3 pb-3 sm:px-6 sm:py-6 lg:px-8"
+    >
       <div
         className={cn(
           'flex w-full flex-col gap-3 rounded-2xl border',
