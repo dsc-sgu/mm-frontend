@@ -175,6 +175,16 @@ _Avoid_: Attempt lifecycle state
 
 Terms used in issues, ADRs and prototypes about how the system is built and tested. They are not domain concepts, but Russian text uses these renderings consistently.
 
+**Identity**:
+What makes an entity the same entity over time: a stable internal ID such as `CourseId`, `UserId` or `AttemptId`, independent of anything that can change.
+_По-русски_: идентичность
+_Avoid_: идентификатор, which names the ID value rather than the sameness it guarantees
+
+**Locator**:
+A mutable, human-readable address that resolves to an Identity, such as a Course slug, a username or an attempt number.
+_По-русски_: локатор
+_Avoid_: using a locator as Identity
+
 **Attempt page**:
 The page of one Attempt with its published Review (`…/$attemptNumber`). The Student sees the result there; a Teacher views it without the Review Lease.
 _По-русски_: страница попытки
@@ -205,6 +215,19 @@ A read model of server state shaped for one screen and cached on its own, such a
 _По-русски_: проекция
 _Avoid_: представление, which developers read as a UI view or a database view
 
+**Wire contract**:
+The exact shape of data crossing the network between frontend and backend: URLs, methods, JSON field names and types, HTTP statuses and error bodies. It differs from the domain model the frontend builds from it at the trust seam.
+_По-русски_: контракт API; a wire DTO is just DTO
+_Avoid_: wire-контракт
+
+**Mutation**:
+A request that changes server state, as opposed to a read; also its TanStack Query wrapper.
+_По-русски_: операция записи; a mutation endpoint — эндпоинт записи
+
+**Structured error payload**:
+The machine-readable body of an error response, such as a stable error code the frontend can branch on instead of parsing message text.
+_По-русски_: тело ошибки
+
 **Idempotency key**:
 A client-generated key that makes a retried write apply at most once.
 _По-русски_: ключ идемпотентности
@@ -227,13 +250,22 @@ _Avoid_: сквозной сценарий — not every vertical is a user flow
 A portion of a vertical that cuts through every layer, is merged as one PR and leaves the application working, such as REV1 or ATT3.
 _По-русски_: этап or срез, as synonyms: этап (рефакторинга) where order matters, срез where cutting through all layers matters
 
+**Clean cutover**:
+Replacing old code with new in one PR, completely, with no period where both live side by side behind adapters, flags or compatibility layers.
+_По-русски_: замена за один шаг
+_Avoid_: чистое переключение, which does not say what is clean
+
 **Test contract**:
 An observable behavior a test pins, with an id such as REV-12 or TAB-08, a test layer and an owning slice.
 _По-русски_: тестовый контракт
 
 **Test layer**:
-Where a test contract is checked: Model/Static, Stateful, Boundary, Component, or Real browser/E2E.
-_По-русски_: уровень тестирования: модельный, с состоянием, на границе API, компонентный, в браузере (E2E)
+Where a test contract is checked: Static, Model, Stateful, Boundary, Component, or Real browser/E2E. Static checks code without running it (tsc, ESLint, type tests); Model runs pure functions.
+_По-русски_: уровень тестирования: статический анализ, модельный, с состоянием, на границе API, компонентный, в браузере (E2E)
+
+**Characterization test**:
+A test that pins the current behavior of code before it is refactored (Feathers), such as the list numbering of the current Course Page editor.
+_По-русски_: характеризационный тест
 
 **Seam**:
 A place where a test attaches to code and can change its behavior without editing that place (Feathers, _Working Effectively with Legacy Code_), such as a pure function, a hook rendered with `renderHook`, or a Worker factory replaced by a fake.
