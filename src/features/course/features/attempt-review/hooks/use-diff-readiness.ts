@@ -1,11 +1,12 @@
-import { createContext, useContext, useSyncExternalStore } from 'react';
+import { createContext, useContext } from 'react';
+import { useStore } from 'zustand';
 
 import type {
   DiffReadiness,
-  DiffReadinessStore,
+  DiffReadinessStoreApi,
 } from '@/features/course/features/attempt-review/model/diff-readiness';
 
-export const DiffReadinessContext = createContext<DiffReadinessStore | null>(
+export const DiffReadinessContext = createContext<DiffReadinessStoreApi | null>(
   null
 );
 
@@ -19,7 +20,8 @@ export function useDiffReadiness(): {
     throw new Error('useDiffReadiness must be used inside DiffWorkers');
   }
 
-  const readiness = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  const readiness = useStore(store, (state) => state.readiness);
+  const retry = useStore(store, (state) => state.retry);
 
-  return { readiness, retry: store.retry };
+  return { readiness, retry };
 }

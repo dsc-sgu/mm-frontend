@@ -14,8 +14,9 @@ export function DiffWorkers({ children }: DiffWorkersProps) {
   const [store] = useState(() => createDiffReadinessStore(createPool));
 
   useEffect(() => {
-    store.start();
-    return store.stop;
+    const { start, stop } = store.getState();
+    start();
+    return stop;
   }, [store]);
 
   return <DiffReadinessContext value={store}>{children}</DiffReadinessContext>;
