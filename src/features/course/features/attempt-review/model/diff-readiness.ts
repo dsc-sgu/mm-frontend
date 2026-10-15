@@ -1,4 +1,5 @@
 import type { WorkerPoolManager } from '@pierre/diffs/worker';
+import { createStore, type StoreApi } from 'zustand/vanilla';
 
 export type DiffWorkerPoolStatus = 'loading' | 'ready' | 'failed';
 
@@ -19,8 +20,7 @@ export type DiffReadiness =
   | { status: 'failed' };
 
 export type DiffReadinessStore = {
-  getSnapshot: () => DiffReadiness;
-  subscribe: (listener: () => void) => () => void;
+  readiness: DiffReadiness;
   /** Creates the Workers; a started store keeps its pool. */
   start: () => void;
   /** Terminates the Workers and forgets their status. */
@@ -29,67 +29,65 @@ export type DiffReadinessStore = {
   retry: () => void;
 };
 
+export type DiffReadinessStoreApi = StoreApi<DiffReadinessStore>;
+
 const LOADING: DiffReadiness = { status: 'loading' };
 const FAILED: DiffReadiness = { status: 'failed' };
 
+function toReadiness(
+  status: DiffWorkerPoolStatus,
+  pool: DiffWorkerPool
+): DiffReadiness {
+  switch (status) {
+    case 'loading':
+      return LOADING;
+    case 'ready':
+      return { status: 'ready', pool };
+    case 'failed':
+      return FAILED;
+  }
+}
+
 export function createDiffReadinessStore(
   createPool: DiffWorkerPoolFactory
-): DiffReadinessStore {
-  let readiness = LOADING;
+): DiffReadinessStoreApi {
+  // The running pool is a resource, not state the UI renders.
   let running: { pool: DiffWorkerPool; unsubscribe: () => void } | null = null;
-  const listeners = new Set<() => void>();
 
-  function update(next: DiffReadiness) {
-    if (next.status === readiness.status) return;
-    readiness = next;
-    for (const listener of listeners) listener();
-  }
-
-  function toReadiness(
-    status: DiffWorkerPoolStatus,
-    pool: DiffWorkerPool
-  ): DiffReadiness {
-    switch (status) {
-      case 'loading':
-        return LOADING;
-      case 'ready':
-        return { status: 'ready', pool };
-      case 'failed':
-        return FAILED;
+  return createStore<DiffReadinessStore>()((set, get) => {
+    function update(next: DiffReadiness) {
+      if (next.status === get().readiness.status) return;
+      set({ readiness: next });
     }
-  }
 
-  function start() {
-    if (running) return;
-    const pool = createPool();
-    running = { pool, unsubscribe: () => {} };
-    const current = running;
-    current.unsubscribe = pool.subscribe((status) => {
-      if (running === current) update(toReadiness(status, pool));
-    });
-  }
+    function start() {
+      if (running) return;
+      const pool = createPool();
+      running = { pool, unsubscribe: () => {} };
+      const current = running;
+      current.unsubscribe = pool.subscribe((status) => {
+        if (running === current) update(toReadiness(status, pool));
+      });
+    }
 
-  function stop() {
-    if (!running) return;
-    const { pool, unsubscribe } = running;
-    running = null;
-    unsubscribe();
-    pool.terminate();
-    update(LOADING);
-  }
+    function stop() {
+      if (!running) return;
+      const { pool, unsubscribe } = running;
+      running = null;
+      unsubscribe();
+      pool.terminate();
+      update(LOADING);
+    }
 
-  return {
-    getSnapshot: () => readiness,
-    subscribe(listener) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    start,
-    stop,
-    retry() {
-      if (readiness.status !== 'failed') return;
-      stop();
-      start();
-    },
-  };
+    return {
+      readiness: LOADING,
+      start,
+      stop,
+      retry() {
+        if (get().readiness.status !== 'failed') return;
+        stop();
+        start();
+      },
+    };
+  });
 }
