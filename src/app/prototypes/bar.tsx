@@ -1,5 +1,6 @@
-// PROTOTYPE: the prototype bar on every page of a dev build. It switches one
-// prototype on, opens its screen and holds that prototype's controls.
+// PROTOTYPE: the prototype bar on every page of a dev or prototype demo
+// build. It switches one prototype on, opens its screen and holds that
+// prototype's controls.
 import { ChevronUp, FlaskConical } from 'lucide-react';
 import { useMatches, useNavigate, useParams } from '@tanstack/react-router';
 
