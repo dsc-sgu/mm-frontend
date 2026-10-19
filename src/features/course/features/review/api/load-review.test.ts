@@ -19,21 +19,21 @@ import type { UserId } from '@/features/auth/model/identity';
 import { GradeSchema } from '@/features/course/model/grade';
 import { loadStudentAttempts } from '@/features/course/features/attempt-review/api/load-student-attempts';
 import { loadReview } from './load-review';
-
-async function studentAttempts(studentId: UserId) {
-  const result = await loadStudentAttempts(COURSE, '1', studentId);
-  if (result.status !== 'found') throw new Error('Expected the Attempts');
-  return result.attempts;
-}
 import { createReply, saveReview } from './mock';
 
 const { anna, boris, sasha, petya } = accessWorld.users;
 const [sashaFirst, sashaSecond, petyaFirst] = reviewWorld.attempts;
-const COURSE = accessWorld.courses.algorithms.id;
-const REVIEW_URL = `/api/v1/courses/${COURSE}/attempts/${sashaFirst.id}/review`;
+const COURSE_ID = accessWorld.courses.algorithms.id;
+const REVIEW_URL = `/api/v1/courses/${COURSE_ID}/attempts/${sashaFirst.id}/review`;
 
 function signIn(userId: UserId) {
   mockBackend.state.session = { userId, expiresAt: SESSION_EXPIRES_AT };
+}
+
+async function studentAttempts(studentId: UserId) {
+  const result = await loadStudentAttempts(COURSE_ID, '1', studentId);
+  if (result.status !== 'found') throw new Error('Expected the Attempts');
+  return result.attempts;
 }
 
 beforeEach(() => {
@@ -43,7 +43,7 @@ beforeEach(() => {
 
 describe('REV-04: Review is loaded by AttemptId with its revision', () => {
   test('a reviewed Attempt has revision 2 with comments of two Teachers and a Student reply', async () => {
-    const result = await loadReview(COURSE, sashaFirst.id);
+    const result = await loadReview(COURSE_ID, sashaFirst.id);
 
     expect(result).toMatchObject({
       status: 'published',
@@ -78,14 +78,14 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
     ['Sasha #2', sashaSecond],
     ['Petya #1', petyaFirst],
   ])('%s without a Review is a declared outcome', async (_, attempt) => {
-    await expect(loadReview(COURSE, attempt.id)).resolves.toEqual({
+    await expect(loadReview(COURSE_ID, attempt.id)).resolves.toEqual({
       status: 'none',
     });
   });
 
   test('the selector carries the same Grade with the same revision', async () => {
     const attempts = await studentAttempts(sasha.id);
-    const review = await loadReview(COURSE, sashaFirst.id);
+    const review = await loadReview(COURSE_ID, sashaFirst.id);
 
     expect(attempts.map(({ attemptNumber }) => attemptNumber)).toEqual([2, 1]);
     expect(attempts[0].review).toBeNull();
@@ -98,7 +98,7 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
 
   test('a save publishes the next revision, seen alike by Review and selector', async () => {
     await saveReview({
-      courseId: COURSE,
+      courseId: COURSE_ID,
       attemptId: sashaFirst.id,
       grade: v.parse(GradeSchema, 8.25),
       overallFeedbackHtml: '<p>Исправлено</p>',
@@ -113,7 +113,7 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
       ],
     });
 
-    const review = await loadReview(COURSE, sashaFirst.id);
+    const review = await loadReview(COURSE_ID, sashaFirst.id);
     const [, first] = await studentAttempts(sasha.id);
     expect(review).toMatchObject({
       status: 'published',
@@ -145,14 +145,14 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
       signIn(id);
 
       const created = await createReply({
-        courseId: COURSE,
+        courseId: COURSE_ID,
         attemptId: sashaFirst.id,
         commentId: 'comment-boris-readme-3',
         html: '<p>Добавлю.</p>',
       });
 
       expect(created.author).toEqual(author);
-      const result = await loadReview(COURSE, sashaFirst.id);
+      const result = await loadReview(COURSE_ID, sashaFirst.id);
       if (result.status !== 'published') throw new Error('Expected a Review');
       expect(
         result.review.comments
@@ -168,7 +168,7 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
   test("another Student's Review is a declared denial", async () => {
     signIn(petya.id);
 
-    await expect(loadReview(COURSE, sashaFirst.id)).resolves.toEqual({
+    await expect(loadReview(COURSE_ID, sashaFirst.id)).resolves.toEqual({
       status: 'forbidden',
     });
   });
@@ -178,7 +178,7 @@ describe('TR-05: load-review statuses', () => {
   test.each([401, 500])('undeclared %i rejects', async (status) => {
     server.use(http.get(REVIEW_URL, undeclaredStatus(status)));
 
-    await expect(loadReview(COURSE, sashaFirst.id)).rejects.toMatchObject({
+    await expect(loadReview(COURSE_ID, sashaFirst.id)).rejects.toMatchObject({
       name: 'OperationFailure',
       operation: 'load-review',
       reason: { kind: 'unexpected-http-status', status },
@@ -190,7 +190,7 @@ describe('TR-05: load-review statuses', () => {
     async (status) => {
       server.use(http.get(REVIEW_URL, () => accessDenial(status)));
 
-      await expect(loadReview(COURSE, sashaFirst.id)).resolves.toEqual({
+      await expect(loadReview(COURSE_ID, sashaFirst.id)).resolves.toEqual({
         status,
       });
     }
@@ -199,7 +199,7 @@ describe('TR-05: load-review statuses', () => {
   test('an unreadable body rejects', async () => {
     server.use(http.get(REVIEW_URL, unreadableBody));
 
-    await expect(loadReview(COURSE, sashaFirst.id)).rejects.toMatchObject({
+    await expect(loadReview(COURSE_ID, sashaFirst.id)).rejects.toMatchObject({
       operation: 'load-review',
       kind: 'unreadable-body',
     });
@@ -224,7 +224,7 @@ describe('TR-05: load-review statuses', () => {
       http.get(REVIEW_URL, reply(200, { status: 'published', review }))
     );
 
-    await expect(loadReview(COURSE, sashaFirst.id)).resolves.toMatchObject({
+    await expect(loadReview(COURSE_ID, sashaFirst.id)).resolves.toMatchObject({
       status: 'published',
       review: { revision: 1, grade: v.parse(GradeSchema, 7.5) },
     });
@@ -254,7 +254,7 @@ describe('TR-05: load-review statuses', () => {
   ])('200 with %s rejects', async (_, body) => {
     server.use(http.get(REVIEW_URL, invalidBody(body)));
 
-    await expect(loadReview(COURSE, sashaFirst.id)).rejects.toMatchObject({
+    await expect(loadReview(COURSE_ID, sashaFirst.id)).rejects.toMatchObject({
       operation: 'load-review',
       kind: 'invalid-response',
     });
