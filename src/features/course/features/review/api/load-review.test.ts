@@ -74,6 +74,10 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
     expect(result.review.grade).toEqual(v.parse(GradeSchema, 7.5));
   });
 
+  // An unreviewed Attempt answers 200 with `none`, not 404: 404 already means
+  // the Attempt itself is gone or hidden (a ResourceDenial). Sharing the status
+  // would show a missing Attempt as "not reviewed yet". Working contract
+  // pending backend confirmation #113.
   test.each([
     ['Sasha #2', sashaSecond],
     ['Petya #1', petyaFirst],
