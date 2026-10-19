@@ -20,6 +20,7 @@ export function devReview(
   }
 
   const publishedAt = shift(attempt.submittedAt, REVIEW_DELAY);
+  const repliedAt = shift(attempt.submittedAt, REPLY_DELAY);
   const comments = DEV_COMMENTS[attempt.attemptNumber] ?? [];
 
   return {
@@ -37,19 +38,13 @@ export function devReview(
       publishedAt,
       publishedBy: teacherId,
     },
-    replies:
-      attempt.attemptNumber === 2
-        ? [
-            {
-              id: `reply-${attempt.id}-main-4`,
-              commentId: 'comment-a2-main-4',
-              authorId: attempt.studentId,
-              html: '<p>Согласен, добавлю тест отдельным коммитом.</p>',
-              createdAt: shift(attempt.submittedAt, REPLY_DELAY),
-              updatedAt: shift(attempt.submittedAt, REPLY_DELAY),
-            },
-          ]
-        : [],
+    replies: (DEV_REPLIES[attempt.attemptNumber] ?? []).map((reply) => ({
+      ...reply,
+      id: `reply-${attempt.id}-${reply.commentId}`,
+      authorId: attempt.studentId,
+      createdAt: repliedAt,
+      updatedAt: repliedAt,
+    })),
   };
 }
 
@@ -94,6 +89,20 @@ const DEV_COMMENTS: Record<number, DevComment[]> = {
       side: 'additions',
       lineNumber: 3,
       html: '<p>Компонент маленький и понятный. Можно добавить ссылку на <a href="/docs/components">гайд по компонентам</a>.</p>',
+    },
+  ],
+};
+
+type DevReply = Omit<
+  MockReview['replies'][number],
+  'id' | 'authorId' | 'createdAt' | 'updatedAt'
+>;
+
+const DEV_REPLIES: Record<number, DevReply[]> = {
+  2: [
+    {
+      commentId: 'comment-a2-main-4',
+      html: '<p>Согласен, добавлю тест отдельным коммитом.</p>',
     },
   ],
 };
