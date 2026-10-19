@@ -3,8 +3,13 @@ import { useId } from 'react';
 
 import {
   formatGrade,
+  type Grade,
   type GradeInputError,
 } from '@/features/course/model/grade';
+import {
+  publishedReview,
+  type ReviewResult,
+} from '@/features/course/features/review/model/types';
 import { GradeField } from '@/features/course/ui/grade-field';
 import { Button } from '@/shadcn/components/ui/button';
 import { Spinner } from '@/shadcn/components/ui/spinner';
@@ -12,13 +17,11 @@ import { cn } from '@/shadcn/lib/utils';
 import { formatAttemptReviewDateTime } from '@/features/course/features/attempt-review/model/date-format';
 import type { AttemptReviewDraft } from '@/features/course/features/attempt-review/model/draft';
 import { RichTextContent, RichTextEditor } from './rich-text/editor';
-import type {
-  AttemptReviewAggregate,
-  AttemptReviewMode,
-} from '@/features/course/features/attempt-review/model/types';
+import type { AttemptReviewMode } from '@/features/course/features/attempt-review/model/types';
 
 type AttemptReviewReviewPanelProps = {
-  review: AttemptReviewAggregate;
+  review: ReviewResult;
+  maxGrade: Grade;
   draft: AttemptReviewDraft;
   mode: AttemptReviewMode;
   gradeError: GradeInputError | null;
@@ -39,6 +42,7 @@ type AttemptReviewReviewPanelProps = {
 
 export function AttemptReviewReviewPanel({
   review,
+  maxGrade,
   draft,
   mode,
   gradeError,
@@ -55,6 +59,7 @@ export function AttemptReviewReviewPanel({
   onSave,
 }: AttemptReviewReviewPanelProps) {
   const saveBlockedReasonId = useId();
+  const published = publishedReview(review);
 
   return (
     <section
@@ -97,7 +102,7 @@ export function AttemptReviewReviewPanel({
           {mode === 'editable' ? (
             <GradeField
               value={draft.grade}
-              maxGrade={review.current.task.maxGrade}
+              maxGrade={maxGrade}
               changed={gradeChanged}
               error={gradeError}
               ariaLabel="Оценка за попытку"
@@ -107,19 +112,17 @@ export function AttemptReviewReviewPanel({
             <div className="rounded-xl border bg-muted/30 p-3">
               <p className="text-sm text-muted-foreground">Оценка</p>
               <p className="text-2xl font-semibold">
-                {review.current.grade
-                  ? formatGrade(review.current.grade.value)
-                  : '—'}
-                /{formatGrade(review.current.task.maxGrade)}
+                {published ? formatGrade(published.grade) : '—'}/
+                {formatGrade(maxGrade)}
               </p>
             </div>
           )}
         </div>
 
-        {review.current.grade ? (
+        {published ? (
           <p className="text-sm text-muted-foreground">
-            Оценено {formatAttemptReviewDateTime(review.current.grade.gradedAt)}{' '}
-            · {review.current.grade.gradedBy}
+            Оценено {formatAttemptReviewDateTime(published.publishedAt)} ·{' '}
+            {published.publishedBy.name}
           </p>
         ) : (
           <p
@@ -186,7 +189,7 @@ export function AttemptReviewReviewPanel({
           />
         ) : (
           <RichTextContent
-            html={review.overallFeedback.html}
+            html={published?.overallFeedbackHtml ?? ''}
             className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
           />
         )}

@@ -1,120 +1,90 @@
-import {
-  queryOptions,
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type QueryClient,
-} from '@tanstack/react-query';
+import { queryOptions } from '@tanstack/react-query';
 
 import { courseKeys } from '@/features/course/api/queries';
-import { courseAttemptsKeys } from '@/features/course/features/attempts/api/queries';
 import type { UserId } from '@/features/auth/model/identity';
-import type { CourseId } from '@/features/course/model/identity';
-import {
-  createAttemptReviewCommentReply,
-  deleteAttemptReviewCommentReply,
-  fetchAttemptReview,
-  saveAttemptReview,
-  updateAttemptReviewCommentReply,
-} from './mock';
-import type {
-  AttemptReviewIdentity,
-  CreateAttemptReviewCommentReplyInput,
-  DeleteAttemptReviewCommentReplyInput,
-  SaveAttemptReviewInput,
-  UpdateAttemptReviewCommentReplyInput,
-} from '@/features/course/features/attempt-review/model/types';
+import type { AttemptId, CourseId } from '@/features/course/model/identity';
+import { loadAttemptMaterial } from './load-material';
+import { loadStudentAttempts } from './load-student-attempts';
+import { loadAttemptSummary } from './load-summary';
 
 export const attemptReviewKeys = {
   course: (courseId: CourseId) =>
     [...courseKeys.byId(courseId), 'attempt-review'] as const,
-  attempt: (params: AttemptReviewIdentity) =>
+  attempt: (courseId: CourseId, attemptId: AttemptId) =>
+    [...attemptReviewKeys.course(courseId), 'attempt', attemptId] as const,
+  summary: (viewerId: UserId, courseId: CourseId, attemptId: AttemptId) =>
     [
-      ...attemptReviewKeys.course(params.courseId),
-      params.studentId,
-      params.attemptId,
+      ...attemptReviewKeys.attempt(courseId, attemptId),
+      'summary',
+      viewerId,
     ] as const,
-  detail: (viewerId: UserId, params: AttemptReviewIdentity) =>
-    [...attemptReviewKeys.attempt(params), viewerId] as const,
+  material: (viewerId: UserId, courseId: CourseId, attemptId: AttemptId) =>
+    [
+      ...attemptReviewKeys.attempt(courseId, attemptId),
+      'material',
+      viewerId,
+    ] as const,
+  student: (courseId: CourseId, taskId: string, studentId: UserId) =>
+    [
+      ...attemptReviewKeys.course(courseId),
+      'student',
+      taskId,
+      studentId,
+    ] as const,
+  studentAttempts: (
+    viewerId: UserId,
+    courseId: CourseId,
+    taskId: string,
+    studentId: UserId
+  ) =>
+    [
+      ...attemptReviewKeys.student(courseId, taskId, studentId),
+      'attempts',
+      viewerId,
+    ] as const,
 };
 
-export function attemptReviewQueryOptions(
+export function attemptSummaryOptions(
   viewerId: UserId,
-  params: AttemptReviewIdentity
+  courseId: CourseId,
+  attemptId: AttemptId
 ) {
   return queryOptions({
-    queryKey: attemptReviewKeys.detail(viewerId, params),
-    queryFn: () => fetchAttemptReview(params),
-    staleTime: 30 * 1000,
+    queryKey: attemptReviewKeys.summary(viewerId, courseId, attemptId),
+    queryFn: ({ signal }) => loadAttemptSummary(courseId, attemptId, signal),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Immutable: an Attempt's material never changes once submitted. */
+export function attemptMaterialOptions(
+  viewerId: UserId,
+  courseId: CourseId,
+  attemptId: AttemptId
+) {
+  return queryOptions({
+    queryKey: attemptReviewKeys.material(viewerId, courseId, attemptId),
+    queryFn: ({ signal }) => loadAttemptMaterial(courseId, attemptId, signal),
+    staleTime: Infinity,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-export function useAttemptReviewQuery(
+export function studentAttemptsOptions(
   viewerId: UserId,
-  params: AttemptReviewIdentity
+  courseId: CourseId,
+  taskId: string,
+  studentId: UserId
 ) {
-  return useQuery(attemptReviewQueryOptions(viewerId, params));
-}
-
-export function useSaveAttemptReviewMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (input: SaveAttemptReviewInput) => saveAttemptReview(input),
-    onSuccess: async (_data, variables) => {
-      // A saved grade changes the Course's attempt list projections.
-      await Promise.all([
-        invalidateAttemptReviewQuery(queryClient, variables),
-        queryClient.invalidateQueries({
-          queryKey: courseAttemptsKeys.course(variables.courseId),
-        }),
-      ]);
-    },
-  });
-}
-
-export function useCreateAttemptReviewCommentReplyMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (input: CreateAttemptReviewCommentReplyInput) =>
-      createAttemptReviewCommentReply(input),
-    onSuccess: async (_data, variables) => {
-      await invalidateAttemptReviewQuery(queryClient, variables);
-    },
-  });
-}
-
-export function useUpdateAttemptReviewCommentReplyMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (input: UpdateAttemptReviewCommentReplyInput) =>
-      updateAttemptReviewCommentReply(input),
-    onSuccess: async (_data, variables) => {
-      await invalidateAttemptReviewQuery(queryClient, variables);
-    },
-  });
-}
-
-export function useDeleteAttemptReviewCommentReplyMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (input: DeleteAttemptReviewCommentReplyInput) =>
-      deleteAttemptReviewCommentReply(input),
-    onSuccess: async (_data, variables) => {
-      await invalidateAttemptReviewQuery(queryClient, variables);
-    },
-  });
-}
-
-function invalidateAttemptReviewQuery(
-  queryClient: QueryClient,
-  params: AttemptReviewIdentity
-) {
-  return queryClient.invalidateQueries({
-    queryKey: attemptReviewKeys.attempt(params),
+  return queryOptions({
+    queryKey: attemptReviewKeys.studentAttempts(
+      viewerId,
+      courseId,
+      taskId,
+      studentId
+    ),
+    queryFn: ({ signal }) =>
+      loadStudentAttempts(courseId, taskId, studentId, signal),
+    staleTime: 30 * 1000,
   });
 }

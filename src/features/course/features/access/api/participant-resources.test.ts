@@ -24,7 +24,7 @@ import { loadRepository } from '@/features/course/features/repository/api/load-r
 import { repositoryLocatorOptions } from '@/features/course/features/repository/api/queries';
 import { loadAttempt } from '@/features/course/features/attempt-review/api/load-attempt';
 import { attemptLocatorOptions } from '@/features/course/features/attempt-review/api/locator-queries';
-import { attemptReviewKeys } from '@/features/course/features/attempt-review/api/queries';
+import { reviewKeys } from '@/features/course/features/review/api/queries';
 
 const COURSE = accessWorld.courses.algorithms.id;
 const ONE = v.parse(AttemptNumberSchema, 1);
@@ -148,11 +148,7 @@ describe('ACC-08: backend resolves participant resources without a client roster
     await expect(loadRepository(COURSE, sasha.username)).resolves.toEqual({
       status: 'not-found',
     });
-    const key = attemptReviewKeys.detail(sasha.id, {
-      courseId: COURSE,
-      studentId: sasha.id,
-      attemptId: reviewWorld.attempts[0].id,
-    });
+    const key = reviewKeys.detail(sasha.id, COURSE, reviewWorld.attempts[0].id);
     expect(key).not.toContain(sasha.username);
     expect(key).not.toContain(user.username);
     expect(key).not.toContain(ONE);
@@ -169,13 +165,9 @@ describe('ACC-08: backend resolves participant resources without a client roster
     ).not.toEqual(
       attemptLocatorOptions(anna.id, COURSE, '1', petya.username, ONE).queryKey
     );
-    const identity = {
-      courseId: COURSE,
-      studentId: petya.id,
-      attemptId: reviewWorld.attempts[2].id,
-    };
-    expect(attemptReviewKeys.detail(sasha.id, identity)).not.toEqual(
-      attemptReviewKeys.detail(anna.id, identity)
+    const attemptId = reviewWorld.attempts[2].id;
+    expect(reviewKeys.detail(sasha.id, COURSE, attemptId)).not.toEqual(
+      reviewKeys.detail(anna.id, COURSE, attemptId)
     );
   });
 

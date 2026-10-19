@@ -25,21 +25,30 @@ import { AttemptReviewMobileDrawer } from './ui/mobile-drawer';
 import { AttemptReviewReviewPanel } from './ui/review-panel';
 import { AttemptReviewReviewPanelToggle } from './ui/review-panel-toggle';
 import {
-  useAttemptReviewQuery,
-  useCreateAttemptReviewCommentReplyMutation,
-  useDeleteAttemptReviewCommentReplyMutation,
-  useSaveAttemptReviewMutation,
-  useUpdateAttemptReviewCommentReplyMutation,
+  attemptMaterialOptions,
+  attemptSummaryOptions,
+  studentAttemptsOptions,
 } from './api/queries';
+import { reviewOptions } from '@/features/course/features/review/api/queries';
+import {
+  useReplyMutations,
+  useSaveReviewMutation,
+} from '@/features/course/features/review/api/mutations';
+import {
+  publishedReview,
+  type ReviewResult,
+} from '@/features/course/features/review/model/types';
 import { useDiffReadiness } from './hooks/use-diff-readiness';
 import type { DiffReadiness } from './model/diff-readiness';
 import { DiffReadinessGate } from './ui/diff-readiness';
 import type {
-  AttemptReviewAggregate,
+  AttemptMaterial,
   AttemptReviewDiffViewMode,
   AttemptReviewLineCommentReply,
   AttemptReviewMode,
   AttemptReviewIdentity,
+  AttemptSummary,
+  StudentAttempt,
 } from './model/types';
 
 type AttemptReviewPageProps = {
@@ -49,7 +58,10 @@ type AttemptReviewPageProps = {
 } & AttemptReviewIdentity;
 
 type AttemptReviewPageLoadedProps = {
-  review: AttemptReviewAggregate;
+  summary: AttemptSummary;
+  review: ReviewResult;
+  material: AttemptMaterial;
+  attempts: StudentAttempt[];
 } & AttemptReviewPageProps;
 
 type AttemptReviewMobileDrawerState = 'none' | 'file-tree' | 'review-panel';
@@ -68,10 +80,44 @@ function getSaveBlockedReason(readiness: DiffReadiness): string | null {
   }
 }
 
+/**
+ * Shows only the projections of this Attempt: until all of them are loaded,
+ * nothing of the previously open Attempt appears under its heading.
+ */
 export function AttemptReviewPage(props: AttemptReviewPageProps) {
-  const reviewQuery = useAttemptReviewQuery(props.viewerId, props);
+  const { viewerId, courseId, taskId, studentId, attemptId } = props;
+  const summaryQuery = useQuery(
+    attemptSummaryOptions(viewerId, courseId, attemptId)
+  );
+  const reviewQuery = useQuery(reviewOptions(viewerId, courseId, attemptId));
+  const materialQuery = useQuery(
+    attemptMaterialOptions(viewerId, courseId, attemptId)
+  );
+  const attemptsQuery = useQuery(
+    studentAttemptsOptions(viewerId, courseId, taskId, studentId)
+  );
+  const queries = [summaryQuery, reviewQuery, materialQuery, attemptsQuery];
 
-  if (reviewQuery.isLoading) {
+  // A failed background refetch keeps the loaded data and the unsaved edits.
+  if (queries.some((query) => query.isError && query.data === undefined)) {
+    return (
+      <main className="mx-auto w-full max-w-4xl p-6">
+        <section className="rounded-2xl border bg-card p-6">
+          <h1 className="text-xl font-semibold">Не удалось открыть попытку</h1>
+          <p className="mt-2 text-muted-foreground">
+            Проверьте параметры маршрута или попробуйте обновить страницу.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (
+    !summaryQuery.data ||
+    !reviewQuery.data ||
+    !materialQuery.data ||
+    !attemptsQuery.data
+  ) {
     return (
       <main
         className={cn(
@@ -85,24 +131,14 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
     );
   }
 
-  if (reviewQuery.isError || !reviewQuery.data) {
-    return (
-      <main className="mx-auto w-full max-w-4xl p-6">
-        <section className="rounded-2xl border bg-card p-6">
-          <h1 className="text-xl font-semibold">Не удалось открыть попытку</h1>
-          <p className="mt-2 text-muted-foreground">
-            Проверьте параметры маршрута или попробуйте обновить страницу.
-          </p>
-        </section>
-      </main>
-    );
-  }
-
   return (
     <AttemptReviewPageLoaded
-      key={`${props.viewerId}:${props.attemptId}`}
+      key={`${viewerId}:${attemptId}`}
       {...props}
+      summary={summaryQuery.data}
       review={reviewQuery.data}
+      material={materialQuery.data}
+      attempts={attemptsQuery.data}
     />
   );
 }
@@ -110,21 +146,24 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
 function AttemptReviewPageLoaded({
   mode,
   courseRole,
+  viewerId,
   courseId,
+  taskId,
   studentId,
   attemptId,
+  summary,
   review,
+  material,
+  attempts,
 }: AttemptReviewPageLoadedProps) {
-  const params = { courseId, studentId, attemptId };
-  const attemptNumber = review.current.attemptNumber;
-  const saveMutation = useSaveAttemptReviewMutation();
-  const createReplyMutation = useCreateAttemptReviewCommentReplyMutation();
-  const updateReplyMutation = useUpdateAttemptReviewCommentReplyMutation();
-  const deleteReplyMutation = useDeleteAttemptReviewCommentReplyMutation();
+  const reviewedAttempt = { viewerId, courseId, taskId, studentId, attemptId };
+  const attemptNumber = summary.attemptNumber;
+  const saveMutation = useSaveReviewMutation(reviewedAttempt);
+  const replyMutations = useReplyMutations(reviewedAttempt);
   const { data: sessionData } = useQuery(sessionOptions);
   const { readiness: diffReadiness, retry: retryDiff } = useDiffReadiness();
   const [activeFilePath, setActiveFilePath] = useState<string | null>(
-    review.changedFiles[0]?.path ?? null
+    material.changedFiles[0]?.path ?? null
   );
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [isReviewPanelCollapsed, setIsReviewPanelCollapsed] = useState(false);
@@ -141,15 +180,16 @@ function AttemptReviewPageLoaded({
       return undefined;
     }
 
-    const { username, firstName, lastName, patronymic } = sessionData.session;
+    const { userId, firstName, lastName, patronymic } = sessionData.session;
 
     return {
-      username,
-      name: [lastName, firstName, patronymic].filter(Boolean).join(' '),
+      id: userId,
+      name: [firstName, lastName, patronymic].filter(Boolean).join(' '),
     };
   }, [sessionData]);
   const {
     draft,
+    savedDraft,
     hasChanges,
     gradeError,
     gradeChanged,
@@ -159,7 +199,7 @@ function AttemptReviewPageLoaded({
     setLineComments,
     discard,
     resetToReview,
-  } = useAttemptReviewDraft(review);
+  } = useAttemptReviewDraft(review, summary.task.maxGrade);
   const handleDiffViewerChange = useCallback(
     (viewer: AttemptReviewCodeViewHandle | null) => {
       diffViewerRef.current = viewer;
@@ -193,20 +233,35 @@ function AttemptReviewPageLoaded({
   const saveBlockedReason = getSaveBlockedReason(diffReadiness);
   const canSave =
     mode === 'editable' && savableGrade !== null && !saveMutation.isPending;
-  const totalAdded = review.changedFiles.reduce(
+  const totalAdded = material.changedFiles.reduce(
     (sum, file) => sum + file.addedLines,
     0
   );
-  const totalDeleted = review.changedFiles.reduce(
+  const totalDeleted = material.changedFiles.reduce(
     (sum, file) => sum + file.deletedLines,
     0
   );
+  const published = publishedReview(review);
+  const currentAttempt: StudentAttempt = attempts.find(
+    ({ id }) => id === attemptId
+  ) ?? {
+    id: attemptId,
+    attemptNumber,
+    submittedAt: summary.submittedAt,
+    review: published && {
+      revision: published.revision,
+      grade: published.grade,
+    },
+    addedLines: totalAdded,
+    deletedLines: totalDeleted,
+    commentCount: savedDraft.lineComments.length,
+  };
 
   async function submitCommentReply(
     commentId: string,
     html: string
   ): Promise<AttemptReviewLineCommentReply> {
-    return createReplyMutation.mutateAsync({ ...params, commentId, html });
+    return replyMutations.create.mutateAsync({ commentId, html });
   }
 
   async function updateCommentReply(
@@ -214,16 +269,11 @@ function AttemptReviewPageLoaded({
     replyId: string,
     html: string
   ): Promise<AttemptReviewLineCommentReply> {
-    return updateReplyMutation.mutateAsync({
-      ...params,
-      commentId,
-      replyId,
-      html,
-    });
+    return replyMutations.update.mutateAsync({ commentId, replyId, html });
   }
 
   async function deleteCommentReply(commentId: string, replyId: string) {
-    await deleteReplyMutation.mutateAsync({ ...params, commentId, replyId });
+    await replyMutations.delete.mutateAsync({ commentId, replyId });
   }
 
   async function saveReview() {
@@ -232,10 +282,9 @@ function AttemptReviewPageLoaded({
     }
 
     const savedReview = await saveMutation.mutateAsync({
-      ...params,
       grade: savableGrade,
       overallFeedbackHtml: draft.overallFeedbackHtml,
-      lineComments: prepareLineCommentsForSave(draft.lineComments),
+      comments: prepareLineCommentsForSave(draft.lineComments),
     });
     resetToReview(savedReview);
   }
@@ -249,7 +298,10 @@ function AttemptReviewPageLoaded({
     >
       <AttemptReviewHeader
         mode={mode}
-        review={review}
+        summary={summary}
+        material={material}
+        attempts={attempts}
+        currentAttempt={currentAttempt}
         diffViewMode={diffViewMode}
         hasChanges={hasChanges}
         totalAdded={totalAdded}
@@ -269,7 +321,7 @@ function AttemptReviewPageLoaded({
           <div className="min-h-0 flex-1 overflow-hidden overscroll-contain">
             <AttemptReviewFileTree
               key={`mobile-file-tree-${attemptNumber}`}
-              files={review.changedFiles}
+              files={material.changedFiles}
               comments={draft.lineComments}
               activeFilePath={activeFilePath}
               className="h-full min-h-0 border-0"
@@ -290,6 +342,7 @@ function AttemptReviewPageLoaded({
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <AttemptReviewReviewPanel
               review={review}
+              maxGrade={summary.task.maxGrade}
               draft={draft}
               mode={mode}
               gradeError={gradeError}
@@ -319,7 +372,7 @@ function AttemptReviewPageLoaded({
       >
         <aside className="hidden min-h-0 lg:block lg:h-full">
           <AttemptReviewFileTree
-            files={review.changedFiles}
+            files={material.changedFiles}
             comments={draft.lineComments}
             activeFilePath={activeFilePath}
             collapsed={isFileTreeCollapsed}
@@ -337,9 +390,9 @@ function AttemptReviewPageLoaded({
           >
             <UnsentCommentTextContext value={unsentCommentText}>
               <AttemptReviewDiff
-                files={review.changedFiles}
+                files={material.changedFiles}
                 comments={draft.lineComments}
-                savedComments={review.lineComments}
+                savedComments={savedDraft.lineComments}
                 mode={mode}
                 currentReviewer={currentReviewer}
                 canReplyToComments={canReplyToComments}
@@ -379,6 +432,7 @@ function AttemptReviewPageLoaded({
               <AttemptReviewReviewPanel
                 id={REVIEW_PANEL_ID}
                 review={review}
+                maxGrade={summary.task.maxGrade}
                 draft={draft}
                 mode={mode}
                 gradeError={gradeError}

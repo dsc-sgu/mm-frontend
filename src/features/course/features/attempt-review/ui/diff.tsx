@@ -355,17 +355,15 @@ export function AttemptReviewDiff({
               canEdit={
                 mode === 'editable' &&
                 canManageLineComment(comment) &&
-                currentReviewer?.username === comment.authorUsername
+                currentReviewer?.id === comment.author.id
               }
               canReply={
                 canReplyToComments &&
                 currentReviewer !== undefined &&
                 canReplyToLineComment(comment)
               }
-              currentUsername={
-                canReplyToLineComment(comment)
-                  ? currentReviewer?.username
-                  : undefined
+              currentUserId={
+                canReplyToLineComment(comment) ? currentReviewer?.id : undefined
               }
               onSubmit={(html) => submitComment(comment.id, html)}
               onCancel={() => cancelComment(comment.id)}
