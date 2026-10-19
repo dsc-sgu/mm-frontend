@@ -17,8 +17,8 @@ import { reviewKeys } from '@/features/course/features/review/api/queries';
 const [sashaFirst, sashaSecond] = reviewWorld.attempts;
 const { anna } = accessWorld.users;
 const SASHA_FIRST_URL = '/courses/algorithms/tasks/1/attempts/sasha/1/review';
-const SASHA_FIRST_API = `/api/v1/courses/${accessWorld.courses.algorithms.id}/attempts/${sashaFirst.id}`;
-const COURSE = accessWorld.courses.algorithms.id;
+const COURSE_ID = accessWorld.courses.algorithms.id;
+const SASHA_FIRST_API = `/api/v1/courses/${COURSE_ID}/attempts/${sashaFirst.id}`;
 const FIRST_FEEDBACK = /пустой список не обработан/;
 // The real review page (diff viewer, rich-text editors) renders twice.
 const PAGE_SWITCH_TIMEOUT = 20_000;
@@ -58,7 +58,7 @@ test(
     const held = holdResponse();
     server.use(
       http.get(
-        `/api/v1/courses/${COURSE}/attempts/${sashaSecond.id}/review`,
+        `/api/v1/courses/${COURSE_ID}/attempts/${sashaSecond.id}/review`,
         held.resolver
       )
     );
@@ -92,7 +92,7 @@ test(
 /** Anna leaves the Course: every read by AttemptId is denied from now on. */
 function removeAnnaFromCourse() {
   mockBackend.state.memberships = mockBackend.state.memberships.filter(
-    ({ userId, courseId }) => userId !== anna.id || courseId !== COURSE
+    ({ userId, courseId }) => userId !== anna.id || courseId !== COURSE_ID
   );
 }
 
@@ -148,7 +148,7 @@ test(
 
     removeAnnaFromCourse();
     await queryClient.invalidateQueries({
-      queryKey: reviewKeys.attempt(COURSE, sashaFirst.id),
+      queryKey: reviewKeys.attempt(COURSE_ID, sashaFirst.id),
     });
 
     await screen.findByRole('link', { name: 'К моим курсам' });
@@ -183,14 +183,14 @@ test('the route starts every page read before the page mounts', async () => {
       },
     });
 
-    const attempt = `/api/v1/courses/${COURSE}/attempts/${sashaFirst.id}`;
+    const attempt = `/api/v1/courses/${COURSE_ID}/attempts/${sashaFirst.id}`;
     await waitFor(() =>
       expect(requested).toEqual(
         expect.arrayContaining([
           attempt,
           `${attempt}/review`,
           `${attempt}/material`,
-          `/api/v1/courses/${COURSE}/tasks/1/students/${sashaFirst.studentId}/attempts`,
+          `/api/v1/courses/${COURSE_ID}/tasks/1/students/${sashaFirst.studentId}/attempts`,
         ])
       )
     );
@@ -216,7 +216,7 @@ test('hovering another Attempt in the selector preloads its reads without switch
 
     await user.hover(await screen.findByRole('link', { name: /Попытка #2/ }));
 
-    const second = `/api/v1/courses/${COURSE}/attempts/${sashaSecond.id}`;
+    const second = `/api/v1/courses/${COURSE_ID}/attempts/${sashaSecond.id}`;
     await waitFor(() =>
       expect(requested).toEqual(
         expect.arrayContaining([
