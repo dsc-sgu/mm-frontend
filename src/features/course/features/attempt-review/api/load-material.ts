@@ -67,7 +67,7 @@ export function loadAttemptMaterial(
         material: {
           baselineAttemptNumber: material.baselineAttemptNumber,
           changedFiles: material.files.map((file) =>
-            toChangedFile(file, parseDiffFromFile)
+            toChangedFile(attemptId, file, parseDiffFromFile)
           ),
         },
       };
@@ -84,6 +84,7 @@ const DIFF_TYPES: Record<AttemptReviewFileStatus, FileDiffMetadata['type']> = {
 type ParseDiffFromFile = typeof import('@pierre/diffs').parseDiffFromFile;
 
 function toChangedFile(
+  attemptId: AttemptId,
   { path, status, oldText, newText }: ChangedFileDto,
   parseDiffFromFile: ParseDiffFromFile
 ): AttemptReviewChangedFile {
@@ -92,12 +93,12 @@ function toChangedFile(
       {
         name: path,
         contents: oldText,
-        cacheKey: `${path}:old:${hash(oldText)}`,
+        cacheKey: `${attemptId}:${path}:old`,
       },
       {
         name: path,
         contents: newText,
-        cacheKey: `${path}:new:${hash(newText)}`,
+        cacheKey: `${attemptId}:${path}:new`,
       },
       { context: 4 }
     ),
@@ -112,12 +113,4 @@ function toChangedFile(
     deletedLines: diff.hunks.reduce((sum, hunk) => sum + hunk.deletionLines, 0),
     diff,
   };
-}
-
-function hash(value: string): string {
-  let result = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    result = (result * 31 + value.charCodeAt(index)) | 0;
-  }
-  return String(result);
 }
