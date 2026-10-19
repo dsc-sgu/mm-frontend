@@ -5,9 +5,9 @@ import { attemptReviewKeys } from '@/features/course/features/attempt-review/api
 import { courseAttemptsKeys } from '@/features/course/features/attempts/api/queries';
 import type { ReviewCommentInput } from '@/features/course/features/review/model/types';
 import type { Grade } from '@/features/course/model/grade';
-import { loadReview, type LoadReviewResult } from './load-review';
+import type { LoadReviewResult } from './load-review';
 import { createReply, deleteReply, saveReview, updateReply } from './mock';
-import { reviewKeys } from './queries';
+import { reviewKeys, reviewOptions } from './queries';
 
 // Temporary mutations over the canonical mock backend state, not a reference
 // for new operations (their failures are plain Errors); REV5 and REV6.2
@@ -38,13 +38,16 @@ export function useSaveReviewMutation(attempt: ReviewedAttempt) {
   return useMutation({
     mutationFn: async (edits: ReviewEdits): Promise<LoadReviewResult> => {
       await saveReview({ courseId, attemptId, ...edits });
-      return loadReview(courseId, attemptId);
+      // The save answers with nothing, so the Review is reread through its
+      // query; a read started before the save must not land after this one.
+      const options = reviewOptions(viewerId, courseId, attemptId);
+      await queryClient.cancelQueries({
+        queryKey: options.queryKey,
+        exact: true,
+      });
+      return queryClient.query({ ...options, staleTime: 0 });
     },
-    onSuccess: async (review) => {
-      queryClient.setQueryData(
-        reviewKeys.detail(viewerId, courseId, attemptId),
-        review
-      );
+    onSuccess: async () => {
       // The Grade, its revision and the comment count show in both lists.
       await Promise.all([
         queryClient.invalidateQueries({
