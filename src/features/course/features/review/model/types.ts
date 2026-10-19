@@ -1,13 +1,11 @@
+import type { FullName } from '@/features/auth/model/full-name';
 import type { UserId } from '@/features/auth/model/identity';
 import type { Grade } from '@/features/course/model/grade';
 import type { ReviewRevision } from './revision';
 
 export type ReviewCommentSide = 'deletions' | 'additions';
 
-export type ReviewAuthor = {
-  id: UserId;
-  name: string;
-};
+export type ReviewAuthor = { id: UserId } & FullName;
 
 export type ReviewReply = {
   id: string;

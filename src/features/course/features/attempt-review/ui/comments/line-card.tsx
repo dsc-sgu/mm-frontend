@@ -1,4 +1,5 @@
 import type { UserId } from '@/features/auth/model/identity';
+import { formatFullName } from '@/features/auth/model/full-name';
 import { useState } from 'react';
 import { Check, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 
@@ -194,7 +195,7 @@ export function AttemptReviewLineCommentCard({
             )}
           >
             <span className="truncate font-medium text-foreground">
-              {comment.author.name}
+              {formatFullName(comment.author)}
             </span>
             {commentStatus === 'saved' ? (
               <>

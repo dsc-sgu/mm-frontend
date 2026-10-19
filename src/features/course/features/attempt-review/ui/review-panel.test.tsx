@@ -85,6 +85,19 @@ test('REV-03: an empty Grade invalidates the edits of a first Review', async () 
   expect(result.current.gradeError).toBe('empty');
 });
 
+test('the published Review names its Teacher by Full Name, surname first', async () => {
+  // world:review Users have only a given name; Boris published revision 2.
+  const { boris } = accessWorld.users;
+  mockBackend.state.users = mockBackend.state.users.map((user) =>
+    user.id === boris.id
+      ? { ...user, lastName: 'Кузнецов', patronymic: 'Ильич' }
+      : user
+  );
+  render(<ReviewPanel review={await existingReview()} />);
+
+  expect(screen.getByText(/Оценено .* · Кузнецов Борис Ильич$/)).toBeTruthy();
+});
+
 test('REV-03, A11Y-02: an existing Grade cannot be erased', async () => {
   const user = userEvent.setup();
   render(<ReviewPanel review={await existingReview()} />);

@@ -75,7 +75,7 @@ export const attemptReviewHandlers = [
       submittedAt: attempt.submittedAt,
       deadlineAt: task.deadlineAt,
       task: { title: task.title, maxGrade: gradeToNumber(task.maxGrade) },
-      student: { id: student.id, name: mockUserName(student) },
+      student: { id: student.id, ...mockUserName(student) },
     });
   }),
   http.get(

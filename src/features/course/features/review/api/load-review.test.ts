@@ -50,17 +50,20 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
       review: {
         revision: 2,
         overallFeedbackHtml: expect.stringContaining('пустой список'),
-        publishedBy: { id: boris.id, name: 'Борис' },
+        // world:review Users have only a given name, so no patronymic.
+        publishedBy: { id: boris.id, lastName: '', firstName: 'Борис' },
         comments: [
           {
-            author: { id: anna.id, name: 'Анна' },
+            author: { id: anna.id, lastName: '', firstName: 'Анна' },
             filePath: 'src/main.ts',
             side: 'additions',
             lineNumber: 2,
-            replies: [{ author: { id: sasha.id, name: 'Саша' } }],
+            replies: [
+              { author: { id: sasha.id, lastName: '', firstName: 'Саша' } },
+            ],
           },
           {
-            author: { id: boris.id, name: 'Борис' },
+            author: { id: boris.id, lastName: '', firstName: 'Борис' },
             filePath: 'README.md',
             replies: [],
           },
@@ -135,13 +138,11 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
     expect(first.commentCount).toBe(1);
   });
 
-  test.each([
-    { user: sasha, name: 'Саша' },
-    { user: anna, name: 'Анна' },
-  ])(
-    'a reply belongs to the signed-in $name after reloading',
-    async ({ user, name }) => {
-      signIn(user.id);
+  test.each([sasha, anna])(
+    'a reply belongs to the signed-in $username after reloading',
+    async ({ id, lastName, firstName }) => {
+      const author = { id, lastName, firstName };
+      signIn(id);
 
       const created = await createReply({
         courseId: COURSE,
@@ -150,7 +151,7 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
         html: '<p>Добавлю.</p>',
       });
 
-      expect(created.author).toEqual({ id: user.id, name });
+      expect(created.author).toEqual(author);
       const result = await loadReview(COURSE, sashaFirst.id);
       if (result.status !== 'published') throw new Error('Expected a Review');
       expect(
@@ -158,7 +159,7 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
           .flatMap(({ replies }) => replies)
           .find(({ id }) => id === created.id)
       ).toMatchObject({
-        author: { id: user.id, name },
+        author,
         html: '<p>Добавлю.</p>',
       });
     }
@@ -209,7 +210,12 @@ describe('TR-05: load-review statuses', () => {
     grade: 7.5,
     overallFeedbackHtml: '',
     publishedAt: '2026-05-20T13:05:00.000Z',
-    publishedBy: { id: anna.id, name: 'Анна' },
+    publishedBy: {
+      id: anna.id,
+      lastName: 'Смирнова',
+      firstName: 'Анна',
+      patronymic: 'Сергеевна',
+    },
     comments: [],
   };
 
@@ -239,7 +245,10 @@ describe('TR-05: load-review statuses', () => {
       'an author without UserId',
       {
         status: 'published',
-        review: { ...review, publishedBy: { id: 'anna', name: 'Анна' } },
+        review: {
+          ...review,
+          publishedBy: { ...review.publishedBy, id: 'anna' },
+        },
       },
     ],
   ])('200 with %s rejects', async (_, body) => {

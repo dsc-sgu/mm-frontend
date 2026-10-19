@@ -5,6 +5,7 @@ import {
   runHttpOperation,
   unexpectedHttpStatus,
 } from '@/app/remote-data/http';
+import { FullNameSchema } from '@/features/auth/model/full-name';
 import { UserIdSchema } from '@/features/auth/model/identity';
 import { GradeSchema } from '@/features/course/model/grade';
 import type { AttemptId, CourseId } from '@/features/course/model/identity';
@@ -17,7 +18,10 @@ import type { ReviewResult } from '@/features/course/features/review/model/types
 
 // Working Review wire contract pending backend confirmation #113: the latest
 // revision carries its number, and replies come inside their root comment.
-const AuthorSchema = v.object({ id: UserIdSchema, name: v.string() });
+const AuthorSchema = v.object({
+  id: UserIdSchema,
+  ...FullNameSchema.entries,
+});
 const SideSchema = v.picklist(['deletions', 'additions']);
 const LineSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 

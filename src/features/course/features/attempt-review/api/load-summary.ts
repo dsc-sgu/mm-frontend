@@ -5,6 +5,7 @@ import {
   runHttpOperation,
   unexpectedHttpStatus,
 } from '@/app/remote-data/http';
+import { FullNameSchema } from '@/features/auth/model/full-name';
 import { UserIdSchema } from '@/features/auth/model/identity';
 import { GradeSchema } from '@/features/course/model/grade';
 import {
@@ -26,7 +27,7 @@ const AttemptSummarySchema = v.object({
   submittedAt: v.pipe(v.string(), v.isoTimestamp()),
   deadlineAt: v.pipe(v.string(), v.isoTimestamp()),
   task: v.object({ title: v.string(), maxGrade: GradeSchema }),
-  student: v.object({ id: UserIdSchema, name: v.string() }),
+  student: v.object({ id: UserIdSchema, ...FullNameSchema.entries }),
 });
 
 export type LoadAttemptSummaryResult =

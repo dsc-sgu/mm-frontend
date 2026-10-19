@@ -35,7 +35,8 @@ function lineComment(filePath: string): AttemptReviewLineComment {
     html: '<p>Уточните формулировку.</p>',
     author: {
       id: '00000000-0000-4000-8000-000000000001' as UserId,
-      name: 'Преподаватель',
+      lastName: 'Смирнова',
+      firstName: 'Анна',
     },
     createdAt: '2026-10-01T10:00:00.000Z',
     updatedAt: '2026-10-01T10:00:00.000Z',
