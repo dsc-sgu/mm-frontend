@@ -11,6 +11,11 @@ A person with a stable internal identity and a mutable username.
 _По-русски_: пользователь
 _Avoid_: using username as User identity
 
+**Full Name**:
+The name a User is known by: a surname, a given name and an optional patronymic, always shown in that order.
+_По-русски_: ФИО
+_Avoid_: name, when either the Full Name or the username could be meant; «Имя Фамилия» order
+
 **Course**:
 A learning space with a stable internal identity, mutable route slug, members, content, and tasks.
 _По-русски_: курс
