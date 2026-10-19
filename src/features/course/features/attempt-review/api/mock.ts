@@ -1,7 +1,17 @@
 import { parseDiffFromFile, type FileDiffMetadata } from '@pierre/diffs';
 import * as v from 'valibot';
 import { http, HttpResponse } from 'msw';
-import { resolveStudentAccess } from '@/app/mock-backend/participant-access';
+import {
+  accessDenial,
+  resolveAttemptAccess,
+  resolveStudentAccess,
+  resolveStudentIdAccess,
+} from '@/app/mock-backend/participant-access';
+import {
+  mockBackend,
+  mockUserName,
+  type MockAttempt,
+} from '@/app/mock-backend/state';
 import {
   GradeSchema,
   gradesEqual,
@@ -11,9 +21,6 @@ import {
   AttemptNumberSchema,
   type AttemptNumber,
 } from '@/features/course/model/identity';
-
-import { mockBackend } from '@/app/mock-backend/state';
-
 import {
   findMockCourseAttempt,
   upsertMockCourseAttemptGrade,
@@ -37,7 +44,7 @@ import type {
 } from '@/features/course/features/attempt-review/model/types';
 
 // Working participant-resource wire contract pending backend confirmation #113.
-export const attemptLocatorHandlers = [
+const attemptLocatorHandlers = [
   http.get(
     '/api/v1/courses/:courseId/tasks/:taskId/attempts/:studentUsername/:attemptNumber',
     ({ params }) => {
@@ -73,6 +80,165 @@ export const attemptLocatorHandlers = [
   ),
 ];
 
+// Working wire contracts pending backend confirmation #113. Every read answers
+// from the canonical Attempts and Reviews; denials carry no body.
+export const attemptReviewHandlers = [
+  ...attemptLocatorHandlers,
+  http.get('/api/v1/courses/:courseId/attempts/:attemptId', ({ params }) => {
+    const access = resolveAttemptAccess(
+      String(params.courseId),
+      String(params.attemptId)
+    );
+    if (access.status !== 'found') return accessDenial(access.status);
+    const { attempt } = access;
+    const { tasks, users } = mockBackend.state;
+    const task = tasks.find(
+      ({ courseId, id }) =>
+        courseId === attempt.courseId && id === attempt.taskId
+    );
+    const student = users.find(({ id }) => id === attempt.studentId);
+    if (!task || !student) throw new Error('The mock Attempt is incomplete');
+    return HttpResponse.json({
+      id: attempt.id,
+      attemptNumber: attempt.attemptNumber,
+      submittedAt: attempt.submittedAt,
+      deadlineAt: task.deadlineAt,
+      task: { title: task.title, maxGrade: gradeToNumber(task.maxGrade) },
+      student: { id: student.id, name: mockUserName(student) },
+    });
+  }),
+  http.get(
+    '/api/v1/courses/:courseId/tasks/:taskId/students/:studentId/attempts',
+    ({ params }) => {
+      const access = resolveStudentIdAccess(
+        String(params.courseId),
+        String(params.studentId)
+      );
+      if (access.status !== 'found') return accessDenial(access.status);
+      const attempts = studentAttempts(
+        String(params.courseId),
+        String(params.taskId),
+        access.studentId
+      );
+      return HttpResponse.json({
+        attempts: [...attempts].reverse().map((attempt) => {
+          const review = mockBackend.state.reviews.find(
+            ({ attemptId }) => attemptId === attempt.id
+          );
+          return {
+            id: attempt.id,
+            attemptNumber: attempt.attemptNumber,
+            submittedAt: attempt.submittedAt,
+            review: review
+              ? {
+                  revision: review.revision.number,
+                  grade: gradeToNumber(review.revision.grade),
+                }
+              : null,
+            ...countChangedLines(changedFiles(attempt)),
+            commentCount: review?.revision.comments.length ?? 0,
+          };
+        }),
+      });
+    }
+  ),
+  http.get(
+    '/api/v1/courses/:courseId/attempts/:attemptId/material',
+    ({ params }) => {
+      const access = resolveAttemptAccess(
+        String(params.courseId),
+        String(params.attemptId)
+      );
+      if (access.status !== 'found') return accessDenial(access.status);
+      return HttpResponse.json({
+        baselineAttemptNumber:
+          findBaseline(access.attempt)?.attemptNumber ?? null,
+        files: changedFiles(access.attempt),
+      });
+    }
+  ),
+];
+
+function studentAttempts(
+  courseId: string,
+  taskId: string,
+  studentId: string
+): MockAttempt[] {
+  return mockBackend.state.attempts
+    .filter(
+      (attempt) =>
+        attempt.courseId === courseId &&
+        attempt.taskId === taskId &&
+        attempt.studentId === studentId
+    )
+    .sort((first, second) => first.attemptNumber - second.attemptNumber);
+}
+
+/** The Student's previous Attempt at the Task, or an empty tree. */
+function findBaseline(attempt: MockAttempt): MockAttempt | undefined {
+  return studentAttempts(attempt.courseId, attempt.taskId, attempt.studentId)
+    .filter(({ attemptNumber }) => attemptNumber < attempt.attemptNumber)
+    .at(-1);
+}
+
+type ChangedFile = {
+  path: string;
+  status: 'added' | 'deleted' | 'changed';
+  oldText: string;
+  newText: string;
+};
+
+function changedFiles(attempt: MockAttempt): ChangedFile[] {
+  const baseline = findBaseline(attempt);
+  const previousFiles = baseline ? buildSnapshot(baseline.attemptNumber) : {};
+  const currentFiles = buildSnapshot(attempt.attemptNumber);
+  const paths = Array.from(
+    new Set([...Object.keys(previousFiles), ...Object.keys(currentFiles)])
+  ).sort();
+
+  return paths.flatMap((path): ChangedFile[] => {
+    const oldText = previousFiles[path] ?? '';
+    const newText = currentFiles[path] ?? '';
+    if (oldText === newText) return [];
+    return [
+      {
+        path,
+        status: fileStatus(path, previousFiles, currentFiles),
+        oldText,
+        newText,
+      },
+    ];
+  });
+}
+
+function fileStatus(
+  path: string,
+  previousFiles: Record<string, string>,
+  currentFiles: Record<string, string>
+): ChangedFile['status'] {
+  if (!(path in previousFiles)) return 'added';
+  if (!(path in currentFiles)) return 'deleted';
+  return 'changed';
+}
+
+function countChangedLines(files: ChangedFile[]) {
+  let addedLines = 0;
+  let deletedLines = 0;
+  for (const { path, oldText, newText } of files) {
+    const diff = parseDiffFromFile(
+      { name: path, contents: oldText },
+      { name: path, contents: newText }
+    );
+    for (const hunk of diff.hunks) {
+      addedLines += hunk.additionLines;
+      deletedLines += hunk.deletionLines;
+    }
+  }
+  return { addedLines, deletedLines };
+}
+
+// Legacy Review RAM store the Attempt page still reads. It goes away when the
+// page moves to the reads above.
 type StoredAttemptReview = {
   attemptNumber: AttemptNumber;
   submittedAt: string;
@@ -462,7 +628,7 @@ function buildChangedFiles(
         return null;
       }
 
-      const status = fileStatus(path in previousFiles, path in currentFiles);
+      const status = fileStatus(path, previousFiles, currentFiles);
       const diff = parseDiffFromFile(
         {
           name: path,
@@ -513,19 +679,6 @@ function toHistoryItem(
   };
 }
 
-function fileStatus(
-  inPrevious: boolean,
-  inCurrent: boolean
-): AttemptReviewFileStatus {
-  if (!inPrevious && inCurrent) {
-    return 'added';
-  }
-  if (inPrevious && !inCurrent) {
-    return 'deleted';
-  }
-  return 'changed';
-}
-
 const diffTypes: Record<AttemptReviewFileStatus, FileDiffMetadata['type']> = {
   added: 'new',
   deleted: 'deleted',
@@ -557,6 +710,7 @@ function cloneLineComment(
   };
 }
 
+// Deterministic snapshots by Attempt number until the manifest of REV3.2.
 function buildSnapshot(attemptNumber: AttemptNumber): Record<string, string> {
   const snapshots: Record<number, Record<string, string>> = {
     1: {

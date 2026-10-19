@@ -16,6 +16,7 @@ import {
 import { reply } from '@/app/testing/reply';
 import type { UserId } from '@/features/auth/model/identity';
 import { GradeSchema } from '@/features/course/model/grade';
+import { loadStudentAttempts } from '@/features/course/features/attempt-review/api/load-student-attempts';
 import { loadReview } from './load-review';
 
 const { anna, boris, sasha, petya } = accessWorld.users;
@@ -69,6 +70,19 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
     await expect(loadReview(COURSE, attempt.id)).resolves.toEqual({
       status: 'none',
     });
+  });
+
+  test('the selector carries the same Grade with the same revision', async () => {
+    const attempts = await loadStudentAttempts(COURSE, '1', sasha.id);
+    const review = await loadReview(COURSE, sashaFirst.id);
+
+    expect(attempts.map(({ attemptNumber }) => attemptNumber)).toEqual([2, 1]);
+    expect(attempts[0].review).toBeNull();
+    expect(attempts[1].review).toEqual({
+      revision: 2,
+      grade: v.parse(GradeSchema, 7.5),
+    });
+    expect(review).toMatchObject({ review: attempts[1].review });
   });
 
   test("another Student's Review is not readable", async () => {
