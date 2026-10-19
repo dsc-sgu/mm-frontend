@@ -23,8 +23,8 @@ import { loadAttemptSummary } from './load-summary';
 
 const { anna, sasha, petya } = accessWorld.users;
 const [sashaFirst, sashaSecond, petyaFirst] = reviewWorld.attempts;
-const COURSE = accessWorld.courses.algorithms.id;
-const ATTEMPT_URL = `/api/v1/courses/${COURSE}/attempts/${sashaSecond.id}`;
+const COURSE_ID = accessWorld.courses.algorithms.id;
+const ATTEMPT_URL = `/api/v1/courses/${COURSE_ID}/attempts/${sashaSecond.id}`;
 
 const STUDENT_ATTEMPT = {
   id: sashaFirst.id,
@@ -54,7 +54,7 @@ const operations: Operation[] = [
   {
     name: 'load-attempt-summary',
     url: ATTEMPT_URL,
-    run: () => loadAttemptSummary(COURSE, sashaSecond.id),
+    run: () => loadAttemptSummary(COURSE_ID, sashaSecond.id),
     valid: {
       id: sashaSecond.id,
       attemptNumber: 2,
@@ -75,8 +75,8 @@ const operations: Operation[] = [
   },
   {
     name: 'load-student-attempts',
-    url: `/api/v1/courses/${COURSE}/tasks/1/students/${sasha.id}/attempts`,
-    run: () => loadStudentAttempts(COURSE, '1', sasha.id),
+    url: `/api/v1/courses/${COURSE_ID}/tasks/1/students/${sasha.id}/attempts`,
+    run: () => loadStudentAttempts(COURSE_ID, '1', sasha.id),
     valid: { attempts: [STUDENT_ATTEMPT] },
     invalid: [
       [
@@ -89,7 +89,7 @@ const operations: Operation[] = [
   {
     name: 'load-attempt-material',
     url: `${ATTEMPT_URL}/material`,
-    run: () => loadAttemptMaterial(COURSE, sashaSecond.id),
+    run: () => loadAttemptMaterial(COURSE_ID, sashaSecond.id),
     valid: { baselineAttemptNumber: 1, files: [CHANGED_FILE] },
     invalid: [
       ['baselineAttemptNumber', { baselineAttemptNumber: 0 }],
@@ -100,7 +100,7 @@ const operations: Operation[] = [
 ];
 
 async function material(attemptId: AttemptId) {
-  const result = await loadAttemptMaterial(COURSE, attemptId);
+  const result = await loadAttemptMaterial(COURSE_ID, attemptId);
   if (result.status !== 'found') throw new Error('Expected the material');
   return result.material;
 }
@@ -165,7 +165,9 @@ describe.each(operations)('TR-05: $name statuses', (operation) => {
 
 describe('Attempt projections from the canonical state', () => {
   test('the header names the Task, Student, number and times of the Attempt', async () => {
-    await expect(loadAttemptSummary(COURSE, sashaSecond.id)).resolves.toEqual({
+    await expect(
+      loadAttemptSummary(COURSE_ID, sashaSecond.id)
+    ).resolves.toEqual({
       status: 'found',
       summary: {
         id: sashaSecond.id,
@@ -211,7 +213,7 @@ describe('Attempt projections from the canonical state', () => {
       // Inspect the backend wire response, independently of DTO mapping.
       // eslint-disable-next-line no-restricted-globals
       const response = await fetch(
-        `http://localhost:3000/api/v1/courses/${COURSE}/${path}`
+        `http://localhost:3000/api/v1/courses/${COURSE_ID}/${path}`
       );
       expect(response.status).toBe(403);
       expect(await response.text()).toBe('');
