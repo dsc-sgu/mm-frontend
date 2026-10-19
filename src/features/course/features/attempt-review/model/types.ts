@@ -6,6 +6,7 @@ import type {
 } from '@/features/course/model/identity';
 import type { UserId } from '@/features/auth/model/identity';
 import type { Grade } from '@/features/course/model/grade';
+import type { ReviewRevision } from '@/features/course/features/review/model/revision';
 
 export type AttemptReviewMode = 'editable' | 'readonly';
 export type AttemptReviewDiffViewMode = 'unified' | 'split';
@@ -16,6 +17,33 @@ export type AttemptReviewIdentity = {
   courseId: CourseId;
   studentId: UserId;
   attemptId: AttemptId;
+};
+
+/** What the page header says about the Attempt. */
+export type AttemptSummary = {
+  id: AttemptId;
+  attemptNumber: AttemptNumber;
+  submittedAt: string;
+  deadlineAt: string;
+  task: {
+    title: string;
+    maxGrade: Grade;
+  };
+  student: {
+    id: UserId;
+    name: string;
+  };
+};
+
+/** One of the Student's Attempts at the Task, as the selector lists it. */
+export type StudentAttempt = {
+  id: AttemptId;
+  attemptNumber: AttemptNumber;
+  submittedAt: string;
+  review: { revision: ReviewRevision; grade: Grade } | null;
+  addedLines: number;
+  deletedLines: number;
+  commentCount: number;
 };
 
 export type AttemptReviewTask = {
@@ -59,6 +87,12 @@ export type AttemptReviewChangedFile = {
   deletedLines: number;
   contents: AttemptReviewFileContents;
   diff: FileDiffMetadata;
+};
+
+/** The Attempt's changed files against its baseline. */
+export type AttemptMaterial = {
+  baselineAttemptNumber: AttemptNumber | null;
+  changedFiles: AttemptReviewChangedFile[];
 };
 
 export type AttemptReviewLineCommentStatus =

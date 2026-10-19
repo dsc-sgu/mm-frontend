@@ -17,6 +17,11 @@ export function resolveStudentAccess(courseId: string, username: string) {
   return authorizeStudent(courseId, (user) => user.username === username);
 }
 
+/** The same authorization for a resource addressed by stable identities. */
+export function resolveStudentIdAccess(courseId: string, studentId: string) {
+  return authorizeStudent(courseId, (user) => user.id === studentId);
+}
+
 /** Resolves an Attempt of the Course visible to the signed-in User. */
 export function resolveAttemptAccess(courseId: string, attemptId: string) {
   const attempt = mockBackend.state.attempts.find(
