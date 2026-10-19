@@ -18,6 +18,7 @@ import type { UserId } from '@/features/auth/model/identity';
 import { GradeSchema } from '@/features/course/model/grade';
 import { loadStudentAttempts } from '@/features/course/features/attempt-review/api/load-student-attempts';
 import { loadReview } from './load-review';
+import { createReply, saveReview } from './mock';
 
 const { anna, boris, sasha, petya } = accessWorld.users;
 const [sashaFirst, sashaSecond, petyaFirst] = reviewWorld.attempts;
@@ -84,6 +85,77 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
     });
     expect(review).toMatchObject({ review: attempts[1].review });
   });
+
+  test('a save publishes the next revision, seen alike by Review and selector', async () => {
+    await saveReview({
+      courseId: COURSE,
+      attemptId: sashaFirst.id,
+      grade: v.parse(GradeSchema, 8.25),
+      overallFeedbackHtml: '<p>Исправлено</p>',
+      comments: [
+        {
+          id: 'comment-anna-main-2',
+          filePath: 'src/main.ts',
+          side: 'additions',
+          lineNumber: 2,
+          html: '<p>Сумму можно посчитать через <code>reduce</code>.</p>',
+        },
+      ],
+    });
+
+    const review = await loadReview(COURSE, sashaFirst.id);
+    const [, first] = await loadStudentAttempts(COURSE, '1', sasha.id);
+    expect(review).toMatchObject({
+      status: 'published',
+      review: {
+        revision: 3,
+        grade: v.parse(GradeSchema, 8.25),
+        publishedBy: { id: anna.id },
+        // The kept comment keeps its author; its reply is not in the save.
+        comments: [
+          {
+            id: 'comment-anna-main-2',
+            author: { id: anna.id },
+            replies: [{ author: { id: sasha.id } }],
+          },
+        ],
+      },
+    });
+    expect(first.review).toEqual({
+      revision: 3,
+      grade: v.parse(GradeSchema, 8.25),
+    });
+    expect(first.commentCount).toBe(1);
+  });
+
+  test.each([
+    { user: sasha, name: 'Саша' },
+    { user: anna, name: 'Анна' },
+  ])(
+    'a reply belongs to the signed-in $name after reloading',
+    async ({ user, name }) => {
+      signIn(user.id);
+
+      const created = await createReply({
+        courseId: COURSE,
+        attemptId: sashaFirst.id,
+        commentId: 'comment-boris-readme-3',
+        html: '<p>Добавлю.</p>',
+      });
+
+      expect(created.author).toEqual({ id: user.id, name });
+      const result = await loadReview(COURSE, sashaFirst.id);
+      if (result.status !== 'published') throw new Error('Expected a Review');
+      expect(
+        result.review.comments
+          .flatMap(({ replies }) => replies)
+          .find(({ id }) => id === created.id)
+      ).toMatchObject({
+        author: { id: user.id, name },
+        html: '<p>Добавлю.</p>',
+      });
+    }
+  );
 
   test("another Student's Review is not readable", async () => {
     signIn(petya.id);

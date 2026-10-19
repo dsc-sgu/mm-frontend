@@ -168,7 +168,7 @@ export function AttemptReviewCommentReplyItem({
           )}
         >
           <span className="font-medium text-foreground">
-            {reply.authorName}
+            {reply.author.name}
           </span>
           <span aria-hidden="true">·</span>
           <AttemptReviewCommentTimestamp
@@ -237,7 +237,7 @@ export function AttemptReviewCommentReplyItem({
       >
         <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
           <span className="font-medium text-foreground">
-            {reply.authorName}
+            {reply.author.name}
           </span>
           <span aria-hidden="true">·</span>
           <AttemptReviewCommentTimestamp

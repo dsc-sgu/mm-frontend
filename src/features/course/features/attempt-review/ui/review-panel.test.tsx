@@ -1,6 +1,5 @@
 import { act, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import * as v from 'valibot';
 import { beforeEach, expect, test } from 'vitest';
 import {
   accessWorld,
@@ -8,41 +7,25 @@ import {
   reviewWorld,
   SESSION_EXPIRES_AT,
 } from '@/app/mock-backend/state';
-import { GradeSchema } from '@/features/course/model/grade';
-import {
-  fetchAttemptReview,
-  saveAttemptReview,
-} from '@/features/course/features/attempt-review/api/mock';
+import { loadReview } from '@/features/course/features/review/api/load-review';
+import type { ReviewEdits } from '@/features/course/features/review/api/mutations';
+import type { ReviewResult } from '@/features/course/features/review/model/types';
 import { useAttemptReviewDraft } from '@/features/course/features/attempt-review/model/draft';
-import type {
-  AttemptReviewAggregate,
-  AttemptReviewIdentity,
-  SaveAttemptReviewInput,
-} from '@/features/course/features/attempt-review/model/types';
 import { AttemptReviewReviewPanel } from './review-panel';
 
 const [sashaFirst, , petyaFirst] = reviewWorld.attempts;
+const { maxGrade } = reviewWorld.task;
 
-function identity(
-  attempt: (typeof reviewWorld.attempts)[number]
-): AttemptReviewIdentity {
-  return {
-    courseId: attempt.courseId,
-    studentId: attempt.studentId,
-    attemptId: attempt.id,
-  };
+function review(attempt: (typeof reviewWorld.attempts)[number]) {
+  return loadReview(attempt.courseId, attempt.id);
 }
 
-async function existingReview(): Promise<AttemptReviewAggregate> {
-  return saveAttemptReview({
-    ...identity(sashaFirst),
-    grade: v.parse(GradeSchema, 7.5),
-    overallFeedbackHtml: '<p>Хорошо</p>',
-    lineComments: [],
-  });
+/** Sasha's Attempt #1 has Review revision 2 with Grade 7,5. */
+function existingReview(): Promise<ReviewResult> {
+  return review(sashaFirst);
 }
 
-function ReviewPanel({ review }: { review: AttemptReviewAggregate }) {
+function ReviewPanel({ review }: { review: ReviewResult }) {
   const {
     draft,
     gradeError,
@@ -50,11 +33,12 @@ function ReviewPanel({ review }: { review: AttemptReviewAggregate }) {
     hasChanges,
     savableGrade,
     setGrade,
-  } = useAttemptReviewDraft(review);
+  } = useAttemptReviewDraft(review, maxGrade);
 
   return (
     <AttemptReviewReviewPanel
       review={review}
+      maxGrade={maxGrade}
       draft={draft}
       mode="editable"
       gradeError={gradeError}
@@ -82,9 +66,11 @@ beforeEach(() => {
 });
 
 test('REV-03: an empty Grade invalidates the edits of a first Review', async () => {
-  const review = await fetchAttemptReview(identity(petyaFirst));
-  expect(review.current.grade).toBeNull();
-  const { result } = renderHook(() => useAttemptReviewDraft(review));
+  const firstReview = await review(petyaFirst);
+  expect(firstReview).toEqual({ status: 'none' });
+  const { result } = renderHook(() =>
+    useAttemptReviewDraft(firstReview, maxGrade)
+  );
   expect(result.current.gradeError).toBeNull();
 
   act(() => result.current.setOverallFeedbackHtml('<p>Отзыв</p>'));
@@ -153,11 +139,11 @@ test('the same Grade spelled differently is not a change', async () => {
 });
 
 test('REV-03: Save has no command to clear a Grade', () => {
-  const input: Omit<SaveAttemptReviewInput, keyof AttemptReviewIdentity> = {
+  const input: ReviewEdits = {
     // @ts-expect-error Save always carries a Grade.
     grade: null,
     overallFeedbackHtml: '',
-    lineComments: [],
+    comments: [],
   };
   expect(input.grade).toBeNull();
 });

@@ -100,7 +100,7 @@ function buildAttemptReviewCodeViewItemVersion(
         endSide: comment.endSide,
         endLineNumber: comment.endLineNumber,
         html: comment.html,
-        authorUsername: comment.authorUsername,
+        authorId: comment.author.id,
         createdAt: comment.createdAt,
         updatedAt: comment.updatedAt,
         status: comment.status,

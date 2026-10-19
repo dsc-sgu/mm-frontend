@@ -1,3 +1,4 @@
+import type { UserId } from '@/features/auth/model/identity';
 import { useState } from 'react';
 import { Check, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 
@@ -36,7 +37,7 @@ type AttemptReviewLineCommentCardProps = {
   canDelete: boolean;
   canEdit: boolean;
   canReply: boolean;
-  currentUsername?: string;
+  currentUserId?: UserId;
   onSubmit: (html: string) => void;
   onCancel: () => void;
   onEdit: () => void;
@@ -60,7 +61,7 @@ export function AttemptReviewLineCommentCard({
   canDelete,
   canEdit,
   canReply,
-  currentUsername,
+  currentUserId,
   onSubmit,
   onCancel,
   onEdit,
@@ -193,7 +194,7 @@ export function AttemptReviewLineCommentCard({
             )}
           >
             <span className="truncate font-medium text-foreground">
-              {comment.authorName}
+              {comment.author.name}
             </span>
             {commentStatus === 'saved' ? (
               <>
@@ -333,7 +334,7 @@ export function AttemptReviewLineCommentCard({
         <AttemptReviewCommentReplies
           replies={comment.replies ?? []}
           canReply={canReply && !isEditableComment && !isPendingComment}
-          currentUsername={isPendingComment ? undefined : currentUsername}
+          currentUserId={isPendingComment ? undefined : currentUserId}
           isReplying={isReplying}
           replyHtml={replyHtml}
           isReplySubmitDisabled={isReplySubmitDisabled}
