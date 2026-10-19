@@ -181,7 +181,7 @@ _По-русски_: идентичность
 _Avoid_: идентификатор, which names the ID value rather than the sameness it guarantees
 
 **Locator**:
-A mutable, human-readable address that resolves to an Identity, such as a Course slug, a username or an attempt number.
+A human-readable address that resolves to an Identity, such as a Course slug, or a username with an attempt number. Unlike an Identity, a locator can change and may later resolve to a different entity.
 _По-русски_: локатор
 _Avoid_: using a locator as Identity
 
