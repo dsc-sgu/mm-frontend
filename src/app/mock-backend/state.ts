@@ -1,5 +1,6 @@
 import * as v from 'valibot';
 import { seededCourses } from '@/app/mock-backend/courses';
+import type { FullName } from '@/features/auth/model/full-name';
 import {
   UserIdSchema,
   UsernameSchema,
@@ -123,11 +124,16 @@ export type MockBackendState = {
   nextUserNumber: number;
 };
 
-/** The name a User is shown under to other participants. */
-export function mockUserName(user: MockUser): string {
-  return [user.firstName, user.lastName, user.patronymic]
-    .filter(Boolean)
-    .join(' ');
+/** The parts of a User's name that other participants see. */
+export function mockUserName({
+  lastName,
+  firstName,
+  patronymic,
+}: MockUser): FullName {
+  // Like the backend `UserSummary`, omits the patronymic a User has not got.
+  return patronymic
+    ? { lastName, firstName, patronymic }
+    : { lastName, firstName };
 }
 
 export const SESSION_EXPIRES_AT = '2099-12-31T23:59:59.999Z';

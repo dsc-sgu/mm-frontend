@@ -10,6 +10,7 @@ import {
   type MockReview,
   type MockReviewComment,
 } from '@/app/mock-backend/state';
+import { formatFullName } from '@/features/auth/model/full-name';
 import type { UserId } from '@/features/auth/model/identity';
 import { gradeToNumber, type Grade } from '@/features/course/model/grade';
 import type { AttemptId, CourseId } from '@/features/course/model/identity';
@@ -71,7 +72,7 @@ function toReply({
 function author(userId: UserId): ReviewAuthor {
   const user = mockBackend.state.users.find(({ id }) => id === userId);
   if (!user) throw new Error(`The mock backend has no User ${userId}`);
-  return { id: user.id, name: mockUserName(user) };
+  return { id: user.id, ...mockUserName(user) };
 }
 
 function findReview(attemptId: AttemptId): MockReview | undefined {
@@ -161,7 +162,7 @@ export async function saveReview(input: SaveReviewInput): Promise<void> {
       attemptNumber: attempt.attemptNumber,
       grade: input.grade,
       gradedAt: now,
-      gradedBy: author(viewerId).name,
+      gradedBy: formatFullName(author(viewerId)),
     });
   }
 }

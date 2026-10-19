@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 
+import { formatFullName } from '@/features/auth/model/full-name';
 import { Button } from '@/shadcn/components/ui/button';
 import { Kbd, KbdGroup } from '@/shadcn/components/ui/kbd';
 import { getShortcutLabels } from '@/features/keyboard/shortcut';
@@ -168,7 +169,7 @@ export function AttemptReviewCommentReplyItem({
           )}
         >
           <span className="font-medium text-foreground">
-            {reply.author.name}
+            {formatFullName(reply.author)}
           </span>
           <span aria-hidden="true">·</span>
           <AttemptReviewCommentTimestamp
@@ -237,7 +238,7 @@ export function AttemptReviewCommentReplyItem({
       >
         <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
           <span className="font-medium text-foreground">
-            {reply.author.name}
+            {formatFullName(reply.author)}
           </span>
           <span aria-hidden="true">·</span>
           <AttemptReviewCommentTimestamp

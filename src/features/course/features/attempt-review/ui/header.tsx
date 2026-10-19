@@ -1,5 +1,6 @@
 import { MessageSquareText, PanelLeftOpen } from 'lucide-react';
 
+import { formatFullName } from '@/features/auth/model/full-name';
 import { Button } from '@/shadcn/components/ui/button';
 import { AttemptReviewAttemptSelect } from './attempt-select';
 import { formatAttemptReviewDateTime } from '@/features/course/features/attempt-review/model/date-format';
@@ -66,7 +67,7 @@ export function AttemptReviewHeader({
               'text-muted-foreground'
             )}
           >
-            <span>{summary.student.name}</span>
+            <span>{formatFullName(summary.student)}</span>
             <span>Максимум: {formatGrade(summary.task.maxGrade)}</span>
             <span>
               Отправлено {formatAttemptReviewDateTime(summary.submittedAt)}

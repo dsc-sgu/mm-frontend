@@ -189,12 +189,9 @@ function AttemptReviewPageLoaded({
       return undefined;
     }
 
-    const { userId, firstName, lastName, patronymic } = sessionData.session;
+    const { userId, lastName, firstName, patronymic } = sessionData.session;
 
-    return {
-      id: userId,
-      name: [firstName, lastName, patronymic].filter(Boolean).join(' '),
-    };
+    return { id: userId, lastName, firstName, patronymic };
   }, [sessionData]);
   const {
     draft,

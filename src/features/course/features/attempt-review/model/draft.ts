@@ -138,7 +138,6 @@ function areLineCommentsEqual(
       comment.endLineNumber === other.endLineNumber &&
       comment.html === other.html &&
       comment.author.id === other.author.id &&
-      comment.author.name === other.author.name &&
       comment.createdAt === other.createdAt &&
       comment.updatedAt === other.updatedAt &&
       getLineCommentStatus(comment) === getLineCommentStatus(other) &&
@@ -163,7 +162,6 @@ function areRepliesEqual(
       reply.id === other.id &&
       reply.html === other.html &&
       reply.author.id === other.author.id &&
-      reply.author.name === other.author.name &&
       reply.createdAt === other.createdAt &&
       reply.updatedAt === other.updatedAt
     );

@@ -1,6 +1,7 @@
 import { Check, RotateCcw, Save } from 'lucide-react';
 import { useId } from 'react';
 
+import { formatFullName } from '@/features/auth/model/full-name';
 import {
   formatGrade,
   type Grade,
@@ -122,7 +123,7 @@ export function AttemptReviewReviewPanel({
         {published ? (
           <p className="text-sm text-muted-foreground">
             Оценено {formatAttemptReviewDateTime(published.publishedAt)} ·{' '}
-            {published.publishedBy.name}
+            {formatFullName(published.publishedBy)}
           </p>
         ) : (
           <p
