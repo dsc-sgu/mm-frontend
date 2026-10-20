@@ -8,7 +8,7 @@ import {
   type GradeInputError,
 } from '@/features/course/model/grade';
 import {
-  publishedReview,
+  unwrapPublishedReview,
   type ReviewResult,
 } from '@/features/course/features/review/model/types';
 import { GradeField } from '@/features/course/ui/grade-field';
@@ -60,7 +60,7 @@ export function AttemptReviewReviewPanel({
   onSave,
 }: AttemptReviewReviewPanelProps) {
   const saveBlockedReasonId = useId();
-  const published = publishedReview(review);
+  const published = unwrapPublishedReview(review);
 
   return (
     <section
