@@ -139,6 +139,9 @@ export function TaskReferenceCard({
             {task.maxGrade !== null ? (
               <span>Максимум: {task.maxGrade}</span>
             ) : null}
+            {task.maxAttempts !== null ? (
+              <span>Попыток: {task.maxAttempts}</span>
+            ) : null}
           </div>
         </div>
       </button>

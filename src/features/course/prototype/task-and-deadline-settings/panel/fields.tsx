@@ -18,7 +18,10 @@ import {
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 import { StatementEditor } from '@/features/course/prototype/task-and-deadline-settings/panel/statement/editor';
-import type { TaskGroup } from '@/features/course/prototype/task-and-deadline-settings/fixture';
+import {
+  usedAttempts,
+  type TaskGroup,
+} from '@/features/course/prototype/task-and-deadline-settings/fixture';
 import { overrideCounts } from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import {
   useOpenVariant,
@@ -31,6 +34,7 @@ import {
 } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { formatMoment } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
+import { plural } from '@/features/course/prototype/task-and-deadline-settings/ui/shift/model';
 import {
   PropertyRow,
   VALUE_INDENT,
@@ -349,6 +353,66 @@ export function GradeRow({ session, readOnly, locked, errors }: FieldProps) {
           )}
         />
       )}
+    </PropertyRow>
+  );
+}
+
+function AttemptsNote({
+  taskId,
+  maxAttempts,
+}: {
+  taskId: string;
+  maxAttempts: number | null;
+}) {
+  if (maxAttempts === null || !Number.isInteger(maxAttempts)) {
+    return null;
+  }
+
+  const exhausted = usedAttempts(taskId).filter(
+    (used) => used >= maxAttempts
+  ).length;
+
+  return (
+    <p className="text-xs text-muted-foreground">
+      {exhausted > 0
+        ? `Попытки кончились у ${exhausted} ${plural(exhausted, 'студента', 'студентов', 'студентов')}: сданное останется, новые отправки не примутся`
+        : 'Отправка, где ни один файл не подошёл под маски, попыткой не считается'}
+    </p>
+  );
+}
+
+export function AttemptsRow({ session, readOnly, errors }: FieldProps) {
+  return (
+    <PropertyRow
+      label="Попытки"
+      error={errors.maxAttempts}
+      note={
+        <AttemptsNote
+          taskId={session.taskId}
+          maxAttempts={session.form.maxAttempts}
+        />
+      }
+    >
+      <input
+        type="number"
+        min={1}
+        value={session.form.maxAttempts ?? ''}
+        disabled={readOnly}
+        placeholder="Без ограничений"
+        aria-label="Максимум попыток"
+        aria-invalid={Boolean(errors.maxAttempts)}
+        onChange={(event) =>
+          session.setField(
+            'maxAttempts',
+            event.target.value === '' ? null : Number(event.target.value)
+          )
+        }
+        className={cn(
+          GHOST_INPUT,
+          'w-40 [appearance:textfield] tabular-nums',
+          '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+        )}
+      />
     </PropertyRow>
   );
 }

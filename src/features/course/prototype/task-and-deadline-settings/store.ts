@@ -581,6 +581,7 @@ export const useSandbox = create<Sandbox>()((set, get) => {
             key: '',
             groupId,
             maxGrade: source?.maxGrade ?? null,
+            maxAttempts: source?.maxAttempts ?? null,
             statement: '',
             annotation: '',
             attachments: [],
