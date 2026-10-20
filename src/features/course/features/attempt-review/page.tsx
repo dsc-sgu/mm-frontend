@@ -30,7 +30,7 @@ import {
   useSaveReviewMutation,
 } from '@/features/course/features/review/api/mutations';
 import {
-  publishedReview,
+  unwrapPublishedReview,
   type ReviewResult,
 } from '@/features/course/features/review/model/types';
 import { isResourceDenial } from '@/features/course/features/access/api/resource-denial';
@@ -247,7 +247,7 @@ function AttemptReviewPageLoaded({
     (sum, file) => sum + file.deletedLines,
     0
   );
-  const published = publishedReview(review);
+  const published = unwrapPublishedReview(review);
   const currentAttempt: StudentAttempt = attempts.find(
     ({ id }) => id === attemptId
   ) ?? {

@@ -9,7 +9,7 @@ import {
   type GradeInputResult,
 } from '@/features/course/model/grade';
 import {
-  publishedReview,
+  unwrapPublishedReview,
   type ReviewResult,
 } from '@/features/course/features/review/model/types';
 import { getLineCommentStatus } from './comment-lifecycle';
@@ -31,7 +31,7 @@ export function useAttemptReviewDraft(review: ReviewResult, maxGrade: Grade) {
   // Compared as Grades: `7.50` over a saved 7,5 is not a change.
   const gradeChanged = !gradeInputMatches(
     draft.grade,
-    publishedReview(review)?.grade ?? null
+    unwrapPublishedReview(review)?.grade ?? null
   );
   const hasChanges =
     gradeChanged || !areAttemptReviewDraftsEqual(draft, savedDraft);

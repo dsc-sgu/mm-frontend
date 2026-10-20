@@ -45,7 +45,7 @@ export type ReviewResult =
   | { status: 'published'; review: Review }
   | { status: 'none' };
 
-export function publishedReview(result: ReviewResult): Review | null {
+export function unwrapPublishedReview(result: ReviewResult): Review | null {
   return result.status === 'published' ? result.review : null;
 }
 
