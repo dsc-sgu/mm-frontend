@@ -34,6 +34,8 @@ export type TaskProps = {
   key: string;
   groupId: string;
   maxGrade: number | null;
+  /** How many Attempts a Student may submit; null means no limit. */
+  maxAttempts: number | null;
   statement: string;
   annotation: string;
   attachments: Attachment[];
@@ -234,7 +236,8 @@ const DOCKER_STATEMENT = `Соберите Docker-образ для веб-пр�
 
 Вопросы задавайте в чате курса до 24 октября. После этой даты консультаций по лабораторной не будет.`;
 
-type TaskSeed = Omit<Task, 'version' | 'groupId'> & {
+type TaskSeed = Omit<Task, 'version' | 'groupId' | 'maxAttempts'> & {
+  maxAttempts?: number | null;
   deadline: Schedule['tasks'][string]['deadline'];
   openingTime: number | null;
 };
@@ -245,6 +248,7 @@ const LAB_TASKS: TaskSeed[] = [
     title: 'Git: первый репозиторий',
     key: 'git-basics',
     maxGrade: 10,
+    maxAttempts: 3,
     statement:
       'Создайте репозиторий курса, настройте имя и почту в Git и сделайте три осмысленных коммита. Сдайте ссылку на последний коммит.',
     annotation: 'Нужен аккаунт на платформе курса.',
@@ -284,6 +288,7 @@ const LAB_TASKS: TaskSeed[] = [
     title: 'Docker-образ приложения',
     key: 'docker',
     maxGrade: 10,
+    maxAttempts: 5,
     statement: DOCKER_STATEMENT,
     annotation: 'Понадобится Docker Desktop или Podman.',
     attachments: [
@@ -483,6 +488,7 @@ export const TASKS: Record<string, Task> = Object.fromEntries(
       key: seed.key,
       groupId: seed.groupId,
       maxGrade: seed.maxGrade,
+      maxAttempts: seed.maxAttempts ?? null,
       statement: seed.statement,
       annotation: seed.annotation,
       attachments: seed.attachments,
@@ -624,6 +630,17 @@ export const ATTEMPTS: Attempt[] = SEEDS.flatMap((task, taskIndex) => {
     ];
   });
 });
+
+/**
+ * Attempts each Student has used on a Task, one number per Student who
+ * submitted. `ATTEMPTS` keeps only the last Attempt, so the count is made up
+ * here: from one to three.
+ */
+export function usedAttempts(taskId: string): number[] {
+  return ATTEMPTS.filter((attempt) => attempt.taskId === taskId).map(
+    (_attempt, index) => 1 + Math.floor(pseudoRandom(index * 31 + 5) * 3)
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Scenario world for «Применение правок Task» (#181)

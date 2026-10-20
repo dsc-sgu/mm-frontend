@@ -18,6 +18,7 @@ import {
   AttachmentsBlock,
   Block,
   GradeRow,
+  AttemptsRow,
   GroupRow,
   KeyRow,
   OverridesBlock,
@@ -47,6 +48,16 @@ function maxGradeError(maxGrade: number | null): string | undefined {
   return Number.isInteger(maxGrade) && maxGrade > 0
     ? undefined
     : 'Целое число больше нуля';
+}
+
+function maxAttemptsError(maxAttempts: number | null): string | undefined {
+  if (maxAttempts === null) {
+    return undefined;
+  }
+
+  return Number.isInteger(maxAttempts) && maxAttempts > 0
+    ? undefined
+    : 'Целое число больше нуля или пусто, если без ограничений';
 }
 
 function panelStatus({
@@ -129,6 +140,7 @@ export function TaskPanel({
     title: form.title.trim() ? undefined : 'Введите название',
     key: validateKey(form.key, takenKeys) ?? undefined,
     maxGrade: maxGradeError(form.maxGrade),
+    maxAttempts: maxAttemptsError(form.maxAttempts),
   };
   const hasErrors = Object.values(allErrors).some(Boolean);
   const errors = Object.fromEntries(
@@ -181,6 +193,7 @@ export function TaskPanel({
         <KeyRow {...fieldProps} />
         <GroupRow {...fieldProps} />
         <GradeRow {...fieldProps} />
+        <AttemptsRow {...fieldProps} />
         <ScheduleRows session={session} courseSlug={courseSlug} />
         <PatternsRow {...fieldProps} />
         <AnnotationRow {...fieldProps} />
