@@ -33,6 +33,11 @@ import { VirtualizedAttemptsList } from './ui/virtualized-list';
 import type { CourseAttemptsFilters } from './model/types';
 import type { CourseId } from '@/features/course/model/identity';
 import { cn } from '@/shadcn/lib/utils';
+// PROTOTYPE (#121): throwaway quick-grading and filter bar prototype, see the
+// prototype folder. It shows while #121 is on in the prototype bar.
+import { usePrototypeActive } from '@/app/prototypes/active';
+import { QuickGradingFeedbackPrototype } from './prototype/quick-grading-feedback';
+import { BrowsePrototype } from './prototype/quick-grading-feedback/browse';
 
 type CourseAttemptsPageProps = {
   courseId: CourseId;
@@ -47,6 +52,7 @@ export function CourseAttemptsPage({
   appliedFilters,
   onApplyFilters,
 }: CourseAttemptsPageProps) {
+  const prototype = usePrototypeActive('quick-grading');
   const filters = useCourseAttemptsFilters({ appliedFilters, onApplyFilters });
   const quickGradingState = useCourseAttemptsQuickGradingState();
   const [filtersDrawerOpen, setFiltersDrawerOpen] = useState(false);
@@ -86,6 +92,37 @@ export function CourseAttemptsPage({
   });
   const filterActionsDisabledReason =
     getCourseAttemptsFilterActionsDisabledReason(pageMode);
+
+  // PROTOTYPE (#121): quick grading and the top-bar filters of the prototype.
+  if (prototype && pageMode === 'quick-grading') {
+    return (
+      <QuickGradingFeedbackPrototype
+        attempts={attempts}
+        filters={filters.normalizedAppliedFilters}
+        tasks={tasks}
+        students={students}
+        onExit={grading.exitQuickGrading}
+      />
+    );
+  }
+
+  if (prototype) {
+    return (
+      <BrowsePrototype
+        courseSlug={courseSlug}
+        attempts={attempts}
+        loading={attemptsQuery.isPending}
+        tasks={tasks}
+        students={students}
+        applied={filters.normalizedAppliedFilters}
+        draft={filters.draftFilters}
+        onDraftChange={filters.setDraftFilters}
+        onApplyDraft={filters.applyDraftFilters}
+        onReset={filters.resetFilters}
+        onStartQuickGrading={grading.startQuickGrading}
+      />
+    );
+  }
 
   const filtersPanel = {
     appliedFilters: filters.normalizedAppliedFilters,

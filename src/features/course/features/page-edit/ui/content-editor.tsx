@@ -197,8 +197,10 @@ function CoursePageSortableEditor({
 
 function CoursePagePlateEditor({
   contentEditorReset,
+  editorId,
 }: {
   contentEditorReset: CoursePageContentEditorReset;
+  editorId: string;
 }) {
   const setContentFromEditor = useCoursePageEditStore(
     (state) => state.setContentFromEditor
@@ -212,7 +214,7 @@ function CoursePagePlateEditor({
   );
   const editor = usePlateEditor(
     {
-      id: `course-page-content-${contentEditorReset.revision}`,
+      id: `${editorId}-${contentEditorReset.revision}`,
       plugins: coursePagePlatePlugins,
       value: initialValue,
     },
@@ -249,7 +251,13 @@ function CoursePagePlateEditor({
   );
 }
 
-function CoursePageContentEditorBase() {
+// PROTOTYPE (#181): `editorId` keeps the Plate id unique when the Task panel
+// runs this same editor next to the page editor.
+function CoursePageContentEditorBase({
+  editorId = 'course-page-content',
+}: {
+  editorId?: string;
+}) {
   const contentEditorReset = useCoursePageEditStore(
     (state) => state.contentEditorReset
   );
@@ -263,6 +271,7 @@ function CoursePageContentEditorBase() {
     <CoursePagePlateEditor
       key={contentEditorReset.revision}
       contentEditorReset={contentEditorReset}
+      editorId={editorId}
     />
   );
 }

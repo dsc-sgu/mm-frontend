@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:demo": "tsc -b && vite build --mode demo",
     "lint": "eslint .",
     "test": "vitest run",
     "test:browser": "playwright test",
@@ -25,6 +26,7 @@
     "@platejs/indent": "^53.0.0",
     "@platejs/link": "^53.3.5",
     "@platejs/list": "^53.3.13",
+    "@platejs/markdown": "^53",
     "@platejs/selection": "^53.1.6",
     "@platejs/toggle": "^53.0.0",
     "@shikijs/themes": "^4.0.2",
@@ -49,6 +51,7 @@
     "platejs": "^53.3.15",
     "radix-ui": "~1.6.7",
     "react": "^19.2.0",
+    "react-day-picker": "^10.0.2",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.90.0",
     "shiki": "^4.0.2",

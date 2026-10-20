@@ -11,6 +11,8 @@ import {
   CourseSlugSchema,
   type CourseId,
 } from '@/features/course/model/identity';
+// PROTOTYPE (#181): the sandbox Course Page with 14 Task References.
+import { buildPrototypeCoursePage } from '@/features/course/prototype/task-and-deadline-settings/fixture';
 
 type CoursePageSummary = Omit<
   CoursePage,
@@ -51,11 +53,18 @@ function createCoursePage(course: MockCourse): CoursePage {
     iconName: course.iconName,
     teachers: course.teachers,
   };
+  const description =
+    COURSE_DESCRIPTIONS[course.slug] ??
+    'Материалы курса, задания и полезные ссылки собраны в одном месте.';
+
+  // PROTOTYPE (#181): «Современные информационные технологии» is the sandbox.
+  if (course.slug === 'modern-information-technologies') {
+    return { ...summary, description, ...buildPrototypeCoursePage() };
+  }
+
   return {
     ...summary,
-    description:
-      COURSE_DESCRIPTIONS[course.slug] ??
-      'Материалы курса, задания и полезные ссылки собраны в одном месте.',
+    description,
     resources: buildCourseResources(summary),
     content: buildCourseContent(summary),
   };
