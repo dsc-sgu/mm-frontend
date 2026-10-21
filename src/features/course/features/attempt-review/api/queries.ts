@@ -3,6 +3,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { courseKeys } from '@/features/course/api/queries';
 import type { UserId } from '@/features/auth/model/identity';
 import type { AttemptId, CourseId } from '@/features/course/model/identity';
+import { reviewOptions } from '@/features/course/features/review/api/queries';
 import { loadAttemptMaterial } from './load-material';
 import { loadStudentAttempts } from './load-student-attempts';
 import { loadAttemptSummary } from './load-summary';
@@ -87,4 +88,28 @@ export function studentAttemptsOptions(
       loadStudentAttempts(courseId, taskId, studentId, signal),
     staleTime: 30 * 1000,
   });
+}
+
+export type AttemptPageInput = {
+  viewerId: UserId;
+  courseId: CourseId;
+  taskId: string;
+  studentId: UserId;
+  attemptId: AttemptId;
+};
+
+/** Every read of the Attempt page; the page and its prefetch share it. */
+export function attemptPageQueries({
+  viewerId,
+  courseId,
+  taskId,
+  studentId,
+  attemptId,
+}: AttemptPageInput) {
+  return {
+    summary: attemptSummaryOptions(viewerId, courseId, attemptId),
+    review: reviewOptions(viewerId, courseId, attemptId),
+    material: attemptMaterialOptions(viewerId, courseId, attemptId),
+    attempts: studentAttemptsOptions(viewerId, courseId, taskId, studentId),
+  };
 }

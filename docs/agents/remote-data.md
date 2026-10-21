@@ -100,7 +100,7 @@ Generic `Result<T, E>` МОЖЕТ использоваться вне remote-dat
 5. `loader` не выделяется в ленивый чанк, поэтому всё, что импортируют запущенные им операции, попадает в основной bundle. Тяжёлую зависимость, нужную операции только для преобразования ответа, СЛЕДУЕТ импортировать динамически внутри операции.
 6. Контракт route ДОЛЖЕН проверять, что `router.preloadRoute` к маршруту запускает все чтения страницы, не отрисовывая её.
 
-Эталон — страница попытки: `attemptPageQueries` и `prefetchAttemptPage` в `src/features/course/features/attempt-review/api/prefetch.ts`, `loader` в `src/routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/route.tsx`, динамический импорт парсера diff в `load-material.ts`, контракт в `attempt-review/page.test.tsx`.
+Эталон — страница попытки: `attemptPageQueries` в `src/features/course/features/attempt-review/api/queries.ts` рядом с query options отдельных чтений, `prefetchAttemptPage` в `api/prefetch.ts`, `loader` в `src/routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/route.tsx`, динамический импорт парсера diff в `load-material.ts`, контракт в `attempt-review/page.test.tsx`.
 
 ```ts
 loader({ context }) {
