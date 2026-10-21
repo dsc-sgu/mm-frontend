@@ -8,6 +8,16 @@ import { loadAttemptMaterial } from './load-material';
 import { loadStudentAttempts } from './load-student-attempts';
 import { loadAttemptSummary } from './load-summary';
 
+/**
+ * ['course', courseId, 'attempt-review']
+ * ├── 'attempt', attemptId
+ * │   ├── 'summary', viewerId
+ * │   └── 'material', viewerId
+ * └── 'student', taskId, studentId
+ *     └── 'attempts', viewerId
+ *
+ * `viewerId` comes last, so a prefix without it invalidates every viewer.
+ */
 export const attemptReviewKeys = {
   course: (courseId: CourseId) =>
     [...courseKeys.byId(courseId), 'attempt-review'] as const,
