@@ -1,36 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import type { UserId } from '@/features/auth/model/identity';
-import type { AttemptId, CourseId } from '@/features/course/model/identity';
-import { reviewOptions } from '@/features/course/features/review/api/queries';
-import {
-  attemptMaterialOptions,
-  attemptSummaryOptions,
-  studentAttemptsOptions,
-} from './queries';
-
-export type AttemptPageInput = {
-  viewerId: UserId;
-  courseId: CourseId;
-  taskId: string;
-  studentId: UserId;
-  attemptId: AttemptId;
-};
-
-/** Every read of the Attempt page; the page and its prefetch share it. */
-export function attemptPageQueries({
-  viewerId,
-  courseId,
-  taskId,
-  studentId,
-  attemptId,
-}: AttemptPageInput) {
-  return {
-    summary: attemptSummaryOptions(viewerId, courseId, attemptId),
-    review: reviewOptions(viewerId, courseId, attemptId),
-    material: attemptMaterialOptions(viewerId, courseId, attemptId),
-    attempts: studentAttemptsOptions(viewerId, courseId, taskId, studentId),
-  };
-}
+import { attemptPageQueries, type AttemptPageInput } from './queries';
 
 /**
  * Starts every read of the Attempt page from the route loader, so the reads

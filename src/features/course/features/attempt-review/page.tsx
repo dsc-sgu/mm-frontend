@@ -23,7 +23,7 @@ import { AttemptReviewHeader } from './ui/header';
 import { AttemptReviewMobileDrawer } from './ui/mobile-drawer';
 import { AttemptReviewReviewPanel } from './ui/review-panel';
 import { AttemptReviewReviewPanelToggle } from './ui/review-panel-toggle';
-import { attemptPageQueries, type AttemptPageInput } from './api/prefetch';
+import { attemptPageQueries, type AttemptPageInput } from './api/queries';
 import {
   useReplyMutations,
   useSaveReviewMutation,
