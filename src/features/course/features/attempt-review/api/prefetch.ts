@@ -1,14 +1,20 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { UserId } from '@/features/auth/model/identity';
+import type { AttemptId, CourseId } from '@/features/course/model/identity';
 import { reviewOptions } from '@/features/course/features/review/api/queries';
-import type { AttemptReviewIdentity } from '@/features/course/features/attempt-review/model/types';
 import {
   attemptMaterialOptions,
   attemptSummaryOptions,
   studentAttemptsOptions,
 } from './queries';
 
-export type AttemptPageInput = { viewerId: UserId } & AttemptReviewIdentity;
+export type AttemptPageInput = {
+  viewerId: UserId;
+  courseId: CourseId;
+  taskId: string;
+  studentId: UserId;
+  attemptId: AttemptId;
+};
 
 /** Every read of the Attempt page; the page and its prefetch share it. */
 export function attemptPageQueries({

@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 
 import { sessionOptions } from '@/features/auth/api/queries';
 import type { CourseRole } from '@/features/course/features/access/model/types';
-import type { UserId } from '@/features/auth/model/identity';
 import { canReplyToAttempt } from './model/permissions';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
@@ -24,7 +23,7 @@ import { AttemptReviewHeader } from './ui/header';
 import { AttemptReviewMobileDrawer } from './ui/mobile-drawer';
 import { AttemptReviewReviewPanel } from './ui/review-panel';
 import { AttemptReviewReviewPanelToggle } from './ui/review-panel-toggle';
-import { attemptPageQueries } from './api/prefetch';
+import { attemptPageQueries, type AttemptPageInput } from './api/prefetch';
 import {
   useReplyMutations,
   useSaveReviewMutation,
@@ -43,7 +42,6 @@ import type {
   AttemptReviewDiffViewMode,
   AttemptReviewLineCommentReply,
   AttemptReviewMode,
-  AttemptReviewIdentity,
   AttemptSummary,
   StudentAttempt,
 } from './model/types';
@@ -51,8 +49,7 @@ import type {
 type AttemptReviewPageProps = {
   mode: AttemptReviewMode;
   courseRole: CourseRole;
-  viewerId: UserId;
-} & AttemptReviewIdentity;
+} & AttemptPageInput;
 
 type AttemptReviewPageLoadedProps = {
   summary: AttemptSummary;
