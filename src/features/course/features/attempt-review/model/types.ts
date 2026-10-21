@@ -2,7 +2,6 @@ import type { FileDiffMetadata } from '@pierre/diffs';
 import type {
   AttemptId,
   AttemptNumber,
-  CourseId,
 } from '@/features/course/model/identity';
 import type { FullName } from '@/features/auth/model/full-name';
 import type { UserId } from '@/features/auth/model/identity';
@@ -19,13 +18,6 @@ export type AttemptReviewMode = 'editable' | 'readonly';
 export type AttemptReviewDiffViewMode = 'unified' | 'split';
 export type AttemptReviewFileStatus = 'added' | 'deleted' | 'changed';
 export type AttemptReviewCommentSide = ReviewCommentSide;
-
-export type AttemptReviewIdentity = {
-  courseId: CourseId;
-  taskId: string;
-  studentId: UserId;
-  attemptId: AttemptId;
-};
 
 /** What the page header says about the Attempt. */
 export type AttemptSummary = {
