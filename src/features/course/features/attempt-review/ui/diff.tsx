@@ -34,10 +34,12 @@ import {
 import { useHtmlThemeType } from '@/features/course/features/attempt-review/hooks/use-html-theme';
 import { AttemptReviewLineCommentCard } from './comments/line-card';
 import type {
+  ReviewAuthor,
+  ReviewReply,
+} from '@/features/course/features/review/model/types';
+import type {
   AttemptReviewChangedFile,
-  AttemptReviewCommentAuthor,
   AttemptReviewLineComment,
-  AttemptReviewLineCommentReply,
   AttemptReviewMode,
 } from '@/features/course/features/attempt-review/model/types';
 import { cn } from '@/shadcn/lib/utils';
@@ -47,21 +49,18 @@ type AttemptReviewDiffProps = {
   comments: AttemptReviewLineComment[];
   savedComments?: AttemptReviewLineComment[];
   mode: AttemptReviewMode;
-  currentReviewer?: AttemptReviewCommentAuthor;
+  currentReviewer?: ReviewAuthor;
   canReplyToComments?: boolean;
   loading?: boolean;
   viewMode?: 'unified' | 'split';
   className?: string;
   onCommentsChange?: (comments: AttemptReviewLineComment[]) => void;
-  onReplySubmit?: (
-    commentId: string,
-    html: string
-  ) => Promise<AttemptReviewLineCommentReply>;
+  onReplySubmit?: (commentId: string, html: string) => Promise<ReviewReply>;
   onReplyUpdate?: (
     commentId: string,
     replyId: string,
     html: string
-  ) => Promise<AttemptReviewLineCommentReply>;
+  ) => Promise<ReviewReply>;
   onReplyDelete?: (commentId: string, replyId: string) => Promise<void>;
   onViewerChange?: (viewer: AttemptReviewCodeViewHandle | null) => void;
 };
