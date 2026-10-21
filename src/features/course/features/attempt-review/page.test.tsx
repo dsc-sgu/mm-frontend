@@ -12,6 +12,7 @@ import {
   SESSION_EXPIRES_AT,
 } from '@/app/mock-backend/state';
 import { renderRoutes } from '@/app/testing/render-routes';
+import { attemptPageQueries } from '@/features/course/features/attempt-review/api/queries';
 import { reviewKeys } from '@/features/course/features/review/api/queries';
 
 const [sashaFirst, sashaSecond] = reviewWorld.attempts;
@@ -167,7 +168,7 @@ test('the route starts every page read before the page mounts', async () => {
   };
   server.events.on('request:start', onRequest);
   try {
-    const { router } = renderRoutes([], '/courses/algorithms', {
+    const { queryClient, router } = renderRoutes([], '/courses/algorithms', {
       appRoutes: true,
     });
     await screen.findByRole('link', { name: 'Попытки' });
@@ -194,6 +195,21 @@ test('the route starts every page read before the page mounts', async () => {
         ])
       )
     );
+    // Taken from the page's own list, so a read added to the page without
+    // its prefetch fails here.
+    const pageQueries = attemptPageQueries({
+      viewerId: anna.id,
+      courseId: COURSE_ID,
+      taskId: sashaFirst.taskId,
+      studentId: sashaFirst.studentId,
+      attemptId: sashaFirst.id,
+    });
+    for (const { queryKey } of Object.values(pageQueries)) {
+      expect(
+        queryClient.getQueryCache().find({ queryKey, exact: true }),
+        JSON.stringify(queryKey)
+      ).toBeDefined();
+    }
     expect(
       screen.queryByRole('heading', { name: /Попытка #\d: Сортировки/ })
     ).toBeNull();
