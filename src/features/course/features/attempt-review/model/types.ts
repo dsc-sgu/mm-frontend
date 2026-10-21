@@ -8,16 +8,13 @@ import type { UserId } from '@/features/auth/model/identity';
 import type { Grade } from '@/features/course/model/grade';
 import type { ReviewRevision } from '@/features/course/features/review/model/revision';
 import type {
-  ReviewAuthor,
   ReviewComment,
-  ReviewCommentSide,
   ReviewReply,
 } from '@/features/course/features/review/model/types';
 
 export type AttemptReviewMode = 'editable' | 'readonly';
 export type AttemptReviewDiffViewMode = 'unified' | 'split';
 export type AttemptReviewFileStatus = 'added' | 'deleted' | 'changed';
-export type AttemptReviewCommentSide = ReviewCommentSide;
 
 /** What the page header says about the Attempt. */
 export type AttemptSummary = {
@@ -70,13 +67,9 @@ export type AttemptReviewLineCommentStatus =
   | 'pending-delete'
   | 'saved';
 
-export type AttemptReviewCommentAuthor = ReviewAuthor;
-
-export type AttemptReviewLineCommentReply = ReviewReply;
-
 /** A root comment in the Review editor, including its unsaved lifecycle. */
 export type AttemptReviewLineComment = Omit<ReviewComment, 'replies'> & {
   status?: AttemptReviewLineCommentStatus;
   isEditing?: boolean;
-  replies?: AttemptReviewLineCommentReply[];
+  replies?: ReviewReply[];
 };

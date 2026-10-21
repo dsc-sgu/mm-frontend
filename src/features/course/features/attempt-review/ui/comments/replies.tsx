@@ -10,10 +10,10 @@ import {
 } from '@/features/course/features/attempt-review/model/shortcuts';
 import { RichTextEditor } from '@/features/course/features/attempt-review/ui/rich-text/editor';
 import { AttemptReviewCommentReplyItem } from './reply-item';
-import type { AttemptReviewLineCommentReply } from '@/features/course/features/attempt-review/model/types';
+import type { ReviewReply } from '@/features/course/features/review/model/types';
 
 type AttemptReviewCommentRepliesProps = {
-  replies: AttemptReviewLineCommentReply[];
+  replies: ReviewReply[];
   canReply: boolean;
   currentUserId?: UserId;
   isReplying: boolean;

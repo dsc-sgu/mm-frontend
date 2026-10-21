@@ -17,11 +17,11 @@ import { isRichTextHtmlEmpty } from '@/features/course/features/attempt-review/u
 import { useUnsentCommentText } from '@/features/course/features/attempt-review/hooks/use-unsent-comment-text';
 import { unsentCommentTextKeys } from '@/features/course/features/attempt-review/model/unsent-comment-text';
 import { AttemptReviewCommentTimestamp } from './timestamp';
-import type { AttemptReviewLineCommentReply } from '@/features/course/features/attempt-review/model/types';
+import type { ReviewReply } from '@/features/course/features/review/model/types';
 import { cn } from '@/shadcn/lib/utils';
 
 type AttemptReviewCommentReplyItemProps = {
-  reply: AttemptReviewLineCommentReply;
+  reply: ReviewReply;
   canManage: boolean;
   onUpdate: (replyId: string, html: string) => void | Promise<void>;
   onDelete: (replyId: string) => void | Promise<void>;

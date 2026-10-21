@@ -31,6 +31,7 @@ import {
 import {
   unwrapPublishedReview,
   type ReviewResult,
+  type ReviewReply,
 } from '@/features/course/features/review/model/types';
 import { isResourceDenial } from '@/features/course/features/access/api/resource-denial';
 import { CourseResourceDenied } from '@/features/course/features/access/ui/route-state';
@@ -40,7 +41,6 @@ import { DiffReadinessGate } from './ui/diff-readiness';
 import type {
   AttemptMaterial,
   AttemptReviewDiffViewMode,
-  AttemptReviewLineCommentReply,
   AttemptReviewMode,
   AttemptSummary,
   StudentAttempt,
@@ -263,7 +263,7 @@ function AttemptReviewPageLoaded({
   async function submitCommentReply(
     commentId: string,
     html: string
-  ): Promise<AttemptReviewLineCommentReply> {
+  ): Promise<ReviewReply> {
     return replyMutations.create.mutateAsync({ commentId, html });
   }
 
@@ -271,7 +271,7 @@ function AttemptReviewPageLoaded({
     commentId: string,
     replyId: string,
     html: string
-  ): Promise<AttemptReviewLineCommentReply> {
+  ): Promise<ReviewReply> {
     return replyMutations.update.mutateAsync({ commentId, replyId, html });
   }
 

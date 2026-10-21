@@ -6,16 +6,16 @@ import {
   submitLineCommentChange,
 } from './comment-lifecycle';
 import type {
-  AttemptReviewCommentAuthor,
-  AttemptReviewCommentSide,
-  AttemptReviewLineComment,
-} from './types';
+  ReviewAuthor,
+  ReviewCommentSide,
+} from '@/features/course/features/review/model/types';
+import type { AttemptReviewLineComment } from './types';
 
 export type AttemptReviewLineRange = {
   start: number;
-  side?: AttemptReviewCommentSide;
+  side?: ReviewCommentSide;
   end: number;
-  endSide?: AttemptReviewCommentSide;
+  endSide?: ReviewCommentSide;
 };
 
 export function addLineComment({
@@ -27,7 +27,7 @@ export function addLineComment({
   comments: AttemptReviewLineComment[];
   filePath: string;
   range: AttemptReviewLineRange;
-  currentReviewer: AttemptReviewCommentAuthor;
+  currentReviewer: ReviewAuthor;
 }): AttemptReviewLineComment[] {
   return [
     ...comments,
@@ -148,7 +148,7 @@ function createDraftLineComment({
 }: {
   filePath: string;
   range: AttemptReviewLineRange;
-  currentReviewer: AttemptReviewCommentAuthor;
+  currentReviewer: ReviewAuthor;
 }): AttemptReviewLineComment {
   const side = range.side ?? range.endSide ?? 'additions';
   const endSide = range.endSide ?? side;

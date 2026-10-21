@@ -1,7 +1,5 @@
-import type {
-  AttemptReviewCommentSide,
-  AttemptReviewLineComment,
-} from './types';
+import type { ReviewCommentSide } from '@/features/course/features/review/model/types';
+import type { AttemptReviewLineComment } from './types';
 
 export function formatAttemptReviewCommentRange(
   comment: AttemptReviewLineComment
@@ -23,10 +21,10 @@ export function formatAttemptReviewCommentRange(
   return `К ${startLabel} #${comment.lineNumber} → ${sideLabel(endSide).toLowerCase()} #${endLineNumber}`;
 }
 
-function sideLabel(side: AttemptReviewCommentSide): string {
+function sideLabel(side: ReviewCommentSide): string {
   return side === 'additions' ? 'новой строке' : 'старой строке';
 }
 
-function pluralSideLabel(side: AttemptReviewCommentSide): string {
+function pluralSideLabel(side: ReviewCommentSide): string {
   return side === 'additions' ? 'новым строкам' : 'старым строкам';
 }
