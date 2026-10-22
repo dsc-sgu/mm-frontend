@@ -12,6 +12,10 @@ import {
   type CourseId,
   type AttemptNumber,
 } from '@/features/course/model/identity';
+import {
+  readResourceDenial,
+  type ResourceDenial,
+} from '@/features/course/features/access/api/resource-denial';
 
 const FoundAttemptSchema = v.object({
   status: v.literal('found'),
@@ -22,15 +26,10 @@ const FoundAttemptSchema = v.object({
     attemptNumber: AttemptNumberSchema,
   }),
 });
-const MissingAttemptSchema = v.strictObject({ status: v.literal('not-found') });
-const ForbiddenAttemptSchema = v.strictObject({
-  status: v.literal('forbidden'),
-});
 
 export type LoadAttemptResult =
   | v.InferOutput<typeof FoundAttemptSchema>
-  | v.InferOutput<typeof MissingAttemptSchema>
-  | v.InferOutput<typeof ForbiddenAttemptSchema>;
+  | ResourceDenial;
 
 export function loadAttempt(
   courseId: CourseId,
@@ -55,16 +54,14 @@ export function loadAttempt(
       signal,
     },
     async (context) => {
-      switch (context.response.status) {
-        case 200:
-          return readJson(context, FoundAttemptSchema);
-        case 404:
-          return readJson(context, MissingAttemptSchema);
-        case 403:
-          return readJson(context, ForbiddenAttemptSchema);
-        default:
-          throw unexpectedHttpStatus(context);
+      const denial = readResourceDenial(context);
+      if (denial) {
+        return denial;
       }
+      if (context.response.status !== 200) {
+        throw unexpectedHttpStatus(context);
+      }
+      return readJson(context, FoundAttemptSchema);
     }
   );
 }

@@ -16,11 +16,11 @@ export function courseContextOptions(userId: UserId, courseSlug: CourseSlug) {
     queryKey: courseContextKeys.bySlug(userId, courseSlug),
     queryFn: async ({ client, queryKey, signal }) => {
       const result = await loadCourse(courseSlug, signal);
-      // A lookup that confirmed membership before and now denies it is a lost
-      // Membership: nothing loaded under that Course may outlive it. A slug
-      // that stops resolving is not one; the Course keeps its CourseId cache.
+      // A lookup that confirmed the Course before and now denies it is a lost
+      // access: nothing loaded under that Course may outlive it. A slug change
+      // of the same Course arrives only as `found` with the new slug (ADR 0005).
       const previous = client.getQueryData<LoadCourseResult>(queryKey);
-      if (previous?.status === 'found' && result.status === 'not-member') {
+      if (previous?.status === 'found' && result.status === 'not-found') {
         client.removeQueries({ queryKey: courseKeys.byId(previous.course.id) });
       }
       return result;

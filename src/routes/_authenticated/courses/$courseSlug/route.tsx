@@ -10,7 +10,6 @@ import {
 import { canAccessCourseSection } from '@/features/course/features/access/model/section-policy';
 import { getCourseSection } from '@/features/course/routing/section';
 import { courseContextOptions } from '@/features/course/features/access/api/queries';
-import { courseAccessRouteState } from '@/features/course/features/access/model/route-state';
 import {
   CourseAccessState,
   CourseContextLoading,
@@ -109,9 +108,7 @@ function RouteComponent() {
   if (query.isError) return <CourseRouteOutcome kind="lookup" />;
   if (!query.data) return <CourseContextLoading />;
   if (query.data.status !== 'found') {
-    return (
-      <CourseAccessState state={courseAccessRouteState(query.data.status)} />
-    );
+    return <CourseAccessState state="course-not-found" />;
   }
   // Authorize before mounting any child content, using the live lookup rather
   // than the role captured by beforeLoad. Background demotion closes the route.

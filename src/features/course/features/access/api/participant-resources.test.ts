@@ -9,6 +9,7 @@ import {
   SESSION_EXPIRES_AT,
 } from '@/app/mock-backend/state';
 import { server } from '@/app/mock-backend/node';
+import { accessDenial } from '@/app/mock-backend/participant-access';
 import {
   holdResponse,
   invalidBody,
@@ -19,11 +20,16 @@ import {
 import { createQueryClient } from '@/app/remote-data/query-client';
 import { reply } from '@/app/testing/reply';
 import { UsernameSchema, type UserId } from '@/features/auth/model/identity';
-import { AttemptNumberSchema } from '@/features/course/model/identity';
+import {
+  AttemptIdSchema,
+  AttemptNumberSchema,
+} from '@/features/course/model/identity';
 import { loadRepository } from '@/features/course/features/repository/api/load-repository';
 import { repositoryLocatorOptions } from '@/features/course/features/repository/api/queries';
 import { loadAttempt } from '@/features/course/features/attempt-review/api/load-attempt';
 import { attemptLocatorOptions } from '@/features/course/features/attempt-review/api/locator-queries';
+import { loadReview } from '@/features/course/features/review/api/load-review';
+import { loadCourse } from './load-course';
 import { reviewKeys } from '@/features/course/features/review/api/queries';
 
 const COURSE = accessWorld.courses.algorithms.id;
@@ -52,7 +58,7 @@ describe('ACC-08: backend resolves participant resources without a client roster
         repository: { studentId: sasha.id },
       });
       await expect(loadRepository(COURSE, petya.username)).resolves.toEqual({
-        status: 'forbidden',
+        status: 'not-found',
       });
       await expect(loadRepository(COURSE, anna.username)).resolves.toEqual({
         status: 'not-found',
@@ -68,7 +74,7 @@ describe('ACC-08: backend resolves participant resources without a client roster
       }
       signIn(guest.id);
       await expect(loadRepository(COURSE, sasha.username)).resolves.toEqual({
-        status: 'forbidden',
+        status: 'not-found',
       });
     }
   );
@@ -101,7 +107,7 @@ describe('ACC-08: backend resolves participant resources without a client roster
     });
     await expect(
       loadAttempt(COURSE, '1', petya.username, ONE)
-    ).resolves.toEqual({ status: 'forbidden' });
+    ).resolves.toEqual({ status: 'not-found' });
     await expect(
       loadAttempt(COURSE, '2', sasha.username, ONE)
     ).resolves.toEqual({ status: 'not-found' });
@@ -123,7 +129,7 @@ describe('ACC-08: backend resolves participant resources without a client roster
     signIn(vera.id);
     await expect(
       loadAttempt(COURSE, '1', petya.username, ONE)
-    ).resolves.toEqual({ status: 'forbidden' });
+    ).resolves.toEqual({ status: 'not-found' });
     mockBackend.reset('world:access');
     signIn(sasha.id);
     await expect(
@@ -170,23 +176,85 @@ describe('ACC-08: backend resolves participant resources without a client roster
       reviewKeys.detail(anna.id, COURSE, attemptId)
     );
   });
+});
 
-  test.each(['repositories/petya', 'tasks/1/attempts/petya/1'])(
-    'denial of %s carries no owner/resource body or headers',
-    async (path) => {
-      // Inspect the actual backend wire response, independently of DTO mapping.
-      // eslint-disable-next-line no-restricted-globals
-      const response = await fetch(
-        `http://localhost:3000/api/v1/courses/${COURSE}/${path}`
-      );
-      expect(response.status).toBe(403);
-      expect(await response.json()).toEqual({ status: 'forbidden' });
-      expect(response.headers.get('content-type')).toBe('application/json');
-      expect(
-        [...response.headers.keys()].every((name) =>
-          ['content-type', 'content-length'].includes(name)
-        )
-      ).toBe(true);
+async function wire(path: string) {
+  // Compare what the backend puts on the wire, before any DTO mapping.
+  // eslint-disable-next-line no-restricted-globals
+  const response = await fetch(`http://localhost:3000/api/v1/courses/${path}`);
+  return {
+    status: response.status,
+    headers: [...response.headers.entries()],
+    body: await response.text(),
+  };
+}
+
+describe('ADR 0006: a foreign resource is indistinguishable from a missing one', () => {
+  const MISSING_ATTEMPT = v.parse(
+    AttemptIdSchema,
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  );
+  const PETYA_ATTEMPT = reviewWorld.attempts[2].id;
+  const MISSING = v.parse(UsernameSchema, 'missing');
+
+  test.each([
+    {
+      resource: 'Course',
+      viewer: guest.id,
+      missing: {
+        path: accessWorld.missingSlug,
+        load: () => loadCourse(accessWorld.missingSlug),
+      },
+      foreign: {
+        path: accessWorld.courses.algorithms.slug,
+        load: () => loadCourse(accessWorld.courses.algorithms.slug),
+      },
+    },
+    {
+      resource: 'Attempt locator',
+      viewer: sasha.id,
+      missing: {
+        path: `${COURSE}/tasks/1/attempts/missing/1`,
+        load: () => loadAttempt(COURSE, '1', MISSING, ONE),
+      },
+      foreign: {
+        path: `${COURSE}/tasks/1/attempts/petya/1`,
+        load: () => loadAttempt(COURSE, '1', petya.username, ONE),
+      },
+    },
+    {
+      resource: 'Repository',
+      viewer: sasha.id,
+      missing: {
+        path: `${COURSE}/repositories/missing`,
+        load: () => loadRepository(COURSE, MISSING),
+      },
+      foreign: {
+        path: `${COURSE}/repositories/petya`,
+        load: () => loadRepository(COURSE, petya.username),
+      },
+    },
+    {
+      resource: 'Review by AttemptId',
+      viewer: sasha.id,
+      missing: {
+        path: `${COURSE}/attempts/${MISSING_ATTEMPT}/review`,
+        load: () => loadReview(COURSE, MISSING_ATTEMPT),
+      },
+      foreign: {
+        path: `${COURSE}/attempts/${PETYA_ATTEMPT}/review`,
+        load: () => loadReview(COURSE, PETYA_ATTEMPT),
+      },
+    },
+  ])(
+    '$resource: the same body-less 404 and the same outcome',
+    async ({ viewer, missing, foreign }) => {
+      signIn(viewer);
+      const missingWire = await wire(missing.path);
+      expect(missingWire).toEqual({ status: 404, headers: [], body: '' });
+      expect(await wire(foreign.path)).toEqual(missingWire);
+      await expect(missing.load()).resolves.toEqual({ status: 'not-found' });
+      await expect(foreign.load()).resolves.toEqual({ status: 'not-found' });
     }
   );
 });
@@ -227,7 +295,8 @@ const operations = [
 describe.each(operations)(
   'TR-05: $name',
   ({ name, url, load, query: createQuery }) => {
-    test.each([401, 409, 500, 503])(
+    // 403 is no denial: a foreign resource answers 404 (ADR 0006).
+    test.each([401, 403, 409, 500, 503])(
       'undeclared HTTP %i rejects and is never cached as a denial',
       async (status) => {
         server.use(http.get(url, undeclaredStatus(status)));
@@ -261,10 +330,6 @@ describe.each(operations)(
           },
         },
       ],
-      [404, { status: 'forbidden' }],
-      [403, { status: 'not-found' }],
-      [403, { status: 'forbidden', studentId: petya.id }],
-      [404, { status: 'not-found', resource: {} }],
     ])(
       'invalid HTTP %i payload rejects before entering the cache',
       async (status, body) => {
@@ -302,30 +367,24 @@ describe.each(operations)(
       });
     });
 
-    test.each([
-      [403, 'forbidden'],
-      [404, 'not-found'],
-    ] as const)(
-      '%i is resolved Query data, with no retry',
-      async (status, outcome) => {
-        let requests = 0;
-        server.use(
-          http.get(url, (args) => {
-            requests += 1;
-            return reply(status, { status: outcome })(args);
-          })
-        );
-        const client = createQueryClient();
-        try {
-          await expect(createQuery(client).run()).resolves.toEqual({
-            status: outcome,
-          });
-          expect(requests).toBe(1);
-        } finally {
-          client.clear();
-        }
+    test('a 404 is resolved Query data, with no retry', async () => {
+      let requests = 0;
+      server.use(
+        http.get(url, () => {
+          requests += 1;
+          return accessDenial('not-found');
+        })
+      );
+      const client = createQueryClient();
+      try {
+        await expect(createQuery(client).run()).resolves.toEqual({
+          status: 'not-found',
+        });
+        expect(requests).toBe(1);
+      } finally {
+        client.clear();
       }
-    );
+    });
 
     test('caller cancellation preserves the reason', async () => {
       const held = holdResponse();

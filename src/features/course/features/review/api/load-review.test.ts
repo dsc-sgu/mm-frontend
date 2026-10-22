@@ -169,17 +169,18 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
     }
   );
 
-  test("another Student's Review is a declared denial", async () => {
+  test("another Student's Review is denied as if it did not exist", async () => {
     signIn(petya.id);
 
     await expect(loadReview(COURSE_ID, sashaFirst.id)).resolves.toEqual({
-      status: 'forbidden',
+      status: 'not-found',
     });
   });
 });
 
 describe('TR-05: load-review statuses', () => {
-  test.each([401, 500])('undeclared %i rejects', async (status) => {
+  // 403 is not a denial by identity: a foreign Review answers 404 (ADR 0006).
+  test.each([401, 403, 500])('undeclared %i rejects', async (status) => {
     server.use(http.get(REVIEW_URL, undeclaredStatus(status)));
 
     await expect(loadReview(COURSE_ID, sashaFirst.id)).rejects.toMatchObject({
@@ -189,16 +190,13 @@ describe('TR-05: load-review statuses', () => {
     });
   });
 
-  test.each(['forbidden', 'not-found'] as const)(
-    'a body-less %s denial resolves as declared',
-    async (status) => {
-      server.use(http.get(REVIEW_URL, () => accessDenial(status)));
+  test('a body-less 404 resolves as the declared denial', async () => {
+    server.use(http.get(REVIEW_URL, () => accessDenial('not-found')));
 
-      await expect(loadReview(COURSE_ID, sashaFirst.id)).resolves.toEqual({
-        status,
-      });
-    }
-  );
+    await expect(loadReview(COURSE_ID, sashaFirst.id)).resolves.toEqual({
+      status: 'not-found',
+    });
+  });
 
   test('an unreadable body rejects', async () => {
     server.use(http.get(REVIEW_URL, unreadableBody));

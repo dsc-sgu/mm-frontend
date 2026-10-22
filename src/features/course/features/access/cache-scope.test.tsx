@@ -212,7 +212,7 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
 
       await expect(
         queryClient.query(courseContextOptions(vera.id, databases.slug))
-      ).resolves.toEqual({ status: 'course-not-found' });
+      ).resolves.toEqual({ status: 'not-found' });
       await expect(
         queryClient.query(courseContextOptions(vera.id, renamed))
       ).resolves.toMatchObject({
@@ -317,7 +317,7 @@ describe('a confirmed Membership loss', () => {
           ...courseContextOptions(vera.id, algorithms.slug),
           staleTime: 0,
         })
-      ).resolves.toEqual({ status: 'not-member' });
+      ).resolves.toEqual({ status: 'not-found' });
 
       expect(
         queryClient
@@ -332,7 +332,9 @@ describe('a confirmed Membership loss', () => {
     }
   });
 
-  test('a slug that stops resolving keeps the Course cache', async () => {
+  // ADR 0006: a vanished Course and a lost Membership are one denial, so a
+  // denial after `found` always removes the Course cache.
+  test('a Course that stops resolving after found loses its cache too', async () => {
     const queryClient = createQueryClient();
     try {
       await queryClient.query(courseContextOptions(vera.id, algorithms.slug));
@@ -347,8 +349,10 @@ describe('a confirmed Membership loss', () => {
       });
 
       expect(
-        queryClient.getQueryData(coursePageKeys.detail(algorithms.id))
-      ).toBeDefined();
+        queryClient
+          .getQueryCache()
+          .findAll({ queryKey: courseKeys.byId(algorithms.id) })
+      ).toEqual([]);
     } finally {
       queryClient.clear();
     }

@@ -19,9 +19,16 @@ for (const resource of [
     const path = `/courses/algorithms/${resource}`;
     await page.goto(path);
     const response = await responsePromise;
-    expect(response.status()).toBe(403);
-    expect(await response.json()).toEqual({ status: 'forbidden' });
-    expect(response.headers()['content-type']).toBe('application/json');
+    // ADR 0006: Petya's resource answers exactly like a missing one.
+    expect(response.status()).toBe(404);
+    // Engines may drop an empty body before the protocol reads it, so read
+    // the same address again from the page, through the same MSW worker.
+    const body = await page.evaluate(
+      // eslint-disable-next-line no-restricted-globals
+      (url) => fetch(url, { credentials: 'include' }).then((r) => r.text()),
+      response.url()
+    );
+    expect(body).toBe('');
     expect(
       Object.keys(response.headers()).every((name) =>
         ['content-type', 'content-length'].includes(name)

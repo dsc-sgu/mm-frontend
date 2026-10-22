@@ -104,7 +104,7 @@ describe('ACC-04: course lookup against canonical memberships', () => {
       expiresAt: SESSION_EXPIRES_AT,
     };
     await expect(loadCourse(locator)).resolves.toEqual({
-      status: 'not-member',
+      status: 'not-found',
     });
   });
 
@@ -120,15 +120,15 @@ describe('ACC-04: course lookup against canonical memberships', () => {
       existing: accessWorld.courses.algorithms.id,
     },
   ])(
-    '$kind distinguishes an unknown locator from a non-member without leaking metadata',
+    '$kind gives an unknown locator and a non-member one outcome',
     async ({ missing, existing }) => {
       signInAs(accessWorld.users.guest.id);
 
       await expect(loadCourse(missing)).resolves.toEqual({
-        status: 'course-not-found',
+        status: 'not-found',
       });
       await expect(loadCourse(existing)).resolves.toEqual({
-        status: 'not-member',
+        status: 'not-found',
       });
     }
   );
@@ -158,7 +158,7 @@ describe('ACC-04 / TR-05: lookup transport contract', () => {
     ['color', { ...FOUND, course: { ...ALGORITHMS, color: 'invalid-color' } }],
     ['role', { ...FOUND, role: 'admin' }],
     ['status', { ...FOUND, status: 'allowed' }],
-    ['denial with success status', { status: 'not-member' }],
+    ['denial with success status', { status: 'not-found' }],
   ])(
     'an invalid %s rejects instead of exposing untrusted context',
     async (_, body) => {
@@ -174,13 +174,13 @@ describe('ACC-04 / TR-05: lookup transport contract', () => {
   );
 
   test.each([{ status: 'forbidden' }, FOUND, {}])(
-    'a malformed 404 payload is a failure, not a fabricated denial',
+    'a 404 body is never read: a found payload cannot open the Course',
     async (body) => {
       server.use(http.get(LOOKUP_URL, reply(404, body)));
 
       await expect(
         loadCourse(accessWorld.courses.algorithms.slug)
-      ).rejects.toMatchObject({ kind: 'invalid-response' });
+      ).resolves.toEqual({ status: 'not-found' });
     }
   );
 

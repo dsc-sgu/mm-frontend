@@ -7,10 +7,7 @@ import {
   useRouter,
   useRouterState,
 } from '@tanstack/react-router';
-import {
-  courseAccessRouteState,
-  type CourseAccessRouteState,
-} from '@/features/course/features/access/model/route-state';
+import type { CourseAccessRouteState } from '@/features/course/features/access/model/route-state';
 import {
   courseContextOptions,
   recheckCourseContextAfterAccessDenial,
@@ -92,8 +89,8 @@ export function CourseResourceNotFound() {
 
 /**
  * Replaces a participant-bound page whose read was denied after its locator
- * resolved. A `forbidden` denial makes Membership suspect: the recheck lets the
- * Course route close itself on a lost Membership or a changed role.
+ * resolved. Any denial may be a lost Membership or a changed role (ADR 0006):
+ * the recheck lets the Course route close itself in that case.
  * Pages render it by hand until #243 applies it from the Course shell.
  */
 export function CourseResourceDenied({ denial }: { denial: ResourceDenial }) {
@@ -103,14 +100,13 @@ export function CourseResourceDenied({ denial }: { denial: ResourceDenial }) {
   });
 
   useEffect(() => {
-    if (denial.status !== 'forbidden') return;
     // The Course route renders the recheck's own failure from its query.
     recheckCourseContextAfterAccessDenial(
       queryClient,
       session.userId,
       courseSlug
     ).catch(() => undefined);
-  }, [denial.status, queryClient, session.userId, courseSlug]);
+  }, [denial, queryClient, session.userId, courseSlug]);
 
   return <CourseResourceNotFound />;
 }
@@ -199,7 +195,5 @@ function CourseLocatorOutcome({
   if (!query.data || query.data.status === 'found') {
     return <CourseContextLoading />;
   }
-  return (
-    <CourseAccessState state={courseAccessRouteState(query.data.status)} />
-  );
+  return <CourseAccessState state="course-not-found" />;
 }

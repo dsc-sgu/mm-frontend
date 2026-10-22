@@ -120,7 +120,8 @@ describe.each(operations)('TR-05: $name statuses', (operation) => {
     await expect(operation.run()).resolves.toBeDefined();
   });
 
-  test.each([401, 500])('undeclared %i rejects', async (status) => {
+  // 403 is not a denial by identity: a foreign resource answers 404 (ADR 0006).
+  test.each([401, 403, 500])('undeclared %i rejects', async (status) => {
     server.use(http.get(operation.url, undeclaredStatus(status)));
 
     await expect(operation.run()).rejects.toMatchObject({
@@ -130,14 +131,11 @@ describe.each(operations)('TR-05: $name statuses', (operation) => {
     });
   });
 
-  test.each(['forbidden', 'not-found'] as const)(
-    'a body-less %s denial resolves as declared',
-    async (status) => {
-      server.use(http.get(operation.url, () => accessDenial(status)));
+  test('a body-less 404 resolves as the declared denial', async () => {
+    server.use(http.get(operation.url, () => accessDenial('not-found')));
 
-      await expect(operation.run()).resolves.toEqual({ status });
-    }
-  );
+    await expect(operation.run()).resolves.toEqual({ status: 'not-found' });
+  });
 
   test('an unreadable body rejects', async () => {
     server.use(http.get(operation.url, unreadableBody));
@@ -215,7 +213,7 @@ describe('Attempt projections from the canonical state', () => {
       const response = await fetch(
         `http://localhost:3000/api/v1/courses/${COURSE_ID}/${path}`
       );
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(404);
       expect(await response.text()).toBe('');
     }
   );

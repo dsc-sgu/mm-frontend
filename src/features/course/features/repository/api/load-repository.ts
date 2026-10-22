@@ -7,22 +7,19 @@ import {
 } from '@/app/remote-data/http';
 import { UserIdSchema, type Username } from '@/features/auth/model/identity';
 import type { CourseId } from '@/features/course/model/identity';
+import {
+  readResourceDenial,
+  type ResourceDenial,
+} from '@/features/course/features/access/api/resource-denial';
 
 const FoundRepositorySchema = v.object({
   status: v.literal('found'),
   repository: v.object({ studentId: UserIdSchema }),
 });
-const MissingRepositorySchema = v.strictObject({
-  status: v.literal('not-found'),
-});
-const ForbiddenRepositorySchema = v.strictObject({
-  status: v.literal('forbidden'),
-});
 
 export type LoadRepositoryResult =
   | v.InferOutput<typeof FoundRepositorySchema>
-  | v.InferOutput<typeof MissingRepositorySchema>
-  | v.InferOutput<typeof ForbiddenRepositorySchema>;
+  | ResourceDenial;
 
 export function loadRepository(
   courseId: CourseId,
@@ -37,16 +34,14 @@ export function loadRepository(
       signal,
     },
     async (context) => {
-      switch (context.response.status) {
-        case 200:
-          return readJson(context, FoundRepositorySchema);
-        case 404:
-          return readJson(context, MissingRepositorySchema);
-        case 403:
-          return readJson(context, ForbiddenRepositorySchema);
-        default:
-          throw unexpectedHttpStatus(context);
+      const denial = readResourceDenial(context);
+      if (denial) {
+        return denial;
       }
+      if (context.response.status !== 200) {
+        throw unexpectedHttpStatus(context);
+      }
+      return readJson(context, FoundRepositorySchema);
     }
   );
 }

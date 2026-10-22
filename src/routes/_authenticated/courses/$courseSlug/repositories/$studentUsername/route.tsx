@@ -25,14 +25,15 @@ export const Route = createFileRoute(
         studentUsername
       )
     );
-    if (result.status === 'forbidden') {
+    if (result.status !== 'found') {
+      // Any denial may be a lost Course access, not only a missing resource.
       await recheckCourseContextAfterAccessDenial(
         context.queryClient,
         context.session.userId,
         context.courseSlug
       );
+      throw notFound();
     }
-    if (result.status !== 'found') throw notFound();
     return { repository: result.repository };
   },
   component: RouteComponent,
