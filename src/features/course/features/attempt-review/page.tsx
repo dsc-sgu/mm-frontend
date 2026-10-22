@@ -34,7 +34,6 @@ import {
   type ReviewReply,
 } from '@/features/course/features/review/model/types';
 import { isResourceDenial } from '@/features/course/features/access/api/resource-denial';
-import { CourseResourceDenied } from '@/features/course/features/access/ui/route-state';
 import { useDiffReadiness } from './hooks/use-diff-readiness';
 import type { DiffReadiness } from './model/diff-readiness';
 import { DiffReadinessGate } from './ui/diff-readiness';
@@ -94,15 +93,7 @@ export function AttemptReviewPage(props: AttemptReviewPageProps) {
   const attemptsQuery = useQuery(pageQueries.attempts);
   const queries = [summaryQuery, reviewQuery, materialQuery, attemptsQuery];
 
-  // Access is rechecked by every read, a background refetch included: a denial
-  // replaces the page even with unsaved edits, since they can't be saved.
-  // Wired by hand for now; #243 moves this reaction into the Course shell, so
-  // new pages should not copy it.
-  const denial = queries
-    .map((query) => query.data)
-    .find((data) => data !== undefined && isResourceDenial(data));
-  if (denial) return <CourseResourceDenied denial={denial} />;
-
+  // A denied read is the Course shell's to show (see `useResourceDenial`).
   // A failed background refetch keeps the loaded data and the unsaved edits.
   if (queries.some((query) => query.isError && query.data === undefined)) {
     return (
