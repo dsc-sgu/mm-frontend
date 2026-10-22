@@ -12,6 +12,7 @@ import {
   SESSION_EXPIRES_AT,
 } from '@/app/mock-backend/state';
 import { renderRoutes } from '@/app/testing/render-routes';
+import { attemptReviewKeys } from '@/features/course/features/attempt-review/api/queries';
 import { attemptPageQueries } from '@/features/course/features/attempt-review/api/queries';
 import { reviewKeys } from '@/features/course/features/review/api/queries';
 
@@ -21,6 +22,16 @@ const SASHA_FIRST_URL = '/courses/algorithms/tasks/1/attempts/sasha/1/review';
 const COURSE_ID = accessWorld.courses.algorithms.id;
 const SASHA_FIRST_API = `/api/v1/courses/${COURSE_ID}/attempts/${sashaFirst.id}`;
 const FIRST_FEEDBACK = /пустой список не обработан/;
+// Every read of the Attempt page: a denial of any one of them replaces it.
+const PAGE_READS = [
+  { read: 'summary', url: SASHA_FIRST_API },
+  { read: 'review', url: `${SASHA_FIRST_API}/review` },
+  { read: 'material', url: `${SASHA_FIRST_API}/material` },
+  {
+    read: 'attempts',
+    url: `/api/v1/courses/${COURSE_ID}/tasks/1/students/${sashaFirst.studentId}/attempts`,
+  },
+];
 // The real review page (diff viewer, rich-text editors) renders twice.
 const PAGE_SWITCH_TIMEOUT = 20_000;
 
@@ -97,6 +108,8 @@ function removeAnnaFromCourse() {
   );
 }
 
+// Lost Membership denies every read, so one denied read stands for all; which
+// read is wired is checked by the not-found cases below.
 test(
   'a read denied after the locator resolved closes the Course with lost Membership',
   async () => {
@@ -119,12 +132,10 @@ test(
   PAGE_SWITCH_TIMEOUT
 );
 
-test(
-  'a missing resource read shows the resource 404 inside the Course',
-  async () => {
-    server.use(
-      http.get(`${SASHA_FIRST_API}/material`, () => accessDenial('not-found'))
-    );
+test.each(PAGE_READS)(
+  'a missing $read resource shows the resource 404 inside the Course',
+  async ({ url }) => {
+    server.use(http.get(url, () => accessDenial('not-found')));
     renderRoutes([], SASHA_FIRST_URL, { appRoutes: true });
 
     await screen.findByRole('link', { name: 'На страницу курса' });
@@ -138,23 +149,42 @@ test(
   PAGE_SWITCH_TIMEOUT
 );
 
-test(
-  'a denied background refetch removes the loaded Attempt and its edits',
-  async () => {
+// The Review and the selector sit under different branches of the key tree.
+test.each([
+  {
+    read: 'review',
+    queryKey: reviewKeys.attempt(COURSE_ID, sashaFirst.id),
+  },
+  {
+    read: 'attempts',
+    queryKey: attemptReviewKeys.student(
+      COURSE_ID,
+      sashaFirst.taskId,
+      sashaFirst.studentId
+    ),
+  },
+])(
+  'a denied background refetch of $read removes the loaded Attempt and its edits',
+  async ({ queryKey }) => {
+    const user = userEvent.setup();
     const { queryClient } = renderRoutes([], SASHA_FIRST_URL, {
       appRoutes: true,
     });
     await screen.findByRole('heading', { name: 'Попытка #1: Сортировки' });
-    expect(screen.getByText(FIRST_FEEDBACK)).toBeTruthy();
+    const grade = screen.getByRole('textbox', { name: 'Оценка за попытку' });
+    await user.clear(grade);
+    await user.type(grade, '9');
+    expect(grade).toHaveProperty('value', '9');
 
     removeAnnaFromCourse();
-    await queryClient.invalidateQueries({
-      queryKey: reviewKeys.attempt(COURSE_ID, sashaFirst.id),
-    });
+    await queryClient.invalidateQueries({ queryKey });
 
     await screen.findByRole('link', { name: 'К моим курсам' });
     expect(
       screen.queryByRole('heading', { name: 'Попытка #1: Сортировки' })
+    ).toBeNull();
+    expect(
+      screen.queryByRole('textbox', { name: 'Оценка за попытку' })
     ).toBeNull();
     expect(screen.queryByText(FIRST_FEEDBACK)).toBeNull();
   },
