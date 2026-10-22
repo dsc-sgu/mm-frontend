@@ -127,6 +127,18 @@ loader({ context }) {
 
 Эталон — пункты selector попытки в `attempt-review/ui/attempt-select.tsx` и контракт наведения в `attempt-review/page.test.tsx`.
 
+## Отказ в доступе к ресурсу участника
+
+Доступ проверяется при каждом запросе, поэтому отказ может прийти от любого чтения ресурса участника (попытка, репозиторий, проверка): при первой загрузке, при фоновой перезагрузке, при возврате фокуса. Ресурса нет или он чужой — один исход ([ADR 0006](../adr/0006-access-denial-reveals-nothing.md)).
+
+1. Каждое чтение ресурса участника ДОЛЖНО объявлять `ResourceDenial` из `src/features/course/features/access/api/resource-denial.ts`: `404` без тела через `readResourceDenial` становится resolved data `{ status: 'not-found' }`, а не ошибкой TanStack Query.
+2. Key такого чтения ДОЛЖЕН расширять Course prefix `courseKeys.byId(courseId)`. Под этим prefix статус `not-found` зарезервирован за `ResourceDenial` и НЕ ДОЛЖЕН означать ничего другого.
+3. Страница НЕ ДОЛЖНА обрабатывать `ResourceDenial` сама. Оболочка курса (`useResourceDenial` в `access/hooks/`) замечает отказ в любом чтении под Course prefix, которое наблюдает смонтированная страница, заменяет страницу вместе с несохранёнными правками на `404` ресурса и перепроверяет контекст курса. Подтверждённая потеря участия закрывает курс. Новая страница получает эту реакцию без подключения.
+4. Отказ, который никто не наблюдает (например, локатор из `beforeLoad`), не закрывает страницу. Когда показанная оболочкой страница размонтирована или пользователь ушёл с её адреса, оболочка удаляет из cache все ненаблюдаемые отказы под Course prefix, и повторный заход читает страницу заново. Отказ, пришедший позже, например при предзагрузке по наведению, — свежий ответ сервера, и следующий заход его показывает.
+5. Локатор, разрешаемый в `beforeLoad`, при отказе ДОЛЖЕН дождаться `recheckCourseContextAfterAccessDenial` и бросить `notFound()`.
+
+Эталон — переход `nextDeniedLocation` в `access/model/resource-denial.ts`, контракты оболочки в `access/resource-denial-routes.test.tsx`, локатор попытки в `src/routes/_authenticated/courses/$courseSlug/tasks/$taskId/attempts/$studentUsername/$attemptNumber/route.tsx`.
+
 ## MSW
 
 1. MSW ДОЛЖЕН быть основным HTTP seam для мокирования удалённых операций в development и tests.
