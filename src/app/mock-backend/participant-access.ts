@@ -4,10 +4,12 @@ import { mockBackend, type MockUser } from './state';
 const DENIAL_STATUSES = {
   unauthenticated: 401,
   'not-found': 404,
-  forbidden: 403,
 };
 
-/** A denial without a body: nothing of the resource or its owner leaks. */
+/**
+ * A denial without a body. A foreign resource answers exactly like a missing
+ * one (ADR 0006): neither the status nor the body reveals that it exists.
+ */
 export function accessDenial(status: keyof typeof DENIAL_STATUSES) {
   return new HttpResponse(null, { status: DENIAL_STATUSES[status] });
 }
@@ -50,7 +52,9 @@ function authorizeStudent(
     (membership) =>
       membership.courseId === course.id && membership.userId === session.userId
   );
-  if (!viewer) return { status: 'forbidden' } as const;
+  if (!viewer) {
+    return { status: 'not-found' } as const;
+  }
   const student = users.find(isStudent);
   if (
     !student ||
@@ -63,7 +67,7 @@ function authorizeStudent(
   )
     return { status: 'not-found' } as const;
   if (viewer.role !== 'teacher' && viewer.userId !== student.id) {
-    return { status: 'forbidden' } as const;
+    return { status: 'not-found' } as const;
   }
   return { status: 'found', studentId: student.id } as const;
 }

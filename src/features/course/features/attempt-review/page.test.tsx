@@ -116,7 +116,7 @@ test(
     server.use(
       http.get(`${SASHA_FIRST_API}/material`, () => {
         removeAnnaFromCourse();
-        return accessDenial('forbidden');
+        return accessDenial('not-found');
       })
     );
     renderRoutes([], SASHA_FIRST_URL, { appRoutes: true });

@@ -9,7 +9,8 @@ import {
 // Working wire assumption pending backend confirmation (#113):
 // https://github.com/dsc-sgu/mm-frontend/issues/113
 // GET by locator resolves UUID as CourseId, otherwise a non-UUID CourseSlug.
-// Both access denials use 404 with a validated discriminator, but no metadata.
+// A missing Course and a Course without the User's Membership are one denial:
+// 404 without a body, so neither reveals that the Course exists (ADR 0006).
 // An unauthenticated request returns 401, an undeclared operation failure.
 function findCourse(courses: MockCourse[], locator: unknown) {
   const parsedId = v.safeParse(CourseIdSchema, locator);
@@ -32,15 +33,12 @@ export const courseContextHandlers = [
     }
 
     const course = findCourse(courses, params.locator);
-    if (!course) {
-      return HttpResponse.json({ status: 'course-not-found' }, { status: 404 });
-    }
     const membership = memberships.find(
       ({ courseId, userId }) =>
-        courseId === course.id && userId === session.userId
+        courseId === course?.id && userId === session.userId
     );
-    if (!membership) {
-      return HttpResponse.json({ status: 'not-member' }, { status: 404 });
+    if (!course || !membership) {
+      return new HttpResponse(null, { status: 404 });
     }
 
     const { id, title, shortTitle, iconName, color } = course;

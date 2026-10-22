@@ -69,10 +69,10 @@ describe('ACC-04 / TR-05: Course context query outcomes', () => {
         queryClient.query(
           courseContextOptions(accessWorld.users.guest.id, SLUG)
         )
-      ).resolves.toEqual({ status: 'not-member' });
+      ).resolves.toEqual({ status: 'not-found' });
       expect(queryClient.getQueryState(key)).toMatchObject({
         status: 'success',
-        data: { status: 'not-member' },
+        data: { status: 'not-found' },
         error: null,
       });
     } finally {
@@ -160,7 +160,7 @@ describe('ACC-09: Course context rechecks', () => {
       });
       await vi.waitFor(() => {
         expect(observer.getCurrentResult().data).toEqual({
-          status: 'not-member',
+          status: 'not-found',
         });
       });
       expect(requests.count).toBe(2);
@@ -207,7 +207,7 @@ describe('ACC-09: Course context rechecks', () => {
         await vi.waitFor(() => {
           expect(observer.getCurrentResult()).toMatchObject({
             status: 'success',
-            data: { status: 'not-member' },
+            data: { status: 'not-found' },
             error: null,
           });
         });
@@ -250,10 +250,10 @@ describe('ACC-09: Course context rechecks', () => {
 
       await expect(
         recheckCourseContextAfterAccessDenial(queryClient, VERA, SLUG)
-      ).resolves.toEqual({ status: 'not-member' });
+      ).resolves.toEqual({ status: 'not-found' });
       expect(
         queryClient.getQueryData(courseContextKeys.bySlug(VERA, SLUG))
-      ).toEqual({ status: 'not-member' });
+      ).toEqual({ status: 'not-found' });
       expect(requests.count).toBe(1);
       expect(queryClient.getQueryState(otherUserKey)).toBe(otherUserState);
       expect(queryClient.getQueryState(otherCourseKey)).toBe(otherCourseState);
@@ -319,12 +319,12 @@ describe('ACC-09: Course context rechecks', () => {
 
       await expect(
         recheckCourseContextAfterAccessDenial(queryClient, VERA, SLUG)
-      ).resolves.toEqual({ status: 'not-member' });
+      ).resolves.toEqual({ status: 'not-found' });
       await cancellation;
       await vi.waitFor(() => {
         expect(observer.getCurrentResult()).toMatchObject({
           status: 'success',
-          data: { status: 'not-member' },
+          data: { status: 'not-found' },
           error: null,
         });
       });
