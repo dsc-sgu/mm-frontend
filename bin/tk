@@ -50,6 +50,9 @@ LOCAL_LINK = re.compile(r"\]\((?!https?:|mailto:|#|/)([^)\s]+)\)|<img [^>]*src=\
 CODE = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:[.-][A-Za-z0-9]+)*")
 ID = re.compile(r"(?P<prefix>[a-z][a-z0-9]*)-(?P<core>\d+|[0-9a-z]{5})(?:-(?P<code>" + CODE.pattern + r"))?")
 ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz"  # Crockford base32: no i, l, o, u
+# `external-ref: <source>-<key>` names the issue a ticket came from (gh-290,
+# sgu-17); .tickets/sources maps each source to its URL template.
+EXTERNAL = re.compile(r"(?P<source>[a-z][a-z0-9]*)-(?P<key>[A-Za-z0-9._-]+)")
 
 
 class TkError(Exception):
@@ -274,14 +277,15 @@ class Store:
         return prefixes.most_common(1)[0][0]
 
     def get(self, ref: str) -> Ticket:
-        """The ticket whose id, `<prefix>-<core>`, core, slice code or `<core>-<code>` is `ref`, in any case."""
+        """The ticket whose id, `<prefix>-<core>`, core, slice code, `<core>-<code>` or external ref is `ref`,
+        in any case; a bare or `#` number is also the issue of the first source in .tickets/sources."""
         ref = ref.strip().lstrip("#")
         if ref.isdigit():
             ref = str(int(ref))
         if ref in self.tickets:
             return self.tickets[ref]
         wanted = ref.lower()
-        found = [t for t in self.tickets.values() if wanted in names(t.id)]
+        found = [t for t in self.tickets.values() if wanted in self.names(t)]
         if len(found) > 1:
             raise TkError(f"{ref!r} matches several tickets: {', '.join(sorted(t.id for t in found))}")
         if found:
@@ -293,6 +297,31 @@ class Store:
     def find(self, ticket_id: str) -> Optional[Ticket]:
         """The ticket a relation names, by `<prefix>-<core>` or by full id."""
         return self.by_ref.get(ticket_id) or self.tickets.get(ticket_id)
+
+    def names(self, t: Ticket) -> set:
+        found = names(t.id)
+        external = EXTERNAL.fullmatch(t.meta.get("external-ref", ""))
+        if external:
+            found.add(external.group(0).lower())
+            sources = self.sources() or {}
+            if sources and external["source"] == next(iter(sources)) and external["key"].isdigit():
+                found.add(str(int(external["key"])))
+        return found
+
+    def sources(self) -> Optional[dict]:
+        """Source -> URL template with `{n}`, in file order, or None without .tickets/sources."""
+        if not hasattr(self, "_sources"):
+            path = self.root / "sources"
+            self._sources = None
+            if path.exists():
+                pairs = (line.split(",", 1) for line in path.read_text(encoding="utf-8").split("\n") if line.strip())
+                self._sources = {pair[0].strip(): (pair[1].strip() if len(pair) > 1 else "") for pair in pairs}
+        return self._sources
+
+    def url(self, t: Ticket) -> str:
+        external = EXTERNAL.fullmatch(t.meta.get("external-ref", ""))
+        template = (self.sources() or {}).get(external["source"], "") if external else ""
+        return template.replace("{n}", external["key"]) if template else ""
 
     def label(self, ticket_id: str) -> str:
         t = self.find(ticket_id)
@@ -468,6 +497,11 @@ def check(store: Store) -> list:
             relation("links", link, "linked ticket")
             if link in store.by_ref and t.ref not in store.by_ref[link].items("links"):
                 bad("links", f"link to {link} is one-sided; {link} must link back")
+        sources = store.sources()
+        if "external-ref" in t.meta and sources is not None:
+            external = EXTERNAL.fullmatch(t.meta["external-ref"])
+            if not external or external["source"] not in sources:
+                bad("external-ref", f"`external-ref` must be <source>-<key> with a source from .tickets/sources ({', '.join(sources)})")
         for tag in t.items("tags"):
             if tags is not None and tag not in tags:
                 bad("tags", f"tag `{tag}` is not described in .tickets/tags")
@@ -497,7 +531,7 @@ def check(store: Store) -> list:
     for t in tickets.values():
         match = ID.fullmatch(t.id)
         if match:
-            for name in {match["core"], (match["code"] or "").lower()} - {""}:
+            for name in {match["core"], (match["code"] or "").lower(), t.meta.get("external-ref", "").lower()} - {""}:
                 owners[name].append(t)
     for name, found in sorted(owners.items()):
         if len(found) > 1:
@@ -618,7 +652,8 @@ def cmd_show(store: Store, args) -> None:
         return
     frontmatter = t.text.split("\n---\n", 1)[0] + "\n---"
     lines = t.text.count("\n") + (0 if t.text.endswith("\n") else 1)
-    print(f"{frontmatter}\n# {t.title}\n\npath: {t.path}\nlines: {lines}")
+    url = store.url(t)
+    print(f"{frontmatter}\n# {t.title}\n\npath: {t.path}\nlines: {lines}" + (f"\nurl: {url}" if url else ""))
     print(relations(store, t))
     headings = outline(t)[1:]
     if headings:
@@ -874,10 +909,15 @@ def cmd_refs(store: Store, args) -> None:
     patterns = [r"(?<![\w-])" + re.escape(t.ref) + r"(?![0-9a-z])"]
     if t.code:
         patterns.append(r"(?<![\w.-])" + re.escape(t.code) + r"(?!\w|[.-][A-Za-z0-9])")
-    external = re.fullmatch(r"gh-(\d+)", t.meta.get("external-ref", ""))
+    external = EXTERNAL.fullmatch(t.meta.get("external-ref", ""))
     if external:
-        n = external.group(1)
-        patterns += [rf"(?<![\w&/])#{n}(?!\d)", rf"/issues/{n}(?!\d)"]
+        patterns.append(r"(?<![\w-])" + re.escape(external.group(0)) + r"(?!\w)")
+        url = store.url(t)
+        if url:
+            patterns.append(re.escape(url) + r"(?!\w)")
+        sources = store.sources() or {}
+        if sources and external["source"] == next(iter(sources)) and external["key"].isdigit():
+            patterns.append(rf"(?<![\w&/])#{external['key']}(?!\d)")
     pattern = re.compile("|".join(patterns))
     for other in sorted(store.tickets.values(), key=order):
         if other is t:

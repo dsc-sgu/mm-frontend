@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Import the issues of a GitHub repository into .tickets/ as mm-<number>.
 
-Without --issue it imports every issue and rewrites .tickets/tags from the
-labels; with --issue it imports only those issues, drops labels that
-.tickets/tags does not describe, and commits the new tickets.
+Without --issue it imports every issue as mm-<number> (the snapshot taken at
+the move) and rewrites .tickets/tags from the labels. With --issue it imports
+only those issues: a new one gets a random id like any new ticket, an issue
+imported before keeps its ticket; labels that .tickets/tags does not describe
+and blockers that are not tickets are dropped, and the result is checked and
+committed.
 
 Only reads from GitHub (through the `gh` CLI). Comments become a `## Comments`
 section, sub-issues become `parent`, blocked-by edges become `deps`, labels
@@ -13,6 +16,8 @@ downloaded into .tickets/mm-<number>/ with the links rewritten to them.
 from __future__ import annotations
 
 import argparse
+import importlib.machinery
+import importlib.util
 import json
 import mimetypes
 import re
@@ -125,14 +130,22 @@ def localize(body: str, ticket_id: str, root: Path, used: set) -> str:
     return ATTACHMENT.sub(replace, body)
 
 
-def render(issue: dict, root: Path, ticket_id: str, known_tags: set | None = None) -> str:
+def snapshot_ref(number: int) -> str:
+    return f"mm-{number}"
+
+
+def render(issue: dict, root: Path, ticket_id: str, ref_of=snapshot_ref, known_tags: set | None = None) -> str:
+    """The ticket file of `issue`; `ref_of` maps another issue's number to its ticket's mm-<core>, or None."""
     labels = [label["name"] for label in issue["labels"]["nodes"]]
     if known_tags is not None:
         labels = [label for label in labels if label in known_tags]
+    deps = [ref for ref in (ref_of(b["number"]) for b in issue["blockedBy"]["nodes"]) if ref]
+    parent = ref_of(issue["parent"]["number"]) if issue["parent"] else None
+    directory = "-".join(ticket_id.split("-")[:2])  # attachments live under mm-<core>/
     meta = [
         ("id", ticket_id),
         ("status", "open" if issue["state"] == "OPEN" else "closed"),
-        ("deps", "[" + ", ".join(f"mm-{b['number']}" for b in issue["blockedBy"]["nodes"]) + "]"),
+        ("deps", "[" + ", ".join(deps) + "]"),
         ("links", "[]"),
         ("created", issue["createdAt"]),
         ("type", kind(issue, labels)),
@@ -141,8 +154,8 @@ def render(issue: dict, root: Path, ticket_id: str, known_tags: set | None = Non
     if issue["assignees"]["nodes"]:
         meta.append(("assignee", issue["assignees"]["nodes"][0]["login"]))
     meta.append(("external-ref", f"gh-{issue['number']}"))
-    if issue["parent"]:
-        meta.append(("parent", f"mm-{issue['parent']['number']}"))
+    if parent:
+        meta.append(("parent", parent))
     meta.append(("tags", "[" + ", ".join(labels) + "]"))
     if issue["state"] == "CLOSED":
         meta.append(("closed", issue["closedAt"]))
@@ -152,13 +165,13 @@ def render(issue: dict, root: Path, ticket_id: str, known_tags: set | None = Non
     parts = [f"# {issue['title'].strip()}"]
     body = text(issue["body"])
     if body:
-        parts.append(localize(body, ticket_id, root, used))
+        parts.append(localize(body, directory, root, used))
     comments = issue["comments"]["nodes"]
     if comments:
         parts.append("## Comments")
         for comment in comments:
             login = (comment["author"] or {}).get("login", "ghost")
-            parts.append(f"### {comment['createdAt']} · {login}\n\n{localize(text(comment['body']), ticket_id, root, used)}")
+            parts.append(f"### {comment['createdAt']} · {login}\n\n{localize(text(comment['body']), directory, root, used)}")
     front = "\n".join(f"{key}: {value}" for key, value in meta)
     return f"---\n{front}\n---\n" + "\n\n".join(parts) + "\n"
 
@@ -194,30 +207,57 @@ def main() -> None:
     print(f"imported {len(issues)} issues and {len(labels)} labels into {args.tickets}")
 
 
+def load_tk():
+    path = Path(__file__).resolve().parent.parent / "bin" / "tk"
+    loader = importlib.machinery.SourceFileLoader("tk", str(path))
+    module = importlib.util.module_from_spec(importlib.util.spec_from_loader("tk", loader))
+    sys.modules["tk"] = module  # dataclasses look the module up while it runs
+    loader.exec_module(module)
+    return module
+
+
 def import_some(args) -> None:
-    tags_file = args.tickets / "tags"
-    known = {line.split(",")[0].strip() for line in tags_file.read_text(encoding="utf-8").split("\n") if line.strip()}
+    tk = load_tk()
+
+    def ticket_of(number: int):
+        """The ticket imported from issue `number`, found by `external-ref: gh-<number>`."""
+        store = tk.Store(args.tickets)
+        found = [t for t in store.tickets.values() if t.meta.get("external-ref") == f"gh-{number}"]
+        return found[0] if found else None
+
+    def ref_of(number: int):
+        t = ticket_of(number)
+        if t is None:
+            print(f"  #{number} is not a ticket; leaving it out of the relations", file=sys.stderr)
+        return t.ref if t else None
+
+    known = tk.Store(args.tickets).known_tags()
     written = []
     for number in args.issue:
-        path = existing_path(args.tickets, number)
-        if path and not args.force:
-            sys.exit(f"{path.name} already exists; pass --force to overwrite it")
+        existing = ticket_of(number)
+        if existing and not args.force:
+            sys.exit(f"#{number} is already {existing.id}; pass --force to import it again")
         issue = fetch_one(args.repo, number)
         if issue["comments"]["totalCount"] > 100 or issue["blockedBy"]["totalCount"] > 50:
             sys.exit(f"comments or blocked-by edges of #{number} were cut off")
-        path = path or args.tickets / f"mm-{number}.md"
-        path.write_text(render(issue, args.tickets, path.stem, known), encoding="utf-8")
+        ticket_id = existing.id if existing else tk.Store(args.tickets).next_id()
+        path = args.tickets / f"{ticket_id}.md"
+        path.write_text(render(issue, args.tickets, ticket_id, ref_of, known), encoding="utf-8")
         written.append(path)
-        print(path.stem)
-    names = [str(p.relative_to(args.tickets)) for p in written]
-    names += [d for d in (p.stem.split("-")[0] + "-" + p.stem.split("-")[1] for p in written) if (args.tickets / d).is_dir()]
+        print(ticket_id)
+
+    store = tk.Store(args.tickets)
+    problems = [p for p in tk.check(store) if p.path in written]
+    if problems:
+        sys.exit("imported, but the tickets need fixing before a commit:\n" + tk.format_problems(args.tickets, problems))
+    names = [p.name for p in written]
+    names += [d for d in ("-".join(p.stem.split("-")[:2]) for p in written) if (args.tickets / d).is_dir()]
     subprocess.run(["git", "add", "--", *names], cwd=args.tickets, check=True)
     if subprocess.run(["git", "diff", "--cached", "--quiet", "--", *names], cwd=args.tickets).returncode == 0:
         print("unchanged since the last import", file=sys.stderr)
         return
     refs = ", ".join(f"gh-{n}" for n in args.issue)
     subprocess.run(["git", "commit", "-q", "-m", f"tk: import {refs}", "--", *names], cwd=args.tickets, check=True)
-
 
 if __name__ == "__main__":
     main()

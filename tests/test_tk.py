@@ -162,6 +162,41 @@ class IdTest(TkCase):
         self.assertEqual([row.split(":")[1] for row in out], ["12", "14"])
 
 
+
+class SourceTest(TkCase):
+    def setUp(self) -> None:
+        super().setUp()
+        (self.root / "sources").write_text(
+            "gh , https://github.com/o/r/issues/{n}\nsgu, https://git.sgu.ru/o/r/issues/{n}\n", encoding="utf-8")
+        self.write("mm-28", ticket("mm-28", "Old import", external_ref="gh-28"))
+        self.write("mm-a1b2c", ticket("mm-a1b2c", "From GitHub", external_ref="gh-290"))
+        self.write("mm-d3e4f", ticket("mm-d3e4f", "From the university", external_ref="sgu-17"))
+
+    def title(self, ref: str) -> str:
+        return self.tk("show", ref, "--meta").stdout.split("\n# ", 1)[1].split("\n", 1)[0]
+
+    def test_the_external_ref_finds_the_ticket_and_a_number_means_the_first_source(self) -> None:
+        self.assertEqual(self.title("gh-290"), "From GitHub")
+        self.assertEqual(self.title("#290"), "From GitHub")
+        self.assertEqual(self.title("290"), "From GitHub")
+        self.assertEqual(self.title("SGU-17"), "From the university")
+        self.assertIn("not found", self.tk("show", "17", ok=False).stderr)
+        self.assertEqual(self.title("28"), "Old import")
+
+    def test_show_meta_links_the_original(self) -> None:
+        self.assertIn("\nurl: https://git.sgu.ru/o/r/issues/17", self.tk("show", "sgu-17", "--meta").stdout)
+
+    def test_refs_finds_the_external_ref_and_its_url(self) -> None:
+        self.write("mm-1", ticket("mm-1", "A", "from sgu-17\nhttps://git.sgu.ru/o/r/issues/17 here\nnot sgu-170 or /issues/170\n#17 is GitHub"))
+        self.assertEqual([row.split(":")[1] for row in self.tk("refs", "sgu-17").stdout.splitlines()], ["12", "13"])
+
+    def test_check_wants_a_known_source_and_one_ticket_per_issue(self) -> None:
+        self.write("mm-g5h6j", ticket("mm-g5h6j", external_ref="jira-5"))
+        self.write("mm-k7m8n", ticket("mm-k7m8n", external_ref="gh-290"))
+        out = "\n".join(self.tk("check", ok=False).stdout.splitlines())
+        self.assertIn("mm-g5h6j.md:9: `external-ref` must be <source>-<key> with a source from .tickets/sources (gh, sgu)", out)
+        self.assertIn("`gh-290` names mm-a1b2c and mm-k7m8n too", out)
+
 class GraphTest(TkCase):
     def setUp(self) -> None:
         super().setUp()
@@ -288,6 +323,7 @@ class ReadingTest(TkCase):
             self.assertEqual(lines[int(number) - 1], text)
 
     def test_refs_finds_ids_and_github_numbers_with_line_numbers(self) -> None:
+        (self.root / "sources").write_text("gh , https://github.com/dsc-sgu/mm-frontend/issues/{n}\n", encoding="utf-8")
         self.write("mm-28", ticket("mm-28", "Target", external_ref="gh-28"))
         self.write("mm-1", ticket("mm-1", "A", "See mm-28 here\nand #28 there\nnot #280 or mm-2800\nhttps://github.com/dsc-sgu/mm-frontend/issues/28 link"))
         out = self.tk("refs", "28").stdout.splitlines()
