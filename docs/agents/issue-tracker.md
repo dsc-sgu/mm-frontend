@@ -2,15 +2,16 @@
 
 Tickets and specs for this repo live as Markdown files in `.tickets/` on the orphan branch `tickets`, managed with `tk`. The branch shares no history with `main`; its `README.md` describes the format and every command.
 
-GitHub Issues of this repository are only an intake for people outside the team. Members of the team never open issues; they create tickets with `tk`. The issues opened before the move were imported and closed as not planned with a link to their ticket. A ticket imported from GitHub keeps its number (`#228` is `mm-228`, or `mm-228-REV6.2` with its slice code) and an `external-ref: gh-228`.
+GitHub Issues of this repository are only an intake for people outside the team. Members of the team never open issues; they create tickets with `tk`. The issues opened before the move were imported and closed as not planned with a link to their ticket. A ticket imported at the move keeps its number (`#228` is `mm-228`, or `mm-228-REV6.2` with its slice code). Every ticket from GitHub or any other source has `external-ref: <source>-<key>` (`gh-228`, `sgu-17`), and `tk show gh-228` finds it; `.tickets/sources` lists the sources.
 
 ## Issues from outside the team
 
 - **Triage** them on GitHub with `gh issue view <n> --comments` and `gh issue comment <n>`: ask questions, or close with `gh issue close <n> --reason "not planned"` and a comment why.
-- **Take one on**: run `tools/import_github.py --issue <n>` in the tickets worktree. It creates `mm-<n>` with the issue's body, comments and the labels `.tickets/tags` describes, and commits it. Tag it with `tk tag`, then comment on the issue with a link to the ticket and close it as not planned:
+- **Take one on**: run `tools/import_github.py --issue <n>` in the tickets worktree. It creates a ticket with a random id and `external-ref: gh-<n>`, with the issue's body, comments and the labels `.tickets/tags` describes, checks it, commits it and prints the id. Tag it with `tk tag`, then comment on the issue with a link to the ticket and close it as not planned:
 
   ```bash
-  gh issue close <n> --reason "not planned" --comment "Перенесено в трекер \`tk\`: тикет **mm-<n>** (https://github.com/dsc-sgu/mm-frontend/blob/tickets/.tickets/mm-<n>.md). Работа по задаче ведётся там."
+  id=$(tools/import_github.py --issue <n>)
+  gh issue close <n> --reason "not planned" --comment "Перенесено в трекер \`tk\`: тикет **$id** (https://github.com/dsc-sgu/mm-frontend/blob/tickets/.tickets/$id.md). Работа по задаче ведётся там."
   ```
 
 - Further discussion with the author happens on the closed issue; copy what matters into the ticket with `tk comment`.
