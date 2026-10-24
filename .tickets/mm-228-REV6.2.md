@@ -10,40 +10,40 @@ external-ref: gh-228
 parent: mm-218
 tags: [ready-for-agent]
 ---
-# REV6.2: Публиковать Review Revision атомарно, без ложного успеха и второй Review
+# REV6.2: Публиковать версию проверки атомарно, без ложного успеха и второй проверки
 
-Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть эпика mm-218. Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
-Teacher копит Grade, Overall Feedback и свои root comments в Review Working Copy и публикует их одной Review Revision. Сбой сети не даёт ни ложного успеха, ни второй Review. Конфликт с чужой публикацией не теряет правки.
+Преподаватель копит оценку, общий отзыв и свои комментарии в рабочей копии проверки и публикует их одной версией проверки. Сбой сети не даёт ни ложного успеха, ни второй проверки. Конфликт с чужой публикацией не теряет правки.
 
 ### Делает
 
-**Машина состояний.** Чистая функция `transitionReviewSession(state, event)` в model `review` с состояниями `loading | unavailable | viewing | editing | publishing | publication-unconfirmed | interrupted`. Запрещённые переходы — явные no-op.
+**Машина состояний.** Чистая функция `transitionReviewSession(state, event)` в модели модуля `review` с состояниями `loading | unavailable | viewing | editing | publishing | publication-unconfirmed | interrupted`. Запрещённые переходы — явные no-op.
 
-**Hook.** `useReviewSession(attemptId, intent)` отдаёт состояние и намерения `editGrade`, `editFeedback`, `editOwnComment`, `publish`, `retryPublication`, `applyRecoveryItem`, `discardRecovery`. Намерения lease и вкладок (`tryTakeLease`, `continueHere`) добавляет REV7. Загрузка revision, повторы публикации и обновление проекций скрыты внутри.
+**Хук.** `useReviewSession(attemptId, intent)` отдаёт состояние и намерения `editGrade`, `editFeedback`, `editOwnComment`, `publish`, `retryPublication`, `applyRecoveryItem`, `discardRecovery`. Намерения брони и вкладок (`tryTakeLease`, `continueHere`) добавляет REV7. Загрузка версии, повторы публикации и обновление проекций скрыты внутри.
 
 **Publish gate.** `getPublishGate(...)` возвращает `{ status: 'ready' }` либо `{ status: 'blocked'; reasons }`. Причины этого тикета:
-- revision не загружена;
+- версия не загружена;
 - материал неполон (число записей);
-- Worker `failed`;
-- Grade отсутствует, больше максимума или с лишними знаками;
+- Worker в состоянии `failed`;
+- оценки нет, она больше максимума или с лишними знаками;
 - нет изменений;
 - публикация идёт или не подтверждена.
 
-Причину «lease не мой» добавляет REV7.1. UI показывает все текущие причины.
+Причину «бронь не моя» добавляет REV7.1. Интерфейс показывает все текущие причины.
 
 **Права и привязка.**
-- Teacher меняет Grade, Overall Feedback и свои root comments. Root comments других Teachers только для чтения.
-- Выделение строки или диапазона в diff выбранного файла и стороны привязывает root comment к этому диапазону.
+- Преподаватель меняет оценку, общий отзыв и свои комментарии. Комментарии других преподавателей — только для чтения.
+- Выделение строки или диапазона в diff выбранного файла и стороны привязывает комментарий преподавателя к этому диапазону.
 
-**Пропсы панели Review.** Сейчас `AttemptReviewReviewPanel` получает 13 пропсов, и это плохо:
-- семь из них (`draft`, `gradeError`, `gradeChanged`, `hasChanges`, `onGradeChange`, `onFeedbackChange`, `onDiscard`) — разобранный на части результат одного `useAttemptReviewDraft`. Каждое новое поле Working Copy добавляет пропсы и в page, и в панель;
+**Пропсы панели проверки.** Сейчас `AttemptReviewReviewPanel` получает 13 пропсов, и это плохо:
+- семь из них (`draft`, `gradeError`, `gradeChanged`, `hasChanges`, `onGradeChange`, `onFeedbackChange`, `onDiscard`) — разобранный на части результат одного `useAttemptReviewDraft`. Каждое новое поле рабочей копии добавляет пропсы и в страницу, и в панель;
 - в `mode="readonly"` панель всё равно требует пропсы редактирования и сохранения;
-- полный список скопирован в двух местах `attempt-review/page.tsx` (десктопная и мобильная раскладка).
+- полный список скопирован в двух местах `attempt-review/page.tsx` (раскладки для компьютера и для телефона).
 
-Панель получает состояние `useReviewSession` целиком, а не по полям. Её пропсы — discriminated union по режиму (`AGENTS.md`, «State modeling»): в режиме просмотра нет пропсов редактирования, публикации и publish gate. Разметка панели в `page.tsx` не дублируется.
+Панель получает состояние `useReviewSession` целиком, а не по полям. Её пропсы — размеченное объединение (discriminated union) по режиму (`AGENTS.md`, «State modeling»): в режиме просмотра нет пропсов редактирования, публикации и publish gate. Разметка панели в `page.tsx` не дублируется.
 
-**Публикация.** Форма уровня домена из mm-116 с уточнением mm-132: `leaseId` нет, lease принадлежит auth session.
+**Публикация.** Форма уровня домена из mm-116 с уточнением mm-132: `leaseId` нет, бронь принадлежит сессии входа.
 
 ```ts
 type PublishReviewInput = {
@@ -63,61 +63,61 @@ type PublishReviewResult =
   | { status: 'forbidden' };
 ```
 
-- **MSW handler** проверяет idempotency key раньше revision, применяет Grade, Overall Feedback и полный набор своих root comments одной revision. Удалённый свой root comment с чужими replies оставляет «Комментарий удалён». Пока нет lease, `lease-not-held` handler не возвращает. Порядок проверок и хранение привязки — рабочие допущения mm-113, помеченные в handler.
-- **`published`** вызывает `observeReviewRevision`. Grade пишется и в RAM-мок Course Attempts до ATT1 (решение 4 epic).
+- **Обработчик MSW** проверяет ключ идемпотентности раньше версии, применяет оценку, общий отзыв и полный набор своих комментариев одной версией. Удалённый свой комментарий с чужими ответами оставляет «Комментарий удалён». Пока брони нет, `lease-not-held` обработчик не возвращает. Порядок проверок и хранение привязки — рабочие допущения mm-113, помеченные в обработчике.
+- **`published`** вызывает `observeReviewRevision`. Оценка пишется и в RAM-мок списка попыток курса до ATT1 (решение 4 эпика).
 - **Неизвестный исход** (сеть, `5xx`, невалидный ответ) — `publication-unconfirmed`:
-  - Working Copy заморожена;
+  - рабочая копия заморожена;
   - сначала ограниченный автоматический повтор с тем же `idempotencyKey`, затем «Повторить»;
   - новый ключ появляется только после авторитетного исхода;
   - ответ на повтор — авторитетная сверка.
 - **`revision-conflict`** — `interrupted`:
-  - показывается авторитетная последняя revision;
-  - Working Copy уходит в панель «Неопубликованные изменения»: Grade, Overall Feedback и каждый свой root comment с привязкой, всё можно скопировать;
-  - «Применить» переносит элемент в новую Working Copy от последней revision, автоматического слияния нет.
+  - показывается авторитетная последняя версия;
+  - рабочая копия уходит в панель «Неопубликованные изменения»: оценка, общий отзыв и каждый свой комментарий с привязкой, всё можно скопировать;
+  - «Применить» переносит элемент в новую рабочую копию от последней версии, автоматического слияния нет.
 
 **Тестовая инфраструктура** — первый потребитель:
-- **Общее состояние mock backend для E2E.** Только в test build состояние пишется в localStorage после каждого ответа и читается перед каждым запросом: все страницы одного BrowserContext и перезагрузки видят один backend. Обычный dev-режим по-прежнему сбрасывает состояние при загрузке.
-- **Test-only канал:** смена session без сброса мира; удержание публикации; `fail:lost-response` для публикации.
-- **Stateful-seam:** `useReviewSession` через `renderHook` с настоящим QueryClient, MSW в Node и fake clock.
+- **Общее состояние мок-бэкенда для E2E.** Только в тестовой сборке состояние пишется в localStorage после каждого ответа и читается перед каждым запросом: все страницы одного BrowserContext и перезагрузки видят один бэкенд. Обычный dev-режим по-прежнему сбрасывает состояние при загрузке.
+- **Канал только для тестов:** смена сессии без сброса мира; удержание публикации; `fail:lost-response` для публикации.
+- **Шов с состоянием:** `useReviewSession` через `renderHook` с настоящим QueryClient, MSW в Node и поддельными часами.
 
 ### Удаляет
 
 - `useAttemptReviewDraft` и статусы `pending-*`.
-- Операцию Save и её payload полной заменой.
+- Операцию сохранения и её тело с полной заменой.
 
 ### Не входит
 
 - Защита при уходе — REV6.3.
-- Review Lease, `lease-not-held` и потеря lease как причина `interrupted` — REV7.1.
-- Восстановление Working Copy из браузера — mm-125.
+- Бронь проверки, `lease-not-held` и потеря брони как причина `interrupted` — REV7.1.
+- Восстановление рабочей копии из браузера — mm-273.
 
 ### Контракты
 
-| id | Слой | Риск | Fixtures | Контракт |
+| id | Слой | Риск | Фикстуры | Контракт |
 |---|---|---|---|---|
-| REV-12 | Real browser | Целостность | `world:review` | Выделение строки или диапазона в diff выбранного файла и стороны → root comment привязан к этому диапазону; после публикации Student видит thread на тех же строках. |
+| REV-12 | Real browser | Целостность | `world:review` | Выделение строки или диапазона в diff выбранного файла и стороны → комментарий преподавателя привязан к этому диапазону; после публикации студент видит тред на тех же строках. |
 | REV-22 | Model | Целостность | — | `transitionReviewSession`: полная таблица состояний × событий; запрещённые переходы — явные no-op. (I4) |
-| REV-23 | Model | Целостность | — | `getPublishGate`: каждая причина отдельно и в комбинациях; UI-модель получает все текущие причины, а не первую. (I3, I4) |
-| REV-24 | Stateful | Целостность | `clock` | `publication-unconfirmed`: Working Copy заморожена; auto-retry и «Повторить» несут тот же `idempotencyKey`; новый ключ — только после авторитетного исхода. (I4) |
-| REV-25 | Boundary | Целостность | `world:review`, `fail:lost-response`, `fail:network` | Неизвестный исход публикации, параметризовано по двум мирам: ответ потерян после применения (`fail:lost-response`) и запрос не дошёл (`fail:network`). Клиент их не различает и в обоих делает одно: повтор с тем же `idempotencyKey`. Итог в обоих: `published`, в MSW ровно одна Review, до подтверждения успех не показан. (I4) |
-| REV-28 | Component | Сохранность данных | `world:review` | `revision-conflict` или потеря lease → `interrupted`: авторитетная revision + панель «Неопубликованные изменения» (Grade, Overall Feedback, каждый свой root comment с привязкой), копирование, «Применить» после повторного взятия lease; автоматического слияния нет. (I5) |
-| REV-31 | Component | Целостность | `world:review` | Держатель lease меняет Grade, Overall Feedback и свои root comments; root comments другого Teacher'а только для чтения. |
-| REV-E1 | E2E | Целостность | `world:review` | Анна открывает Attempt mm-2 Саши из Course Attempts, ставит Grade, Overall Feedback и line comment, публикует → Саша в другом контексте видит всё вместе; Course Attempts и история Task показывают ту же Grade. (I7, I8) |
-| REV-E2 | E2E | Целостность | `world:review`, `fail:lost-response` | Потерянный ответ публикации → «Публикация не подтверждена», Working Copy заморожена → «Повторить» → опубликовано; Саша видит ровно одну целостную Review. (I4, I8) |
-| A11Y-02 | Component | Корректность | — | Часть этого тикета: причины publish gate — доступные role, name и state. |
+| REV-23 | Model | Целостность | — | `getPublishGate`: каждая причина отдельно и в комбинациях; модель интерфейса получает все текущие причины, а не первую. (I3, I4) |
+| REV-24 | Stateful | Целостность | `clock` | `publication-unconfirmed`: рабочая копия заморожена; автоматический повтор и «Повторить» несут тот же `idempotencyKey`; новый ключ — только после авторитетного исхода. (I4) |
+| REV-25 | Boundary | Целостность | `world:review`, `fail:lost-response`, `fail:network` | Неизвестный исход публикации, параметризовано по двум мирам: ответ потерян после применения (`fail:lost-response`) и запрос не дошёл (`fail:network`). Клиент их не различает и в обоих делает одно: повтор с тем же `idempotencyKey`. Итог в обоих: `published`, в MSW ровно одна проверка, до подтверждения успех не показан. (I4) |
+| REV-28 | Component | Сохранность данных | `world:review` | `revision-conflict` или потеря брони → `interrupted`: авторитетная версия + панель «Неопубликованные изменения» (оценка, общий отзыв, каждый свой комментарий с привязкой), копирование, «Применить» после повторного взятия брони; автоматического слияния нет. (I5) |
+| REV-31 | Component | Целостность | `world:review` | Держатель брони меняет оценку, общий отзыв и свои комментарии; комментарии другого преподавателя — только для чтения. |
+| REV-E1 | E2E | Целостность | `world:review` | Анна открывает попытку №2 Саши из списка попыток курса, ставит оценку, общий отзыв и комментарий к строкам, публикует → Саша в другом контексте видит всё вместе; список попыток курса и история задания показывают ту же оценку. (I7, I8) |
+| REV-E2 | E2E | Целостность | `world:review`, `fail:lost-response` | Потерянный ответ публикации → «Публикация не подтверждена», рабочая копия заморожена → «Повторить» → опубликовано; Саша видит ровно одну целостную проверку. (I4, I8) |
+| A11Y-02 | Component | Корректность | — | Часть этого тикета: у причин publish gate доступные role, name и state. |
 | TR-05 | Boundary | Корректность | `fail:http-500`, `fail:invalid` | Экземпляр шаблона для публикации; `fail:http-500` и `fail:invalid` ведут в `publication-unconfirmed`. |
 
-REV-28 в этом тикете проверяется для `revision-conflict`, потерю lease добавляет REV7.1. «Саша в другом контексте» в REV-E1 — смена session через test-only канал в том же BrowserContext (решение 2 epic).
+REV-28 в этом тикете проверяется для `revision-conflict`, потерю брони добавляет REV7.1. «Саша в другом контексте» в REV-E1 — смена сессии через канал только для тестов в том же BrowserContext (решение 2 эпика).
 
-Fixtures описаны во вкладке «Fixtures» [матрицы](https://github.com/dsc-sgu/mm-frontend/blob/ddda126c5e73ec787362805c286ee081ee26244d/docs/prototypes/test-contract-matrix.html).
+Фикстуры описаны во вкладке «Fixtures» [матрицы](https://github.com/dsc-sgu/mm-frontend/blob/ddda126c5e73ec787362805c286ee081ee26244d/docs/prototypes/test-contract-matrix.html).
 
 ### Готово, когда
 
-- Lint и build проходят.
-- Контракты выше зелёные; browser и E2E — в Chromium, Firefox и WebKit.
+- `bun run lint` и `bun run build` проходят.
+- Контракты выше зелёные; контракты в браузере и E2E — в Chromium, Firefox и WebKit.
 
 ### Источники
 
-- Epic mm-218: «Review editor и публикация (REV6)», «Mock backend и test-only канал», решения 2 и 4.
-- mm-116 «Спроектировать Review → Grade → Student result vertical»: «Публикация и неопределённость», «Review editor как глубокий module», slice 6.
-- ADR 0001 «Review публикуется атомарными Review Revisions».
+- Эпик mm-218: «Редактор проверки и публикация (REV6)», «Мок-бэкенд и канал только для тестов», решения 2 и 4.
+- mm-116 — проектирование вертикали «проверка → оценка → результат студента»: «Публикация и неопределённость», «Редактор проверки как глубокий модуль», этап 6.
+- ADR 0001 «Проверка публикуется атомарными версиями».
