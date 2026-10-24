@@ -12,7 +12,7 @@ tags: [ready-for-agent]
 ---
 # REV7.1: Брать и держать Review Lease на время работы в Review editor
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Review editor берёт Review Lease при входе и держит его, пока Teacher работает. Второй Teacher видит, кто проверяет, и не перезаписывает чужую работу. Сам Teacher может вернуть lease из другой сессии.
 
@@ -36,7 +36,7 @@ Review editor берёт Review Lease при входе и держит его, 
 
 **Mock backend.**
 - Review Lease по `AttemptId`: владелец — session, TTL 60 с, `423` с holder, перехват тем же User из другой сессии.
-- Обобщение Course lease до lease по id ресурса, перехват и снятие при logout — рабочие допущения [#113](https://github.com/dsc-sgu/mm-frontend/issues/113), помеченные в handlers.
+- Обобщение Course lease до lease по id ресурса, перехват и снятие при logout — рабочие допущения mm-113, помеченные в handlers.
 - Test-only канал умеет сделать holder'ом другого Teacher'а для REV-E4.
 
 **До REV7.2** вкладки одного браузера делят lease без координации и могут перезаписать правки друг друга. Риск такой же, как в текущем коде.
@@ -48,9 +48,9 @@ Review editor берёт Review Lease при входе и держит его, 
 ### Не входит
 
 - Протокол вкладок — REV7.2 и REV7.3.
-- Снятие lease при долгой неактивности — [#135](https://github.com/dsc-sgu/mm-frontend/issues/135).
+- Снятие lease при долгой неактивности — mm-135.
 - Показ состояния lease в Course Attempts из MSW — Course Attempts epic.
-- SSE — [#98](https://github.com/dsc-sgu/mm-frontend/issues/98).
+- SSE — mm-98.
 
 ### Контракты
 
@@ -73,7 +73,7 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Review Lease (REV7)», решение 1.
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): «Review Lease», slice 7.
-- [«Спроектировать смену пишущей вкладки редактора»](https://github.com/dsc-sgu/mm-frontend/issues/132): решение 7.
+- Epic mm-218: «Review Lease (REV7)», решение 1.
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: «Review Lease», slice 7.
+- mm-132 «Спроектировать смену пишущей вкладки редактора»: решение 7.
 - ADR 0004 «Lease принадлежит браузеру, вкладки делят редактор локально».

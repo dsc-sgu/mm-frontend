@@ -14,7 +14,7 @@ close-reason: completed
 ---
 # REV3.1: Запускать diff Workers только на страницах Attempt и показывать их отказ
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218).
+Часть epic mm-218 «Review».
 
 Diff Workers запускаются только на Attempt page и в Review editor. Если Worker или WASM недоступны, Teacher видит ошибку с «Повторить» вместо бесконечной загрузки и может продолжать писать Review.
 
@@ -60,6 +60,6 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Материал Attempt и готовность diff (REV3)», «Решения по тестированию», решение 3.
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): slice 3.
-- [#72](https://github.com/dsc-sgu/mm-frontend/issues/72): «Diff Worker readiness».
+- Epic mm-218: «Материал Attempt и готовность diff (REV3)», «Решения по тестированию», решение 3.
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: slice 3.
+- mm-72: «Diff Worker readiness».

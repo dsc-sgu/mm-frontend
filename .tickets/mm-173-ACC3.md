@@ -14,7 +14,7 @@ close-reason: completed
 ---
 # ACC3: Хранить кэш Course под CourseId и очищать его со сменой session
 
-Часть epic [«Course access»](https://github.com/dsc-sgu/mm-frontend/issues/167). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-167 «Course access». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Кэш Course живёт под одним prefix стабильного `CourseId`. Смена User или потеря Course Membership не оставляет на экране ничего от прежнего доступа. Тикет нельзя раздать по вертикалям: в непереведённых семействах кэш потерянного Course оставался бы видимым (I2).
 
@@ -76,7 +76,7 @@ ACC-E4 — единственный E2E эпика, где выход идёт �
 
 ### Уточнения из заменённых тикетов
 
-- [«Унифицировать ключи запросов и правила согласованности кеша»](https://github.com/dsc-sgu/mm-frontend/issues/76):
+- mm-76 «Унифицировать ключи запросов и правила согласованности кеша»:
   - каждый key включает все входы, меняющие результат `queryFn`;
   - точный entry обновляется из mutation response только при полном провалидированном авторитетном представлении;
   - derived и неполные представления инвалидируются минимальным корректным prefix;
@@ -92,6 +92,6 @@ ACC-E4 — единственный E2E эпика, где выход идёт �
 
 ### Источники
 
-- Epic [#167](https://github.com/dsc-sgu/mm-frontend/issues/167): «Query cache и session (ACC3)».
-- [«Спроектировать Course access vertical и identity seam»](https://github.com/dsc-sgu/mm-frontend/issues/115).
-- [«Определить последовательность подготовки и выполнения рефакторинга»](https://github.com/dsc-sgu/mm-frontend/issues/69#issuecomment-6108811160): «ACC3 нельзя раздать по вертикалям».
+- Epic mm-167: «Query cache и session (ACC3)».
+- mm-115 «Спроектировать Course access vertical и identity seam».
+- mm-69, комментарий от 2026-10-11T12:02:31Z «Определить последовательность подготовки и выполнения рефакторинга»: «ACC3 нельзя раздать по вертикалям».

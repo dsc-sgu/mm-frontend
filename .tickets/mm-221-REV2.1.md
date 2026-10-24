@@ -14,7 +14,7 @@ close-reason: completed
 ---
 # REV2.1: Читать Review, Attempt и selector по AttemptId из единого состояния Attempts и Reviews
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Attempt page и Review editor читают Review, сведения Attempt и selector Attempts раздельными операциями по `AttemptId` из одного состояния Attempts и Reviews в mock backend. Обратного перевода identities в slug и username больше нет.
 
@@ -28,7 +28,7 @@ Attempt page и Review editor читают Review, сведения Attempt и s
   - время и Teacher'а публикации.
 - Replies с автором (`UserId`) хранятся рядом с root comment, но не входят в revision.
 - Attempts получают время отправки, Task — `maxGrade`.
-- `world:review`: Саша, Attempt #1 — Review revision 2 (Grade 7,5, Overall Feedback, root comments Анны и Бориса, reply Саши); Саша, Attempt #2 — без Review; Петя, Attempt #1 — без Review. Dev-seed остаётся демо-набором.
+- `world:review`: Саша, Attempt mm-1 — Review revision 2 (Grade 7,5, Overall Feedback, root comments Анны и Бориса, reply Саши); Саша, Attempt mm-2 — без Review; Петя, Attempt mm-1 — без Review. Dev-seed остаётся демо-набором.
 
 **Read operations** (feature `review` для Review, `attempt-review` для остального). Вместо aggregate:
 - Review по `AttemptId`. Отсутствие Review — объявленный исход, а не ошибка.
@@ -72,8 +72,8 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Уточнения
 
-- [#69, уточнение REV2](https://github.com/dsc-sgu/mm-frontend/issues/69#issuecomment-6162616027) — пункты «Удаляет» и «Временные mutations» выше.
-- [#81](https://github.com/dsc-sgu/mm-frontend/issues/81): attempt-review не импортирует собственный stateful RAM-мок; сохранённый reply получает identity фактического текущего User.
+- mm-69, комментарий от 2026-10-14T06:47:35Z, уточнение REV2 — пункты «Удаляет» и «Временные mutations» выше.
+- mm-81: attempt-review не импортирует собственный stateful RAM-мок; сохранённый reply получает identity фактического текущего User.
 
 ### Готово, когда
 
@@ -83,5 +83,5 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Read operations и единое состояние (REV2)», решение 4.
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): slice 2.
+- Epic mm-218: «Read operations и единое состояние (REV2)», решение 4.
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: slice 2.

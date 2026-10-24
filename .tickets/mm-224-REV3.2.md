@@ -12,7 +12,7 @@ tags: [ready-for-agent]
 ---
 # REV3.2: Загружать материал Attempt по changed-files manifest с проверкой полноты
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Материал Attempt приходит от backend: атомарный changed-files manifest и содержимое по записям. Teacher видит, с чем сравнивается Attempt, какие файлы не загрузились, и не может сохранить Review, пока материал неполон.
 
@@ -22,8 +22,8 @@ tags: [ready-for-agent]
 - У каждой Attempt есть manifest. Baseline описан в manifest: Attempt (возможно, другой Task той же Task Group), шаблон или пустое дерево.
 - Запись manifest — путь, тип изменения, вид (`text | binary | too-large | unsupported`) и размеры.
 - Содержимое текстовой записи — полный старый и новый текст.
-- `world:review`, Саша, Attempt #2: 3 текстовые записи, binary и too-large, baseline — Attempt #1.
-- Baseline, manifest и полнота содержимого — рабочие допущения [#113](https://github.com/dsc-sgu/mm-frontend/issues/113), помеченные в handlers.
+- `world:review`, Саша, Attempt mm-2: 3 текстовые записи, binary и too-large, baseline — Attempt mm-1.
+- Baseline, manifest и полнота содержимого — рабочие допущения mm-113, помеченные в handlers.
 - Профиль `fail:entry`: содержимое записи падает N раз или всегда. Test-only канал умеет включать его для E2E.
 
 **Загрузка.**
@@ -46,8 +46,8 @@ tags: [ready-for-agent]
 
 ### Не входит
 
-- Выбор базы сравнения Teacher'ом — backlog [#196](https://github.com/dsc-sgu/mm-frontend/issues/196).
-- Показ файла целиком — backlog [#195](https://github.com/dsc-sgu/mm-frontend/issues/195).
+- Выбор базы сравнения Teacher'ом — backlog mm-196.
+- Показ файла целиком — backlog mm-195.
 - Streaming материала: он заменит только способ доставки.
 
 ### Загрузка страницы
@@ -83,8 +83,8 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Материал Attempt и готовность diff (REV3)».
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): «Identity и материал Attempt», slice 3.
+- Epic mm-218: «Материал Attempt и готовность diff (REV3)».
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: «Identity и материал Attempt», slice 3.
 
 ## Comments
 
@@ -102,6 +102,6 @@ type Baseline =
 ```
 
 - Варианты взаимоисключающие. Не заменять их опциональным номером и булевым флагом.
-- Базой сравнения может быть попытка предыдущего задания той же цепочки заданий: у студента один репозиторий на цепочку, и первая попытка следующего задания продолжает код предыдущего (решение фронтенда в #113, правило бэкенда пока открыто). Поэтому в варианте `attempt` есть задание: одного номера попытки мало. Шапка должна показывать, что это попытка предыдущего задания цепочки, а не только «Сравнение с попыткой #N».
+- Базой сравнения может быть попытка предыдущего задания той же цепочки заданий: у студента один репозиторий на цепочку, и первая попытка следующего задания продолжает код предыдущего (решение фронтенда в mm-113, правило бэкенда пока открыто). Поэтому в варианте `attempt` есть задание: одного номера попытки мало. Шапка должна показывать, что это попытка предыдущего задания цепочки, а не только «Сравнение с попыткой #N».
 - Текст «Сравнение с …» шапка выбирает через `switch` по `kind`, без проверки номера на truthy.
-- DTO манифеста приводится к этому типу на границе доверия. Что именно бэкенд передаёт для варианта `attempt`, остаётся рабочим допущением #113.
+- DTO манифеста приводится к этому типу на границе доверия. Что именно бэкенд передаёт для варианта `attempt`, остаётся рабочим допущением mm-113.

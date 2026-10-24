@@ -12,7 +12,7 @@ tags: [ready-for-human]
 ---
 # REV4: Писать и показывать review-текст на Plate без HTML в модели
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Overall Feedback, root comments и replies пишутся и показываются на Plate по `ReviewTextDocument`. HTML нет ни в модели, ни в моках, ни на readonly-выходе. Ссылка вставляется через dialog.
 
@@ -83,6 +83,6 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Review-текст (REV4)».
-- [«Выбрать persisted contract review-текста при переходе на Plate»](https://github.com/dsc-sgu/mm-frontend/issues/109).
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): slice 4.
+- Epic mm-218: «Review-текст (REV4)».
+- mm-109 «Выбрать persisted contract review-текста при переходе на Plate».
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: slice 4.

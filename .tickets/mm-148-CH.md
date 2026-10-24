@@ -20,7 +20,7 @@ close-reason: completed
 - Playwright Test и официальный `@platejs/playwright` для работы с редактором.
 - Job в CI на Chromium, Firefox и WebKit. Движки равноправны.
 - Traces и screenshots сохраняются только как диагностические artifacts. Pixel-сравнений нет.
-- Flaky policy из #68: один автоматический повтор только ради trace и классификации; прохождение со второй попытки не считается чистым.
+- Flaky policy из mm-68: один автоматический повтор только ради trace и классификации; прохождение со второй попытки не считается чистым.
 
 **Characterization на текущем редакторе.**
 - DOC-14 и DOC-18 пишутся до PL и DOC1.
@@ -34,12 +34,12 @@ CH и K идут параллельно. Кто приходит вторым, �
 
 | id | Слой | Риск | Fixtures | Контракт |
 |---|---|---|---|---|
-| DOC-14 | Real browser | Корректность | `doc:lists-74` | Сценарии #74: три ordered items → `1, 2, 3` (регрессия `1, 1, 1`); создание через `1.` и команду; Enter, пустой Enter, Backspace, Tab/Shift+Tab; смена variant; drag/delete; multi-selection drag; сохранить → открыть снова; номера совпадают с read-only. |
+| DOC-14 | Real browser | Корректность | `doc:lists-74` | Сценарии mm-74: три ordered items → `1, 2, 3` (регрессия `1, 1, 1`); создание через `1.` и команду; Enter, пустой Enter, Backspace, Tab/Shift+Tab; смена variant; drag/delete; multi-selection drag; сохранить → открыть снова; номера совпадают с read-only. |
 | DOC-18 | Real browser | Корректность | `doc:all-blocks` | Фокус после insert, move, moveUp/Down, remove, duplicate, transform и после undo/redo; keyboard drag возвращает фокус. |
 
 Fixtures здесь — последовательности, которые тест набирает в редакторе. Канонических документов v1 ещё нет, они приходят в DOC1.
 
-Подробные сценарии — «Обязательные regression scenarios» в [«Зафиксировать контракт нумерации списков редактора»](https://github.com/dsc-sgu/mm-frontend/issues/74). Почему characterization только эти две — вкладка «Characterization» [матрицы](https://github.com/dsc-sgu/mm-frontend/blob/ddda126c5e73ec787362805c286ee081ee26244d/docs/prototypes/test-contract-matrix.html).
+Подробные сценарии — «Обязательные regression scenarios» в mm-74 «Зафиксировать контракт нумерации списков редактора». Почему characterization только эти две — вкладка «Characterization» [матрицы](https://github.com/dsc-sgu/mm-frontend/blob/ddda126c5e73ec787362805c286ee081ee26244d/docs/prototypes/test-contract-matrix.html).
 
 ### Если подсценарий не проходит на текущем редакторе
 
@@ -59,6 +59,6 @@ Fixtures здесь — последовательности, которые т�
 
 ### Источники
 
-- [«Выбрать слоистую стратегию тестирования»](https://github.com/dsc-sgu/mm-frontend/issues/68): стек, browser matrix, flaky policy, characterization policy.
-- [«Спроектировать матрицу тестовых контрактов критических вертикалей»](https://github.com/dsc-sgu/mm-frontend/issues/120): решение 1.
-- [«Спроектировать structured-document seam Course Page»](https://github.com/dsc-sgu/mm-frontend/issues/119#issuecomment-6106418624): уточнения из матрицы, «Characterization до slice 1».
+- mm-68 «Выбрать слоистую стратегию тестирования»: стек, browser matrix, flaky policy, characterization policy.
+- mm-120 «Спроектировать матрицу тестовых контрактов критических вертикалей»: решение 1.
+- mm-120, комментарий от 2026-10-11T06:53:09Z «Спроектировать structured-document seam Course Page»: уточнения из матрицы, «Characterization до slice 1».

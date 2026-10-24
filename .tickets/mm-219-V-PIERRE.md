@@ -14,7 +14,7 @@ close-reason: completed
 ---
 # V-PIERRE: Обновить Pierre Diffs до 1.4 с одной Shiki и восстанавливаемым кэшем подсветки
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218).
+Часть epic mm-218 «Review».
 
 Diff Attempt работает на актуальной Pierre Diffs, в сборке одна Shiki, а сбой загрузки подсветки не ломает её до перезагрузки страницы. Поведение для User не меняется. Slice готовит основу, на которой REV3.1 строит готовность diff.
 
@@ -39,7 +39,7 @@ Diff Attempt работает на актуальной Pierre Diffs, в сбо�
 
 ### Не входит
 
-- `@pierre/trees` — backlog [#137](https://github.com/dsc-sgu/mm-frontend/issues/137).
+- `@pierre/trees` — backlog mm-137.
 - Перенос Worker pool на routes review, состояния `loading | ready | failed` и бесконечный loader — REV3.1.
 - Лимиты Worker pool (1 Worker / cache 10 на мобильных, 3 / 100 на desktop) — их подтверждают замером после REV3.
 
@@ -56,6 +56,6 @@ Diff Attempt работает на актуальной Pierre Diffs, в сбо�
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218).
-- [«Разобрать низкоуровневые browser- и scheduling-механизмы»](https://github.com/dsc-sgu/mm-frontend/issues/72): «`@pierre/diffs` и две Shiki», «transiently poisoned Shiki Promise caches».
-- [#69](https://github.com/dsc-sgu/mm-frontend/issues/69#issuecomment-6108811160): кэш Shiki отнесён к V-PIERRE.
+- Epic mm-218.
+- mm-72 «Разобрать низкоуровневые browser- и scheduling-механизмы»: «`@pierre/diffs` и две Shiki», «transiently poisoned Shiki Promise caches».
+- mm-69, комментарий от 2026-10-11T12:02:31Z: кэш Shiki отнесён к V-PIERRE.

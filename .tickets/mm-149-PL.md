@@ -18,7 +18,7 @@ close-reason: completed
 
 - Обновляет `platejs` и все `@platejs/*` одним cohort до актуальных совместимых версий.
 - Разбирается с точной фиксацией `@platejs/selection` на `53.0.0`. Она появилась в `b6344c4` («add marquee block selection») без объяснения. Итог — либо фиксация снята, либо её причина записана рядом.
-- `queueMicrotask` и `editor.meta._forceFocus` в `page-edit/model/block-operations.ts` чувствительны к обновлению (#72). Если обновление их ломает, чинится видимый исход DOC-18, без перехода к `BlockCommands`: это DOC4.
+- `queueMicrotask` и `editor.meta._forceFocus` в `page-edit/model/block-operations.ts` чувствительны к обновлению (mm-72). Если обновление их ломает, чинится видимый исход DOC-18, без перехода к `BlockCommands`: это DOC4.
 
 ### Не входит
 
@@ -36,5 +36,5 @@ close-reason: completed
 
 ### Источники
 
-- [«Провести аудит зависимостей и конкурирующих библиотек»](https://github.com/dsc-sgu/mm-frontend/issues/71): cohort 6 в ревизии версий.
-- [«Разобрать низкоуровневые browser- и scheduling-механизмы»](https://github.com/dsc-sgu/mm-frontend/issues/72): «Course Page editor DOM/Plate coordination».
+- mm-71 «Провести аудит зависимостей и конкурирующих библиотек»: cohort 6 в ревизии версий.
+- mm-72 «Разобрать низкоуровневые browser- и scheduling-механизмы»: «Course Page editor DOM/Plate coordination».

@@ -12,7 +12,7 @@ tags: [ready-for-agent]
 ---
 # REV2.2: Строить историю попыток на странице Task из того же состояния
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 История попыток Student'а на странице Task читается из того же состояния Attempts и Reviews, что и Review и selector. Grade в истории и на Attempt page одна.
 
@@ -46,7 +46,7 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Уточнения
 
-[#79](https://github.com/dsc-sgu/mm-frontend/issues/79): Student видит только историю, относящуюся к его identity и текущему Course; mutation отметки меняет состояние backend и сохраняется после refetch; повторное чтение не генерирует новых Attempts или отметок; feature `task` не импортирует собственный stateful RAM-мок истории.
+mm-79: Student видит только историю, относящуюся к его identity и текущему Course; mutation отметки меняет состояние backend и сохраняется после refetch; повторное чтение не генерирует новых Attempts или отметок; feature `task` не импортирует собственный stateful RAM-мок истории.
 
 ### Готово, когда
 
@@ -55,5 +55,5 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Read operations и единое состояние (REV2)».
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): slice 2.
+- Epic mm-218: «Read operations и единое состояние (REV2)».
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: slice 2.

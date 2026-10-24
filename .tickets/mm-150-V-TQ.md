@@ -24,7 +24,7 @@ close-reason: completed
 
 ### Не входит
 
-`@tanstack/react-virtual` — в #71 он отдельный cohort.
+`@tanstack/react-virtual` — в mm-71 он отдельный cohort.
 
 ### Готово, когда
 
@@ -34,4 +34,4 @@ close-reason: completed
 
 ### Источники
 
-[«Провести аудит зависимостей и конкурирующих библиотек»](https://github.com/dsc-sgu/mm-frontend/issues/71): cohort 7 в ревизии версий.
+mm-71 «Провести аудит зависимостей и конкурирующих библиотек»: cohort 7 в ревизии версий.

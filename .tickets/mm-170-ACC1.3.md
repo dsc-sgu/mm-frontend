@@ -14,13 +14,13 @@ close-reason: completed
 ---
 # ACC1.3: Открывать разделы Course по section policy с явным 403
 
-Часть epic [«Course access»](https://github.com/dsc-sgu/mm-frontend/issues/167).
+Часть epic mm-167 «Course access».
 
 Права разделов Course задаёт одна таблица. Раздел не по роли становится явным `403` вместо redirect. После этого тикета единственный автоматический redirect — unauthenticated → login.
 
 ### Делает
 
-**Section policy.** Таблица из [#115](https://github.com/dsc-sgu/mm-frontend/issues/115) — единственный источник правил для навигации и авторизации route:
+**Section policy.** Таблица из mm-115 — единственный источник правил для навигации и авторизации route:
 
 ```ts
 const courseSectionAccess = {
@@ -60,7 +60,7 @@ const courseSectionAccess = {
 ### Не входит
 
 - Владение participant-bound ресурсами — ACC2.2.
-- Содержимое персонального журнала ([#99](https://github.com/dsc-sgu/mm-frontend/issues/99)).
+- Содержимое персонального журнала (mm-99).
 - Очистка кэша Course по prefix при потере Membership — ACC3. Здесь заменяется только видимое содержимое.
 
 ### Контракты
@@ -84,6 +84,6 @@ Component-тесты идут через настоящее дерево routes 
 
 ### Источники
 
-- Epic [#167](https://github.com/dsc-sgu/mm-frontend/issues/167): «Section policy», «Route states и тексты», решение 2 в «Дополнительно».
-- [«Спроектировать Course access vertical и identity seam»](https://github.com/dsc-sgu/mm-frontend/issues/115).
-- [«Выбрать явный UX для отказа в course-local доступе»](https://github.com/dsc-sgu/mm-frontend/issues/111).
+- Epic mm-167: «Section policy», «Route states и тексты», решение 2 в «Дополнительно».
+- mm-115 «Спроектировать Course access vertical и identity seam».
+- mm-111 «Выбрать явный UX для отказа в course-local доступе».

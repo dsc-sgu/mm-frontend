@@ -12,7 +12,7 @@ tags: [ready-for-agent]
 ---
 # ACC4: Реагировать на отказ в доступе от любого чтения по стабильным identities
 
-Часть epic [«Course access»](https://github.com/dsc-sgu/mm-frontend/issues/167). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-167 «Course access». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 ## Проблема
 

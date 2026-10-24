@@ -12,7 +12,7 @@ tags: [ready-for-agent]
 ---
 # REV6.3: Предупреждать об уходе с несохранённой Review Working Copy
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218).
+Часть epic mm-218 «Review».
 
 Teacher не теряет неопубликованную Review Working Copy случайно: уход, переключение Attempt, reload и закрытие вкладки требуют подтверждения. Просмотр без изменений уход не блокирует.
 
@@ -46,7 +46,7 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Уточнения
 
-[«Предупреждать об уходе с несохранённого attempt review»](https://github.com/dsc-sgu/mm-frontend/issues/87) и его комментарий о связи с Review vertical: после явного discard или успешной публикации предупреждение исчезает; readonly-просмотр и Review без локальных изменений уход не блокируют; новые свои root comments учитываются как несохранённая работа.
+mm-87 «Предупреждать об уходе с несохранённого attempt review» и его комментарий о связи с Review vertical: после явного discard или успешной публикации предупреждение исчезает; readonly-просмотр и Review без локальных изменений уход не блокируют; новые свои root comments учитываются как несохранённая работа.
 
 ### Готово, когда
 
@@ -55,5 +55,5 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Review editor и публикация (REV6)», «Защита при уходе».
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): «Публикация и неопределённость».
+- Epic mm-218: «Review editor и публикация (REV6)», «Защита при уходе».
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: «Публикация и неопределённость».

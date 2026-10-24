@@ -12,7 +12,7 @@ tags: [ready-for-agent]
 ---
 # REV6.2: Публиковать Review Revision атомарно, без ложного успеха и второй Review
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Teacher копит Grade, Overall Feedback и свои root comments в Review Working Copy и публикует их одной Review Revision. Сбой сети не даёт ни ложного успеха, ни второй Review. Конфликт с чужой публикацией не теряет правки.
 
@@ -43,7 +43,7 @@ Teacher копит Grade, Overall Feedback и свои root comments в Review W
 
 Панель получает состояние `useReviewSession` целиком, а не по полям. Её пропсы — discriminated union по режиму (`AGENTS.md`, «State modeling»): в режиме просмотра нет пропсов редактирования, публикации и publish gate. Разметка панели в `page.tsx` не дублируется.
 
-**Публикация.** Форма уровня домена из #116 с уточнением #132: `leaseId` нет, lease принадлежит auth session.
+**Публикация.** Форма уровня домена из mm-116 с уточнением mm-132: `leaseId` нет, lease принадлежит auth session.
 
 ```ts
 type PublishReviewInput = {
@@ -63,7 +63,7 @@ type PublishReviewResult =
   | { status: 'forbidden' };
 ```
 
-- **MSW handler** проверяет idempotency key раньше revision, применяет Grade, Overall Feedback и полный набор своих root comments одной revision. Удалённый свой root comment с чужими replies оставляет «Комментарий удалён». Пока нет lease, `lease-not-held` handler не возвращает. Порядок проверок и хранение привязки — рабочие допущения [#113](https://github.com/dsc-sgu/mm-frontend/issues/113), помеченные в handler.
+- **MSW handler** проверяет idempotency key раньше revision, применяет Grade, Overall Feedback и полный набор своих root comments одной revision. Удалённый свой root comment с чужими replies оставляет «Комментарий удалён». Пока нет lease, `lease-not-held` handler не возвращает. Порядок проверок и хранение привязки — рабочие допущения mm-113, помеченные в handler.
 - **`published`** вызывает `observeReviewRevision`. Grade пишется и в RAM-мок Course Attempts до ATT1 (решение 4 epic).
 - **Неизвестный исход** (сеть, `5xx`, невалидный ответ) — `publication-unconfirmed`:
   - Working Copy заморожена;
@@ -89,7 +89,7 @@ type PublishReviewResult =
 
 - Защита при уходе — REV6.3.
 - Review Lease, `lease-not-held` и потеря lease как причина `interrupted` — REV7.1.
-- Восстановление Working Copy из браузера — [#125](https://github.com/dsc-sgu/mm-frontend/issues/125).
+- Восстановление Working Copy из браузера — mm-125.
 
 ### Контракты
 
@@ -102,7 +102,7 @@ type PublishReviewResult =
 | REV-25 | Boundary | Целостность | `world:review`, `fail:lost-response`, `fail:network` | Неизвестный исход публикации, параметризовано по двум мирам: ответ потерян после применения (`fail:lost-response`) и запрос не дошёл (`fail:network`). Клиент их не различает и в обоих делает одно: повтор с тем же `idempotencyKey`. Итог в обоих: `published`, в MSW ровно одна Review, до подтверждения успех не показан. (I4) |
 | REV-28 | Component | Сохранность данных | `world:review` | `revision-conflict` или потеря lease → `interrupted`: авторитетная revision + панель «Неопубликованные изменения» (Grade, Overall Feedback, каждый свой root comment с привязкой), копирование, «Применить» после повторного взятия lease; автоматического слияния нет. (I5) |
 | REV-31 | Component | Целостность | `world:review` | Держатель lease меняет Grade, Overall Feedback и свои root comments; root comments другого Teacher'а только для чтения. |
-| REV-E1 | E2E | Целостность | `world:review` | Анна открывает Attempt #2 Саши из Course Attempts, ставит Grade, Overall Feedback и line comment, публикует → Саша в другом контексте видит всё вместе; Course Attempts и история Task показывают ту же Grade. (I7, I8) |
+| REV-E1 | E2E | Целостность | `world:review` | Анна открывает Attempt mm-2 Саши из Course Attempts, ставит Grade, Overall Feedback и line comment, публикует → Саша в другом контексте видит всё вместе; Course Attempts и история Task показывают ту же Grade. (I7, I8) |
 | REV-E2 | E2E | Целостность | `world:review`, `fail:lost-response` | Потерянный ответ публикации → «Публикация не подтверждена», Working Copy заморожена → «Повторить» → опубликовано; Саша видит ровно одну целостную Review. (I4, I8) |
 | A11Y-02 | Component | Корректность | — | Часть этого тикета: причины publish gate — доступные role, name и state. |
 | TR-05 | Boundary | Корректность | `fail:http-500`, `fail:invalid` | Экземпляр шаблона для публикации; `fail:http-500` и `fail:invalid` ведут в `publication-unconfirmed`. |
@@ -118,6 +118,6 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Review editor и публикация (REV6)», «Mock backend и test-only канал», решения 2 и 4.
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): «Публикация и неопределённость», «Review editor как глубокий module», slice 6.
+- Epic mm-218: «Review editor и публикация (REV6)», «Mock backend и test-only канал», решения 2 и 4.
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: «Публикация и неопределённость», «Review editor как глубокий module», slice 6.
 - ADR 0001 «Review публикуется атомарными Review Revisions».

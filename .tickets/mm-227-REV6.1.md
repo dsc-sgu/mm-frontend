@@ -12,7 +12,7 @@ tags: [ready-for-agent]
 ---
 # REV6.1: Сводить каждую Review Revision в cache через observeReviewRevision
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Prefactor ядра Review editor. Каждая авторитетная Review Revision попадает в cache через одну функцию, которая не даёт старой revision заменить новую и обновляет все экраны с Grade. После сохранения Review selector, история Task и Course Attempts показывают новую Grade.
 
@@ -25,7 +25,7 @@ Prefactor ядра Review editor. Каждая авторитетная Review R
 
 Сравнение revision происходит только внутри владельца cache. Это не шина событий.
 
-Её вызывают загрузка Review и текущий Save. В REV6.2 Save заменит публикация, позже — quick grading (ATT6) и SSE ([#98](https://github.com/dsc-sgu/mm-frontend/issues/98)).
+Её вызывают загрузка Review и текущий Save. В REV6.2 Save заменит публикация, позже — quick grading (ATT6) и SSE (mm-98).
 
 ### Удаляет
 
@@ -52,6 +52,6 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Согласованность Grade (REV6)».
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): «Согласованность Grade на всех экранах».
-- [«Унифицировать ключи запросов и правила согласованности кеша»](https://github.com/dsc-sgu/mm-frontend/issues/76): `observeReviewRevision`.
+- Epic mm-218: «Согласованность Grade (REV6)».
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: «Согласованность Grade на всех экранах».
+- mm-76 «Унифицировать ключи запросов и правила согласованности кеша»: `observeReviewRevision`.

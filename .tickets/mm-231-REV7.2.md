@@ -12,13 +12,13 @@ tags: [ready-for-human]
 ---
 # REV7.2: Делить Review editor между вкладками — живая копия и «Продолжить здесь»
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218).
+Часть epic mm-218 «Review».
 
 Вкладки одного браузера делят Review editor. Пишет одна, остальные показывают живую копию Review Working Copy. «Продолжить здесь» переносит работу без сервера и без потерь. Закрытая пишущая вкладка передаёт работу следующей.
 
 ### Делает
 
-Протокол из [#132](https://github.com/dsc-sgu/mm-frontend/issues/132) в общем module `lease`. Ресурс — `mm:editor:{UserId}:review:{AttemptId}`.
+Протокол из mm-132 в общем module `lease`. Ресурс — `mm:editor:{UserId}:review:{AttemptId}`.
 
 **Кто пишет.**
 - Запись `{epoch, writer}` в localStorage. Каждая смена увеличивает `epoch`.
@@ -81,6 +81,6 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Протокол вкладок (REV7)».
-- [«Спроектировать смену пишущей вкладки редактора»](https://github.com/dsc-sgu/mm-frontend/issues/132): «Модель», решения 1, 3, 4, 6, 8; прототип [`editor-tab-handoff.html`](https://github.com/dsc-sgu/mm-frontend/blob/fc7fb23c7669f1990ecfa94a9686b6ed67d56c1f/docs/prototypes/editor-tab-handoff.html) (переносимая логика — в первом блоке `<script>`).
+- Epic mm-218: «Протокол вкладок (REV7)».
+- mm-132 «Спроектировать смену пишущей вкладки редактора»: «Модель», решения 1, 3, 4, 6, 8; прототип [`editor-tab-handoff.html`](https://github.com/dsc-sgu/mm-frontend/blob/fc7fb23c7669f1990ecfa94a9686b6ed67d56c1f/docs/prototypes/editor-tab-handoff.html) (переносимая логика — в первом блоке `<script>`).
 - ADR 0004 «Lease принадлежит браузеру, вкладки делят редактор локально».

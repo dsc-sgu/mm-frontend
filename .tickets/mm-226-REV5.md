@@ -12,7 +12,7 @@ tags: [ready-for-agent]
 ---
 # REV5: Отправлять replies сразу, вне Review Working Copy
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Replies отправляются сразу и не зависят от правок Review: reply Student'а переживает следующую Review Revision, а Teacher отвечает без Review Lease.
 
@@ -21,7 +21,7 @@ Replies отправляются сразу и не зависят от прав
 **Операции reply.**
 - Создание, правка и удаление reply — мгновенные HTTP-операции через MSW над каноническим состоянием. Они вне Review Working Copy, revision и Review Lease.
 - Ответ операции — авторитетный reply или thread. Cache Review обновляется им; номер Review Revision не меняется.
-- Какие сущности возвращает backend — рабочее допущение [#113](https://github.com/dsc-sgu/mm-frontend/issues/113), помеченное в handler.
+- Какие сущности возвращает backend — рабочее допущение mm-113, помеченное в handler.
 
 **Права.**
 - Отвечают Teachers Course и Student — владелец Attempt.
@@ -56,7 +56,7 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Уточнения
 
-[#81](https://github.com/dsc-sgu/mm-frontend/issues/81) и [#75](https://github.com/dsc-sgu/mm-frontend/issues/75): Student — владелец Attempt отвечает на сохранённые комментарии, но не правит Review; User, не являющийся Teacher'ом Course или владельцем Attempt, права ответа не получает; reply получает identity фактического текущего User.
+mm-81 и mm-75: Student — владелец Attempt отвечает на сохранённые комментарии, но не правит Review; User, не являющийся Teacher'ом Course или владельцем Attempt, права ответа не получает; reply получает identity фактического текущего User.
 
 ### Готово, когда
 
@@ -65,6 +65,6 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Replies (REV5)».
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): «Review Revision и replies», slice 5.
+- Epic mm-218: «Replies (REV5)».
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: «Review Revision и replies», slice 5.
 - ADR 0001 «Review публикуется атомарными Review Revisions».

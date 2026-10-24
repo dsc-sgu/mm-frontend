@@ -14,13 +14,13 @@ close-reason: completed
 ---
 # ACC1.2: Входить в Course через загрузку по slug с явным 404 и отказом проверки
 
-Часть epic [«Course access»](https://github.com/dsc-sgu/mm-frontend/issues/167). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-167 «Course access». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Вход в любой Course route начинается одной загрузкой Course по slug, которая называет роль текущего User. Отказ на уровне Course становится явным состоянием route вместо redirect.
 
 ### Делает
 
-**Загрузка Course по slug.** Форма результата — из [#115](https://github.com/dsc-sgu/mm-frontend/issues/115):
+**Загрузка Course по slug.** Форма результата — из mm-115:
 
 ```ts
 type LoadCourseResult =
@@ -34,7 +34,7 @@ type LoadCourseResult =
 ```
 
 - `loadCourseBySlug(courseSlug, signal)` на транспортном ядре. Сеть, необъявленный status и невалидный DTO — отказ операции, а не отказ в доступе.
-- MSW handler читает Courses и Course Memberships текущего User из состояния ACC1.1. Wire format, включая различие `course-not-found` и `not-member`, — рабочее допущение [#113](https://github.com/dsc-sgu/mm-frontend/issues/113), помеченное в handler.
+- MSW handler читает Courses и Course Memberships текущего User из состояния ACC1.1. Wire format, включая различие `course-not-found` и `not-member`, — рабочее допущение mm-113, помеченное в handler.
 - `courseContextKeys.bySlug(userId, courseSlug)` стоит вне Course prefix: вход операции — slug.
 - Перепроверка — при входе в Course, focus и reconnect. Кроме того, есть точка входа «отказ защищённой операции по доступу»; её первые потребители — операции ACC2.2.
 
@@ -43,7 +43,7 @@ type LoadCourseResult =
 - Контекст route содержит `CourseId`, metadata shell (title, shortTitle, иконка, цвет) и `CourseRole`. Списка username Students в нём нет.
 - Вложенные routes не загружают Course Page ради identity или роли.
 
-**Route states** по [#111](https://github.com/dsc-sgu/mm-frontend/issues/111):
+**Route states** по mm-111:
 
 | Исход | Что видит User | Действие |
 |---|---|---|
@@ -127,12 +127,12 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Уточнения из заменённых тикетов
 
-- [«Убрать глобальную роль из сессии и привязать permissions к курсу»](https://github.com/dsc-sgu/mm-frontend/issues/75):
+- mm-75 «Убрать глобальную роль из сессии и привязать permissions к курсу»:
   - session содержит состояние аутентификации и identity текущего User, но не роль в курсе;
   - на сохранённый комментарий к Attempt может отвечать Teacher этого Course или Student-владелец Attempt;
   - mock reply сохраняет identity фактического текущего User.
-- [«Перевести course read-side на fetch и MSW поверх published snapshots»](https://github.com/dsc-sgu/mm-frontend/issues/89): доступ к Course загружается через Fetch и MSW из общего состояния Courses и Course Memberships.
-- Уточнения #115 и #111 из [#120](https://github.com/dsc-sgu/mm-frontend/issues/120): подтверждение Membership при повторном входе; отказ backend не несёт сведений о ресурсе (#113).
+- mm-89 «Перевести course read-side на fetch и MSW поверх published snapshots»: доступ к Course загружается через Fetch и MSW из общего состояния Courses и Course Memberships.
+- Уточнения mm-115 и mm-111 из mm-120: подтверждение Membership при повторном входе; отказ backend не несёт сведений о ресурсе (mm-113).
 
 ### Готово, когда
 
@@ -142,7 +142,7 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#167](https://github.com/dsc-sgu/mm-frontend/issues/167): «Загрузка Course по slug», «Route states и тексты», «Mock backend и test-only канал», решение 1 в «Дополнительно».
-- [«Спроектировать Course access vertical и identity seam»](https://github.com/dsc-sgu/mm-frontend/issues/115).
-- [«Выбрать явный UX для отказа в course-local доступе»](https://github.com/dsc-sgu/mm-frontend/issues/111).
+- Epic mm-167: «Загрузка Course по slug», «Route states и тексты», «Mock backend и test-only канал», решение 1 в «Дополнительно».
+- mm-115 «Спроектировать Course access vertical и identity seam».
+- mm-111 «Выбрать явный UX для отказа в course-local доступе».
 - [Матрица](https://github.com/dsc-sgu/mm-frontend/blob/ddda126c5e73ec787362805c286ee081ee26244d/docs/prototypes/test-contract-matrix.html), Q7 (E2E-harness) и Q8 (подтверждение Membership).

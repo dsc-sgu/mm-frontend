@@ -14,7 +14,7 @@ close-reason: completed
 ---
 # ACC1.1: Загружать «Мои курсы» из mock backend через Fetch
 
-Часть epic [«Course access»](https://github.com/dsc-sgu/mm-frontend/issues/167). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-167 «Course access». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Prefactor для ACC1.2: «Мои курсы» переходят на Fetch и MSW, а в состоянии mock backend появляются Courses и Course Memberships, которые дальше читает загрузка Course по slug.
 
@@ -40,9 +40,9 @@ Prefactor для ACC1.2: «Мои курсы» переходят на Fetch и 
 
 **Список курсов.**
 - Fetch-операция на транспортном ядре, ответ проверяется Valibot. Объявленный исход — список Courses текущего User. Всё остальное — отказ операции.
-- URL и форма ответа — рабочее допущение из [#113](https://github.com/dsc-sgu/mm-frontend/issues/113), помеченное в handler.
+- URL и форма ответа — рабочее допущение из mm-113, помеченное в handler.
 - Элемент списка несёт `CourseId`, `CourseSlug` для ссылки и данные карточки.
-- Key factory семейства содержит `UserId`: это user-specific проекция по правилу #115.
+- Key factory семейства содержит `UserId`: это user-specific проекция по правилу mm-115.
 - «Мои курсы» на панели управления используют операцию. Загрузка, пустой список и сбой различимы: сбой показывает текст по виду отказа и «Повторить», а не «Вы пока не состоите ни в одном курсе».
 - Сохранение Course Page инвалидирует список через key factory владельца, а не через raw-константу.
 - **До ACC1.2** Course root по-прежнему ищет Course в списке по slug, проверка доступа остаётся прежней.
@@ -70,7 +70,7 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Уточнения из заменённых тикетов
 
-- [«Перевести course read-side на fetch и MSW поверх published snapshots»](https://github.com/dsc-sgu/mm-frontend/issues/89) и [«Перевести course dashboard и редактирование курса на общий mock backend»](https://github.com/dsc-sgu/mm-frontend/issues/78):
+- mm-89 «Перевести course read-side на fetch и MSW поверх published snapshots» и mm-78 «Перевести course dashboard и редактирование курса на общий mock backend»:
   - список курсов строится из общего канонического состояния Courses и Course Memberships;
   - feature query modules не импортируют реализацию mock backend;
   - выключение MSW не требует правок в потребителях.
@@ -83,6 +83,6 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#167](https://github.com/dsc-sgu/mm-frontend/issues/167): «Identity», «Список курсов», «Mock backend и test-only канал».
-- [«Спроектировать Course access vertical и identity seam»](https://github.com/dsc-sgu/mm-frontend/issues/115).
-- [«Определить последовательность подготовки и выполнения рефакторинга»](https://github.com/dsc-sgu/mm-frontend/issues/69#issuecomment-6108811160): slice ACC1.
+- Epic mm-167: «Identity», «Список курсов», «Mock backend и test-only канал».
+- mm-115 «Спроектировать Course access vertical и identity seam».
+- mm-69, комментарий от 2026-10-11T12:02:31Z «Определить последовательность подготовки и выполнения рефакторинга»: slice ACC1.

@@ -14,7 +14,7 @@ close-reason: completed
 ---
 # REV1: Вводить Grade с проверенной точностью в общем поле Grade
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218).
+Часть epic mm-218 «Review».
 
 Grade — проверенное значение с точностью до тысячных. Её вводят в одно общее поле Grade и в Review editor, и в quick grading. Существующую Grade больше нельзя стереть.
 
@@ -36,7 +36,7 @@ Grade — проверенное значение с точностью до т�
 
 **Course Attempts.** Quick grading использует тот же тип и то же поле.
 
-**Термины в коде.** `score` → `grade: Grade`, `maxScore` → `Task.maxGrade` во всех потребителях: Review editor, Attempt page, Course Attempts, страница Task и их моки. Wire-формат Grade в моках — рабочее допущение [#113](https://github.com/dsc-sgu/mm-frontend/issues/113) (`tasks.max_grade` на backend сейчас `real`).
+**Термины в коде.** `score` → `grade: Grade`, `maxScore` → `Task.maxGrade` во всех потребителях: Review editor, Attempt page, Course Attempts, страница Task и их моки. Wire-формат Grade в моках — рабочее допущение mm-113 (`tasks.max_grade` на backend сейчас `real`).
 
 ### Удаляет
 
@@ -69,5 +69,5 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Grade (REV1)».
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): «Grade», slice 1.
+- Epic mm-218: «Grade (REV1)».
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: «Grade», slice 1.

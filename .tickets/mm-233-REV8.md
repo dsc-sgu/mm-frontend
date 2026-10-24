@@ -12,7 +12,7 @@ tags: [ready-for-agent]
 ---
 # REV8: Показывать Student'у результат независимо от diff и отмечать прочитанное по увиденному
 
-Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218). Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
 Student видит свой результат независимо от diff. Review отмечается прочитанной ровно до того, что Student действительно видел. Новая revision или reply Teacher'а снова делают её непрочитанной.
 
@@ -27,11 +27,11 @@ Student видит свой результат независимо от diff. R
 **`markReviewSeen`.**
 - Передаёт номер revision и последний показанный reply Teacher'а.
 - Отметка `seen` optimistic. Более новая revision снова делает Review непрочитанной.
-- Формат отметки — рабочее допущение [#113](https://github.com/dsc-sgu/mm-frontend/issues/113), помеченное в handler.
+- Формат отметки — рабочее допущение mm-113, помеченное в handler.
 
 **История попыток на странице Task** показывает непрочитанность из того же состояния.
 
-**«Идёт синхронизация»** показывается только по явному сигналу backend в ответе. Frontend не выводит его сам. Сигнал — рабочее допущение #113.
+**«Идёт синхронизация»** показывается только по явному сигналу backend в ответе. Frontend не выводит его сам. Сигнал — рабочее допущение mm-113.
 
 ### Удаляет
 
@@ -40,8 +40,8 @@ Student видит свой результат независимо от diff. R
 
 ### Не входит
 
-- Журнал Student'а ([#99](https://github.com/dsc-sgu/mm-frontend/issues/99)): он объявит зависимость от revision сам.
-- Уведомления ([#200](https://github.com/dsc-sgu/mm-frontend/issues/200)).
+- Журнал Student'а (mm-99): он объявит зависимость от revision сам.
+- Уведомления (mm-200).
 
 ### Контракты
 
@@ -58,7 +58,7 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Уточнения
 
-[#79](https://github.com/dsc-sgu/mm-frontend/issues/79): отметка прочитанности меняет состояние backend и переживает refetch.
+mm-79: отметка прочитанности меняет состояние backend и переживает refetch.
 
 ### Готово, когда
 
@@ -67,5 +67,5 @@ Fixtures описаны во вкладке «Fixtures» [матрицы](https:
 
 ### Источники
 
-- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Результат Student'а и Read State (REV8)».
-- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): «Результат Student'а», slice 8.
+- Epic mm-218: «Результат Student'а и Read State (REV8)».
+- mm-116 «Спроектировать Review → Grade → Student result vertical»: «Результат Student'а», slice 8.

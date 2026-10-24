@@ -14,7 +14,7 @@ close-reason: completed
 ---
 # ACC2.1: Называть номер Attempt attemptNumber
 
-Часть epic [«Course access»](https://github.com/dsc-sgu/mm-frontend/issues/167).
+Часть epic mm-167 «Course access».
 
 Prefactor для ACC2.2. Номер Attempt перестаёт выглядеть как глобальный id: это порядковый `AttemptNumber` в контексте Course, Task и Student.
 
@@ -44,7 +44,7 @@ Prefactor для ACC2.2. Номер Attempt перестаёт выглядет�
 
 ### Уточнения из заменённых тикетов
 
-- [«Переименовать frontend identity попытки в attemptNumber»](https://github.com/dsc-sgu/mm-frontend/issues/84):
+- mm-84 «Переименовать frontend identity попытки в attemptNumber»:
   - номер остаётся числом и scoped к course + task + student;
   - переход между Attempts и прямое открытие существующих URLs работают как раньше.
 
@@ -55,7 +55,7 @@ Prefactor для ACC2.2. Номер Attempt перестаёт выглядет�
 
 ### Источники
 
-- Epic [#167](https://github.com/dsc-sgu/mm-frontend/issues/167): «Participant-bound ресурсы (ACC2)».
-- [«Определить последовательность подготовки и выполнения рефакторинга»](https://github.com/dsc-sgu/mm-frontend/issues/69#issuecomment-6108811160): «ACC2 поглощает переименование в `attemptNumber`».
+- Epic mm-167: «Participant-bound ресурсы (ACC2)».
+- mm-69, комментарий от 2026-10-11T12:02:31Z «Определить последовательность подготовки и выполнения рефакторинга»: «ACC2 поглощает переименование в `attemptNumber`».
 
 Тикет трогает те же route-файлы Attempt, что ACC1.2 и ACC1.3. Блокировки по графу у него нет, только порядок слияния.
