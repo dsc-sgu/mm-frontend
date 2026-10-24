@@ -4,14 +4,15 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: ['**']
 
 permissions:
   contents: read
 
-# A new push to a PR cancels its previous run; every commit on main gets its own run.
+# Team branches are checked on push, pull requests from forks on pull_request.
+# A new push to a branch or a PR cancels its previous run; every commit on main gets its own run.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.sha }}
+  group: ci-${{ github.event.pull_request.number || (github.ref == 'refs/heads/main' && github.sha) || github.ref }}
   cancel-in-progress: true
 
 jobs:

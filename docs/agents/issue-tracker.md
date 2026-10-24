@@ -56,7 +56,25 @@ Pull requests stay on GitHub. When set to `yes`, PRs run through the same tags a
 
 A bare `#42` in old text may be an imported ticket or a PR: `tk show 42` succeeds only for a ticket, otherwise use `gh pr view 42`.
 
-A PR that implements tickets names them in its body (`Implements mm-228`); GitHub cannot close them. Close each ticket with `tk close` once the PR is merged.
+A PR from outside that implements tickets names them in its body (`Implements mm-228`); GitHub cannot close them. Close each ticket with `tk close` once the PR is merged.
+
+## Landing changes
+
+Members of the team do not open pull requests. Pull requests are for people without write access, from their forks.
+
+1. Work on a branch off a fresh `origin/main` and push it: CI checks every pushed branch (`gh run list --branch <branch>`).
+2. When CI passes, the ticket says what was done and what to check: `tk comment <id>` with the summary, like a PR description used to.
+3. The change lands as a fast-forward of `main`, without checking `main` out:
+
+   ```bash
+   git fetch origin && git rebase origin/main && git push origin HEAD:main
+   ```
+
+   If the rebase changed anything, push the branch and wait for CI again first.
+
+4. Close the tickets with `tk close <id> --reason completed` and run `tk sync`, then delete the branch: `git push origin --delete <branch>`.
+
+Commits name their ticket by id, as in `fix(review): keep the draft (mm-228)`.
 
 ## When a skill says "publish to the issue tracker"
 

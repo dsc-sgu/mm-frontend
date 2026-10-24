@@ -416,7 +416,7 @@ Nested ternaries are forbidden by `'no-nested-ternary': 'error'`. Rewrite a chai
 
 ### Issue tracker
 
-Tickets are Markdown files on the orphan branch `tickets`, managed with `tk`; GitHub Issues only take issues from people outside the team. See `docs/agents/issue-tracker.md`.
+Tickets are Markdown files on the orphan branch `tickets`, managed with `tk`; GitHub Issues and pull requests are only for people outside the team. See `docs/agents/issue-tracker.md`.
 
 ### Language of issues
 
