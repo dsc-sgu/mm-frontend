@@ -28,7 +28,7 @@ Attempt page и Review editor читают Review, сведения Attempt и s
   - время и Teacher'а публикации.
 - Replies с автором (`UserId`) хранятся рядом с root comment, но не входят в revision.
 - Attempts получают время отправки, Task — `maxGrade`.
-- `world:review`: Саша, Attempt mm-1 — Review revision 2 (Grade 7,5, Overall Feedback, root comments Анны и Бориса, reply Саши); Саша, Attempt mm-2 — без Review; Петя, Attempt mm-1 — без Review. Dev-seed остаётся демо-набором.
+- `world:review`: Саша, Attempt #1 — Review revision 2 (Grade 7,5, Overall Feedback, root comments Анны и Бориса, reply Саши); Саша, Attempt #2 — без Review; Петя, Attempt #1 — без Review. Dev-seed остаётся демо-набором.
 
 **Read operations** (feature `review` для Review, `attempt-review` для остального). Вместо aggregate:
 - Review по `AttemptId`. Отсутствие Review — объявленный исход, а не ошибка.

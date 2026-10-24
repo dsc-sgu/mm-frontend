@@ -46,7 +46,7 @@ close-reason: completed
 - Handler решает наличие и доступ: Student видит только собственные Repository и Attempts, Teacher — ресурсы Students своего Course.
 - Ответ на отказ не несёт сведений о ресурсе и его владельце ни в теле, ни в заголовках (требование к backend в mm-113).
 - Сопоставление `AttemptNumber` → `AttemptId` — рабочее допущение до ответа mm-85, помеченное в handler.
-- Мир `world:review` в минимальной форме: Task «Сортировки», Attempts mm-1 и mm-2 Саши и Attempt mm-1 Пети в «Алгоритмах». Reviews, manifest и Grade появятся в REV2.
+- Мир `world:review` в минимальной форме: Task «Сортировки», Attempts #1 и #2 Саши и Attempt #1 Пети в «Алгоритмах». Reviews, manifest и Grade появятся в REV2.
 
 **Содержимое Attempt page** до REV2 остаётся на прежнем источнике. Ему передаются уже разрешённые identities.
 
