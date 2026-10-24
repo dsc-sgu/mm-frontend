@@ -88,4 +88,4 @@ podman run --rm -v "$PWD:/w:Z" -w /w docker.io/library/python:3.9-slim \
   sh -c 'apt-get -qq update && apt-get -qq install -y git >/dev/null && python -m unittest discover -s tests'
 ```
 
-`tools/import_github.py` imported the GitHub Issues snapshot; it only reads from GitHub.
+`tools/import_github.py` imported the GitHub Issues snapshot; it only reads from GitHub. `tools/import_github.py --issue 290` imports one issue taken from outside contributors as `mm-290` and commits it; labels that `.tickets/tags` does not describe are dropped.

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Import every issue of a GitHub repository into .tickets/ as mm-<number>.
+"""Import the issues of a GitHub repository into .tickets/ as mm-<number>.
+
+Without --issue it imports every issue and rewrites .tickets/tags from the
+labels; with --issue it imports only those issues, drops labels that
+.tickets/tags does not describe, and commits the new tickets.
 
 Only reads from GitHub (through the `gh` CLI). Comments become a `## Comments`
 section, sub-issues become `parent`, blocked-by edges become `deps`, labels
@@ -18,12 +22,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-QUERY = """
-query($owner: String!, $name: String!, $cursor: String) {
-  repository(owner: $owner, name: $name) {
-    issues(first: 50, after: $cursor, orderBy: {field: CREATED_AT, direction: ASC}) {
-      pageInfo { hasNextPage endCursor }
-      nodes {
+FIELDS = """
         number title body state stateReason createdAt closedAt
         author { login }
         assignees(first: 10) { nodes { login } }
@@ -33,11 +32,22 @@ query($owner: String!, $name: String!, $cursor: String) {
         subIssues(first: 100) { totalCount }
         blockedBy(first: 50) { totalCount nodes { number } }
         comments(first: 100) { totalCount nodes { author { login } body createdAt } }
-      }
+"""
+QUERY = """
+query($owner: String!, $name: String!, $cursor: String) {
+  repository(owner: $owner, name: $name) {
+    issues(first: 50, after: $cursor, orderBy: {field: CREATED_AT, direction: ASC}) {
+      pageInfo { hasNextPage endCursor }
+      nodes { %s }
     }
   }
 }
-"""
+""" % FIELDS
+ONE = """
+query($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) { issue(number: $number) { %s } }
+}
+""" % FIELDS
 ATTACHMENT = re.compile(r"https://github\.com/user-attachments/(?:assets|files)/[A-Za-z0-9-]+(?:/[^\s)\"'<>]+)?")
 
 
@@ -57,6 +67,18 @@ def fetch(repo: str) -> list:
         if not page["pageInfo"]["hasNextPage"]:
             return issues
         cursor = page["pageInfo"]["endCursor"]
+
+
+def fetch_one(repo: str, number: int) -> dict:
+    owner, name = repo.split("/")
+    args = ["api", "graphql", "-F", f"owner={owner}", "-F", f"name={name}", "-F", f"number={number}", "-f", f"query={ONE}"]
+    return json.loads(gh(*args))["data"]["repository"]["issue"]
+
+
+def existing_path(tickets: Path, number: int) -> Path | None:
+    """The file of the ticket imported from issue `number`, with or without a slice code."""
+    found = [*tickets.glob(f"mm-{number}.md"), *tickets.glob(f"mm-{number}-*.md")]
+    return found[0] if found else None
 
 
 def kind(issue: dict, labels: list) -> str:
@@ -103,9 +125,10 @@ def localize(body: str, ticket_id: str, root: Path, used: set) -> str:
     return ATTACHMENT.sub(replace, body)
 
 
-def render(issue: dict, root: Path) -> str:
-    ticket_id = f"mm-{issue['number']}"
+def render(issue: dict, root: Path, ticket_id: str, known_tags: set | None = None) -> str:
     labels = [label["name"] for label in issue["labels"]["nodes"]]
+    if known_tags is not None:
+        labels = [label for label in labels if label in known_tags]
     meta = [
         ("id", ticket_id),
         ("status", "open" if issue["state"] == "OPEN" else "closed"),
@@ -145,26 +168,55 @@ def main() -> None:
     parser.add_argument("--repo", default="dsc-sgu/mm-frontend")
     parser.add_argument("--tickets", type=Path, default=Path(__file__).resolve().parent.parent / ".tickets")
     parser.add_argument("--force", action="store_true", help="overwrite tickets that already exist")
+    parser.add_argument("--issue", type=int, action="append", help="import only this issue (repeatable)")
     args = parser.parse_args()
 
+    if args.issue:
+        import_some(args)
+        return
     issues = fetch(args.repo)
     truncated = [i["number"] for i in issues
                  if i["comments"]["totalCount"] > 100 or i["blockedBy"]["totalCount"] > 50]
     if truncated:
         sys.exit(f"comments or blocked-by edges were cut off for: {truncated}")
     args.tickets.mkdir(exist_ok=True)
-    existing = [i for i in issues if (args.tickets / f"mm-{i['number']}.md").exists()]
+    existing = [i for i in issues if existing_path(args.tickets, i["number"])]
     if existing and not args.force:
         sys.exit(f"{len(existing)} tickets already exist; pass --force to overwrite them")
 
     for issue in issues:
-        path = args.tickets / f"mm-{issue['number']}.md"
-        path.write_text(render(issue, args.tickets), encoding="utf-8")
+        path = existing_path(args.tickets, issue["number"]) or args.tickets / f"mm-{issue['number']}.md"
+        path.write_text(render(issue, args.tickets, path.stem), encoding="utf-8")
 
     labels = json.loads(gh("label", "list", "--repo", args.repo, "--limit", "200", "--json", "name,description"))
     lines = sorted(f"{label['name']} , {label['description']}".rstrip(" ,") for label in labels)
     (args.tickets / "tags").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"imported {len(issues)} issues and {len(labels)} labels into {args.tickets}")
+
+
+def import_some(args) -> None:
+    tags_file = args.tickets / "tags"
+    known = {line.split(",")[0].strip() for line in tags_file.read_text(encoding="utf-8").split("\n") if line.strip()}
+    written = []
+    for number in args.issue:
+        path = existing_path(args.tickets, number)
+        if path and not args.force:
+            sys.exit(f"{path.name} already exists; pass --force to overwrite it")
+        issue = fetch_one(args.repo, number)
+        if issue["comments"]["totalCount"] > 100 or issue["blockedBy"]["totalCount"] > 50:
+            sys.exit(f"comments or blocked-by edges of #{number} were cut off")
+        path = path or args.tickets / f"mm-{number}.md"
+        path.write_text(render(issue, args.tickets, path.stem, known), encoding="utf-8")
+        written.append(path)
+        print(path.stem)
+    names = [str(p.relative_to(args.tickets)) for p in written]
+    names += [d for d in (p.stem.split("-")[0] + "-" + p.stem.split("-")[1] for p in written) if (args.tickets / d).is_dir()]
+    subprocess.run(["git", "add", "--", *names], cwd=args.tickets, check=True)
+    if subprocess.run(["git", "diff", "--cached", "--quiet", "--", *names], cwd=args.tickets).returncode == 0:
+        print("unchanged since the last import", file=sys.stderr)
+        return
+    refs = ", ".join(f"gh-{n}" for n in args.issue)
+    subprocess.run(["git", "commit", "-q", "-m", f"tk: import {refs}", "--", *names], cwd=args.tickets, check=True)
 
 
 if __name__ == "__main__":
