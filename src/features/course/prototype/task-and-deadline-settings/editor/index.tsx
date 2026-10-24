@@ -1,7 +1,8 @@
 // PROTOTYPE (#181): variant C — deadlines inside the Course Page editor.
 // The real Plate editor renders; Task References get deadline chips, the
 // Task panel opens from them (scenario 1, edit mode), «/Task» creates a Task.
-// Under `?taskApply=contract` «Применить» also creates and deletes Tasks.
+// Under `taskApply: contract` and `blocks` «Применить» also creates and
+// deletes Tasks; under `blocks` every edited block is a draft of its own.
 import { useCallback, useState, type ReactNode } from 'react';
 import { FileStack, LoaderCircle } from 'lucide-react';
 
@@ -13,7 +14,10 @@ import {
   dockPadding,
   DOCK_CENTER_LEFT,
 } from '@/features/course/prototype/task-and-deadline-settings/panel/layout';
-import { PrototypePageEditContext } from '@/features/course/prototype/task-and-deadline-settings/page-edit-slot';
+import {
+  PrototypePageEditContext,
+  type PrototypePageEditSlot,
+} from '@/features/course/prototype/task-and-deadline-settings/page-edit-slot';
 import { PanelFrame } from '@/features/course/prototype/task-and-deadline-settings/panel/panel-frame';
 import {
   FIELD_LABEL,
@@ -26,10 +30,14 @@ import {
   usePrototypeSettings,
   useUpdatePrototypeSearch,
 } from '@/features/course/prototype/task-and-deadline-settings/search';
-import { isExpandedStatement } from '@/features/course/prototype/task-and-deadline-settings/settings';
+import {
+  isExpandedStatement,
+  type TaskApplyMode,
+} from '@/features/course/prototype/task-and-deadline-settings/settings';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { ScheduleDock } from '@/features/course/prototype/task-and-deadline-settings/ui/schedule-save-bar';
-import { useContractPageEditSlot } from './apply-slot';
+import { useBlocksPageEditSlot, useContractPageEditSlot } from './apply-slot';
+import { BlockDraftStrip } from './block-drafts';
 import { ContractDraftStrip } from './draft-strip';
 import { insertAfterTask, setCarry } from './new-task';
 import { EditorTaskReference } from './task-reference';
@@ -53,6 +61,7 @@ export function PrototypeEditor({
       : null;
   const session = usePanelSessionState(openTaskId, 'edit');
   const contract = settings.taskApply === 'contract';
+  const blocks = settings.taskApply === 'blocks';
 
   const open = useCallback(
     (taskId: string) => update({ task: taskId }),
@@ -60,6 +69,7 @@ export function PrototypeEditor({
   );
   const close = useCallback(() => update({ task: undefined }), [update]);
   const contractSlot = useContractPageEditSlot(open);
+  const blocksSlot = useBlocksPageEditSlot(open);
 
   const renderCard = useCallback(
     ({ taskId, blockId }: { taskId: string; blockId: string }) => (
@@ -86,7 +96,9 @@ export function PrototypeEditor({
 
   return (
     <PrototypeAssignmentContext.Provider value={renderCard}>
-      <PrototypePageEditContext.Provider value={contract ? contractSlot : null}>
+      <PrototypePageEditContext.Provider
+        value={pageEditSlot(settings.taskApply, contractSlot, blocksSlot)}
+      >
         <PanelSessionContext.Provider value={session}>
           <div className={dockOffset(Boolean(session), 'dock')}>
             <div
@@ -121,11 +133,12 @@ export function PrototypeEditor({
               className="pointer-events-none fixed top-16 z-30 grid w-[calc(100%-1rem)] max-w-2xl -translate-x-1/2 justify-items-center gap-2"
             >
               <DraftStrip />
-              {contract ? <ContractDraftStrip /> : null}
+              {contract || blocks ? <ContractDraftStrip /> : null}
+              {blocks ? <BlockDraftStrip /> : null}
               <ScheduleDock
                 floating={false}
                 note={
-                  contract
+                  contract || blocks
                     ? 'Дедлайны опубликованных заданий применяются отдельно от черновика курса, новых — в черновике'
                     : 'Дедлайны применяются отдельно от черновика курса'
                 }
@@ -136,6 +149,21 @@ export function PrototypeEditor({
       </PrototypePageEditContext.Provider>
     </PrototypeAssignmentContext.Provider>
   );
+}
+
+function pageEditSlot(
+  taskApply: TaskApplyMode,
+  contract: PrototypePageEditSlot,
+  blocks: PrototypePageEditSlot
+) {
+  switch (taskApply) {
+    case 'contract':
+      return contract;
+    case 'blocks':
+      return blocks;
+    default:
+      return null;
+  }
 }
 
 /** Scenario 1 in A: Task edits wait in the Course Draft Snapshot. */

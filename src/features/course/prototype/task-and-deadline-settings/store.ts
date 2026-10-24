@@ -3,8 +3,21 @@
 import { useMemo } from 'react';
 import { create } from 'zustand';
 
+import type { CourseContentBlockItem } from '@/features/course/features/page/model/types';
+import {
+  blockDraftsOf,
+  mergeWithHead,
+  rebaseBlock,
+  sampleOwnDrafts,
+  simulateTheirPublication,
+  takeTheirBlock,
+  type BlockConflict,
+  type BlockDraft,
+  type MergeOutcome,
+} from './blocks';
 import {
   ATTEMPTS,
+  buildPrototypeCoursePage,
   OTHER_TEACHER,
   OWN_DRAFT_PAGE_EDITS,
   SCHEDULE,
@@ -25,6 +38,7 @@ import {
 } from './schedule';
 import { NOW } from './time';
 import { usePrototypeSettings } from './search';
+import { newTasksInDraft } from './settings';
 import {
   draftTaskChanges,
   quoteTitles,
@@ -88,6 +102,19 @@ type SandboxState = {
   pageTaskIds: string[] | null;
   /** Scenario 7: another Teacher publishes the Course without this Task. */
   deletedByOther: boolean;
+  /** `taskApply: blocks`: the Course Page the block drafts are based on. */
+  basePage: CourseContentBlockItem[];
+  /** `taskApply: blocks`: the working copy while it differs from the base. */
+  draftPage: CourseContentBlockItem[] | null;
+  /**
+   * `taskApply: blocks`: what is published now, learnt when a publication
+   * met a conflict. Null while it is the base.
+   */
+  headPage: CourseContentBlockItem[] | null;
+  /** Bumped when an open editor must reload its working copy. */
+  draftPageRevision: number;
+  /** Scenario 8: another Teacher publishes his block drafts meanwhile. */
+  otherPublishesBlocks: boolean;
 };
 
 type SandboxActions = {
@@ -100,6 +127,24 @@ type SandboxActions = {
   setFailNextSave: (on: boolean) => void;
   setDeletedByOther: (on: boolean) => void;
   setPageTaskIds: (taskIds: string[] | null) => void;
+  setOwnBlockDrafts: (on: boolean) => void;
+  setOtherPublishesBlocks: (on: boolean) => void;
+
+  /** `taskApply: blocks`: the editor reports the published page and its copy. */
+  syncPage: (
+    published: CourseContentBlockItem[],
+    working: CourseContentBlockItem[]
+  ) => void;
+  /** `taskApply: blocks`: a Task edit kept in the draft of its block. */
+  writeTaskToBlockDraft: (taskId: string, edits: Partial<TaskProps>) => void;
+  /** Merges the drafts with the head; a conflict publishes nothing. */
+  mergeBlockDrafts: (working: CourseContentBlockItem[]) => MergeOutcome;
+  finishBlockPublish: (
+    content: CourseContentBlockItem[],
+    theirsKept: string[]
+  ) => void;
+  keepMyBlock: (blockId: string) => void;
+  takeTheirBlock: (blockId: string) => void;
 
   queue: (commands: DeadlineCommand[]) => void;
   dropPending: (keys: ReadonlySet<string>) => void;
@@ -167,6 +212,11 @@ function initialState(): SandboxState {
     removedTaskIds: [],
     pageTaskIds: null,
     deletedByOther: false,
+    basePage: buildPrototypeCoursePage().content,
+    draftPage: null,
+    headPage: null,
+    draftPageRevision: 0,
+    otherPublishesBlocks: false,
   };
 }
 
@@ -189,6 +239,18 @@ function emptyDraft(): CourseDraft {
 }
 
 export const useSandbox = create<Sandbox>()((set, get) => {
+  const taskTitle = (taskId: string) => get().tasks[taskId]?.title ?? '';
+
+  function currentBlockDrafts() {
+    const { basePage, draftPage, draft } = get();
+    return blockDraftsOf(
+      basePage,
+      draftPage ?? basePage,
+      new Set(Object.keys(draft?.taskEdits ?? {})),
+      taskTitle
+    );
+  }
+
   function log(text: string, tone: LogTone) {
     logSequence += 1;
     set((state) => ({
@@ -313,6 +375,172 @@ export const useSandbox = create<Sandbox>()((set, get) => {
     },
 
     setPageTaskIds: (pageTaskIds) => set({ pageTaskIds }),
+
+    setOwnBlockDrafts: (on) => {
+      set((state) => ({
+        draftPage: on ? sampleOwnDrafts(state.basePage) : null,
+        headPage: null,
+        draftPageRevision: state.draftPageRevision + 1,
+      }));
+      log(
+        on
+          ? 'У вас черновики блоков: задание «Docker-образ приложения» перенесено ниже, абзац про учебный стенд дописан'
+          : 'Ваши черновики блоков удалены',
+        'world'
+      );
+    },
+
+    setOtherPublishesBlocks: (on) => {
+      set({ otherPublishesBlocks: on });
+      log(
+        on
+          ? `${OTHER_TEACHER.shortName} опубликует свои черновики блоков раньше вас`
+          : `${OTHER_TEACHER.shortName} ничего не публикует`,
+        'world'
+      );
+    },
+
+    syncPage: (published, working) => {
+      const state = get();
+      // A draft keeps the base it started from; without one the editor
+      // shows what is published.
+      const basePage =
+        state.draftPage || state.headPage ? state.basePage : published;
+      const same =
+        blockDraftsOf(basePage, working, new Set(), taskTitle).length === 0;
+
+      set({ basePage, draftPage: same ? null : working });
+    },
+
+    writeTaskToBlockDraft: (taskId, edits) => {
+      set((state) => {
+        const draft = state.draft ?? emptyDraft();
+        return {
+          draft: {
+            ...draft,
+            taskEdits: {
+              ...draft.taskEdits,
+              [taskId]: { ...draft.taskEdits[taskId], ...edits },
+            },
+          },
+        };
+      });
+      log(
+        `В черновик блока: задание «${taskTitle(taskId)}» — ${Object.keys(edits).length} полей`,
+        'course'
+      );
+    },
+
+    mergeBlockDrafts: (working) => {
+      const state = get();
+      let head = state.headPage;
+
+      if (!head && state.otherPublishesBlocks) {
+        const drafts = currentBlockDrafts();
+        const theirs = simulateTheirPublication(state.basePage, drafts);
+        head = theirs.head;
+        set({ otherPublishesBlocks: false });
+        log(
+          `${OTHER_TEACHER.shortName} опубликовал свои черновики блоков: ${theirs.touched.length}`,
+          'world'
+        );
+      }
+
+      if (!head) {
+        return { status: 'merged', content: working, theirsKept: [] };
+      }
+
+      const outcome = mergeWithHead(state.basePage, head, working, taskTitle);
+
+      if (outcome.status === 'conflict') {
+        set({ headPage: head });
+        log(
+          `Курс не опубликован: конфликт в блоках — ${outcome.conflicts
+            .map((item) => item.label)
+            .join('; ')}`,
+          'conflict'
+        );
+      }
+
+      return outcome;
+    },
+
+    finishBlockPublish: (content, theirsKept) => {
+      const drafts = currentBlockDrafts();
+      const { draft, tasks } = get();
+      const nextTasks = { ...tasks };
+      const taskIds = Object.keys(draft?.taskEdits ?? {});
+
+      for (const taskId of taskIds) {
+        const task = nextTasks[taskId];
+        if (task) {
+          nextTasks[taskId] = {
+            ...task,
+            ...draft!.taskEdits[taskId],
+            version: task.version + 1,
+          };
+        }
+      }
+
+      set({
+        tasks: nextTasks,
+        draft: null,
+        basePage: content,
+        draftPage: null,
+        headPage: null,
+        lastApplied: { taskIds, at: Date.now() },
+      });
+      log(
+        [
+          `Опубликованы ваши черновики блоков: ${drafts.length}`,
+          theirsKept.length
+            ? `сохранены правки ${OTHER_TEACHER.shortName}: ${theirsKept.join('; ')}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join('; '),
+        'course'
+      );
+    },
+
+    keepMyBlock: (blockId) => {
+      const { basePage, headPage } = get();
+
+      if (!headPage) {
+        return;
+      }
+
+      set({ basePage: rebaseBlock(basePage, headPage, blockId) });
+      log(
+        'Конфликт блока решён: остаётся ваша версия, она ляжет поверх опубликованной',
+        'course'
+      );
+    },
+
+    takeTheirBlock: (blockId) => {
+      const { basePage, draftPage, headPage, draft } = get();
+
+      if (!headPage) {
+        return;
+      }
+
+      const theirs = headPage.find((block) => block.id === blockId);
+      const taskEdits = { ...draft?.taskEdits };
+      if (theirs?.type === 'assignment') {
+        delete taskEdits[theirs.taskId];
+      }
+
+      set((state) => ({
+        basePage: rebaseBlock(basePage, headPage, blockId),
+        draftPage: takeTheirBlock(draftPage ?? basePage, headPage, blockId),
+        draft: draft && { ...draft, taskEdits },
+        draftPageRevision: state.draftPageRevision + 1,
+      }));
+      log(
+        `Конфликт блока решён: взята версия ${OTHER_TEACHER.shortName}, ваш черновик блока отброшен`,
+        'course'
+      );
+    },
 
     queue: (commands) => {
       if (commands.length === 0) {
@@ -727,6 +955,55 @@ function withoutTasks(taskGroups: TaskGroup[], taskIds: ReadonlySet<string>) {
     .filter((group) => group.taskIds.length > 0);
 }
 
+export type BlockDraftView = {
+  drafts: BlockDraft[];
+  /** Known once a publication met a conflict; empty when all are resolved. */
+  conflicts: BlockConflict[];
+};
+
+let blockDraftView: { key: unknown[]; value: BlockDraftView } | null = null;
+
+/**
+ * `taskApply: blocks`: the Teacher's block drafts and open conflicts. Every
+ * block of the editor reads it, so it is computed once per sandbox change.
+ */
+export function useBlockDraftView(): BlockDraftView {
+  return useSandbox((state) => {
+    const key = [
+      state.basePage,
+      state.draftPage,
+      state.headPage,
+      state.draft,
+      state.tasks,
+    ];
+
+    if (
+      blockDraftView &&
+      blockDraftView.key.every((item, index) => item === key[index])
+    ) {
+      return blockDraftView.value;
+    }
+
+    const title = (taskId: string) => state.tasks[taskId]?.title ?? '';
+    const working = state.draftPage ?? state.basePage;
+    const outcome = state.headPage
+      ? mergeWithHead(state.basePage, state.headPage, working, title)
+      : null;
+    const value = {
+      drafts: blockDraftsOf(
+        state.basePage,
+        working,
+        new Set(Object.keys(state.draft?.taskEdits ?? {})),
+        title
+      ),
+      conflicts: outcome?.status === 'conflict' ? outcome.conflicts : [],
+    };
+
+    blockDraftView = { key, value };
+    return value;
+  });
+}
+
 /** The schedule a Teacher sees: applied values plus the pending batch. */
 export function useViewSchedule() {
   const schedule = useSandbox((state) => state.schedule);
@@ -747,7 +1024,7 @@ export function useOrderedTasks() {
   return useMemo(() => {
     // Under the #129 contract a new Task exists only in the Course Draft
     // Snapshot until it is published, so screens outside the editor skip it.
-    const hidden = new Set(taskApply === 'contract' ? newTaskIds : []);
+    const hidden = new Set(newTasksInDraft(taskApply) ? newTaskIds : []);
 
     return taskGroups
       .map((group) => ({

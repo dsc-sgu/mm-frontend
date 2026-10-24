@@ -2,8 +2,10 @@
 // through the Course Draft Snapshot), `?taskApply=task` (D, a Task
 // publication with a version check) or `?taskApply=contract` (the #129
 // contract: D for a published Task, a new Task autosaves into the draft and
-// is published by «Применить» of the editor). The schedule of a published
-// Task is always applied apart.
+// is published by «Применить» of the editor) or `taskApply: blocks` (per-block
+// drafts of mm-backend PR #187: an edit goes into the draft of the Task's
+// block when there is one, otherwise it is published at once). The schedule
+// of a published Task is always applied apart.
 import { useEffect, useEffectEvent, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import {
@@ -19,10 +21,13 @@ import {
 
 import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
+import type { BlockDraft } from '@/features/course/prototype/task-and-deadline-settings/blocks';
 import { missingForPublish } from '@/features/course/prototype/task-and-deadline-settings/contract';
 import { OTHER_TEACHER } from '@/features/course/prototype/task-and-deadline-settings/fixture';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
+import { newTasksInDraft } from '@/features/course/prototype/task-and-deadline-settings/settings';
 import {
+  useBlockDraftView,
   useSandbox,
   useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
@@ -113,6 +118,7 @@ export function PublishFooter({
   const effectiveLease = useEffectiveLease();
   const view = useViewSchedule();
   const { changes } = usePendingChanges();
+  const { drafts: blockDrafts } = useBlockDraftView();
   const [busy, setBusy] = useState(false);
 
   const fields = changedFields(session.base, session.form);
@@ -123,7 +129,13 @@ export function PublishFooter({
   const scheduleDirty = apply === 'batch' && scheduleChanges.length > 0;
   const isNew = sandbox.newTaskIds.includes(session.taskId);
   const removed = sandbox.removedTaskIds.includes(session.taskId);
-  const draftOwned = taskApply === 'contract' && isNew;
+  const draftOwned = newTasksInDraft(taskApply) && isNew;
+  const blockDraft =
+    taskApply === 'blocks'
+      ? blockDrafts.find(
+          (draft) => draft.taskId === session.taskId && draft.kind !== 'deleted'
+        )
+      : undefined;
 
   // `?taskApply=contract`: a new Task belongs to the Course Draft Snapshot,
   // so its fields save into the draft by themselves, like page edits.
@@ -441,7 +453,69 @@ export function PublishFooter({
     );
   }
 
-  // ------------------------------------------- D, contract for a published Task
+  // ------------------------------- blocks, the Task's block is in the draft
+  if (blockDraft) {
+    const others = blockDrafts.length - 1;
+
+    async function writeToBlockDraft() {
+      if (!guard()) {
+        return;
+      }
+
+      if (dirty) {
+        sandbox.writeTaskToBlockDraft(
+          session.taskId,
+          editsOf(session.base, session.form)
+        );
+        session.rebase(session.form, session.baseVersion);
+      }
+
+      setBusy(true);
+      const ok = await applySchedule();
+      setBusy(false);
+      session.setResult({ kind: 'draft', at: Date.now() });
+      if (ok && scheduleDirty) {
+        toast.success('Дедлайны применены отдельно от черновика');
+      }
+    }
+
+    return (
+      <FooterShell>
+        {result}
+        <Note tone="warn" icon={<FileStack className="size-3.5" />}>
+          <p>
+            Блок этого задания уже в вашем черновике:{' '}
+            {blockDraftReason(blockDraft)}. Настройки задания — данные его
+            блока, поэтому правка ляжет в тот же черновик, а не опубликуется
+            сразу.
+          </p>
+          <p>
+            Студенты увидят её после «Применить»
+            {session.context === 'edit' ? '' : ' в редакторе курса'}
+            {others > 0
+              ? `, вместе с остальными вашими черновиками блоков: ${others}`
+              : ''}
+            .
+          </p>
+        </Note>
+        {scheduleBox}
+        <Buttons>
+          {onCreateAnother ? (
+            <CreateAnotherButton onClick={onCreateAnother} />
+          ) : null}
+          <Button
+            disabled={busy || (!dirty && !scheduleDirty)}
+            onClick={writeToBlockDraft}
+          >
+            {busy ? <LoaderCircle className="animate-spin" /> : null}
+            {draftButtonLabel(dirty, scheduleDirty)}
+          </Button>
+        </Buttons>
+      </FooterShell>
+    );
+  }
+
+  // ------------------------------- D, contract and blocks for a published Task
   const conflict = session.result.kind === 'conflict' ? session.result : null;
   const deleted = deletedOutcome(session.result, removed);
   const version = conflict ? conflict.theirs.version : session.baseVersion;
@@ -579,7 +653,18 @@ export function PublishFooter({
           отдельно. Правки страницы в редакторе ждут «Применить».
         </Note>
       ) : null}
-      {sandbox.draft ? (
+      {taskApply === 'blocks' && !deleted ? (
+        <Note>
+          Блока этого задания нет в ваших черновиках, поэтому правка публикуется
+          сразу, новой версией этого блока
+          {blockDrafts.length > 0
+            ? `. Ваши черновики других блоков (${blockDrafts.length}) останутся как были`
+            : ''}
+          . Блокировки курса нет: если {OTHER_TEACHER.shortName} опубликовал это
+          задание раньше, будет конфликт версий.
+        </Note>
+      ) : null}
+      {sandbox.draft && taskApply !== 'blocks' ? (
         <Note>
           Ваш черновик курса останется как был
           {sandbox.draft.stale ? ', хоть он и устарел' : ''}.
@@ -709,6 +794,28 @@ function draftNoteText(dirty: boolean, result: PanelResult) {
   return result.kind === 'draft'
     ? `Сохранено в черновике курса в ${formatClock(result.at)}`
     : 'Хранится в черновике курса';
+}
+
+/** Why the Task's block is already in the Teacher's draft. */
+function blockDraftReason(draft: BlockDraft) {
+  switch (draft.kind) {
+    case 'created':
+    case 'deleted':
+      return 'это новый блок';
+    case 'edited':
+      return editedReason(draft.change);
+  }
+}
+
+function editedReason(change: 'data' | 'position' | 'both') {
+  switch (change) {
+    case 'data':
+      return 'в нём уже есть ваши правки настроек';
+    case 'position':
+      return 'вы переместили его на странице';
+    case 'both':
+      return 'вы переместили его и уже правили настройки';
+  }
 }
 
 /** A Task deleted by another Teacher, seen on publish or already removed. */

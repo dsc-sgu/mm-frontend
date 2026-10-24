@@ -12,7 +12,11 @@ import {
 import { cn } from '@/shadcn/lib/utils';
 import { overrideCounts } from '@/features/course/prototype/task-and-deadline-settings/schedule';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
-import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
+import type { TaskApplyMode } from '@/features/course/prototype/task-and-deadline-settings/settings';
+import {
+  useBlockDraftView,
+  useSandbox,
+} from '@/features/course/prototype/task-and-deadline-settings/store';
 import {
   formatClock,
   formatMoment,
@@ -43,6 +47,14 @@ export function TaskReferenceCard({
     state.taskGroups.find((item) => item.id === task?.groupId)
   );
   const draftEdits = useSandbox((state) => state.draft?.taskEdits[taskId]);
+  const { drafts: blockDrafts } = useBlockDraftView();
+  const draftBadge = draftBadgeText(
+    taskApply,
+    Boolean(draftEdits),
+    blockDrafts.some(
+      (draft) => draft.taskId === taskId && draft.kind !== 'deleted'
+    )
+  );
   const lastApplied = useSandbox((state) => state.lastApplied);
   const removed = useSandbox((state) => state.removedTaskIds.includes(taskId));
   const session = usePanelSession();
@@ -90,9 +102,9 @@ export function TaskReferenceCard({
                 Задание
               </span>
               <span className="text-muted-foreground">{group?.title}</span>
-              {draftEdits && taskApply === 'course' ? (
+              {draftBadge ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-0.5 text-xs text-violet-800 dark:text-violet-300">
-                  <FileStack className="size-3" /> есть правки в черновике
+                  <FileStack className="size-3" /> {draftBadge}
                 </span>
               ) : null}
               {removed ? (
@@ -171,4 +183,18 @@ export function TaskReferenceCard({
       {footer}
     </div>
   );
+}
+
+function draftBadgeText(
+  taskApply: TaskApplyMode,
+  hasDraftEdits: boolean,
+  inBlockDraft: boolean
+) {
+  if (taskApply === 'course' && hasDraftEdits) {
+    return 'есть правки в черновике';
+  }
+
+  return taskApply === 'blocks' && inBlockDraft
+    ? 'блок в моём черновике'
+    : null;
 }

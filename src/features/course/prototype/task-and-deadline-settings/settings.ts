@@ -7,9 +7,16 @@ export type ApplyMode = 'instant' | 'batch';
 /**
  * How Task edits are applied (#129): A — through the Course Draft Snapshot;
  * D — a Task publication with a version check; `contract` — the contract
- * from #129: D for published Tasks, new Tasks live in the draft.
+ * from #129: D for published Tasks, new Tasks live in the draft; `blocks` —
+ * per-block drafts of mm-backend PR #187: no Course lock, every edited block
+ * is a draft of its own, and publishing merges block by block.
  */
-export type TaskApplyMode = 'course' | 'task' | 'contract';
+export type TaskApplyMode = 'course' | 'task' | 'contract' | 'blocks';
+
+/** A new Task belongs to the Course draft until «Применить» publishes it. */
+export function newTasksInDraft(mode: TaskApplyMode) {
+  return mode === 'contract' || mode === 'blocks';
+}
 export type DeadlineFieldMode = 'counter' | 'full';
 /**
  * Where the statement is edited. `expanded` — the panel grows and the

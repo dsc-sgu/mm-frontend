@@ -20,11 +20,12 @@ import {
   type VariantKey,
 } from './search';
 import {
+  newTasksInDraft,
   SHIFT_VARIANTS,
   useSandboxSwitches,
   type TaskApplyMode,
 } from './settings';
-import { useSandbox, type LogTone } from './store';
+import { useBlockDraftView, useSandbox, type LogTone } from './store';
 import { formatClock } from './time';
 import { useEffectiveLease, type EffectiveLease } from './use-lease';
 import { Segmented } from './ui/segmented';
@@ -118,6 +119,8 @@ function SandboxSettings() {
   const sandbox = useSandbox();
   const effectiveLease = useEffectiveLease();
   const resetSwitches = useSandboxSwitches((state) => state.resetSwitches);
+  const { drafts: blockDrafts, conflicts } = useBlockDraftView();
+  const blocks = settings.taskApply === 'blocks';
 
   return (
     <div className="grid gap-4 p-4">
@@ -145,6 +148,7 @@ function SandboxSettings() {
             { value: 'course', label: 'A · через черновик курса' },
             { value: 'task', label: 'D · публикация задания' },
             { value: 'contract', label: 'Контракт #129' },
+            { value: 'blocks', label: 'Черновики блоков · бэкенд #187' },
           ]}
         />
       </Row>
@@ -219,18 +223,33 @@ function SandboxSettings() {
 
       <Row label="Сценарии применения правок задания">
         <div className="grid gap-1.5">
-          <Toggle
-            checked={Boolean(sandbox.draft?.pageEdits.length)}
-            onChange={sandbox.setOwnDraft}
-          >
-            3 · У меня неопубликованный черновик с правками страницы
-          </Toggle>
-          <Toggle
-            checked={sandbox.lease.holder === 'other'}
-            onChange={sandbox.setLeaseByOther}
-          >
-            4 · Блокировку редактирования держит {OTHER_TEACHER.shortName}
-          </Toggle>
+          {blocks ? (
+            <Toggle
+              checked={sandbox.draftPage !== null}
+              onChange={sandbox.setOwnBlockDrafts}
+            >
+              3 · У меня черновики блоков
+              <span className="block text-xs text-muted-foreground">
+                Задание «Docker-образ приложения» перенесено ниже, абзац про
+                учебный стенд дописан
+              </span>
+            </Toggle>
+          ) : (
+            <Toggle
+              checked={Boolean(sandbox.draft?.pageEdits.length)}
+              onChange={sandbox.setOwnDraft}
+            >
+              3 · У меня неопубликованный черновик с правками страницы
+            </Toggle>
+          )}
+          {blocks ? null : (
+            <Toggle
+              checked={sandbox.lease.holder === 'other'}
+              onChange={sandbox.setLeaseByOther}
+            >
+              4 · Блокировку редактирования держит {OTHER_TEACHER.shortName}
+            </Toggle>
+          )}
           <Toggle
             checked={sandbox.concurrentEdit}
             onChange={sandbox.setConcurrentEdit}
@@ -243,12 +262,28 @@ function SandboxSettings() {
               )}
             </span>
           </Toggle>
-          <Toggle
-            checked={Boolean(sandbox.draft?.stale)}
-            onChange={sandbox.setStaleDraft}
-          >
-            6 · Мой черновик устарел
-          </Toggle>
+          {blocks ? (
+            <Toggle
+              checked={sandbox.otherPublishesBlocks}
+              onChange={sandbox.setOtherPublishesBlocks}
+            >
+              8 · {OTHER_TEACHER.shortName} опубликует свои черновики блоков
+              раньше вас
+              <span className="block text-xs text-muted-foreground">
+                Сработает на «Применить» в редакторе: он правит блок, который
+                правили и вы (конфликт), перемещённый вами блок и блок, которого
+                вы не касались (сольются сами). Сценариев 4 и 6 здесь нет:
+                блокировки курса нет, а черновик не устаревает целиком.
+              </span>
+            </Toggle>
+          ) : (
+            <Toggle
+              checked={Boolean(sandbox.draft?.stale)}
+              onChange={sandbox.setStaleDraft}
+            >
+              6 · Мой черновик устарел
+            </Toggle>
+          )}
           {settings.taskApply === 'contract' ? (
             <Toggle
               checked={sandbox.deletedByOther}
@@ -274,15 +309,27 @@ function SandboxSettings() {
 
       <Row label="Состояние">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
-          <dt className="text-muted-foreground">Блокировка</dt>
-          <dd>{leaseText(effectiveLease)}</dd>
-          <dt className="text-muted-foreground">Черновик</dt>
-          <dd>
-            {sandbox.draft
-              ? `правок страницы ${sandbox.draft.pageEdits.length}, заданий ${Object.keys(sandbox.draft.taskEdits).length}${sandbox.draft.stale ? ', устарел' : ''}`
-              : 'нет'}
-          </dd>
-          {settings.taskApply === 'contract' ? (
+          {blocks ? (
+            <>
+              <dt className="text-muted-foreground">Черновики блоков</dt>
+              <dd>
+                {blockDrafts.length}
+                {conflicts.length ? `, конфликтов ${conflicts.length}` : ''}
+              </dd>
+            </>
+          ) : (
+            <>
+              <dt className="text-muted-foreground">Блокировка</dt>
+              <dd>{leaseText(effectiveLease)}</dd>
+              <dt className="text-muted-foreground">Черновик</dt>
+              <dd>
+                {sandbox.draft
+                  ? `правок страницы ${sandbox.draft.pageEdits.length}, заданий ${Object.keys(sandbox.draft.taskEdits).length}${sandbox.draft.stale ? ', устарел' : ''}`
+                  : 'нет'}
+              </dd>
+            </>
+          )}
+          {newTasksInDraft(settings.taskApply) ? (
             <>
               <dt className="text-muted-foreground">Ссылки в черновике</dt>
               <dd>
@@ -341,6 +388,8 @@ function concurrentEditHint(taskApply: TaskApplyMode, leaseIsMine: boolean) {
       return 'В D блокировка не нужна: второй получит конфликт версий';
     case 'contract':
       return 'В контракте блокировка не нужна: второй получит конфликт версий';
+    case 'blocks':
+      return 'Блокировки нет: если блока задания нет в вашем черновике, правка публикуется сразу и второй получит конфликт версий';
   }
 }
 
