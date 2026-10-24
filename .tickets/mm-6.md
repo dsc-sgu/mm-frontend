@@ -1,6 +1,6 @@
 ---
 id: mm-6
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-02-01T15:43:50Z
@@ -8,6 +8,8 @@ type: epic
 priority: 2
 external-ref: gh-6
 tags: [enhancement]
+closed: 2026-10-24T20:04:36Z
+close-reason: not_planned
 ---
 # Course pages
 
