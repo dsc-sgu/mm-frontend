@@ -27,14 +27,10 @@ const FoundCourseSchema = v.object({
   role: v.picklist(['student', 'teacher']),
 });
 
-const DeniedCourseSchema = v.variant('status', [
-  v.object({ status: v.literal('course-not-found') }),
-  v.object({ status: v.literal('not-member') }),
-]);
-
+/** A missing Course and a Course without Membership are one outcome. */
 export type LoadCourseResult =
   | v.InferOutput<typeof FoundCourseSchema>
-  | v.InferOutput<typeof DeniedCourseSchema>;
+  | { status: 'not-found' };
 
 /** Looks up shell identity and membership without loading Course Page content. */
 export function loadCourse(
@@ -53,7 +49,7 @@ export function loadCourse(
         case 200:
           return readJson(context, FoundCourseSchema);
         case 404:
-          return readJson(context, DeniedCourseSchema);
+          return { status: 'not-found' };
         default:
           throw unexpectedHttpStatus(context);
       }

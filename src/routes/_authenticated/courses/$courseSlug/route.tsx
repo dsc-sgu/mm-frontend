@@ -10,12 +10,13 @@ import {
 import { canAccessCourseSection } from '@/features/course/features/access/model/section-policy';
 import { getCourseSection } from '@/features/course/routing/section';
 import { courseContextOptions } from '@/features/course/features/access/api/queries';
-import { courseAccessRouteState } from '@/features/course/features/access/model/route-state';
 import {
   CourseAccessState,
   CourseContextLoading,
+  CourseResourceNotFound,
   CourseRouteOutcome,
 } from '@/features/course/features/access/ui/route-state';
+import { useResourceDenial } from '@/features/course/features/access/hooks/use-resource-denial';
 import { requireCourseSlug } from '@/features/course/routing/params';
 import { useRequestedCourseSlug } from '@/features/course/routing/requested-slug';
 import {
@@ -85,7 +86,7 @@ function RouteComponent() {
       match.routeId !== Route.id &&
       (match.status === 'notFound' || match.status === 'error')
   );
-  const { courseSlug, courseRole, session } = Route.useRouteContext();
+  const { course, courseSlug, courseRole, session } = Route.useRouteContext();
   const router = useRouter();
   const requestedCourseSlug = useRequestedCourseSlug();
   const query = useQuery({
@@ -95,6 +96,11 @@ function RouteComponent() {
   });
   const roleChanged =
     query.data?.status === 'found' && query.data.role !== courseRole;
+  const resourceDenied = useResourceDenial({
+    userId: session.userId,
+    courseId: course.id,
+    courseSlug,
+  });
 
   useEffect(() => {
     if (requestedCourseSlug === courseSlug && !query.isError && roleChanged) {
@@ -109,9 +115,12 @@ function RouteComponent() {
   if (query.isError) return <CourseRouteOutcome kind="lookup" />;
   if (!query.data) return <CourseContextLoading />;
   if (query.data.status !== 'found') {
-    return (
-      <CourseAccessState state={courseAccessRouteState(query.data.status)} />
-    );
+    return <CourseAccessState state="course-not-found" />;
+  }
+  // A read of the page was denied, a background refetch included: replace the
+  // page with its unsaved edits, since nothing of it can be saved anyway.
+  if (resourceDenied) {
+    return <CourseResourceNotFound />;
   }
   // Authorize before mounting any child content, using the live lookup rather
   // than the role captured by beforeLoad. Background demotion closes the route.

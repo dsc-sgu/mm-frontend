@@ -23,13 +23,8 @@ const attemptLocatorHandlers = [
         String(params.courseId),
         String(params.studentUsername)
       );
-      switch (result.status) {
-        case 'unauthenticated':
-          return new HttpResponse(null, { status: 401 });
-        case 'not-found':
-          return HttpResponse.json({ status: 'not-found' }, { status: 404 });
-        case 'forbidden':
-          return HttpResponse.json({ status: 'forbidden' }, { status: 403 });
+      if (result.status !== 'found') {
+        return accessDenial(result.status);
       }
       // Working AttemptNumber -> AttemptId mapping pending the backend's #85:
       // the number is scoped to Course + Task + Student, never a global identity.
@@ -40,8 +35,9 @@ const attemptLocatorHandlers = [
           attempt.studentId === result.studentId &&
           String(attempt.attemptNumber) === params.attemptNumber
       );
-      if (!attempt)
-        return HttpResponse.json({ status: 'not-found' }, { status: 404 });
+      if (!attempt) {
+        return accessDenial('not-found');
+      }
       const { id, studentId, taskId, attemptNumber } = attempt;
       return HttpResponse.json({
         status: 'found',

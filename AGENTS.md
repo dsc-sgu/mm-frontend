@@ -298,7 +298,7 @@ Do not add FSM libraries such as `xstate` or `robot` by default. This does not a
   - Examples: `page-edit/model/editor-store` + `page-edit/hooks/use-editor-store.ts`, `attempt-review/model/diff-readiness.ts` + `hooks/use-diff-readiness.ts`.
 - **Non-reactive cell or cache is not a store.** If data is written on change and read only on mount (e.g. an initial `useState` value), there are no subscribers: use a plain object (`Map`) in context or a `useRef` lifted above the unmount point. Zustand adds nothing here, and a `set` per change would copy the data. Example: `attempt-review/model/unsent-comment-text.ts`.
 - **Do not hand-write** `listeners` / `subscribe` / `getSnapshot` / subscriber fan-out.
-- **`useSyncExternalStore`** is only for adapters to browser APIs (`matchMedia`, `MutationObserver`, …), like `src/hooks/use-media-query.ts`. ESLint enforces this with `no-restricted-imports`, the same way `no-nested-ternary` is enforced.
+- **`useSyncExternalStore`** is only for adapters to browser APIs (`matchMedia`, `MutationObserver`, …), like `src/hooks/use-media-query.ts`. ESLint enforces this with `no-restricted-imports`, the same way `no-nested-ternary` is enforced. The one exception is `access/hooks/use-resource-denial.ts`, an adapter to the TanStack `QueryCache`: the Course shell reacts to a denied read of any page, and no TanStack hook selects over the data of many queries. Any other exception is listed in `eslint.config.js` and agreed first.
 - **State needed before the bundle loads** (e.g. the theme set by the inline script in `index.html`) lives in the DOM / `localStorage`; React reads it through an adapter instead of duplicating it in a store.
 
 A store is not needed for the state of a single component.

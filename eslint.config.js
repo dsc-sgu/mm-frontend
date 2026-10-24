@@ -56,14 +56,18 @@ function restrictedImports(...patterns) {
   );
 }
 
-// Browser API adapters, the only legitimate users of useSyncExternalStore.
+// Adapters to external sources, the only legitimate users of
+// useSyncExternalStore: browser APIs, plus the one listed QueryCache adapter.
 // Generated shadcn components use `import * as React`, which the rule flags.
-const BROWSER_API_ADAPTERS = [
+const EXTERNAL_SOURCE_ADAPTERS = [
   'src/shadcn/components/ui/**',
   'src/hooks/use-media-query.ts',
   // The theme class on <html> is set by an inline script before the bundle
   // loads, so the DOM stays the source of truth and React observes it.
   'src/features/course/features/attempt-review/hooks/use-html-theme.ts',
+  // The Course shell must notice a denied read of any page without the page
+  // wiring it, and no TanStack hook selects over the data of many queries.
+  'src/features/course/features/access/hooks/use-resource-denial.ts',
 ];
 
 const fetchMessage = `Call Fetch only through runHttpOperation from ${TRANSPORT_MODULE}.`;
@@ -151,7 +155,7 @@ export default defineConfig([
     },
   },
   {
-    files: BROWSER_API_ADAPTERS,
+    files: EXTERNAL_SOURCE_ADAPTERS,
     rules: {
       'no-restricted-imports': restrictedImportsWithPaths(
         [axiosPath],

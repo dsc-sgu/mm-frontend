@@ -10,7 +10,7 @@ import { server } from '@/app/mock-backend/node';
 import { networkFailure, undeclaredStatus } from '@/app/mock-backend/failures';
 import { renderRoutes } from '@/app/testing/render-routes';
 import { AttemptReviewPage } from '@/features/course/features/attempt-review/page';
-import { reply } from '@/app/testing/reply';
+import { accessDenial } from '@/app/mock-backend/participant-access';
 
 // This contract exercises the real Router, HTTP operation, Query and Course
 // shell up to the content seam; the page's own contracts render the content.
@@ -194,7 +194,7 @@ test('a cached Student link cannot retain an Attempt after a backend denial', as
   await act(async () => {
     await router.navigate({ to: COURSE_PATH });
   });
-  server.use(http.get(ATTEMPT_ENDPOINT, reply(403, { status: 'forbidden' })));
+  server.use(http.get(ATTEMPT_ENDPOINT, () => accessDenial('not-found')));
   await act(async () => {
     await router.navigate({ to: path });
   });
