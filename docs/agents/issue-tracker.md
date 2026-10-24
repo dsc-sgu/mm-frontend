@@ -1,45 +1,63 @@
-# Issue tracker: GitHub
+# Issue tracker: tk
 
-Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all operations.
+Tickets and specs for this repo live as Markdown files in `.tickets/` on the orphan branch `tickets`, managed with `tk`. The branch shares no history with `main`; its `README.md` describes the format and every command.
+
+GitHub Issues of this repository are a frozen archive of the same tickets: do not create, edit, comment on or close them. A ticket imported from there keeps its number (`#228` is `mm-228`) and an `external-ref: gh-228`.
+
+## Setup
+
+Check the branch out once as a worktree and put `tk` on the `PATH`:
+
+```bash
+git worktree add ../mm-frontend-worktrees/tickets tickets
+ln -s "$PWD/../mm-frontend-worktrees/tickets/bin/tk" ~/.local/bin/tk
+```
+
+`tk` then works from any directory and any worktree. It needs Python 3.9+ and nothing outside the standard library.
 
 ## Conventions
 
-- **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
-- **Read an issue**: `gh issue view <number> --comments`, filtering comments by `jq` and also fetching labels.
-- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
-- **Comment on an issue**: `gh issue comment <number> --body "..."`
-- **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
-- **Close**: `gh issue close <number> --comment "..."`
+- **Name a ticket** `mm-<n>` in new text, never `#<n>`: GitHub keeps numbering pull requests from the same counter. Every command accepts `mm-228`, `228` and `#228`.
+- **Create a ticket**: `tk create "Title" --stdin --tags needs-triage <<'EOF'` with the body on stdin; it prints the new id.
+- **Read a ticket**: `tk show <id> --meta` prints the frontmatter, relations and a line-numbered outline; then read only the lines you need from `.tickets/mm-<n>.md`. `tk show <id>` prints the whole ticket.
+- **List tickets**: `tk ls` (open and in progress), `tk ready` (no open blockers), `tk blocked`, `tk closed`; `ls` and `ready` filter with `--tag`, `--parent`, `--assignee` or `--unassigned`. `tk query | jq …` prints every ticket as a JSON line.
+- **Comment**: `tk comment <id> <<'EOF'` with the text on stdin.
+- **Apply / remove tags** (the labels of [triage-labels.md](triage-labels.md)): `tk tag <id> <tag>` / `tk untag <id> <tag>`. Every tag must be described in `.tickets/tags`.
+- **Close**: `tk close <id> --reason completed` (or `not_planned`, `duplicate`).
+- **Find mentions**: `tk refs <id>` lists the tickets whose text mentions it.
+- **Search by meaning**: if the qmd MCP server is available, query its `tickets` collection; exact words, ids and tags go through `rg` over `.tickets/`.
 
-Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
+Each write is committed alone on the `tickets` branch (`tk: close mm-228 (completed)`), so `git log -- .tickets/mm-228.md` is the ticket's history. After editing a ticket file by hand, run `tk check` and commit it yourself. Nothing is pushed until `tk sync`, which pulls with rebase and pushes; run it after a session's writes.
 
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
 
-When set to `yes`, PRs run through the same labels and states as issues, using the `gh pr` equivalents:
+Pull requests stay on GitHub. When set to `yes`, PRs run through the same tags and states as tickets, using the `gh pr` commands:
 
 - **Read a PR**: `gh pr view <number> --comments` and `gh pr diff <number>` for the diff.
 - **List external PRs for triage**: `gh pr list --state open --json number,title,body,labels,author,authorAssociation,comments` then keep only `authorAssociation` of `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR`, or `NONE` (drop `OWNER`/`MEMBER`/`COLLABORATOR`).
 - **Comment / label / close**: `gh pr comment`, `gh pr edit --add-label`/`--remove-label`, `gh pr close`.
 
-GitHub shares one number space across issues and PRs, so a bare `#42` may be either: resolve with `gh pr view 42` and fall back to `gh issue view 42`.
+A bare `#42` in old text may be an imported ticket or a PR: `tk show 42` succeeds only for a ticket, otherwise use `gh pr view 42`.
+
+A PR that implements tickets names them in its body (`Implements mm-228`); GitHub cannot close them. Close each ticket with `tk close` once the PR is merged.
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue.
+Create a ticket with `tk create`.
 
 ## When a skill says "fetch the relevant ticket"
 
-Run `gh issue view <number> --comments`.
+Run `tk show <id> --meta`, then read the parts you need.
 
 ## Wayfinding operations
 
-Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
+Used by `/wayfinder`. The **map** is a single ticket with **child** tickets.
 
-- **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `gh issue create --label wayfinder:map`.
-- **Child ticket**: an issue linked to the map as a GitHub sub-issue (`gh api` on the sub-issues endpoint). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.
-- **Blocking**: GitHub's **native issue dependencies**, the canonical, UI-visible representation. Add an edge with `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is the blocker's numeric **database id** (`gh api repos/<owner>/<repo>/issues/<n> --jq .id`, _not_ the `#number` or `node_id`). GitHub reports `issue_dependencies_summary.blocked_by` (open blockers only, the live gate). Where dependencies aren't available, fall back to a `Blocked by: #<n>, #<n>` line at the top of the child body. A ticket is unblocked when every blocker is closed.
-- **Frontier query**: list the map's open children (`gh issue list --state open`, scoped to the map's sub-issues / task list), drop any with an open blocker (`issue_dependencies_summary.blocked_by > 0`, or an open issue in the `Blocked by` line) or an assignee; first in map order wins.
-- **Claim**: `gh issue edit <n> --add-assignee @me`, the session's first write.
-- **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.
+- **Map**: a ticket tagged `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `tk create "…" --stdin --tags wayfinder:map`.
+- **Child ticket**: `tk create "…" --stdin --parent <map> --tags wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.
+- **Blocking**: `tk dep <child> <blocker>` adds the blocker to the child's `deps`; `tk undep` removes it. A ticket is unblocked when every ticket in its `deps` is closed. `tk dep tree <id>` shows the chain, `tk dep cycle` finds cycles.
+- **Frontier query**: `tk ready --parent <map> --unassigned`: the map's open descendants without open blockers or an assignee. `tk tree <map>` shows the whole map with its blockers.
+- **Claim**: `tk claim <id>`, the session's first write. It assigns the ticket to you and starts it, and refuses a ticket someone else holds.
+- **Resolve**: `tk comment <id>` with the answer, then `tk close <id> --reason completed`, then append a context pointer (gist + `mm-<n>`) to the map's Decisions-so-far by editing the map file; run `tk check` and commit it.
