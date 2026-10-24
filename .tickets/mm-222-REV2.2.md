@@ -5,7 +5,7 @@ deps: [mm-221]
 links: [mm-d4wtq, mm-187, mm-s56by, mm-268, mm-181]
 created: 2026-10-14T10:58:44Z
 type: task
-priority: 2
+priority: 1
 external-ref: gh-222
 parent: mm-218
 tags: [ready-for-agent]

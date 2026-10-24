@@ -5,7 +5,7 @@ deps: []
 links: []
 created: 2026-02-01T15:42:18Z
 type: feature
-priority: 2
+priority: 3
 external-ref: gh-3
 ---
 # User hover card component

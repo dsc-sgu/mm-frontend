@@ -5,7 +5,7 @@ deps: [mm-147, mm-226, mm-224, mm-223, mm-227]
 links: []
 created: 2026-10-14T10:59:33Z
 type: task
-priority: 2
+priority: 1
 external-ref: gh-228
 parent: mm-218
 tags: [ready-for-agent]

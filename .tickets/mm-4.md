@@ -5,7 +5,7 @@ deps: []
 links: [mm-1d3ef, mm-187, mm-s56by, mm-7rgrq, mm-26, mm-27, mm-199, mm-200, mm-3s7m8, mm-113]
 created: 2026-02-01T15:43:28Z
 type: feature
-priority: 2
+priority: 1
 external-ref: gh-4
 ---
 # Edit profile page layout
