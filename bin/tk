@@ -233,7 +233,8 @@ def author(root: Path) -> str:
     if name:
         return name
     with contextlib.suppress(FileNotFoundError):
-        name = git(root, "config", "user.name", check=False).stdout.strip()
+        name = git(root, "config", "tk.author", check=False).stdout.strip()
+        name = name or git(root, "config", "user.name", check=False).stdout.strip()
     return name or os.environ.get("USER", "unknown")
 
 
@@ -1119,7 +1120,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("name", nargs="?")
     p = command("claim", cmd_claim, "assign to yourself and start, unless someone else holds it")
     p.add_argument("id")
-    p.add_argument("--as", dest="as_name", help="claim as this name (default: $TICKET_AUTHOR or git user.name)")
+    p.add_argument("--as", dest="as_name", help="claim as this name (default: $TICKET_AUTHOR, git tk.author or user.name)")
 
     p = command("tag", cmd_tag, "add tags")
     p.add_argument("id")
@@ -1131,7 +1132,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = command("comment", cmd_comment, "append a comment (text as arguments or on stdin)")
     p.add_argument("id")
     p.add_argument("text", nargs="*")
-    p.add_argument("--author", help="default: $TICKET_AUTHOR or git user.name")
+    p.add_argument("--author", help="default: $TICKET_AUTHOR, git tk.author or user.name")
 
     p = command("refs", cmd_refs, "find tickets whose text mentions a ticket")
     p.add_argument("id")

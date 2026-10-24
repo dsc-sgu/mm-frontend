@@ -447,6 +447,15 @@ class GitTest(TkCase):
         self.assertEqual(self.git("diff", "--cached", "--name-only"), "unrelated.txt\n")
 
 
+    def test_the_name_comes_from_git_tk_author_before_user_name(self) -> None:
+        self.git("init", "-q")
+        self.git("config", "user.name", "Tester Full Name")
+        self.git("config", "tk.author", "t3m8ch")
+        self.write("mm-1", ticket("mm-1"))
+        del self.env["TICKET_AUTHOR"]
+        self.tk("claim", "1")
+        self.assertIn("assignee: t3m8ch\n", self.read("mm-1"))
+
     def test_a_code_change_is_one_commit_that_renames_the_file(self) -> None:
         self.git("init", "-q")
         self.git("config", "user.name", "Tester")

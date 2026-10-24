@@ -80,7 +80,7 @@ tk query | jq -r 'select(.status == "open") | .id'
 tk help
 ```
 
-`tk sync` is the only command that talks to the remote. Each write is committed alone (`tk: close mm-228 (completed)`), so `git log --follow -- .tickets/mm-228-REV6.2.md` is the ticket's history across code changes. Set `TK_AUTOCOMMIT=0` to skip it. `tk sync` pulls with rebase, numbers new tickets and pushes; nothing is pushed otherwise. The comment author is `$TICKET_AUTHOR`, else `git config user.name`.
+`tk sync` is the only command that talks to the remote. Each write is committed alone (`tk: close mm-228 (completed)`), so `git log --follow -- .tickets/mm-228-REV6.2.md` is the ticket's history across code changes. Set `TK_AUTOCOMMIT=0` to skip it. `tk sync` pulls with rebase, numbers new tickets and pushes; nothing is pushed otherwise. Your name, for `tk claim` and comments, is `$TICKET_AUTHOR`, else `git config tk.author`, else `git config user.name`; set it once to your forge login: `git config --global tk.author t3m8ch`.
 
 ## Development
 
