@@ -1,0 +1,61 @@
+---
+id: mm-171-ACC2.1
+status: closed
+deps: [mm-168]
+links: []
+created: 2026-10-12T12:13:59Z
+type: task
+priority: 2
+external-ref: gh-171
+parent: mm-167
+tags: [ready-for-agent]
+closed: 2026-10-12T18:17:06Z
+close-reason: completed
+---
+# ACC2.1: Называть номер Attempt attemptNumber
+
+Часть epic [«Course access»](https://github.com/dsc-sgu/mm-frontend/issues/167).
+
+Prefactor для ACC2.2. Номер Attempt перестаёт выглядеть как глобальный id: это порядковый `AttemptNumber` в контексте Course, Task и Student.
+
+### Делает
+
+- Параметр route `$attemptId` переименовывается в `$attemptNumber` и получает тип `AttemptNumber` из ACC1.1. Строка URL не меняется.
+- Одна терминология во всех потребителях:
+  - Attempt page и Review editor;
+  - breadcrumbs;
+  - ссылки из Course Attempts;
+  - история Attempts на Task Page;
+  - выбор Attempt;
+  - query identity и RAM-моки.
+- Подписи для User остаются прежними («Попытка #n»).
+
+### Удаляет
+
+- `attemptId` в значении «порядковый номер».
+
+### Не входит
+
+- Разрешение номера во внутренний `AttemptId` и решение backend о доступе — ACC2.2.
+
+### Контракты
+
+Контрактов матрицы нет: тикет проверяют lint, build и существующие тесты, включая E2E страницы проверки Attempt.
+
+### Уточнения из заменённых тикетов
+
+- [«Переименовать frontend identity попытки в attemptNumber»](https://github.com/dsc-sgu/mm-frontend/issues/84):
+  - номер остаётся числом и scoped к course + task + student;
+  - переход между Attempts и прямое открытие существующих URLs работают как раньше.
+
+### Готово, когда
+
+- Lint и build проходят, существующие тесты зелёные.
+- Во frontend-коде нет `attemptId`, означающего порядковый номер.
+
+### Источники
+
+- Epic [#167](https://github.com/dsc-sgu/mm-frontend/issues/167): «Participant-bound ресурсы (ACC2)».
+- [«Определить последовательность подготовки и выполнения рефакторинга»](https://github.com/dsc-sgu/mm-frontend/issues/69#issuecomment-6108811160): «ACC2 поглощает переименование в `attemptNumber`».
+
+Тикет трогает те же route-файлы Attempt, что ACC1.2 и ACC1.3. Блокировки по графу у него нет, только порядок слияния.

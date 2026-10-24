@@ -1,0 +1,59 @@
+---
+id: mm-229-REV6.3
+status: open
+deps: [mm-228]
+links: []
+created: 2026-10-14T10:59:41Z
+type: task
+priority: 2
+external-ref: gh-229
+parent: mm-218
+tags: [ready-for-agent]
+---
+# REV6.3: Предупреждать об уходе с несохранённой Review Working Copy
+
+Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218).
+
+Teacher не теряет неопубликованную Review Working Copy случайно: уход, переключение Attempt, reload и закрытие вкладки требуют подтверждения. Просмотр без изменений уход не блокирует.
+
+### Делает
+
+- **Что считается несохранённым.** Working Copy, отличная от последней Review Revision: Grade, Overall Feedback и собственные root comments. Replies публикуются сразу и не учитываются.
+- **Когда нужно подтверждение:**
+  - навигация по приложению;
+  - переключение Attempt через selector;
+  - reload и закрытие вкладки через `beforeunload`.
+- **`publication-unconfirmed`:** уход предупреждает «Публикация не подтверждена».
+- **Без блокировки:** Attempt page и Review editor без изменений.
+- **Точка для lease.** Действия, которые должны выполниться только после подтверждённого ухода, получают единую точку. Снятие lease подключит REV7.1.
+
+### Не входит
+
+- Снятие Review Lease — REV7.1.
+- Правило «предупреждать, только если нет совместимой живой копии» — REV7.3.
+
+### Контракты
+
+| id | Слой | Риск | Fixtures | Контракт |
+|---|---|---|---|---|
+| REV-29 | Component | Сохранность данных | `world:review` | Несохранённая Working Copy: подтверждение при навигации и переключении Attempt; в `publication-unconfirmed` — «Публикация не подтверждена»; lease снимается только после подтверждённого ухода. (I5) |
+| REV-30 | Real browser | Сохранность данных | `world:review` | `beforeunload` при reload и закрытии вкладки с несохранённой Working Copy. (I5) |
+| A11Y-01 | Real browser | Корректность | `world:review` | Часть этого тикета: axe на устойчивых состояниях Review editor — editing и interrupted. |
+
+REV-29 в этом тикете проверяется без lease; условие «lease снимается только после подтверждённого ухода» добавляет REV7.1.
+
+Fixtures описаны во вкладке «Fixtures» [матрицы](https://github.com/dsc-sgu/mm-frontend/blob/ddda126c5e73ec787362805c286ee081ee26244d/docs/prototypes/test-contract-matrix.html).
+
+### Уточнения
+
+[«Предупреждать об уходе с несохранённого attempt review»](https://github.com/dsc-sgu/mm-frontend/issues/87) и его комментарий о связи с Review vertical: после явного discard или успешной публикации предупреждение исчезает; readonly-просмотр и Review без локальных изменений уход не блокируют; новые свои root comments учитываются как несохранённая работа.
+
+### Готово, когда
+
+- Lint и build проходят.
+- Контракты выше зелёные; browser-контракты — в Chromium, Firefox и WebKit.
+
+### Источники
+
+- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Review editor и публикация (REV6)», «Защита при уходе».
+- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): «Публикация и неопределённость».

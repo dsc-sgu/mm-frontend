@@ -1,0 +1,65 @@
+---
+id: mm-223-REV3.1
+status: closed
+deps: [mm-219]
+links: []
+created: 2026-10-14T10:58:53Z
+type: task
+priority: 2
+external-ref: gh-223
+parent: mm-218
+tags: [ready-for-agent]
+closed: 2026-10-15T11:17:02Z
+close-reason: completed
+---
+# REV3.1: Запускать diff Workers только на страницах Attempt и показывать их отказ
+
+Часть epic [«Review»](https://github.com/dsc-sgu/mm-frontend/issues/218).
+
+Diff Workers запускаются только на Attempt page и в Review editor. Если Worker или WASM недоступны, Teacher видит ошибку с «Повторить» вместо бесконечной загрузки и может продолжать писать Review.
+
+### Делает
+
+**Где живёт pool.** Worker pool монтируется на routes Attempt page и Review editor, а не на всём authenticated-поддереве. На Course Page, в Course Attempts и на других страницах Workers не создаются.
+
+**Готовность diff.**
+- Module готовности diff отдаёт состояние `loading | ready | failed`.
+- `failed` показывает явную ошибку с «Повторить». Повтор пересоздаёт Workers.
+- Main-thread или plain fallback не нужен.
+- Пока diff `failed`, Save недоступен с причиной, а Grade, Overall Feedback и комментарии остаются редактируемыми. В REV6.2 это станет причиной publish gate.
+
+**Seam для тестов.** Фабрика Workers передаётся module как зависимость. Harness component-тестов подставляет управляемый фейк `ready`/`failed`, diff в jsdom рендерится без подсветки. Нынешняя подмена pool в harness, при которой страница review не рендерится, удаляется. С этого тикета component-тесты Attempt page и Review editor рендерят настоящее дерево routes.
+
+### Удаляет
+
+- Worker pool на authenticated-поддереве.
+- Бесконечный loader при недоступном Worker.
+
+### Не входит
+
+- Manifest, полнота материала и «Повторить» для записей — REV3.2.
+- Лимиты pool — замер после REV3.
+
+### Контракты
+
+| id | Слой | Риск | Fixtures | Контракт |
+|---|---|---|---|---|
+| REV-10 | Real browser | Целостность | `world:review`, `fail:worker` | Diff Worker: `loading → ready`; недоступный Worker/WASM → `failed` с Retry, а не бесконечный loader; публикация заблокирована, поля редактируемы. (I3) |
+| REV-11 | Real browser | Корректность | `world:review` | Worker pool создаётся только на Attempt page и в Review editor; на Course Page и в Course Attempts Workers нет. |
+| A11Y-02 | Component | Корректность | — | Часть этого тикета: «Повторить» у отказа diff — доступные role и name. |
+
+`fail:worker` — только Playwright: скрипт Worker или WASM блокируется через route. Обход Firefox (module Worker, чей скрипт отдал service worker, не запускается, mswjs/msw#2654) из существующего E2E сохраняется.
+
+Fixtures описаны во вкладке «Fixtures» [матрицы](https://github.com/dsc-sgu/mm-frontend/blob/ddda126c5e73ec787362805c286ee081ee26244d/docs/prototypes/test-contract-matrix.html).
+
+### Готово, когда
+
+- Lint и build проходят.
+- Контракты выше зелёные в Chromium, Firefox и WebKit.
+- Component-harness рендерит Attempt page и Review editor с фейком готовности diff.
+
+### Источники
+
+- Epic [#218](https://github.com/dsc-sgu/mm-frontend/issues/218): «Материал Attempt и готовность diff (REV3)», «Решения по тестированию», решение 3.
+- [«Спроектировать Review → Grade → Student result vertical»](https://github.com/dsc-sgu/mm-frontend/issues/116): slice 3.
+- [#72](https://github.com/dsc-sgu/mm-frontend/issues/72): «Diff Worker readiness».

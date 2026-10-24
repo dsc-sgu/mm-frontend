@@ -1,0 +1,37 @@
+---
+id: mm-150-V-TQ
+status: closed
+deps: [mm-138]
+links: []
+created: 2026-10-11T12:29:01Z
+type: task
+priority: 2
+external-ref: gh-150
+parent: mm-151
+tags: [ready-for-agent]
+closed: 2026-10-11T15:47:50Z
+close-reason: completed
+---
+# V-TQ: Обновить TanStack Query и Router
+
+### Делает
+
+Обновляет вместе до актуальных версий в пределах текущего major:
+
+- `@tanstack/react-query`;
+- `@tanstack/react-router` и `@tanstack/router-plugin`;
+- `routeTree.gen.ts` перегенерируется.
+
+### Не входит
+
+`@tanstack/react-virtual` — в #71 он отдельный cohort.
+
+### Готово, когда
+
+- Lint и build проходят.
+- Проверены loaders, типизация навигации и augmentation `StaticDataRouteOption`. W0-2 переносит её на `@tanstack/react-router`; если W0-2 ещё не влит, augmentation проверяется на старом месте.
+- Smoke-проверка: вход, список курсов, Course Page, Course Attempts, Attempt review, переходы назад и вперёд.
+
+### Источники
+
+[«Провести аудит зависимостей и конкурирующих библиотек»](https://github.com/dsc-sgu/mm-frontend/issues/71): cohort 7 в ревизии версий.

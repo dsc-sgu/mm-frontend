@@ -1,0 +1,38 @@
+---
+id: mm-145-V-VAL
+status: closed
+deps: [mm-138]
+links: []
+created: 2026-10-11T12:28:52Z
+type: task
+priority: 2
+external-ref: gh-145
+parent: mm-151
+tags: [ready-for-agent]
+closed: 2026-10-11T15:47:48Z
+close-reason: completed
+---
+# V-VAL: Обновить Valibot, React Hook Form и resolvers
+
+### Делает
+
+Обновляет одним cohort до актуальных версий в пределах текущего major:
+
+- `valibot`;
+- `react-hook-form`;
+- `@hookform/resolvers`.
+
+### Готово, когда
+
+- Lint и build проходят.
+- Вручную проверено:
+  - runtime parsing session (`features/auth/model/schema.ts`): авторизованная и неавторизованная session;
+  - формы входа и регистрации: валидация, сообщения об ошибках, отправка;
+  - валидация редактора Course Page (`page-edit/model/validation.ts`);
+  - guards параметров route (`course/routing/params.ts`).
+
+K идёт после этого slice и строит транспортное ядро уже на обновлённом Valibot.
+
+### Источники
+
+[«Провести аудит зависимостей и конкурирующих библиотек»](https://github.com/dsc-sgu/mm-frontend/issues/71): cohort 4 в ревизии версий.
