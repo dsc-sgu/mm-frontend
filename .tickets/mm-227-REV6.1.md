@@ -10,48 +10,48 @@ external-ref: gh-227
 parent: mm-218
 tags: [ready-for-agent]
 ---
-# REV6.1: Сводить каждую Review Revision в cache через observeReviewRevision
+# REV6.1: Сводить каждую версию проверки в кэш через observeReviewRevision
 
-Часть epic mm-218 «Review». Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
+Часть эпика mm-218. Перед началом прочитать [`docs/agents/remote-data.md`](https://github.com/dsc-sgu/mm-frontend/blob/main/docs/agents/remote-data.md) (обязательно по `AGENTS.md`).
 
-Prefactor ядра Review editor. Каждая авторитетная Review Revision попадает в cache через одну функцию, которая не даёт старой revision заменить новую и обновляет все экраны с Grade. После сохранения Review selector, история Task и Course Attempts показывают новую Grade.
+Подготовительный рефакторинг ядра редактора проверки. Каждая авторитетная версия проверки попадает в кэш через одну функцию, которая не даёт старой версии заменить новую и обновляет все экраны с оценкой. После сохранения проверки селектор попыток, история задания и список попыток курса показывают новую оценку.
 
 ### Делает
 
-`observeReviewRevision(queryClient, { attemptId, courseId, taskId, studentId, revision })` в feature `review`:
-- монотонно пишет авторитетную Review в свой cache и отменяет идущий запрос Review;
-- revision с меньшим номером не заменяет большую;
-- инвалидирует чужие проекции по prefix через их публичные key factories (selector, история Task, Course Attempts), не читая их данных.
+`observeReviewRevision(queryClient, { attemptId, courseId, taskId, studentId, revision })` в модуле `review`:
+- монотонно пишет авторитетную проверку в свой кэш и отменяет идущий запрос проверки;
+- версия с меньшим номером не заменяет большую;
+- инвалидирует чужие проекции по префиксу через их публичные фабрики ключей (селектор попыток, история задания, список попыток курса), не читая их данных.
 
-Сравнение revision происходит только внутри владельца cache. Это не шина событий.
+Версии сравниваются только внутри владельца кэша. Это не шина событий.
 
-Её вызывают загрузка Review и текущий Save. В REV6.2 Save заменит публикация, позже — quick grading (ATT6) и SSE (mm-98).
+Её вызывают загрузка проверки и текущее сохранение. В REV6.2 сохранение заменит публикация, позже — быстрое оценивание (ATT6) и SSE (mm-98).
 
 ### Удаляет
 
-- Ручную инвалидацию в mutation Save, включая прямой импорт ключей Course Attempts.
+- Ручную инвалидацию в операции записи сохранения, включая прямой импорт ключей списка попыток курса.
 
 ### Не входит
 
 - Публикация и её исходы — REV6.2.
-- «Идёт синхронизация» по сигналу backend — REV8.
+- «Идёт синхронизация» по сигналу бэкенда — REV8.
 
 ### Контракты
 
-| id | Слой | Риск | Fixtures | Контракт |
+| id | Слой | Риск | Фикстуры | Контракт |
 |---|---|---|---|---|
-| REV-27 | Boundary | Целостность | `world:review`, `fail:held` | `observeReviewRevision`: запоздавшая revision 2 после 3 не заменяет 3; идущий запрос отменён; чужие проекции инвалидированы по prefix через их key factories, их данные не читаются. (I7, I8) |
+| REV-27 | Boundary | Целостность | `world:review`, `fail:held` | `observeReviewRevision`: запоздавшая версия 2 после 3 не заменяет 3; идущий запрос отменён; чужие проекции инвалидированы по префиксу через их фабрики ключей, их данные не читаются. (I7, I8) |
 
-Fixtures описаны во вкладке «Fixtures» [матрицы](https://github.com/dsc-sgu/mm-frontend/blob/ddda126c5e73ec787362805c286ee081ee26244d/docs/prototypes/test-contract-matrix.html).
+Фикстуры описаны во вкладке «Fixtures» [матрицы](https://github.com/dsc-sgu/mm-frontend/blob/ddda126c5e73ec787362805c286ee081ee26244d/docs/prototypes/test-contract-matrix.html).
 
 ### Готово, когда
 
-- Lint и build проходят.
+- `bun run lint` и `bun run build` проходят.
 - Контракт выше зелёный.
-- Ни одна mutation Review не инвалидирует проекции в обход `observeReviewRevision`.
+- Ни одна операция записи проверки не инвалидирует проекции в обход `observeReviewRevision`.
 
 ### Источники
 
-- Epic mm-218: «Согласованность Grade (REV6)».
-- mm-116 «Спроектировать Review → Grade → Student result vertical»: «Согласованность Grade на всех экранах».
-- mm-76 «Унифицировать ключи запросов и правила согласованности кеша»: `observeReviewRevision`.
+- Эпик mm-218: «Согласованность оценки (REV6)».
+- mm-116 — проектирование вертикали «проверка → оценка → результат студента»: «Согласованность оценки на всех экранах».
+- mm-76 — единые ключи запросов и правила согласованности кэша: `observeReviewRevision`.
