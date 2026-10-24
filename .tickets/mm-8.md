@@ -8,4 +8,4 @@ type: bug
 priority: 3
 external-ref: gh-8
 ---
-# Disable checks for shadcn components
+# Отключить проверки для компонентов shadcn
