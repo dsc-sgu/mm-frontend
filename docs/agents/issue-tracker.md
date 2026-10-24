@@ -7,10 +7,11 @@ GitHub Issues of this repository are only an intake for people outside the team.
 ## Issues from outside the team
 
 - **Triage** them on GitHub with `gh issue view <n> --comments` and `gh issue comment <n>`: ask questions, or close with `gh issue close <n> --reason "not planned"` and a comment why.
-- **Take one on**: run `tools/import_github.py --issue <n>` in the tickets worktree. It creates a ticket with a random id and `external-ref: gh-<n>`, with the issue's body, comments and the labels `.tickets/tags` describes, checks it, commits it and prints the id. Tag it with `tk tag`, then comment on the issue with a link to the ticket and close it as not planned:
+- **Take one on**: run `tools/import_github.py --issue <n>` in the tickets worktree. It creates a new ticket with `external-ref: gh-<n>`, with the issue's body, comments and the labels `.tickets/tags` describes, checks it and commits it. Tag it with `tk tag`, run `tk sync` to give it its number, then comment on the issue with a link to the ticket and close it as not planned:
 
   ```bash
-  id=$(tools/import_github.py --issue <n>)
+  tools/import_github.py --issue <n> && tk sync
+  id=$(tk show gh-<n> --meta | sed -n 's/^id: //p')
   gh issue close <n> --reason "not planned" --comment "Перенесено в трекер \`tk\`: тикет **$id** (https://github.com/dsc-sgu/mm-frontend/blob/tickets/.tickets/$id.md). Работа по задаче ведётся там."
   ```
 
@@ -29,9 +30,10 @@ ln -s "$PWD/../mm-frontend-worktrees/tickets/bin/tk" ~/.local/bin/tk
 
 ## Conventions
 
-- **Name a ticket** by its id (`mm-228-REV6.2`, `mm-k7q2x`) or by `mm-<core>` (`mm-228`) in new text, never `#<n>`: GitHub keeps numbering pull requests from the same counter. An id is `mm-<core>[-<slice code>]`: the core is the issue number for imported tickets and 5 random characters for new ones. Every command finds a ticket by any part of its id: `mm-228`, `228`, `#228`, `REV6.2`, `k7q2x`.
-- **Slice codes** (`ACC4`, `REV6.2`) end the id of a slice of a plan or an epic: `tk create --code ACC5`, later `tk code <id> <code>`. In `deps`, `parent` and `links` write `mm-<core>` without the code.
-- **Create a ticket**: `tk create "Title" --stdin --tags needs-triage <<'EOF'` with the body on stdin; it prints the new id.
+- **Name a ticket** by its id (`mm-228-REV6.2`) or by `mm-<number>` (`mm-228`) in new text, never `#<n>`: GitHub keeps numbering pull requests from the same counter. An id is `mm-<number>[-<slice code>]`; every command finds a ticket by any part of its id: `mm-228`, `228`, `#228`, `REV6.2`. A number is always this tracker's: the GitHub issue #290 is `gh-290`.
+- **Numbers come from `tk sync`.** `tk create` works offline and gives a random id like `mm-k7q2x`; the first `tk sync` renames it to the next number and keeps `k7q2x` as an alias that still finds it. Sync before you put a new ticket's id into a branch name, a commit or a PR.
+- **Slice codes** (`ACC4`, `REV6.2`) end the id of a slice of a plan or an epic: `tk create --code ACC5`, later `tk code <id> <code>`. In `deps`, `parent` and `links` write `mm-<number>` without the code.
+- **Create a ticket**: `tk create "Title" --stdin --tags needs-triage <<'EOF'` with the body on stdin; it prints the unsynced id. Create several, then one `tk sync` numbers them all and prints `mm-k7q2x -> mm-281` for each.
 - **Read a ticket**: `tk show <id> --meta` prints the frontmatter, relations and a line-numbered outline; then read only the lines you need from the file at its `path`. `tk show <id>` prints the whole ticket.
 - **List tickets**: `tk ls` (open and in progress), `tk ready` (no open blockers), `tk blocked`, `tk closed`; `ls` and `ready` filter with `--tag`, `--parent`, `--assignee` or `--unassigned`. `tk query | jq …` prints every ticket as a JSON line.
 - **Comment**: `tk comment <id> <<'EOF'` with the text on stdin.
@@ -40,7 +42,7 @@ ln -s "$PWD/../mm-frontend-worktrees/tickets/bin/tk" ~/.local/bin/tk
 - **Find mentions**: `tk refs <id>` lists the tickets whose text mentions it.
 - **Search by meaning**: if the qmd MCP server is available, query its `tickets` collection; exact words, ids and tags go through `rg` over `.tickets/`.
 
-Each write is committed alone on the `tickets` branch (`tk: close mm-228 (completed)`), so `git log --follow -- <path>` is the ticket's history. After editing a ticket file by hand, run `tk check` and commit it yourself. Nothing is pushed until `tk sync`, which pulls with rebase and pushes; run it after a session's writes.
+Each write is committed alone on the `tickets` branch (`tk: close mm-228 (completed)`), so `git log --follow -- <path>` is the ticket's history. After editing a ticket file by hand, run `tk check` and commit it yourself. Nothing is pushed until `tk sync`, which pulls with rebase, numbers new tickets and pushes; run it after a session's writes.
 
 ## Pull requests as a triage surface
 
