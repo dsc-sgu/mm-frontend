@@ -175,11 +175,10 @@ class SourceTest(TkCase):
     def title(self, ref: str) -> str:
         return self.tk("show", ref, "--meta").stdout.split("\n# ", 1)[1].split("\n", 1)[0]
 
-    def test_the_external_ref_finds_the_ticket_and_a_number_means_the_first_source(self) -> None:
+    def test_the_external_ref_finds_the_ticket_but_a_number_is_always_ours(self) -> None:
         self.assertEqual(self.title("gh-290"), "From GitHub")
-        self.assertEqual(self.title("#290"), "From GitHub")
-        self.assertEqual(self.title("290"), "From GitHub")
         self.assertEqual(self.title("SGU-17"), "From the university")
+        self.assertIn("not found", self.tk("show", "#290", ok=False).stderr)
         self.assertIn("not found", self.tk("show", "17", ok=False).stderr)
         self.assertEqual(self.title("28"), "Old import")
 
@@ -461,6 +460,96 @@ class GitTest(TkCase):
         self.assertRegex(self.git("show", "-M", "--name-status", "--format=", "HEAD"),
                          r"^R\d+\t.tickets/mm-1.md\t.tickets/mm-1-ACC4.md\n$")
         self.assertEqual(self.git("status", "--porcelain", "--", "*.md"), "")
+
+
+class SyncTest(TkCase):
+    """Two clones of one bare remote, as two people with their own tickets worktree."""
+
+    def run_git(self, cwd: Path, *args: str) -> str:
+        return subprocess.run(["git", *args], cwd=cwd, check=True, text=True,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.env["TK_AUTOCOMMIT"] = "1"
+        remote = self.base / "remote.git"
+        self.run_git(self.base, "init", "-q", "--bare", "-b", "tickets", str(remote))
+        seed = self.base / "seed"
+        self.run_git(self.base, "clone", "-q", str(remote), str(seed))
+        (seed / ".tickets").mkdir()
+        (seed / ".tickets" / "mm-275.md").write_text(ticket("mm-275", "Last import"), encoding="utf-8")
+        (seed / ".gitignore").write_text(".tickets/.lock\n", encoding="utf-8")
+        self.run_git(seed, "add", "-A")
+        self.run_git(seed, "-c", "user.name=s", "-c", "user.email=s@x", "commit", "-qm", "seed")
+        self.run_git(seed, "push", "-q", "origin", "HEAD:tickets")
+        self.clones = []
+        for name in ("a", "b"):
+            clone = self.base / name
+            self.run_git(self.base, "clone", "-q", "-b", "tickets", str(remote), str(clone))
+            self.run_git(clone, "config", "user.name", name)
+            self.run_git(clone, "config", "user.email", f"{name}@x")
+            self.clones.append(clone)
+
+    def at(self, clone: Path, *args: str, stdin: str = "", ok: bool = True) -> subprocess.CompletedProcess:
+        self.env["TICKETS_DIR"] = str(clone / ".tickets")
+        return self.tk(*args, stdin=stdin, ok=ok, cwd=clone)
+
+    def test_sync_numbers_new_tickets_and_rewrites_what_points_at_them(self) -> None:
+        a = self.clones[0]
+        first = self.at(a, "create", "First", "--code", "ACC5").stdout.strip()
+        core = first.split("-")[1]
+        (a / ".tickets" / f"mm-{core}").mkdir()
+        (a / ".tickets" / f"mm-{core}" / "pic.png").write_bytes(b"png")
+        self.at(a, "comment", first, f"see mm-{core}/pic.png")
+        second = self.at(a, "create", "Second", "--deps", first, "--parent", "275",
+                         "-d", f"after {first} and mm-{core}").stdout.strip()
+        self.assertEqual(self.at(a, "sync").stdout.splitlines(), [f"{first} -> mm-276-ACC5", f"{second} -> mm-277"])
+        text = (a / ".tickets" / "mm-277.md").read_text(encoding="utf-8")
+        self.assertIn("deps: [mm-276]", text)
+        self.assertIn("after mm-276-ACC5 and mm-276", text)
+        moved = (a / ".tickets" / "mm-276-ACC5.md").read_text(encoding="utf-8")
+        self.assertIn(f"aliases: [{core}]", moved)
+        self.assertIn("see mm-276/pic.png", moved)
+        self.assertTrue((a / ".tickets" / "mm-276" / "pic.png").exists())
+        self.assertIn("id: mm-276-ACC5", self.at(a, "show", core, "--meta").stdout)
+        self.assertEqual(self.at(a, "check").stdout.strip(), "ok: 3 tickets")
+        self.assertEqual(self.run_git(a, "status", "--porcelain"), "")
+        self.assertEqual(self.run_git(a, "rev-parse", "HEAD"), self.run_git(a, "rev-parse", "origin/tickets"))
+
+    def test_two_people_syncing_at_once_get_different_numbers(self) -> None:
+        for clone in self.clones:
+            for n in range(3):
+                self.at(clone, "create", f"{clone.name}{n}")
+        with ThreadPoolExecutor(2) as pool:
+            results = list(pool.map(lambda c: subprocess.run(
+                [sys.executable, str(TK), "sync"], cwd=c, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                env=dict(self.env, TICKETS_DIR=str(c / ".tickets"))), self.clones))
+        for result in results:
+            self.assertEqual(result.returncode, 0, result.stderr)
+        self.at(self.clones[0], "sync")
+        ids = sorted(path.stem for path in (self.clones[0] / ".tickets").glob("*.md"))
+        self.assertEqual(ids, [f"mm-{n}" for n in range(275, 282)])
+        self.assertEqual(self.at(self.clones[0], "check").stdout.strip(), "ok: 7 tickets")
+
+    def test_a_rejected_push_undoes_the_numbering_and_numbers_again(self) -> None:
+        a, b = self.clones
+        self.at(a, "create", "From a")
+        mine = self.at(b, "create", "From b").stdout.strip()
+        hook = b / ".git" / "hooks" / "pre-push"
+        # The first push of b finds that a has just pushed: the remote moved under it.
+        hook.write_text(f"""#!/bin/sh
+[ -e "{self.base}/raced" ] && exit 0
+touch "{self.base}/raced"
+cd "{a}" && TICKETS_DIR="{a}/.tickets" "{sys.executable}" "{TK}" sync >/dev/null
+""", encoding="utf-8")
+        hook.chmod(0o755)
+        self.assertEqual(self.at(b, "sync").stdout.strip(), f"{mine} -> mm-277")
+        self.assertTrue((self.base / "raced").exists())
+        numbering = [line for line in self.run_git(b, "log", "--format=%s").splitlines() if line.startswith("tk: number")]
+        self.assertEqual(len(numbering), 2, numbering)  # a's mm-276 and b's mm-277; b's undone try is gone
+        self.assertEqual(numbering[0], f"tk: number {mine} as mm-277")
+        self.assertEqual(sorted(p.stem for p in (b / ".tickets").glob("*.md")), ["mm-275", "mm-276", "mm-277"])
+        self.assertEqual(self.at(b, "check").stdout.strip(), "ok: 3 tickets")
 
 if __name__ == "__main__":
     unittest.main()

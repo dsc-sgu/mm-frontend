@@ -47,14 +47,15 @@ Comment text.
 
 ## Ids
 
-An id is `mm-<core>` with an optional slice code after it: `mm-228-REV6.2`, `mm-k7q2x`, `mm-k7q2x-ACC5`. The file is named after the id.
+An id is `mm-<core>` with an optional slice code after it: `mm-228-REV6.2`, `mm-281`, `mm-281-ACC5`. The file is named after the id.
 
-- **Core.** A ticket imported from GitHub Issues at the move keeps its number: `#228` is `mm-228`. Every other ticket, created here or imported later from any forge or bug tracker, gets 5 random characters of Crockford base32 with at least one letter and one digit, so it never looks like an issue number and two people who create tickets before `tk sync` do not collide. The core never changes; where a ticket came from is its `external-ref`.
-- **Slice code.** The code of a slice in a plan or an epic (`ACC4`, `REV6.2`, `W0-1`), set with `tk create --code` or later with `tk code <id> <code>`, removed with `tk code <id> --none`. It may hold hyphens; everything after the core is one code.
-- **Source.** `external-ref: <source>-<key>` names the issue a ticket came from: `gh-290`, `sgu-17`. `.tickets/sources` lists the sources with their URL templates (`gh , https://github.com/dsc-sgu/mm-frontend/issues/{n}`); the first one is what a bare `#290` means. `tk check` rejects an unknown source and two tickets with the same `external-ref`, and `tk show --meta` prints the `url` of the original.
-- **Lookup.** Every command finds a ticket by any part of its id or by its `external-ref`, in any case: `mm-228-REV6.2`, `mm-228`, `228`, `#228`, `gh-228`, `REV6.2`, `rev6.2`, `228-REV6.2`; `mm-k7q2x-ACC5` also answers to `k7q2x` and `ACC5`, and to `sgu-17` if it came from there. A part that two tickets share is an error that lists both, and `tk check` reports it.
-- **Relations.** `deps`, `parent` and `links` name `mm-<core>` without the code, so changing a code renames one file and touches no other ticket; `tk check` rejects a relation written with the code.
-- **In text** name a ticket by its full id or by `mm-<core>`, never `#<n>`: GitHub keeps numbering pull requests from the same counter. `tk refs` finds `mm-<core>`, the slice code, the `external-ref`, the URL of the original and, for the first source, `#<n>`.
+- **Number.** The tickets imported from GitHub Issues at the move kept their issue number: `#228` is `mm-228`. Every later ticket gets the next number of this tracker when `tk sync` first pushes it, whether it was created here or imported from a forge or bug tracker.
+- **Unsynced ticket.** `tk create` needs no network: a new ticket is `mm-<5 random characters>` (Crockford base32 with a letter and a digit, like `mm-k7q2x`) until `tk sync`. Before pushing, `tk sync` renames each such ticket to the next free number, rewrites `deps`, `parent`, `links` and `mm-k7q2x` mentions in every ticket, moves its attachment folder, and keeps `k7q2x` in `aliases`, so a branch or commit that already says `mm-k7q2x` still finds it. Nobody else has seen the ticket before that push, so the rename breaks nothing; if the push is rejected because someone pushed first, `tk sync` undoes its numbering, pulls and numbers again. A random id in `tk ls` is a ticket you have not synced.
+- **Slice code.** The code of a slice in a plan or an epic (`ACC4`, `REV6.2`, `W0-1`), set with `tk create --code` or later with `tk code <id> <code>`, removed with `tk code <id> --none`. It may hold hyphens; everything after the number is one code.
+- **Source.** `external-ref: <source>-<key>` names the issue a ticket came from: `gh-290`, `sgu-17`. `.tickets/sources` lists the sources with their URL templates (`gh , https://github.com/dsc-sgu/mm-frontend/issues/{n}`). `tk check` rejects an unknown source and two tickets with the same `external-ref`, and `tk show --meta` prints the `url` of the original. A number is always this tracker's: `#290` is `mm-290`, the GitHub issue #290 is `gh-290`.
+- **Lookup.** Every command finds a ticket by any part of its id, an alias or its `external-ref`, in any case: `mm-228-REV6.2`, `mm-228`, `228`, `#228`, `gh-228`, `REV6.2`, `rev6.2`, `228-REV6.2`; `mm-281-ACC5` also answers to `ACC5`, to its alias `k7q2x` and to `sgu-17` if it came from there. A name that two tickets share is an error that lists both, and `tk check` reports it.
+- **Relations.** `deps`, `parent` and `links` name `mm-<number>` without the code, so changing a code renames one file and touches no other ticket; `tk check` rejects a relation written with the code.
+- **In text** name a ticket by its full id or by `mm-<number>`, never `#<n>`: GitHub keeps numbering pull requests from the same counter. `tk refs` finds `mm-<number>`, the aliases, the slice code, the `external-ref`, the URL of the original and, for the tickets imported at the move, `#<n>`.
 
 Lists sort by priority, then by `created`.
 
@@ -79,7 +80,7 @@ tk query | jq -r 'select(.status == "open") | .id'
 tk help
 ```
 
-Each write is committed alone (`tk: close mm-228 (completed)`), so `git log --follow -- .tickets/mm-228-REV6.2.md` is the ticket's history across code changes. Set `TK_AUTOCOMMIT=0` to skip it. `tk sync` pulls with rebase and pushes; nothing is pushed otherwise. The comment author is `$TICKET_AUTHOR`, else `git config user.name`.
+`tk sync` is the only command that talks to the remote. Each write is committed alone (`tk: close mm-228 (completed)`), so `git log --follow -- .tickets/mm-228-REV6.2.md` is the ticket's history across code changes. Set `TK_AUTOCOMMIT=0` to skip it. `tk sync` pulls with rebase, numbers new tickets and pushes; nothing is pushed otherwise. The comment author is `$TICKET_AUTHOR`, else `git config user.name`.
 
 ## Development
 
@@ -89,4 +90,4 @@ podman run --rm -v "$PWD:/w:Z" -w /w docker.io/library/python:3.9-slim \
   sh -c 'apt-get -qq update && apt-get -qq install -y git >/dev/null && python -m unittest discover -s tests'
 ```
 
-`tools/import_github.py` imported the GitHub Issues snapshot; it only reads from GitHub. `tools/import_github.py --issue 290` imports one issue taken from outside contributors with a random id and `external-ref: gh-290`, checks it and commits it; labels that `.tickets/tags` does not describe and blockers that are not tickets are dropped. An importer for another source writes the same `external-ref: <source>-<key>` after adding the source to `.tickets/sources`.
+`tools/import_github.py` imported the GitHub Issues snapshot; it only reads from GitHub. `tools/import_github.py --issue 290` imports one issue taken from outside contributors as a new unsynced ticket with `external-ref: gh-290`, checks it and commits it; `tk sync` numbers it like any other; labels that `.tickets/tags` does not describe and blockers that are not tickets are dropped. An importer for another source writes the same `external-ref: <source>-<key>` after adding the source to `.tickets/sources`.

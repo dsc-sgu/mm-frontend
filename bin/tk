@@ -28,9 +28,9 @@ except ImportError:  # Windows has no fcntl; run without the lock there.
 
 KEY_ORDER = (
     "id", "status", "deps", "links", "created", "type", "priority",
-    "assignee", "external-ref", "parent", "tags", "closed", "close-reason",
+    "assignee", "external-ref", "aliases", "parent", "tags", "closed", "close-reason",
 )
-LIST_KEYS = frozenset({"deps", "links", "tags"})
+LIST_KEYS = frozenset({"deps", "links", "tags", "aliases"})
 STATUSES = ("open", "in_progress", "closed")
 ACTIVE = frozenset({"open", "in_progress"})
 TYPES = ("bug", "feature", "task", "epic", "chore")
@@ -43,10 +43,11 @@ KEY = re.compile(r"[a-z][a-z0-9-]*")
 BASH_TK_KEYS = re.compile(r"(id|status|deps|links|parent|priority|assignee|tags|type): ")
 INLINE_CODE = re.compile(r"(`+).+?\1")
 LOCAL_LINK = re.compile(r"\]\((?!https?:|mailto:|#|/)([^)\s]+)\)|<img [^>]*src=\"(?!https?:|/)([^\"]+)\"")
-# An id is `<prefix>-<core>[-<slice code>]`. The core is a GitHub issue number
-# for imported tickets and 5 random characters for new ones; it never changes,
-# so relations store `<prefix>-<core>` and a slice code can be added or changed
-# by renaming one file. A slice code (ACC4, REV2.1, W0-1) may hold hyphens.
+# An id is `<prefix>-<core>[-<slice code>]`. A new ticket gets 5 random
+# characters as its core, so creating one needs no network; `tk sync` gives it
+# the next number before anyone else sees it and keeps the random core in
+# `aliases`. Relations store `<prefix>-<core>`, so a slice code can be added or
+# changed by renaming one file. A slice code (ACC4, REV2.1, W0-1) may hold hyphens.
 CODE = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:[.-][A-Za-z0-9]+)*")
 ID = re.compile(r"(?P<prefix>[a-z][a-z0-9]*)-(?P<core>\d+|[0-9a-z]{5})(?:-(?P<code>" + CODE.pattern + r"))?")
 ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz"  # Crockford base32: no i, l, o, u
@@ -253,6 +254,7 @@ class Store:
         self.broken: list = []
         self.changed: dict = {}
         self.removed: set = set()
+        self.extra: set = set()  # other paths under root to commit with the tickets, like attachment folders
         for path in sorted(root.glob("*.md")):
             text = path.read_text(encoding="utf-8")
             try:
@@ -277,8 +279,8 @@ class Store:
         return prefixes.most_common(1)[0][0]
 
     def get(self, ref: str) -> Ticket:
-        """The ticket whose id, `<prefix>-<core>`, core, slice code, `<core>-<code>` or external ref is `ref`,
-        in any case; a bare or `#` number is also the issue of the first source in .tickets/sources."""
+        """The ticket whose id, `<prefix>-<core>`, core, slice code, `<core>-<code>`, alias or external ref
+        is `ref`, in any case."""
         ref = ref.strip().lstrip("#")
         if ref.isdigit():
             ref = str(int(ref))
@@ -300,12 +302,10 @@ class Store:
 
     def names(self, t: Ticket) -> set:
         found = names(t.id)
-        external = EXTERNAL.fullmatch(t.meta.get("external-ref", ""))
-        if external:
-            found.add(external.group(0).lower())
-            sources = self.sources() or {}
-            if sources and external["source"] == next(iter(sources)) and external["key"].isdigit():
-                found.add(str(int(external["key"])))
+        if t.meta.get("external-ref"):
+            found.add(t.meta["external-ref"].lower())
+        for alias in t.items("aliases"):
+            found |= {alias.lower(), f"{self.prefix}-{alias}".lower()}
         return found
 
     def sources(self) -> Optional[dict]:
@@ -377,6 +377,8 @@ class Store:
 
     def rename(self, ticket: Ticket, new_id: str) -> None:
         del self.tickets[ticket.id]
+        if self.by_ref.get(ticket.ref) is ticket:
+            del self.by_ref[ticket.ref]
         self.changed.pop(ticket.id, None)
         self.removed.add(ticket.path)
         ticket.id = ticket.meta["id"] = new_id
@@ -396,7 +398,10 @@ class Store:
         for path in self.removed:
             path.unlink()
         if os.environ.get("TK_AUTOCOMMIT", "1") != "0" and in_git(self.root):
-            names = sorted(path.name for path in paths | self.removed)
+            names = sorted({path.name for path in paths | self.removed} | self.extra)
+            tracked = set(git(self.root, "ls-files", "--", *names).stdout.split("\n"))
+            # A path that is gone and was never committed has nothing to stage.
+            names = [n for n in names if (self.root / n).exists() or n in tracked or any(t.startswith(n + "/") for t in tracked)]
             git(self.root, "add", "--", *names)
             result = git(self.root, "commit", "-q", "-m", f"tk: {message}", "--", *names, check=False)
             if result.returncode != 0:
@@ -531,7 +536,8 @@ def check(store: Store) -> list:
     for t in tickets.values():
         match = ID.fullmatch(t.id)
         if match:
-            for name in {match["core"], (match["code"] or "").lower(), t.meta.get("external-ref", "").lower()} - {""}:
+            aliases = {alias.lower() for alias in t.items("aliases")}
+            for name in {match["core"], (match["code"] or "").lower(), t.meta.get("external-ref", "").lower(), *aliases} - {""}:
                 owners[name].append(t)
     for name, found in sorted(owners.items()):
         if len(found) > 1:
@@ -906,7 +912,7 @@ def cmd_comment(store: Store, args) -> None:
 
 def cmd_refs(store: Store, args) -> None:
     t = store.get(args.id)
-    patterns = [r"(?<![\w-])" + re.escape(t.ref) + r"(?![0-9a-z])"]
+    patterns = [r"(?<![\w-])" + re.escape(r) + r"(?![0-9a-z])" for r in [t.ref, *(f"{store.prefix}-{a}" for a in t.items("aliases"))]]
     if t.code:
         patterns.append(r"(?<![\w.-])" + re.escape(t.code) + r"(?!\w|[.-][A-Za-z0-9])")
     external = EXTERNAL.fullmatch(t.meta.get("external-ref", ""))
@@ -915,9 +921,8 @@ def cmd_refs(store: Store, args) -> None:
         url = store.url(t)
         if url:
             patterns.append(re.escape(url) + r"(?!\w)")
-        sources = store.sources() or {}
-        if sources and external["source"] == next(iter(sources)) and external["key"].isdigit():
-            patterns.append(rf"(?<![\w&/])#{external['key']}(?!\d)")
+        if external["source"] == "gh" and t.ref == f"{store.prefix}-{external['key']}":
+            patterns.append(rf"(?<![\w&/])#{external['key']}(?!\d)")  # the snapshot: #228 is mm-228
     pattern = re.compile("|".join(patterns))
     for other in sorted(store.tickets.values(), key=order):
         if other is t:
@@ -945,21 +950,81 @@ def cmd_check(store: Store, args) -> None:
     print(f"ok: {len(store.tickets)} tickets")
 
 
+def unsynced(store: Store) -> list:
+    """Tickets with a random core: nobody else has seen them under a number yet."""
+    return sorted((t for t in store.tickets.values() if ID.fullmatch(t.id) and not ID.fullmatch(t.id)["core"].isdigit()), key=order)
+
+
+def number(store: Store) -> list:
+    """Give every unsynced ticket the next number; rewrite relations and mentions; return (old, new) ids."""
+    added = git(store.root, "log", "--reverse", "--no-renames", "--diff-filter=A", "--name-only", "--format=", "--", ".").stdout.split()
+    first = {Path(name).stem: index for index, name in reversed(list(enumerate(added)))}
+    # `created` has whole seconds; within one second the order of the commits decides.
+    tickets = sorted(unsynced(store), key=lambda t: (t.meta.get("created", ""), first.get(t.id, len(first)), t.id))
+    used = [number_of(t.id) for t in store.tickets.values() if number_of(t.id) != sys.maxsize]
+    renamed = []
+    for n, t in enumerate(tickets, start=max(used, default=0) + 1):
+        old_id, old_ref, new_ref = t.id, t.ref, f"{store.prefix}-{n}"
+        mention = re.compile(r"(?<![\w-])" + re.escape(old_ref) + r"(?![0-9a-z])")
+        for other in store.tickets.values():
+            touched = False
+            for key in ("deps", "links"):
+                if old_ref in other.items(key):
+                    other.set_items(key, [new_ref if r == old_ref else r for r in other.items(key)])
+                    touched = True
+            if other.parent == old_ref:
+                other.meta["parent"] = new_ref
+                touched = True
+            if mention.search(other.body):
+                other.body = mention.sub(new_ref, other.body)
+                touched = True
+            if touched:
+                store.touch(other)
+        t.set_items("aliases", t.items("aliases") + [old_ref.split("-", 1)[1]])
+        folder = store.root / old_ref
+        if folder.is_dir():
+            folder.rename(store.root / new_ref)
+            store.extra |= {old_ref, new_ref}
+        store.rename(t, new_ref + (f"-{t.code}" if t.code else ""))
+        renamed.append((old_id, t.id))
+    if renamed:
+        store.flush("number " + ", ".join(f"{old} as {new}" for old, new in renamed))
+    return renamed
+
+
 def cmd_sync(store: Store, args) -> None:
-    if not in_git(store.root):
-        raise TkError(f"{store.root} is not in a git work tree")
-    for step in (("pull", "--rebase"), ("push",)):
-        result = git(store.root, *step, check=False)
-        sys.stderr.write(result.stderr)
-        if result.returncode != 0:
-            raise TkError(f"git {' '.join(step)} failed")
+    """Pull, number the unsynced tickets, push; on a rejected push undo the numbering and start over."""
+    root = store.root
+    if not in_git(root):
+        raise TkError(f"{root} is not in a git work tree")
+    if os.environ.get("TK_AUTOCOMMIT", "1") == "0":
+        raise TkError("tk sync commits the numbering of new tickets; unset TK_AUTOCOMMIT")
+    for _ in range(5):
+        pull = git(root, "pull", "--rebase", "--autostash", check=False)
+        if pull.returncode != 0:
+            git(root, "rebase", "--abort", check=False)
+            sys.stderr.write(pull.stderr)
+            raise TkError("git pull --rebase failed; nothing was numbered or pushed")
+        store = Store(root)
+        renamed = number(store)
+        push = git(root, "push", check=False)
+        if push.returncode == 0:
+            for old, new in renamed:
+                print(f"{old} -> {new}")
+            return
+        if renamed:
+            git(root, "reset", "-q", "--keep", "HEAD~1")
+        if "rejected" not in push.stderr and "fetch first" not in push.stderr:
+            sys.stderr.write(push.stderr)
+            raise TkError("git push failed; the tickets stay unsynced")
+    raise TkError("others kept pushing while tk sync ran; run it again")
 
 
 # Command line ----------------------------------------------------------------
 
 WRITES = {
     "create", "dep", "undep", "link", "unlink", "parent", "code", "status", "start", "close",
-    "reopen", "assign", "claim", "tag", "untag", "comment",
+    "reopen", "assign", "claim", "tag", "untag", "comment", "sync",
 }
 
 
@@ -974,8 +1039,8 @@ def add_filters(parser: argparse.ArgumentParser, unassigned: bool = True) -> Non
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="tk", description="Tickets as Markdown files in .tickets/ (wedow/ticket format).",
-        epilog="Ids are mm-<core>[-<slice code>]: mm-228-REV6.2 is also mm-228, 228, #228, REV6.2 or rev6.2, "
-               "and mm-k7q2x-ACC5 is also k7q2x or ACC5. "
+        epilog="Ids are mm-<core>[-<slice code>]: mm-228-REV6.2 is also mm-228, 228, #228, REV6.2 or rev6.2. "
+               "A new ticket is mm-<5 random characters> until tk sync numbers it; the random part stays an alias. "
                "Finds .tickets via $TICKETS_DIR, then the current directory and its parents, then beside tk.",
     )
     sub = parser.add_subparsers(dest="command", metavar="<command>")
@@ -1073,7 +1138,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = command("query", cmd_query, "print every ticket as a JSON line (pipe into jq)")
     p.add_argument("--body", action="store_true", help="include the body")
     command("check", cmd_check, "validate every ticket; exit 1 on problems")
-    command("sync", cmd_sync, "git pull --rebase and git push the tickets")
+    command("sync", cmd_sync, "pull, give new tickets their numbers, and push")
     command("help", None, "show this help")
     return parser
 
