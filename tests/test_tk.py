@@ -56,15 +56,27 @@ class TkCase(unittest.TestCase):
 
 
 class CreateTest(TkCase):
-    def test_numbers_continue_after_the_highest_id_with_its_prefix(self) -> None:
+    def created(self, *args: str, stdin: str = "") -> str:
+        ticket_id = self.tk("create", *args, stdin=stdin).stdout.strip()
+        self.assertRegex(ticket_id, r"^mm-(?=[0-9a-z]*[a-z])(?=[0-9a-z]*\d)[0-9a-hjkmnp-tv-z]{5}(-|$)")
+        return ticket_id
+
+    def test_new_ids_are_random_and_do_not_look_like_issue_numbers(self) -> None:
         self.write("mm-7", ticket("mm-7"))
-        self.write("mm-41", ticket("mm-41"))
-        self.assertEqual(self.tk("create", "Next").stdout.strip(), "mm-42")
+        ids = {self.created("Next") for _ in range(5)}
+        self.assertEqual(len(ids), 5)
+
+    def test_slice_code_ends_the_id(self) -> None:
+        self.write("mm-7", ticket("mm-7"))
+        ticket_id = self.created("Sliced", "--code", "ACC5")
+        self.assertTrue(ticket_id.endswith("-ACC5"))
+        self.assertIn(f"id: {ticket_id}\n", self.read(ticket_id))
+        self.assertIn("slice code", self.tk("create", "Bad", "--code", "5x", ok=False).stderr)
 
     def test_new_ticket_has_no_assignee_and_keeps_the_bash_tk_layout(self) -> None:
         self.write("mm-1", ticket("mm-1"))
-        self.tk("create", "Write the spec", "-d", "Body text", "--tags", "a,b", "--parent", "1")
-        text = self.read("mm-2")
+        ticket_id = self.created("Write the spec", "-d", "Body text", "--tags", "a,b", "--parent", "1")
+        text = self.read(ticket_id)
         self.assertNotIn("assignee", text)
         front, body = text.split("\n---\n", 1)
         self.assertEqual(
@@ -76,34 +88,78 @@ class CreateTest(TkCase):
 
     def test_body_from_stdin(self) -> None:
         self.write("mm-1", ticket("mm-1"))
-        self.tk("create", "From stdin", "--stdin", stdin="line one\nline two\n")
-        self.assertTrue(self.read("mm-2").endswith("# From stdin\n\nline one\nline two\n"))
+        ticket_id = self.created("From stdin", "--stdin", stdin="line one\nline two\n")
+        self.assertTrue(self.read(ticket_id).endswith("# From stdin\n\nline one\nline two\n"))
 
     def test_prefix_comes_from_the_environment_when_there_are_no_tickets(self) -> None:
         self.tk("create", "First", ok=False)
         self.env["TICKET_PREFIX"] = "mm"
-        self.assertEqual(self.tk("create", "First").stdout.strip(), "mm-1")
+        self.created("First")
 
     def test_parallel_creates_get_distinct_ids(self) -> None:
         self.write("mm-1", ticket("mm-1"))
         with ThreadPoolExecutor(8) as pool:
             ids = list(pool.map(lambda n: self.tk("create", f"T{n}").stdout.strip(), range(8)))
-        self.assertEqual(sorted(ids, key=lambda i: int(i[3:])), [f"mm-{n}" for n in range(2, 10)])
+        self.assertEqual(len(set(ids)), 8)
+        self.assertEqual(self.tk("check").stdout.strip(), "ok: 9 tickets")
 
 
 class IdTest(TkCase):
     def setUp(self) -> None:
         super().setUp()
-        for n in (2, 22, 228):
+        for n in (1, 2, 22, 228):
             self.write(f"mm-{n}", ticket(f"mm-{n}", f"Ticket {n}"))
+        self.write("mm-221-REV2.1", ticket("mm-221-REV2.1", "Review slice"))
+        self.write("mm-138-W0-1", ticket("mm-138-W0-1", "Wave slice"))
+        self.write("mm-k7q2x-ACC5", ticket("mm-k7q2x-ACC5", "New slice"))
+
+    def title(self, ref: str) -> str:
+        return self.tk("show", ref, "--meta").stdout.split("\n# ", 1)[1].split("\n", 1)[0]
 
     def test_bare_number_and_hash_resolve_exactly(self) -> None:
-        self.assertIn("# Ticket 22", self.tk("show", "22").stdout)
-        self.assertIn("# Ticket 228", self.tk("show", "#228").stdout)
+        self.assertEqual(self.title("22"), "Ticket 22")
+        self.assertEqual(self.title("#228"), "Ticket 228")
+
+    def test_any_part_of_the_id_finds_the_ticket(self) -> None:
+        for ref in ("mm-221-REV2.1", "mm-221", "221", "#221", "REV2.1", "rev2.1", "221-REV2.1"):
+            self.assertEqual(self.title(ref), "Review slice", ref)
+        for ref in ("k7q2x", "mm-k7q2x", "ACC5", "K7Q2X-acc5"):
+            self.assertEqual(self.title(ref), "New slice", ref)
+
+    def test_a_hyphenated_slice_code_is_one_part(self) -> None:
+        self.assertEqual(self.title("W0-1"), "Wave slice")
+        self.assertEqual(self.title("1"), "Ticket 1")
+        self.assertIn("not found", self.tk("show", "W0", ok=False).stderr)
 
     def test_no_substring_matching(self) -> None:
         self.assertIn("not found", self.tk("show", "mm-22 8", ok=False).stderr)
         self.assertIn("not found", self.tk("show", "m-2", ok=False).stderr)
+        self.assertIn("not found", self.tk("show", "REV2", ok=False).stderr)
+
+    def test_an_ambiguous_name_lists_the_candidates(self) -> None:
+        self.write("mm-a1b2c-acc5", ticket("mm-a1b2c-acc5", "Clash"))
+        err = self.tk("show", "ACC5", ok=False).stderr
+        self.assertIn("matches several tickets: mm-a1b2c-acc5, mm-k7q2x-ACC5", err)
+
+    def test_relations_store_the_stable_part_and_survive_a_code_change(self) -> None:
+        self.tk("dep", "1", "REV2.1")
+        self.tk("parent", "2", "ACC5")
+        self.tk("link", "22", "W0-1")
+        self.assertIn("deps: [mm-221]", self.read("mm-1"))
+        self.assertIn("parent: mm-k7q2x", self.read("mm-2"))
+        self.assertIn("links: [mm-138]", self.read("mm-22"))
+        self.assertEqual(self.tk("code", "221", "REV2.9").stdout.strip(), "mm-221-REV2.9")
+        self.assertFalse((self.root / "mm-221-REV2.1.md").exists())
+        self.assertIn("id: mm-221-REV2.9\n", self.read("mm-221-REV2.9"))
+        self.assertEqual(self.tk("blocked").stdout.splitlines(), ["mm-1     [P2][open] - Ticket 1 <- mm-221-REV2.9"])
+        self.assertIn("## Parent\n\n- mm-k7q2x-ACC5 [open] New slice", self.tk("show", "2").stdout)
+        self.assertEqual(self.tk("code", "k7q2x", "--none").stdout.strip(), "mm-k7q2x")
+        self.assertEqual(self.tk("check").stdout.strip(), "ok: 7 tickets")
+
+    def test_refs_finds_the_slice_code_too(self) -> None:
+        self.write("mm-2", ticket("mm-2", "Two", "after REV2.1 lands\nnot REV2.10 or REV2.1.3\nsee mm-221"))
+        out = self.tk("refs", "REV2.1").stdout.splitlines()
+        self.assertEqual([row.split(":")[1] for row in out], ["12", "14"])
 
 
 class GraphTest(TkCase):
@@ -315,6 +371,18 @@ class CheckTest(TkCase):
         self.assertIn("dependency cycle: mm-1 -> mm-2 -> mm-1", out)
         self.assertIn("parent cycle: mm-1 -> mm-2 -> mm-1", out)
 
+    def test_relations_must_not_carry_the_slice_code_and_names_must_be_unique(self) -> None:
+        self.write("mm-1-ACC4", ticket("mm-1-ACC4"))
+        self.write("mm-2", ticket("mm-2", deps="[mm-1-ACC4]"))
+        self.write("mm-3-acc4", ticket("mm-3-acc4"))
+        self.write("mm-4-x", ticket("mm-4-x"))
+        self.write("mm-x", ticket("mm-x"))
+        out = "\n".join(self.problems())
+        self.assertIn("mm-2.md:4: write dependency mm-1-ACC4 as mm-1: the slice code may change", out)
+        self.assertIn("mm-1-ACC4.md:2: `acc4` names mm-1-ACC4 and mm-3-acc4 too", out)
+        self.assertIn("mm-x.md:2: id mm-x must look like", out)
+        self.assertNotIn("mm-4-x.md", out)
+
     def test_unparseable_file_is_reported_and_other_commands_still_work(self) -> None:
         self.write("mm-1", ticket("mm-1"))
         self.write("mm-2", "no frontmatter\n")
@@ -343,6 +411,20 @@ class GitTest(TkCase):
         self.assertEqual(self.git("show", "--name-only", "--format=", "HEAD"), ".tickets/mm-1.md\n")
         self.assertEqual(self.git("diff", "--cached", "--name-only"), "unrelated.txt\n")
 
+
+    def test_a_code_change_is_one_commit_that_renames_the_file(self) -> None:
+        self.git("init", "-q")
+        self.git("config", "user.name", "Tester")
+        self.git("config", "user.email", "t@example.com")
+        self.write("mm-1", ticket("mm-1"))
+        self.git("add", "-A")
+        self.git("commit", "-qm", "init")
+        self.env["TK_AUTOCOMMIT"] = "1"
+        self.tk("code", "1", "ACC4")
+        self.assertEqual(self.git("log", "-1", "--format=%s"), "tk: rename mm-1 to mm-1-ACC4\n")
+        self.assertRegex(self.git("show", "-M", "--name-status", "--format=", "HEAD"),
+                         r"^R\d+\t.tickets/mm-1.md\t.tickets/mm-1-ACC4.md\n$")
+        self.assertEqual(self.git("status", "--porcelain", "--", "*.md"), "")
 
 if __name__ == "__main__":
     unittest.main()

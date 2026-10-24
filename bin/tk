@@ -11,9 +11,10 @@ import contextlib
 import json
 import os
 import re
+import secrets
 import subprocess
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -42,6 +43,13 @@ KEY = re.compile(r"[a-z][a-z0-9-]*")
 BASH_TK_KEYS = re.compile(r"(id|status|deps|links|parent|priority|assignee|tags|type): ")
 INLINE_CODE = re.compile(r"(`+).+?\1")
 LOCAL_LINK = re.compile(r"\]\((?!https?:|mailto:|#|/)([^)\s]+)\)|<img [^>]*src=\"(?!https?:|/)([^\"]+)\"")
+# An id is `<prefix>-<core>[-<slice code>]`. The core is a GitHub issue number
+# for imported tickets and 5 random characters for new ones; it never changes,
+# so relations store `<prefix>-<core>` and a slice code can be added or changed
+# by renaming one file. A slice code (ACC4, REV2.1, W0-1) may hold hyphens.
+CODE = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:[.-][A-Za-z0-9]+)*")
+ID = re.compile(r"(?P<prefix>[a-z][a-z0-9]*)-(?P<core>\d+|[0-9a-z]{5})(?:-(?P<code>" + CODE.pattern + r"))?")
+ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz"  # Crockford base32: no i, l, o, u
 
 
 class TkError(Exception):
@@ -68,6 +76,17 @@ class Ticket:
     meta: dict
     body: str  # everything after the closing `---`, starting with `# <title>`
     text: str  # the file as last read or written
+
+    @property
+    def ref(self) -> str:
+        """`<prefix>-<core>`, the part of the id that relations store."""
+        match = ID.fullmatch(self.id)
+        return f"{match['prefix']}-{match['core']}" if match else self.id
+
+    @property
+    def code(self) -> str:
+        match = ID.fullmatch(self.id)
+        return (match["code"] or "") if match else ""
 
     @property
     def title(self) -> str:
@@ -154,9 +173,25 @@ def now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def names(ticket_id: str) -> set:
+    """Every lowercase name a ticket answers to: the id, `<prefix>-<core>`, the core, the code and `<core>-<code>`."""
+    found = {ticket_id.lower()}
+    match = ID.fullmatch(ticket_id)
+    if match:
+        core, code = match["core"], match["code"]
+        found |= {f"{match['prefix']}-{core}", core}
+        if code:
+            found |= {code.lower(), f"{core}-{code}".lower()}
+    return found
+
+
 def number_of(ticket_id: str) -> int:
-    match = re.search(r"-(\d+)$", ticket_id)
-    return int(match.group(1)) if match else sys.maxsize
+    match = ID.fullmatch(ticket_id)
+    return int(match["core"]) if match and match["core"].isdigit() else sys.maxsize
+
+
+def order(t: Ticket) -> tuple:
+    return (t.meta.get("created", ""), number_of(t.id), t.id)
 
 
 def find_root() -> Path:
@@ -214,6 +249,7 @@ class Store:
         self.tickets: dict = {}
         self.broken: list = []
         self.changed: dict = {}
+        self.removed: set = set()
         for path in sorted(root.glob("*.md")):
             text = path.read_text(encoding="utf-8")
             try:
@@ -222,40 +258,60 @@ class Store:
                 self.broken.append(Problem(path, error.line, str(error)))
                 continue
             self.tickets[path.stem] = Ticket(path.stem, path, meta, body, text)
+        self.by_ref: dict = {}
+        for t in self.tickets.values():
+            self.by_ref.setdefault(t.ref, t)
 
     @property
     def prefix(self) -> str:
         env = os.environ.get("TICKET_PREFIX")
         if env:
             return env
-        names = [path.stem for path in self.root.glob("*.md")]
-        prefixes = Counter(m.group(1) for m in map(re.compile(r"(.+)-\d+$").match, names) if m)
+        stems = [path.stem for path in self.root.glob("*.md")]
+        prefixes = Counter(m["prefix"] for m in map(ID.fullmatch, stems) if m)
         if not prefixes:
             raise TkError("no tickets to take the id prefix from; set TICKET_PREFIX")
         return prefixes.most_common(1)[0][0]
 
     def get(self, ref: str) -> Ticket:
+        """The ticket whose id, `<prefix>-<core>`, core, slice code or `<core>-<code>` is `ref`, in any case."""
         ref = ref.strip().lstrip("#")
         if ref.isdigit():
-            ref = f"{self.prefix}-{int(ref)}"
+            ref = str(int(ref))
         if ref in self.tickets:
             return self.tickets[ref]
-        if any(problem.path.stem == ref for problem in self.broken):
+        wanted = ref.lower()
+        found = [t for t in self.tickets.values() if wanted in names(t.id)]
+        if len(found) > 1:
+            raise TkError(f"{ref!r} matches several tickets: {', '.join(sorted(t.id for t in found))}")
+        if found:
+            return found[0]
+        if any(wanted in names(problem.path.stem) for problem in self.broken):
             raise TkError(f"ticket {ref} cannot be parsed; run `tk check`")
         raise TkError(f"ticket {ref!r} not found")
 
-    def next_id(self) -> str:
-        prefix = self.prefix
-        pattern = re.compile(re.escape(prefix) + r"-(\d+)$")
-        numbers = [int(m.group(1)) for m in (pattern.match(p.stem) for p in self.root.glob("*.md")) if m]
-        return f"{prefix}-{max(numbers, default=0) + 1}"
+    def find(self, ticket_id: str) -> Optional[Ticket]:
+        """The ticket a relation names, by `<prefix>-<core>` or by full id."""
+        return self.by_ref.get(ticket_id) or self.tickets.get(ticket_id)
+
+    def label(self, ticket_id: str) -> str:
+        t = self.find(ticket_id)
+        return t.id if t else ticket_id
+
+    def next_id(self, code: str = "") -> str:
+        taken = {name for t in self.tickets.values() for name in names(t.id)}
+        while True:
+            core = "".join(secrets.choice(ALPHABET) for _ in range(5))
+            # A digit and a letter keep it apart from issue numbers and from words.
+            if re.search(r"\d", core) and re.search("[a-z]", core) and core not in taken:
+                return f"{self.prefix}-{core}" + (f"-{code}" if code else "")
 
     def sorted(self, tickets) -> list:
-        return sorted(tickets, key=lambda t: (t.priority, number_of(t.id), t.id))
+        return sorted(tickets, key=lambda t: (t.priority, *order(t)))
 
     def children(self, ticket: Ticket) -> list:
-        found = [t for t in self.tickets.values() if t.parent == ticket.id]
-        return sorted(found, key=lambda t: (number_of(t.id), t.id))
+        found = [t for t in self.tickets.values() if t.parent == ticket.ref]
+        return sorted(found, key=order)
 
     def descendants(self, ticket: Ticket) -> list:
         found, stack, seen = [], [ticket], {ticket.id}
@@ -268,11 +324,12 @@ class Store:
         return found
 
     def blockers(self, ticket: Ticket) -> list:
-        return [d for d in ticket.items("deps") if d not in self.tickets or self.tickets[d].status != "closed"]
+        """Full ids of the dependencies that are not closed."""
+        return [self.label(d) for d in ticket.items("deps") if not self.find(d) or self.find(d).status != "closed"]
 
     def blocking(self, ticket: Ticket) -> list:
-        found = [t for t in self.tickets.values() if t.active and ticket.id in t.items("deps")]
-        return sorted(found, key=lambda t: (number_of(t.id), t.id))
+        found = [t for t in self.tickets.values() if t.active and ticket.ref in t.items("deps")]
+        return sorted(found, key=order)
 
     def known_tags(self) -> Optional[set]:
         path = self.root / "tags"
@@ -286,7 +343,16 @@ class Store:
 
     def add(self, ticket: Ticket) -> None:
         self.tickets[ticket.id] = ticket
+        self.by_ref.setdefault(ticket.ref, ticket)
         self.touch(ticket)
+
+    def rename(self, ticket: Ticket, new_id: str) -> None:
+        del self.tickets[ticket.id]
+        self.changed.pop(ticket.id, None)
+        self.removed.add(ticket.path)
+        ticket.id = ticket.meta["id"] = new_id
+        ticket.path = self.root / f"{new_id}.md"
+        self.add(ticket)
 
     def flush(self, message: str) -> None:
         """Validate the touched tickets, write them, and commit them to git."""
@@ -298,8 +364,10 @@ class Store:
             raise TkError("refusing to write invalid tickets:\n" + format_problems(self.root, problems))
         for ticket in self.changed.values():
             ticket.path.write_text(ticket.text, encoding="utf-8")
+        for path in self.removed:
+            path.unlink()
         if os.environ.get("TK_AUTOCOMMIT", "1") != "0" and in_git(self.root):
-            names = sorted(path.name for path in paths)
+            names = sorted(path.name for path in paths | self.removed)
             git(self.root, "add", "--", *names)
             result = git(self.root, "commit", "-q", "-m", f"tk: {message}", "--", *names, check=False)
             if result.returncode != 0:
@@ -352,8 +420,18 @@ def check(store: Store) -> list:
         def bad(key: str, message: str, ticket: Ticket = t) -> None:
             problems.append(Problem(ticket.path, key_line(ticket, key), message))
 
+        def relation(key: str, value: str, what: str) -> None:
+            if value in store.by_ref:
+                return
+            if value in tickets:
+                bad(key, f"write {what} {value} as {tickets[value].ref}: the slice code may change")
+            else:
+                bad(key, f"{what} {value} does not exist")
+
         if t.meta.get("id") != t.id:
             bad("id", f"`id` must equal the file name `{t.id}`")
+        if not ID.fullmatch(t.id):
+            bad("id", f"id {t.id} must look like mm-228, mm-k7q2x or mm-k7q2x-ACC4")
         for key, value in t.meta.items():
             if key not in KEY_ORDER:
                 bad(key, f"unknown key `{key}`")
@@ -378,19 +456,17 @@ def check(store: Store) -> list:
             for key in ("closed", "close-reason"):
                 if key in t.meta:
                     bad(key, f"`{key}` is only allowed on a closed ticket")
-        if t.parent and t.parent not in tickets:
-            bad("parent", f"parent {t.parent} does not exist")
-        if t.parent == t.id:
+        if t.parent:
+            relation("parent", t.parent, "parent")
+        if t.parent == t.ref:
             bad("parent", "a ticket cannot be its own parent")
         for dep in t.items("deps"):
-            if dep not in tickets:
-                bad("deps", f"dependency {dep} does not exist")
-            if dep == t.id:
+            relation("deps", dep, "dependency")
+            if dep == t.ref:
                 bad("deps", "a ticket cannot depend on itself")
         for link in t.items("links"):
-            if link not in tickets:
-                bad("links", f"linked ticket {link} does not exist")
-            elif t.id not in tickets[link].items("links"):
+            relation("links", link, "linked ticket")
+            if link in store.by_ref and t.ref not in store.by_ref[link].items("links"):
                 bad("links", f"link to {link} is one-sided; {link} must link back")
         for tag in t.items("tags"):
             if tags is not None and tag not in tags:
@@ -417,12 +493,25 @@ def check(store: Store) -> list:
                 if target and not (store.root / target).exists():
                     problems.append(Problem(t.path, body_line(t, index), f"attachment {target} does not exist"))
 
-    open_deps = {t.id: [d for d in t.items("deps") if d != t.id and d in tickets and tickets[d].active] for t in tickets.values() if t.active}
-    parents = {t.id: [t.parent] for t in tickets.values() if t.parent in tickets}
+    owners = defaultdict(list)
+    for t in tickets.values():
+        match = ID.fullmatch(t.id)
+        if match:
+            for name in {match["core"], (match["code"] or "").lower()} - {""}:
+                owners[name].append(t)
+    for name, found in sorted(owners.items()):
+        if len(found) > 1:
+            for t in found:
+                others = ", ".join(o.id for o in found if o is not t)
+                problems.append(Problem(t.path, key_line(t, "id"), f"`{name}` names {t.id} and {others} too"))
+
+    refs = store.by_ref
+    open_deps = {t.ref: [d for d in t.items("deps") if d != t.ref and d in refs and refs[d].active] for t in tickets.values() if t.active}
+    parents = {t.ref: [t.parent] for t in tickets.values() if t.parent in refs}
     for kind, key, edges in (("dependency", "deps", open_deps), ("parent", "parent", parents)):
         for cycle in cycles(edges):
             for member in cycle:
-                bad_ticket = tickets[member]
+                bad_ticket = refs[member]
                 problems.append(Problem(
                     bad_ticket.path, key_line(bad_ticket, key),
                     f"{kind} cycle: {' -> '.join(cycle + cycle[:1])}",
@@ -440,7 +529,7 @@ def line(t: Ticket) -> str:
 
 
 def bullet(store: Store, ticket_id: str) -> str:
-    t = store.tickets.get(ticket_id)
+    t = store.find(ticket_id)
     if t is None:
         return f"- {ticket_id} [missing]"
     return f"- {t.id} [{t.status}] {t.title}"
@@ -491,9 +580,15 @@ def scope(store: Store, args) -> list:
 
 # Commands ------------------------------------------------------------------
 
+def valid_code(code: str) -> str:
+    if not CODE.fullmatch(code):
+        raise TkError(f"slice code {code!r} must start with a letter and hold letters, digits, `.` and `-`, like ACC4 or W0-1")
+    return code
+
+
 def cmd_create(store: Store, args) -> None:
     description = sys.stdin.read() if args.stdin else (args.description or "")
-    ticket_id = store.next_id()
+    ticket_id = store.next_id(valid_code(args.code) if args.code else "")
     meta = {
         "id": ticket_id, "status": "open", "deps": [], "links": [], "created": now(),
         "type": args.type, "priority": str(args.priority),
@@ -503,11 +598,11 @@ def cmd_create(store: Store, args) -> None:
     if args.external_ref:
         meta["external-ref"] = args.external_ref
     if args.parent:
-        meta["parent"] = store.get(args.parent).id
+        meta["parent"] = store.get(args.parent).ref
     if args.tags:
         meta["tags"] = [tag.strip() for tag in args.tags.split(",") if tag.strip()]
     if args.deps:
-        meta["deps"] = [store.get(dep).id for dep in args.deps.split(",") if dep.strip()]
+        meta["deps"] = [store.get(dep).ref for dep in args.deps.split(",") if dep.strip()]
     body = f"# {args.title}\n"
     if description.strip():
         body += "\n" + description.strip("\n") + "\n"
@@ -553,7 +648,7 @@ def cmd_blocked(store: Store, args) -> None:
 
 def cmd_closed(store: Store, args) -> None:
     closed = [t for t in store.tickets.values() if t.status == "closed"]
-    closed.sort(key=lambda t: (t.meta.get("closed", ""), number_of(t.id)), reverse=True)
+    closed.sort(key=lambda t: (t.meta.get("closed", ""), *order(t)), reverse=True)
     for t in closed[: args.limit]:
         reason = t.meta.get("close-reason", "completed")
         print(f"{t.id:<8} {t.meta.get('closed', '?'):<20} {reason:<11} - {t.title}")
@@ -581,30 +676,36 @@ def cmd_tree(store: Store, args) -> None:
 
 def cmd_dep(store: Store, args) -> None:
     t = store.get(args.id)
-    added = [store.get(dep).id for dep in args.deps]
-    t.set_items("deps", t.items("deps") + added)
+    added = [store.get(dep) for dep in args.deps]
+    t.set_items("deps", t.items("deps") + [a.ref for a in added])
     store.touch(t)
-    store.flush(f"{t.id} depends on {', '.join(added)}")
+    store.flush(f"{t.id} depends on {', '.join(a.id for a in added)}")
 
 
 def cmd_undep(store: Store, args) -> None:
     t = store.get(args.id)
-    removed = [store.get(dep).id if dep.strip().lstrip("#").isdigit() else dep for dep in args.deps]
+    removed = []
+    for dep in args.deps:
+        try:
+            removed.append(store.get(dep).ref)
+        except TkError:  # a dependency on a ticket that no longer exists
+            removed.append(dep)
     t.set_items("deps", [d for d in t.items("deps") if d not in removed])
     store.touch(t)
-    store.flush(f"{t.id} no longer depends on {', '.join(removed)}")
+    store.flush(f"{t.id} no longer depends on {', '.join(store.label(r) for r in removed)}")
 
 
 def dep_tree_lines(store: Store, ticket_id: str, prefix: str, seen: set, ancestors: frozenset, full: bool) -> Iterator[str]:
-    deps = store.tickets[ticket_id].items("deps")
+    deps = store.find(ticket_id).items("deps")
     for index, dep in enumerate(deps):
         last = index == len(deps) - 1
         branch = prefix + ("└── " if last else "├── ")
-        target = store.tickets.get(dep)
+        target = store.find(dep)
         if target is None:
             yield f"{branch}{dep} [missing]"
             continue
-        label = f"{branch}{dep} [{target.status}] {target.title}"
+        dep = target.ref
+        label = f"{branch}{target.id} [{target.status}] {target.title}"
         if dep in ancestors:
             yield f"{label} (cycle)"
         elif dep in seen and not full:
@@ -618,13 +719,13 @@ def dep_tree_lines(store: Store, ticket_id: str, prefix: str, seen: set, ancesto
 def cmd_dep_tree(store: Store, args) -> None:
     t = store.get(args.id)
     print(f"{t.id} [{t.status}] {t.title}")
-    for text in dep_tree_lines(store, t.id, "", {t.id}, frozenset({t.id}), args.full):
+    for text in dep_tree_lines(store, t.ref, "", {t.ref}, frozenset({t.ref}), args.full):
         print(text)
 
 
 def cmd_dep_cycle(store: Store, args) -> None:
-    tickets = store.tickets
-    edges = {t.id: [d for d in t.items("deps") if d in tickets and tickets[d].active] for t in tickets.values() if t.active}
+    refs = store.by_ref
+    edges = {t.ref: [d for d in t.items("deps") if d in refs and refs[d].active] for t in store.tickets.values() if t.active}
     found = cycles(edges)
     for cycle in found:
         print(" -> ".join(cycle + cycle[:1]))
@@ -637,15 +738,15 @@ def cmd_link(store: Store, args) -> None:
     if len(linked) < 2:
         raise TkError("link needs at least two tickets")
     for t in linked:
-        t.set_items("links", t.items("links") + [o.id for o in linked if o is not t])
+        t.set_items("links", t.items("links") + [o.ref for o in linked if o is not t])
         store.touch(t)
     store.flush(f"link {', '.join(t.id for t in linked)}")
 
 
 def cmd_unlink(store: Store, args) -> None:
     a, b = store.get(args.id), store.get(args.other)
-    a.set_items("links", [i for i in a.items("links") if i != b.id])
-    b.set_items("links", [i for i in b.items("links") if i != a.id])
+    a.set_items("links", [i for i in a.items("links") if i != b.ref])
+    b.set_items("links", [i for i in b.items("links") if i != a.ref])
     store.touch(a)
     store.touch(b)
     store.flush(f"unlink {a.id}, {b.id}")
@@ -655,9 +756,23 @@ def cmd_parent(store: Store, args) -> None:
     t = store.get(args.id)
     if args.none == bool(args.parent):
         raise TkError("give either a parent or --none")
-    t.set("parent", None if args.none else store.get(args.parent).id)
+    t.set("parent", None if args.none else store.get(args.parent).ref)
     store.touch(t)
-    store.flush(f"{t.id} parent {t.parent or 'removed'}")
+    store.flush(f"{t.id} parent {store.label(t.parent) if t.parent else 'removed'}")
+
+
+def cmd_code(store: Store, args) -> None:
+    t = store.get(args.id)
+    if args.none == bool(args.code):
+        raise TkError("give either a slice code or --none")
+    old = t.id
+    new = t.ref + ("" if args.none else f"-{valid_code(args.code)}")
+    if new == old:
+        print(old)
+        return
+    store.rename(t, new)
+    store.flush(f"rename {old} to {new}")
+    print(new)
 
 
 def cmd_status(store: Store, args) -> None:
@@ -756,13 +871,15 @@ def cmd_comment(store: Store, args) -> None:
 
 def cmd_refs(store: Store, args) -> None:
     t = store.get(args.id)
-    patterns = [r"(?<![\w-])" + re.escape(t.id) + r"(?!\d)"]
+    patterns = [r"(?<![\w-])" + re.escape(t.ref) + r"(?![0-9a-z])"]
+    if t.code:
+        patterns.append(r"(?<![\w.-])" + re.escape(t.code) + r"(?!\w|[.-][A-Za-z0-9])")
     external = re.fullmatch(r"gh-(\d+)", t.meta.get("external-ref", ""))
     if external:
         n = external.group(1)
         patterns += [rf"(?<![\w&/])#{n}(?!\d)", rf"/issues/{n}(?!\d)"]
     pattern = re.compile("|".join(patterns))
-    for other in sorted(store.tickets.values(), key=lambda o: (number_of(o.id), o.id)):
+    for other in sorted(store.tickets.values(), key=order):
         if other is t:
             continue
         for index, text in enumerate(other.body.split("\n")):
@@ -773,7 +890,7 @@ def cmd_refs(store: Store, args) -> None:
 
 
 def cmd_query(store: Store, args) -> None:
-    for t in sorted(store.tickets.values(), key=lambda o: (number_of(o.id), o.id)):
+    for t in sorted(store.tickets.values(), key=order):
         record = dict(t.meta, title=t.title, path=str(t.path))
         if args.body:
             record["body"] = t.body
@@ -801,7 +918,7 @@ def cmd_sync(store: Store, args) -> None:
 # Command line ----------------------------------------------------------------
 
 WRITES = {
-    "create", "dep", "undep", "link", "unlink", "parent", "status", "start", "close",
+    "create", "dep", "undep", "link", "unlink", "parent", "code", "status", "start", "close",
     "reopen", "assign", "claim", "tag", "untag", "comment",
 }
 
@@ -817,7 +934,8 @@ def add_filters(parser: argparse.ArgumentParser, unassigned: bool = True) -> Non
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="tk", description="Tickets as Markdown files in .tickets/ (wedow/ticket format).",
-        epilog="Ids: mm-228, 228 and #228 all mean mm-228. "
+        epilog="Ids are mm-<core>[-<slice code>]: mm-228-REV6.2 is also mm-228, 228, #228, REV6.2 or rev6.2, "
+               "and mm-k7q2x-ACC5 is also k7q2x or ACC5. "
                "Finds .tickets via $TICKETS_DIR, then the current directory and its parents, then beside tk.",
     )
     sub = parser.add_subparsers(dest="command", metavar="<command>")
@@ -838,6 +956,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--tags", help="comma-separated tags")
     p.add_argument("--deps", help="comma-separated tickets this one depends on")
     p.add_argument("--external-ref", help="e.g. gh-123")
+    p.add_argument("-c", "--code", help="slice code to end the id with, e.g. ACC5")
 
     p = command("show", cmd_show, "print a ticket with its parent, blockers, blocked and children")
     p.add_argument("id")
@@ -873,6 +992,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = command("parent", cmd_parent, "set or remove the parent of a ticket")
     p.add_argument("id")
     p.add_argument("parent", nargs="?")
+    p.add_argument("--none", action="store_true")
+
+    p = command("code", cmd_code, "set or remove the slice code at the end of an id (renames the file)")
+    p.add_argument("id")
+    p.add_argument("code", nargs="?")
     p.add_argument("--none", action="store_true")
 
     p = command("status", cmd_status, "set the status of a ticket")
