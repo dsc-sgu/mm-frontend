@@ -2,7 +2,7 @@
 id: mm-3s7m8
 status: open
 deps: []
-links: []
+links: [mm-4, mm-113]
 created: 2026-10-24T20:15:18Z
 type: feature
 priority: 2
