@@ -10,3 +10,9 @@ external-ref: gh-6
 tags: [enhancement]
 ---
 # Course pages
+
+## Comments
+
+### 2026-10-24T20:04:36Z · t3m8ch
+
+Зонтик закрыт вместе с mm-20 и mm-21: страницы курса делаются вертикалями в эпиках mm-69.
