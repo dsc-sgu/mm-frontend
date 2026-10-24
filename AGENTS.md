@@ -418,6 +418,8 @@ Nested ternaries are forbidden by `'no-nested-ternary': 'error'`. Rewrite a chai
 
 Tickets are Markdown files on the orphan branch `tickets`, managed with `tk`; GitHub Issues and pull requests are only for people outside the team. See `docs/agents/issue-tracker.md`.
 
+Before starting work on a ticket or landing a change on `main`, MUST read the «Landing changes» section of [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md).
+
 ### Language of issues
 
 Write issues, issue comments, ADRs and prototype documents in Russian, for a human reader. This includes titles, user stories and test names in prose.
