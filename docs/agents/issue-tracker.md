@@ -28,6 +28,8 @@ ln -s "$PWD/../mm-frontend-worktrees/tickets/bin/tk" ~/.local/bin/tk
 
 `tk` then works from any directory and any worktree. It needs Python 3.9+ and nothing outside the standard library.
 
+Set your name for claims and comments to your forge login once: `git config --global tk.author <login>`. Without it `tk` uses `git config user.name`, which does not match the assignees of the imported tickets.
+
 ## Conventions
 
 - **Name a ticket** by its id (`mm-228-REV6.2`) or by `mm-<number>` (`mm-228`) in new text, never `#<n>`: GitHub keeps numbering pull requests from the same counter. An id is `mm-<number>[-<slice code>]`; every command finds a ticket by any part of its id: `mm-228`, `228`, `#228`, `REV6.2`. A number is always this tracker's: the GitHub issue #290 is `gh-290`.
@@ -62,9 +64,10 @@ A PR from outside that implements tickets names them in its body (`Implements mm
 
 Members of the team do not open pull requests. Pull requests are for people without write access, from their forks.
 
-1. Work on a branch off a fresh `origin/main` and push it: CI checks every pushed branch (`gh run list --branch <branch>`).
-2. When CI passes, the ticket says what was done and what to check: `tk comment <id>` with the summary, like a PR description used to.
-3. The change lands as a fast-forward of `main`, without checking `main` out:
+1. Start with `tk claim <id> && tk sync`: the claim is visible to others only once pushed. A wave claims all its tickets, then syncs once.
+2. Work on a branch off a fresh `origin/main` whose name holds the ticket id (`mm-228-review-draft`, `mm-218-wave2`), so `git branch -r --list '*mm-228*'` finds it; the ticket needs no note about the branch. Push the branch: CI checks every pushed branch (`gh run list --branch <branch>`).
+3. When CI passes, the ticket says what was done and what to check: `tk comment <id>` with the summary, like a PR description used to.
+4. The change lands as a fast-forward of `main`, without checking `main` out:
 
    ```bash
    git fetch origin && git rebase origin/main && git push origin HEAD:main
@@ -72,7 +75,7 @@ Members of the team do not open pull requests. Pull requests are for people with
 
    If the rebase changed anything, push the branch and wait for CI again first.
 
-4. Close the tickets with `tk close <id> --reason completed` and run `tk sync`, then delete the branch: `git push origin --delete <branch>`.
+5. Close the tickets with `tk close <id> --reason completed` and run `tk sync`, then delete the branch: `git push origin --delete <branch>`.
 
 Commits name their ticket by id, as in `fix(review): keep the draft (mm-228)`.
 
@@ -92,5 +95,5 @@ Used by `/wayfinder`. The **map** is a single ticket with **child** tickets.
 - **Child ticket**: `tk create "…" --stdin --parent <map> --tags wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.
 - **Blocking**: `tk dep <child> <blocker>` adds the blocker to the child's `deps`; `tk undep` removes it. A ticket is unblocked when every ticket in its `deps` is closed. `tk dep tree <id>` shows the chain, `tk dep cycle` finds cycles.
 - **Frontier query**: `tk ready --parent <map> --unassigned`: the map's open descendants without open blockers or an assignee. `tk tree <map>` shows the whole map with its blockers.
-- **Claim**: `tk claim <id>`, the session's first write. It assigns the ticket to you and starts it, and refuses a ticket someone else holds.
+- **Claim**: `tk claim <id> && tk sync`, the session's first write. It assigns the ticket to you and starts it, and refuses a ticket someone else holds.
 - **Resolve**: `tk comment <id>` with the answer, then `tk close <id> --reason completed`, then append a context pointer (gist + ticket id) to the map's Decisions-so-far by editing the map file; run `tk check` and commit it.
