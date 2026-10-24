@@ -15,7 +15,7 @@ The format is that of [wedow/ticket](https://github.com/wedow/ticket), so its ba
 
 ```md
 ---
-id: mm-228
+id: mm-228-REV6.2
 status: open                 # open | in_progress | closed
 deps: [mm-226, mm-227]       # blocked by these until they close
 links: []                    # symmetric "see also"
@@ -41,23 +41,31 @@ Comment text.
 ```
 
 - Lists stay on one line; values contain no `: `, `[` or `]`.
-- Attachments of `mm-228` live in `.tickets/mm-228/` and are linked as `mm-228/name.png`.
+- Attachments of `mm-228-REV6.2` live in `.tickets/mm-228/` and are linked as `mm-228/name.png`.
 - Every tag is described in `.tickets/tags` (`name , description`).
 - `tk check` enforces all of this and the references between tickets; `tk` refuses a write that would break it.
 
 ## Ids
 
-Tickets imported from GitHub Issues keep their number: `#228` is `mm-228`. New tickets continue the sequence. GitHub keeps numbering pull requests from the same counter, so new text names tickets as `mm-<n>`, never `#<n>`. Every command accepts `mm-228`, `228` and `#228`.
+An id is `mm-<core>` with an optional slice code after it: `mm-228-REV6.2`, `mm-k7q2x`, `mm-k7q2x-ACC5`. The file is named after the id.
+
+- **Core.** A ticket imported from GitHub Issues keeps its number: `#228` is `mm-228`. A new ticket gets 5 random characters of Crockford base32 with at least one letter and one digit, so it never looks like an issue number and two people who create tickets before `tk sync` do not collide. The core never changes.
+- **Slice code.** The code of a slice in a plan or an epic (`ACC4`, `REV6.2`, `W0-1`), set with `tk create --code` or later with `tk code <id> <code>`, removed with `tk code <id> --none`. It may hold hyphens; everything after the core is one code.
+- **Lookup.** Every command finds a ticket by any part of its id, in any case: `mm-228-REV6.2`, `mm-228`, `228`, `#228`, `REV6.2`, `rev6.2`, `228-REV6.2`; `mm-k7q2x-ACC5` also answers to `k7q2x` and `ACC5`. A part that two tickets share is an error that lists both, and `tk check` reports it.
+- **Relations.** `deps`, `parent` and `links` name `mm-<core>` without the code, so changing a code renames one file and touches no other ticket; `tk check` rejects a relation written with the code.
+- **In text** name a ticket by its full id or by `mm-<core>`, never `#<n>`: GitHub keeps numbering pull requests from the same counter. `tk refs` finds `mm-<core>`, the slice code and, for imported tickets, `#<n>` and `/issues/<n>`.
+
+Lists sort by priority, then by `created`.
 
 ## Commands
 
 ```bash
 tk ready --parent mm-218 --unassigned  # the frontier of an epic
 tk show 228 --meta                     # frontmatter, relations and a line-numbered outline
-sed -n 19,82p .tickets/mm-228.md       # then read only the part you need
+sed -n 19,82p .tickets/mm-228-REV6.2.md  # then read only the part you need
 tk tree 218                            # an epic's descendants with their blockers
-tk refs 228                            # tickets whose text mentions mm-228 or #228
-tk create "Title" --stdin --parent 218 --tags ready-for-agent <<'EOF'
+tk refs REV6.2                         # tickets whose text mentions mm-228, REV6.2 or #228
+tk create "Title" --stdin --parent 218 --code REV9 --tags ready-for-agent <<'EOF'
 Body.
 EOF
 tk claim 228                           # assign to yourself and start; refuses someone else's ticket
@@ -65,11 +73,12 @@ tk comment 228 --author t3m8ch <<'EOF'
 Comment text.
 EOF
 tk close 228 --reason completed
+tk code 228 REV6.4                     # rename mm-228-REV6.2 to mm-228-REV6.4
 tk query | jq -r 'select(.status == "open") | .id'
 tk help
 ```
 
-Each write is committed alone (`tk: close mm-228 (completed)`), so `git log -- .tickets/mm-228.md` is the ticket's history. Set `TK_AUTOCOMMIT=0` to skip it. `tk sync` pulls with rebase and pushes; nothing is pushed otherwise. The comment author is `$TICKET_AUTHOR`, else `git config user.name`.
+Each write is committed alone (`tk: close mm-228 (completed)`), so `git log --follow -- .tickets/mm-228-REV6.2.md` is the ticket's history across code changes. Set `TK_AUTOCOMMIT=0` to skip it. `tk sync` pulls with rebase and pushes; nothing is pushed otherwise. The comment author is `$TICKET_AUTHOR`, else `git config user.name`.
 
 ## Development
 
