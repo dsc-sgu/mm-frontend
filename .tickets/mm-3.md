@@ -7,7 +7,6 @@ created: 2026-02-01T15:42:18Z
 type: feature
 priority: 2
 external-ref: gh-3
-tags: [enhancement, good first issue, layout]
 ---
 # User hover card component
 

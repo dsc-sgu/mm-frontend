@@ -7,7 +7,6 @@ created: 2026-02-01T15:43:28Z
 type: feature
 priority: 2
 external-ref: gh-4
-tags: [enhancement, good first issue, layout]
 ---
 # Edit profile page layout
 

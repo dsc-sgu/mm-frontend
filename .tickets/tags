@@ -1,16 +1,6 @@
 architecture
-bug , Something isn't working
-documentation , Improvements or additions to documentation
-duplicate , This issue or pull request already exists
-enhancement , New feature or request
-good first issue , Good for newcomers
-hard , Difficult to implement
-help wanted , Extra attention is needed
-invalid , This doesn't seem right
-layout
 needs-triage , Maintainer needs to evaluate this issue
 performance
-question , Further information is requested
 ready-for-agent , Fully specified, ready for an AFK agent
 ready-for-human , Requires human implementation
 wayfinder:grilling , Wayfinder HITL conversation decision ticket
@@ -18,4 +8,3 @@ wayfinder:map , Canonical Wayfinder map
 wayfinder:prototype , Wayfinder HITL prototype decision ticket
 wayfinder:research , Wayfinder AFK research decision ticket
 wayfinder:task , Wayfinder prerequisite task ticket
-wontfix , This will not be worked on
