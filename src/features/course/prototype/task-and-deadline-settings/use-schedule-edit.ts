@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 
 import type { DeadlineCommand } from './schedule';
 import { usePrototypeSettings } from './search';
+import { newTasksInDraft } from './settings';
 import { useSandbox } from './store';
 
 export function useScheduleEdit() {
@@ -22,10 +23,9 @@ export function useScheduleEdit() {
       // `?taskApply=contract`: a new Task's schedule belongs to the Course
       // Draft Snapshot until it is published; there is no Task to apply to.
       const newTaskIds = new Set(useSandbox.getState().newTaskIds);
-      const inDraft =
-        taskApply === 'contract'
-          ? commands.filter((command) => newTaskIds.has(command.taskId))
-          : [];
+      const inDraft = newTasksInDraft(taskApply)
+        ? commands.filter((command) => newTaskIds.has(command.taskId))
+        : [];
       const applied = commands.filter((command) => !inDraft.includes(command));
 
       writeDraftSchedule(inDraft, label);

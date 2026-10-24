@@ -84,12 +84,19 @@ function CoursePageEditContent({
       return;
     }
 
-    // PROTOTYPE (#181): an unfinished new Task stops the publication.
-    if (prototypeSlot && !prototypeSlot.beforeApply(workingCopy.content)) {
+    // PROTOTYPE (#181): an unfinished new Task stops the publication, and
+    // block drafts may publish merged with what others published.
+    const prototypeContent = prototypeSlot
+      ? prototypeSlot.beforeApply(workingCopy.content)
+      : workingCopy.content;
+    if (!prototypeContent) {
       return;
     }
 
-    const submittedWorkingCopy = structuredClone(workingCopy);
+    const submittedWorkingCopy = structuredClone({
+      ...workingCopy,
+      content: prototypeContent,
+    });
 
     await saveMutation.mutateAsync({
       courseId,
@@ -107,6 +114,10 @@ function CoursePageEditContent({
     await prototypeSlot?.afterApply(submittedWorkingCopy.content);
 
     markWorkingCopySaved(submittedWorkingCopy);
+    // PROTOTYPE (#181): show the merged page in place of the working copy.
+    if (prototypeContent !== workingCopy.content) {
+      resetWorkingCopy();
+    }
 
     await router.invalidate();
 
@@ -128,6 +139,7 @@ function CoursePageEditContent({
     markWorkingCopySaved,
     navigate,
     prototypeSlot,
+    resetWorkingCopy,
     router,
     saveMutation,
     workingCopy,

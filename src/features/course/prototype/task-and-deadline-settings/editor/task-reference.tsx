@@ -33,6 +33,7 @@ import {
   useViewSchedule,
 } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
+import { newTasksInDraft } from '@/features/course/prototype/task-and-deadline-settings/settings';
 import { formatCompactMoment } from '@/features/course/prototype/task-and-deadline-settings/time';
 import { useScheduleEdit } from '@/features/course/prototype/task-and-deadline-settings/use-schedule-edit';
 import { usePendingChanges } from '@/features/course/prototype/task-and-deadline-settings/use-pending';
@@ -138,7 +139,8 @@ export function EditorTaskReference({
   const resolvedId = taskId === NEW_TASK_ID ? blockId : taskId;
   const task = useSandbox((state) => state.tasks[resolvedId]);
   const inDraft = useSandbox(
-    (state) => taskApply === 'contract' && state.newTaskIds.includes(resolvedId)
+    (state) =>
+      newTasksInDraft(taskApply) && state.newTaskIds.includes(resolvedId)
   );
   const removed = useSandbox((state) =>
     state.removedTaskIds.includes(resolvedId)
@@ -160,7 +162,7 @@ export function EditorTaskReference({
       courseAccess === 'draft' &&
       !useSandbox.getState().tasks[blockId]
     ) {
-      createTask(blockId, takeCarry(), taskApply === 'contract');
+      createTask(blockId, takeCarry(), newTasksInDraft(taskApply));
       onOpenPanel(blockId);
     }
   }, [blockId, courseAccess, createTask, onOpenPanel, taskApply, taskId]);

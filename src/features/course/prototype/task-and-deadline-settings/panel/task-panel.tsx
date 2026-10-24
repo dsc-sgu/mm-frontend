@@ -9,7 +9,10 @@ import { Button } from '@/shadcn/components/ui/button';
 import { cn } from '@/shadcn/lib/utils';
 import { OTHER_TEACHER } from '@/features/course/prototype/task-and-deadline-settings/fixture';
 import { usePrototypeSettings } from '@/features/course/prototype/task-and-deadline-settings/search';
-import { isExpandedStatement } from '@/features/course/prototype/task-and-deadline-settings/settings';
+import {
+  isExpandedStatement,
+  newTasksInDraft,
+} from '@/features/course/prototype/task-and-deadline-settings/settings';
 import { useSandbox } from '@/features/course/prototype/task-and-deadline-settings/store';
 import { useEffectiveLease } from '@/features/course/prototype/task-and-deadline-settings/use-lease';
 import { formatClock } from '@/features/course/prototype/task-and-deadline-settings/time';
@@ -288,12 +291,12 @@ export function TaskPanel({
                 // «Создать ещё» keeps this Task first, then carries its
                 // group, Grade and schedule into the next one.
                 if (newTaskIds.includes(session.taskId)) {
-                  if (taskApply === 'contract') {
+                  if (newTasksInDraft(taskApply)) {
                     draftNewTask(session.taskId, form);
                   } else {
                     saveNewTask(session.taskId, form);
                   }
-                } else if (fields.length > 0 && taskApply === 'contract') {
+                } else if (fields.length > 0 && newTasksInDraft(taskApply)) {
                   // The draft holds only the `taskId` of a published Task.
                   toast.error(
                     'Сначала опубликуйте правки этого задания или отмените их'

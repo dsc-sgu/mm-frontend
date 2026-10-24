@@ -100,9 +100,12 @@ function initialSession(
     return null;
   }
 
-  // In A the panel continues the Teacher's own Course Draft Snapshot.
+  // In A the panel continues the Teacher's own Course Draft Snapshot, under
+  // `blocks` the draft of the Task's block.
   const draftEdits =
-    taskApply === 'course' ? (draft?.taskEdits[taskId] ?? {}) : {};
+    taskApply === 'course' || taskApply === 'blocks'
+      ? (draft?.taskEdits[taskId] ?? {})
+      : {};
   const base = { ...pickProps(task), ...draftEdits };
 
   return {
