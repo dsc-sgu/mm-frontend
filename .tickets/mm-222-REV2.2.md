@@ -2,7 +2,7 @@
 id: mm-222-REV2.2
 status: open
 deps: [mm-221]
-links: [mm-d4wtq]
+links: [mm-280]
 created: 2026-10-14T10:58:44Z
 type: task
 priority: 1
