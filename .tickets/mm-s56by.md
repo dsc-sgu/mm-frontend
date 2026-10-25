@@ -5,7 +5,7 @@ deps: []
 links: [mm-1d3ef, mm-d4wtq, mm-7rgrq]
 created: 2026-10-24T20:04:19Z
 type: task
-priority: 0
+priority: 2
 ---
 # Обсудить и запрототипировать репозитории курса
 
