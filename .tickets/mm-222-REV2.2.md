@@ -1,11 +1,12 @@
 ---
 id: mm-222-REV2.2
-status: open
+status: in_progress
 deps: [mm-221]
 links: [mm-280]
 created: 2026-10-14T10:58:44Z
 type: task
 priority: 1
+assignee: t3m8ch
 external-ref: gh-222
 parent: mm-218
 tags: [ready-for-agent]
