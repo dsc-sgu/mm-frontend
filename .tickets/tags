@@ -1,6 +1,6 @@
-architecture
+architecture , Cross-cutting structure of the app: routing, data layer and the API contract with the backend
 needs-triage , Maintainer needs to evaluate this issue
-performance
+performance , Fewer requests or faster loading and rendering
 ready-for-agent , Fully specified, ready for an AFK agent
 ready-for-human , Requires human implementation
 wayfinder:grilling , Wayfinder HITL conversation decision ticket
