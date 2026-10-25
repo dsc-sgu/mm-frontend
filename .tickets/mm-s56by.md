@@ -6,6 +6,7 @@ links: [mm-1d3ef, mm-d4wtq, mm-7rgrq, mm-187]
 created: 2026-10-24T20:04:19Z
 type: task
 priority: 2
+tags: [wayfinder:grilling]
 ---
 # Обсудить и запрототипировать репозитории курса
 
