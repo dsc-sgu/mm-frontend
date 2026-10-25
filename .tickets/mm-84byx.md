@@ -6,6 +6,7 @@ links: [mm-178, mm-188, mm-208]
 created: 2026-10-24T20:15:19Z
 type: feature
 priority: 3
+tags: [wayfinder:grilling]
 ---
 # Архивировать или удалить курс
 
