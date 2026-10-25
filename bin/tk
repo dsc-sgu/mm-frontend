@@ -916,6 +916,7 @@ def cmd_refs(store: Store, args) -> None:
     patterns = [r"(?<![\w-])" + re.escape(r) + r"(?![0-9a-z])" for r in [t.ref, *(f"{store.prefix}-{a}" for a in t.items("aliases"))]]
     if t.code:
         patterns.append(r"(?<![\w.-])" + re.escape(t.code) + r"(?!\w|[.-][A-Za-z0-9])")
+    hash_pattern = None
     external = EXTERNAL.fullmatch(t.meta.get("external-ref", ""))
     if external:
         patterns.append(r"(?<![\w-])" + re.escape(external.group(0)) + r"(?!\w)")
@@ -923,13 +924,18 @@ def cmd_refs(store: Store, args) -> None:
         if url:
             patterns.append(re.escape(url) + r"(?!\w)")
         if external["source"] == "gh" and t.ref == f"{store.prefix}-{external['key']}":
-            patterns.append(rf"(?<![\w&/])#{external['key']}(?!\d)")  # the snapshot: #228 is mm-228
+            hash_pattern = re.compile(rf"(?<![\w&/])#{external['key']}(?!\d)")  # the snapshot: #228 is mm-228
     pattern = re.compile("|".join(patterns))
     for other in sorted(store.tickets.values(), key=order):
         if other is t:
             continue
+        fenced = False
         for index, text in enumerate(other.body.split("\n")):
-            if pattern.search(text):
+            if text.startswith("```") or text.startswith("~~~"):
+                fenced = not fenced
+            # #N in code is a line or attempt number in a quoted UI label, never a ticket
+            hashed = hash_pattern and not fenced and hash_pattern.search(INLINE_CODE.sub("", text))
+            if pattern.search(text) or hashed:
                 snippet = text.strip()
                 snippet = snippet if len(snippet) <= 140 else snippet[:137] + "..."
                 print(f"{other.id}:{body_line(other, index)}: {snippet}")

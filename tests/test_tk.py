@@ -331,6 +331,12 @@ class ReadingTest(TkCase):
         for row in out:
             self.assertIn(row.split(": ", 1)[1], lines[int(row.split(":")[1]) - 1])
 
+    def test_refs_skips_github_numbers_in_code_but_not_ids(self) -> None:
+        self.write("mm-28", ticket("mm-28", "Target", external_ref="gh-28"))
+        self.write("mm-1", ticket("mm-1", "A", "Label «Line `#28`»\n```\nAttempt #28\n```\n`tk dep mm-1 mm-28`"))
+        out = self.tk("refs", "28").stdout.splitlines()
+        self.assertEqual([row.split(":", 2)[2] for row in out], [" `tk dep mm-1 mm-28`"])
+
     def test_query_emits_valid_json_for_awkward_values(self) -> None:
         self.write("mm-1", ticket("mm-1", 'Quote " and \\ backslash', external_ref='x"y'))
         record = json.loads(self.tk("query").stdout)
