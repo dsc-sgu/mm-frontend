@@ -72,7 +72,9 @@ let queryClient: QueryClient;
 
 async function loadedReview(): Promise<Review> {
   const result = await queryClient.query(reviewOptions(ATTEMPT));
-  if (result.status !== 'published') throw new Error('Expected a Review');
+  if (result.status !== 'published') {
+    throw new Error('Expected a Review');
+  }
   return result.review;
 }
 

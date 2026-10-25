@@ -49,7 +49,9 @@ function signIn(userId: UserId) {
 
 async function history(studentId: UserId) {
   const result = await loadAttemptHistory(COURSE_ID, '1', studentId);
-  if (result.status !== 'found') throw new Error('Expected the history');
+  if (result.status !== 'found') {
+    throw new Error('Expected the history');
+  }
   return result.attempts;
 }
 
@@ -161,9 +163,12 @@ describe('REV-05: selector and history read one state', () => {
     expect(historyResult.attempts.map(({ id }) => id)).toEqual(
       selectorResult.attempts.map(({ id }) => id)
     );
-    expect(historyResult.attempts[1].review).toMatchObject(
-      selectorResult.attempts[1].review ?? {}
-    );
+    const selected = selectorResult.attempts[1].review;
+    expect(selected).not.toBeNull();
+    expect(historyResult.attempts[1].review).toMatchObject({
+      revision: selected?.revision,
+      grade: selected?.grade,
+    });
   });
 
   type AttemptList =
