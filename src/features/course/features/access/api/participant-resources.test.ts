@@ -30,7 +30,7 @@ import { loadAttempt } from '@/features/course/features/attempt-review/api/load-
 import { attemptLocatorOptions } from '@/features/course/features/attempt-review/api/locator-queries';
 import { loadReview } from '@/features/course/features/review/api/load-review';
 import { loadCourse } from './load-course';
-import { reviewKeys } from '@/features/course/features/review/api/queries';
+import { reviewKeys } from '@/features/course/features/review/api/keys';
 
 const COURSE = accessWorld.courses.algorithms.id;
 const ONE = v.parse(AttemptNumberSchema, 1);

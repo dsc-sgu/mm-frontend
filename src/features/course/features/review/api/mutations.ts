@@ -1,25 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UserId } from '@/features/auth/model/identity';
-import type { AttemptId, CourseId } from '@/features/course/model/identity';
-import { attemptReviewKeys } from '@/features/course/features/attempt-review/api/queries';
-import { courseAttemptsKeys } from '@/features/course/features/attempts/api/queries';
 import type { ReviewCommentInput } from '@/features/course/features/review/model/types';
 import type { Grade } from '@/features/course/model/grade';
-import type { LoadReviewResult } from './load-review';
+import { reviewKeys } from './keys';
+import { loadReview, type LoadReviewResult } from './load-review';
 import { createReply, deleteReply, saveReview, updateReply } from './mock';
-import { reviewKeys, reviewOptions } from './queries';
+import { observeReviewRevision } from './observe-revision';
+import { reviewOptions, type ReviewedAttempt } from './queries';
 
 // Temporary mutations over the canonical mock backend state, not a reference
 // for new operations (their failures are plain Errors); REV5 and REV6.2
 // replace them with HTTP operations.
-
-export type ReviewedAttempt = {
-  viewerId: UserId;
-  courseId: CourseId;
-  taskId: string;
-  studentId: UserId;
-  attemptId: AttemptId;
-};
 
 export type ReviewEdits = {
   grade: Grade;
@@ -33,30 +23,28 @@ export type ReviewEdits = {
  */
 export function useSaveReviewMutation(attempt: ReviewedAttempt) {
   const queryClient = useQueryClient();
-  const { viewerId, courseId, taskId, studentId, attemptId } = attempt;
+  const { courseId, taskId, studentId, attemptId } = attempt;
 
   return useMutation({
     mutationFn: async (edits: ReviewEdits): Promise<LoadReviewResult> => {
       await saveReview({ courseId, attemptId, ...edits });
-      // The save answers with nothing, so the Review is reread through its
-      // query; a read started before the save must not land after this one.
-      const options = reviewOptions(viewerId, courseId, attemptId);
-      await queryClient.cancelQueries({
-        queryKey: options.queryKey,
-        exact: true,
-      });
-      return queryClient.query({ ...options, staleTime: 0 });
-    },
-    onSuccess: async () => {
-      // The Grade, its revision and the comment count show in both lists.
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: attemptReviewKeys.student(courseId, taskId, studentId),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: courseAttemptsKeys.course(courseId),
-        }),
-      ]);
+      // The save answers with nothing, so the published revision is reread.
+      const result = await loadReview(courseId, attemptId);
+      if (result.status === 'published') {
+        const review = await observeReviewRevision(queryClient, {
+          courseId,
+          attemptId,
+          taskId,
+          studentId,
+          revision: result.review,
+        });
+        return { status: 'published', review };
+      }
+      // A denial replaces the cached Review, and with it the page.
+      const { queryKey } = reviewOptions(attempt);
+      await queryClient.cancelQueries({ queryKey, exact: true });
+      queryClient.setQueryData(queryKey, result);
+      return result;
     },
   });
 }

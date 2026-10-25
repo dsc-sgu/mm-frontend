@@ -22,7 +22,7 @@ import {
   courseContextOptions,
 } from '@/features/course/features/access/api/queries';
 import { attemptLocatorKeys } from '@/features/course/features/attempt-review/api/locator-queries';
-import { attemptReviewKeys } from '@/features/course/features/attempt-review/api/queries';
+import { attemptReviewKeys } from '@/features/course/features/attempt-review/api/keys';
 import { courseAttemptsKeys } from '@/features/course/features/attempts/api/queries';
 import {
   coursePageKeys,
@@ -30,7 +30,7 @@ import {
 } from '@/features/course/features/page/api/queries';
 import { repositoryLocatorKeys } from '@/features/course/features/repository/api/queries';
 import { taskKeys } from '@/features/course/features/task/api/queries';
-import { reviewKeys } from '@/features/course/features/review/api/queries';
+import { reviewKeys } from '@/features/course/features/review/api/keys';
 import {
   CourseSlugSchema,
   type AttemptNumber,

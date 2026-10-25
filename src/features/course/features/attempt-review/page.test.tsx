@@ -12,9 +12,9 @@ import {
   SESSION_EXPIRES_AT,
 } from '@/app/mock-backend/state';
 import { renderRoutes } from '@/app/testing/render-routes';
-import { attemptReviewKeys } from '@/features/course/features/attempt-review/api/queries';
+import { attemptReviewKeys } from '@/features/course/features/attempt-review/api/keys';
 import { attemptPageQueries } from '@/features/course/features/attempt-review/api/queries';
-import { reviewKeys } from '@/features/course/features/review/api/queries';
+import { reviewKeys } from '@/features/course/features/review/api/keys';
 
 const [sashaFirst, sashaSecond] = reviewWorld.attempts;
 const { anna } = accessWorld.users;
