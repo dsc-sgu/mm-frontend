@@ -6,6 +6,7 @@ links: [mm-4, mm-113]
 created: 2026-10-24T20:15:18Z
 type: feature
 priority: 2
+tags: [wayfinder:grilling]
 ---
 # Спроектировать подтверждение email и восстановление забытого пароля
 
