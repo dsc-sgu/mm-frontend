@@ -16,6 +16,10 @@ The name a User is known by: a surname, a given name and an optional patronymic,
 _По-русски_: ФИО
 _Avoid_: name, when either the Full Name or the username could be meant; «Имя Фамилия» order
 
+**SSH Key**:
+A public key a User adds to their account so that MergeMinds recognises them in Git over SSH and lets them `git push` to their repositories, as a Student does to submit an Attempt. A User may have several.
+_По-русски_: SSH-ключ
+
 **Course**:
 A learning space with a stable internal identity, mutable route slug, members, content, and tasks.
 _По-русски_: курс
@@ -38,6 +42,11 @@ _По-русски_: преподаватель
 An academic grouping of Students inside a Course. A Course's Student Groups are flat: a lab subgroup is simply another Student Group of that Course. Every Course has at least one Student Group, starting with a single one, and every Student belongs to exactly one Student Group of the Course.
 _По-русски_: подгруппа — it is the Student Group itself, not a level nested inside one
 _Avoid_: учебная группа, which means an official university group; a nested level inside a Student Group; a Course or Student without a Student Group
+
+**Invite Link**:
+A link by which a User joins a Course. An Invite Link for Students always leads into one particular Student Group of the Course: a Student who follows it joins the Course already in that Student Group. An Invite Link can expire and can be revoked.
+_По-русски_: ссылка-приглашение
+_Avoid_: an Invite Link for Students without a Student Group
 
 ## Course structure and editing
 
@@ -82,6 +91,11 @@ _По-русски_: ключ цепочки
 _Formerly_: Task Group Key
 _Avoid_: name, when either the title or the key could be meant; using the Task Chain Key as Task Chain identity
 
+**Template Repository**:
+The repository of a Task Chain from which every Student's repository for that Task Chain is created. Teachers fill it with `git push`; there is no archive upload. It may be empty, and its content does not change once the Course is opened, so every Student starts from the same state.
+_По-русски_: шаблонный репозиторий
+_Avoid_: filling the Template Repository by uploading a ZIP archive; changing it after the Course is opened
+
 **Task**:
 A course activity with a stable identity and a position within one Task Chain. Its execution position is independent of where its Task Block appears on the Course Page. Tasks are added and removed only while the Course is `draft`; once it is open, every Task keeps its Task Chain and its position there.
 _По-русски_: задание
@@ -91,6 +105,11 @@ _Avoid_: Assignment
 A short identifier of a Task, unique within its Task Chain, by which a Student names the Task when submitting an Attempt through Git. It is separate from the Task's title and can change only while the Course is `draft`, so a key Students may have used never comes to mean another Task.
 _По-русски_: ключ задания
 _Avoid_: name, when either the title or the key could be meant; using the Task Key as Task identity
+
+**Path Mask**:
+A glob pattern of a Task that selects which files of a submission belong to the Task: the Attempt's diff shows only matching files, and a submission in which no file matches is not an Attempt. Path Masks are optional; a Task without them accepts any files. They can change after the Course is opened: a change applies to later submissions, while Attempts already submitted are still shown by the Path Masks in effect when they were submitted.
+_По-русски_: маска путей
+_Avoid_: re-filtering Attempts already submitted by a changed Path Mask
 
 **Task Block**:
 The block of the Course Page that shows one Task; every Task has exactly one, so a Task without a Task Block does not exist. Its position on the page is presentational and does not define the Task's execution order; the Task's properties belong to the Task, not to the block. Removing a Task Block removes its Task, so it is possible only while the Course is `draft`; afterwards the block can only be moved.
