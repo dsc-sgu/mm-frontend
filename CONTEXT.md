@@ -96,7 +96,7 @@ _Avoid_: name, when either the title or the key could be meant; using the Task K
 The block of the Course Page that shows one Task; every Task has exactly one, so a Task without a Task Block does not exist. Its position on the page is presentational and does not define the Task's execution order; the Task's properties belong to the Task, not to the block. Removing a Task Block removes its Task, so it is possible only while the Course is `draft`; afterwards the block can only be moved.
 _По-русски_: блок задания
 _Formerly_: Task Reference
-_Avoid_: Assignment, assignment block; storing Task properties in the block's data; a Task hidden from the Course Page or shown twice; copying a Task Block
+_Avoid_: Assignment, assignment block; storing Task properties in the block's data in the Course Page document; a Task hidden from the Course Page or shown twice; copying a Task Block
 
 **Task Summary**:
 The part of a Task that can be shown without access to its content: its title, deadline, maximum Grade, and an optional annotation written by a Teacher.
