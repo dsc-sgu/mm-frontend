@@ -20,6 +20,8 @@ import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
 import type { CoursePage } from '@/features/course/features/page/model/types';
 import type { CourseId, CourseSlug } from '@/features/course/model/identity';
+// PROTOTYPE (#181): `?taskApply=contract` publishes Tasks with the page.
+import { usePrototypePageEdit } from '@/features/course/prototype/task-and-deadline-settings/page-edit-slot';
 
 import styles from './page.module.css';
 
@@ -64,6 +66,7 @@ function CoursePageEditContent({
     (state) => state.setWorkingCopy
   );
   const workingCopy = useCoursePageEditStore((state) => state.workingCopy);
+  const prototypeSlot = usePrototypePageEdit();
 
   const apply = useCallback(async () => {
     if (!isDirty) {
@@ -81,7 +84,19 @@ function CoursePageEditContent({
       return;
     }
 
-    const submittedWorkingCopy = structuredClone(workingCopy);
+    // PROTOTYPE (#181): an unfinished new Task stops the publication, and
+    // block drafts may publish merged with what others published.
+    const prototypeContent = prototypeSlot
+      ? prototypeSlot.beforeApply(workingCopy.content)
+      : workingCopy.content;
+    if (!prototypeContent) {
+      return;
+    }
+
+    const submittedWorkingCopy = structuredClone({
+      ...workingCopy,
+      content: prototypeContent,
+    });
 
     await saveMutation.mutateAsync({
       courseId,
@@ -95,8 +110,14 @@ function CoursePageEditContent({
       content: submittedWorkingCopy.content,
       resources: submittedWorkingCopy.resources,
     });
+    // PROTOTYPE (#181): Tasks are created and deleted in the same publication.
+    await prototypeSlot?.afterApply(submittedWorkingCopy.content);
 
     markWorkingCopySaved(submittedWorkingCopy);
+    // PROTOTYPE (#181): show the merged page in place of the working copy.
+    if (prototypeContent !== workingCopy.content) {
+      resetWorkingCopy();
+    }
 
     await router.invalidate();
 
@@ -117,6 +138,8 @@ function CoursePageEditContent({
     isDirty,
     markWorkingCopySaved,
     navigate,
+    prototypeSlot,
+    resetWorkingCopy,
     router,
     saveMutation,
     workingCopy,
@@ -173,6 +196,8 @@ function CoursePageEditContent({
         >
           <CoursePageContentEditor />
         </article>
+
+        {prototypeSlot?.render()}
 
         <CoursePageEditApplyBar
           isDirty={isDirty}

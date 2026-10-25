@@ -16,6 +16,8 @@ import {
 } from '@/features/course/features/page-edit/model/block-target';
 import type { CoursePlateElement } from '@/features/course/features/page-edit/model/plate-content';
 import { CoursePageBlockMenu } from '@/features/course/features/page-edit/ui/block-menu';
+// PROTOTYPE (#181): `taskApply: blocks` marks block drafts.
+import { usePrototypePageEdit } from '@/features/course/prototype/task-and-deadline-settings/page-edit-slot';
 
 type BlockFrameContentTag = keyof Pick<
   HTMLElementTagNameMap,
@@ -57,6 +59,7 @@ export function CoursePageBlockFrame({
   const blockTarget = getBlockTarget(element, props.path);
   const blockTargetKey = getCoursePageBlockTargetKey(blockTarget);
   const isTopLevelBlock = props.path.length === 1;
+  const prototypeSlot = usePrototypePageEdit();
   const {
     attributes: sortableAttributes,
     isDragging,
@@ -217,6 +220,11 @@ export function CoursePageBlockFrame({
           className="pointer-events-none absolute inset-0 z-20 bg-primary/20"
         />
       )}
+
+      {/* PROTOTYPE (#181): a block draft of `taskApply: blocks`. */}
+      {isTopLevelBlock && typeof element.id === 'string'
+        ? prototypeSlot?.blockMark?.(element.id)
+        : null}
 
       <Content className={contentClassName}>{children}</Content>
     </PlateElement>
