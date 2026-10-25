@@ -2,7 +2,7 @@
 id: mm-cc7t9
 status: open
 deps: []
-links: [mm-176]
+links: [mm-176, mm-f1cyc]
 created: 2026-10-25T11:18:58Z
 type: feature
 priority: 1
