@@ -146,11 +146,18 @@ export async function saveReview(input: SaveReviewInput): Promise<void> {
     },
     replies: previous?.replies ?? [],
   };
-  const { reviews, users } = mockBackend.state;
+  const { reviews, users, unseenAttemptUpdates } = mockBackend.state;
   mockBackend.state.reviews = [
     ...reviews.filter(({ attemptId }) => attemptId !== attempt.id),
     review,
   ];
+  // The Student has not seen the new revision yet.
+  if (!unseenAttemptUpdates.includes(attempt.id)) {
+    mockBackend.state.unseenAttemptUpdates = [
+      ...unseenAttemptUpdates,
+      attempt.id,
+    ];
+  }
 
   // Course Attempts still read their own RAM mock until ATT1 removes this.
   const student = users.find(({ id }) => id === attempt.studentId);

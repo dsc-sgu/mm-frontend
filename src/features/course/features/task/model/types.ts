@@ -1,5 +1,11 @@
+import type { FullName } from '@/features/auth/model/full-name';
+import type { UserId } from '@/features/auth/model/identity';
 import type { Grade } from '@/features/course/model/grade';
-import type { AttemptNumber } from '@/features/course/model/identity';
+import type {
+  AttemptId,
+  AttemptNumber,
+} from '@/features/course/model/identity';
+import type { ReviewRevision } from '@/features/course/features/review/model/revision';
 
 export type TaskAttachmentKind =
   | 'pdf'
@@ -20,26 +26,21 @@ export type TaskAttachment = {
   sizeBytes: number;
 };
 
-export type TaskAttemptReview =
-  | { status: 'pending' }
-  | {
-      status: 'graded';
-      grade: Grade;
-      gradedAt: string;
-      graderName: string;
-    };
-
-export type TaskAttemptAttention = {
-  status: 'seen' | 'unseen';
+/** The latest published Review Revision of an Attempt, as the history shows it. */
+export type TaskAttemptReview = {
+  revision: ReviewRevision;
+  grade: Grade;
+  publishedAt: string;
+  publishedBy: { id: UserId } & FullName;
 };
 
 export type TaskAttempt = {
-  id: string;
+  id: AttemptId;
   attemptNumber: AttemptNumber;
-  studentUsername: string;
   submittedAt: string;
-  review: TaskAttemptReview;
-  attention: TaskAttemptAttention;
+  review: TaskAttemptReview | null;
+  /** Whether the Student has looked at the latest Review. Replaced in REV8. */
+  updates: 'seen' | 'unseen';
 };
 
 export type Task = {
@@ -50,7 +51,6 @@ export type Task = {
   deadlineAt: string;
   maxGrade: Grade;
   attachments: TaskAttachment[];
-  attempts: TaskAttempt[];
 };
 
 export type TaskPageData = {

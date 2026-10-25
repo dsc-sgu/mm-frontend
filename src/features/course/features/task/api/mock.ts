@@ -1,15 +1,23 @@
+import { http, HttpResponse } from 'msw';
 import * as v from 'valibot';
-import { mockBackend } from '@/app/mock-backend/state';
-import { GradeSchema, type Grade } from '@/features/course/model/grade';
-import type { UserId } from '@/features/auth/model/identity';
 import {
-  AttemptNumberSchema,
-  type AttemptNumber,
-  type CourseId,
-} from '@/features/course/model/identity';
+  accessDenial,
+  resolveAttemptAccess,
+  resolveStudentIdAccess,
+} from '@/app/mock-backend/participant-access';
+import {
+  mockBackend,
+  mockUserName,
+  type MockReview,
+} from '@/app/mock-backend/state';
+import {
+  GradeSchema,
+  gradeToNumber,
+  type Grade,
+} from '@/features/course/model/grade';
+import type { CourseId } from '@/features/course/model/identity';
 import type {
   TaskAttachment,
-  TaskAttempt,
   TaskPageData,
 } from '@/features/course/features/task/model/types';
 
@@ -82,125 +90,13 @@ const ATTACHMENTS = [
 
 const mockGrade = (value: number): Grade => v.parse(GradeSchema, value);
 
-const ATTEMPTS = [
-  {
-    attemptNumber: v.parse(AttemptNumberSchema, 10),
-    studentUsername: 'student',
-    submittedAt: '2026-03-03T10:05:00+03:00',
-    review: { status: 'pending' },
-  },
-  {
-    attemptNumber: v.parse(AttemptNumberSchema, 9),
-    studentUsername: 'student',
-    submittedAt: '2026-03-02T09:15:00+03:00',
-    review: {
-      status: 'graded',
-      grade: mockGrade(8),
-      gradedAt: '2026-03-02T11:10:00+03:00',
-      graderName: 'Громова Елизавета Андреевна',
-    },
-  },
-  {
-    attemptNumber: v.parse(AttemptNumberSchema, 8),
-    studentUsername: 'student',
-    submittedAt: '2026-03-01T18:42:00+03:00',
-    review: {
-      status: 'graded',
-      grade: mockGrade(10),
-      gradedAt: '2026-03-01T20:06:00+03:00',
-      graderName: 'Ковалёв Павел Сергеевич',
-    },
-  },
-  {
-    attemptNumber: v.parse(AttemptNumberSchema, 7),
-    studentUsername: 'student',
-    submittedAt: '2026-02-28T16:30:00+03:00',
-    review: {
-      status: 'graded',
-      grade: mockGrade(6),
-      gradedAt: '2026-02-28T18:12:00+03:00',
-      graderName: 'Батраева Инна Олеговна',
-    },
-  },
-  {
-    attemptNumber: v.parse(AttemptNumberSchema, 6),
-    studentUsername: 'student',
-    submittedAt: '2026-02-28T09:24:00+03:00',
-    review: {
-      status: 'graded',
-      grade: mockGrade(0),
-      gradedAt: '2026-02-28T11:48:00+03:00',
-      graderName: 'Морозов Андрей Викторович',
-    },
-  },
-  {
-    attemptNumber: v.parse(AttemptNumberSchema, 5),
-    studentUsername: 'student',
-    submittedAt: '2026-02-27T10:20:00+03:00',
-    review: {
-      status: 'graded',
-      grade: mockGrade(9),
-      gradedAt: '2026-02-27T12:02:00+03:00',
-      graderName: 'Семёнова Дарья Михайловна',
-    },
-  },
-  {
-    attemptNumber: v.parse(AttemptNumberSchema, 4),
-    studentUsername: 'student',
-    submittedAt: '2026-02-27T03:03:00+03:00',
-    review: {
-      status: 'graded',
-      grade: mockGrade(4),
-      gradedAt: '2026-02-27T05:10:00+03:00',
-      graderName: 'Левченко Анна Игоревна',
-    },
-  },
-  {
-    attemptNumber: v.parse(AttemptNumberSchema, 3),
-    studentUsername: 'student',
-    submittedAt: '2026-02-26T23:59:00+03:00',
-    review: {
-      status: 'graded',
-      grade: mockGrade(7),
-      gradedAt: '2026-02-27T00:34:00+03:00',
-      graderName: 'Титов Егор Алексеевич',
-    },
-  },
-  {
-    attemptNumber: v.parse(AttemptNumberSchema, 2),
-    studentUsername: 'student',
-    submittedAt: '2026-02-26T20:18:00+03:00',
-    review: {
-      status: 'graded',
-      grade: mockGrade(10),
-      gradedAt: '2026-02-26T21:05:00+03:00',
-      graderName: 'Сафрончик Мария Павловна',
-    },
-  },
-  {
-    attemptNumber: v.parse(AttemptNumberSchema, 1),
-    studentUsername: 'student',
-    submittedAt: '2026-02-25T02:07:00+03:00',
-    review: {
-      status: 'graded',
-      grade: mockGrade(0),
-      gradedAt: '2026-02-25T03:47:00+03:00',
-      graderName: 'Кудяков Артём Александрович',
-    },
-  },
-] satisfies Array<Omit<TaskAttempt, 'id' | 'attention'>>;
-
-const INITIAL_UNSEEN_ATTEMPT_NUMBERS = new Set([7, 9]);
-const seenAttemptUpdates = new Set<string>();
-
+// The Task itself stays an in-memory mock until its own HTTP operation.
 export async function fetchTaskPage({
   courseId,
   taskId,
-  studentId,
 }: {
   courseId: CourseId;
   taskId: string;
-  studentId: UserId | null;
 }): Promise<TaskPageData | null> {
   await new Promise((resolve) => setTimeout(resolve, 180));
 
@@ -210,85 +106,100 @@ export async function fetchTaskPage({
   if (!course || !Number.isInteger(taskNumber) || taskNumber < 1) {
     return null;
   }
-
-  const student =
-    studentId === null
-      ? null
-      : mockBackend.state.users.find(({ id }) => id === studentId);
-  if (student === undefined) {
-    return null;
-  }
+  // The Attempt page reads these from the canonical Task; the history must
+  // judge deadlines and Grades by the same values.
+  const canonical = mockBackend.state.tasks.find(
+    (task) => task.courseId === courseId && task.id === taskId
+  );
 
   return {
     task: {
       id: taskId,
       number: taskNumber,
-      title: TASK_TITLES[taskId] ?? `practice-${taskId}.sh`,
+      title: canonical?.title ?? TASK_TITLES[taskId] ?? `practice-${taskId}.sh`,
       description:
         'Работа скрипта должна заключаться в объединении текстов всех песен. Для решения подразумевается использование масок.',
-      deadlineAt: '2026-02-26T23:59:00+03:00',
-      maxGrade: mockGrade(10),
+      deadlineAt: canonical?.deadlineAt ?? '2026-02-26T23:59:00+03:00',
+      maxGrade: canonical?.maxGrade ?? mockGrade(10),
       attachments: ATTACHMENTS.map((attachment) => ({
         ...attachment,
         id: `${courseId}:${taskId}:attachment:${attachment.name}`,
-      })),
-      attempts: ATTEMPTS.map((attempt) => ({
-        ...attempt,
-        studentUsername: student?.username ?? attempt.studentUsername,
-        id: `${courseId}:${taskId}:attempt:${attempt.attemptNumber}`,
-        review: { ...attempt.review },
-        attention: {
-          status:
-            INITIAL_UNSEEN_ATTEMPT_NUMBERS.has(attempt.attemptNumber) &&
-            !seenAttemptUpdates.has(
-              getAttemptUpdatesKey({
-                courseId,
-                taskId,
-                student: studentId ?? attempt.studentUsername,
-                attemptNumber: attempt.attemptNumber,
-              })
-            )
-              ? 'unseen'
-              : 'seen',
-        },
       })),
     },
   };
 }
 
-export async function markTaskAttemptUpdatesSeen({
-  courseId,
-  taskId,
-  studentId,
-  attemptNumber,
-}: {
-  courseId: CourseId;
-  taskId: string;
-  studentId: UserId;
-  attemptNumber: AttemptNumber;
-}): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 120));
+// Working wire contracts pending backend confirmation #113. Both answer from
+// the canonical Attempts and Reviews; denials carry no body.
+export const taskHandlers = [
+  http.get(
+    '/api/v1/courses/:courseId/tasks/:taskId/students/:studentId/attempt-history',
+    ({ params }) => {
+      const access = resolveStudentIdAccess(
+        String(params.courseId),
+        String(params.studentId)
+      );
+      if (access.status !== 'found') {
+        return accessDenial(access.status);
+      }
+      const { attempts, reviews, unseenAttemptUpdates } = mockBackend.state;
+      return HttpResponse.json({
+        attempts: attempts
+          .filter(
+            (attempt) =>
+              attempt.courseId === params.courseId &&
+              attempt.taskId === params.taskId &&
+              attempt.studentId === access.studentId
+          )
+          .sort((first, second) => second.attemptNumber - first.attemptNumber)
+          .map(({ id, attemptNumber, submittedAt }) => {
+            const review = reviews.find(({ attemptId }) => attemptId === id);
+            return {
+              id,
+              attemptNumber,
+              submittedAt,
+              review: review ? toHistoryReview(review) : null,
+              updates: unseenAttemptUpdates.includes(id) ? 'unseen' : 'seen',
+            };
+          }),
+      });
+    }
+  ),
+  http.post(
+    '/api/v1/courses/:courseId/attempts/:attemptId/updates-seen',
+    ({ params }) => {
+      const access = resolveAttemptAccess(
+        String(params.courseId),
+        String(params.attemptId)
+      );
+      if (access.status !== 'found') {
+        return accessDenial(access.status);
+      }
+      // Only the Student who submitted the Attempt has updates to see.
+      if (access.attempt.studentId !== mockBackend.state.session?.userId) {
+        return new HttpResponse(null, { status: 403 });
+      }
+      const { attempt } = access;
+      mockBackend.state.unseenAttemptUpdates =
+        mockBackend.state.unseenAttemptUpdates.filter(
+          (attemptId) => attemptId !== attempt.id
+        );
+      return new HttpResponse(null, { status: 204 });
+    }
+  ),
+];
 
-  seenAttemptUpdates.add(
-    getAttemptUpdatesKey({
-      courseId,
-      taskId,
-      student: studentId,
-      attemptNumber,
-    })
+function toHistoryReview({ revision }: MockReview) {
+  const publisher = mockBackend.state.users.find(
+    ({ id }) => id === revision.publishedBy
   );
-}
-
-function getAttemptUpdatesKey({
-  courseId,
-  taskId,
-  student,
-  attemptNumber,
-}: {
-  courseId: CourseId;
-  taskId: string;
-  student: string;
-  attemptNumber: AttemptNumber;
-}): string {
-  return `${courseId}:${taskId}:${student}:${attemptNumber}`;
+  if (!publisher) {
+    throw new Error(`The mock backend has no User ${revision.publishedBy}`);
+  }
+  return {
+    revision: revision.number,
+    grade: gradeToNumber(revision.grade),
+    publishedAt: revision.publishedAt,
+    publishedBy: { id: publisher.id, ...mockUserName(publisher) },
+  };
 }

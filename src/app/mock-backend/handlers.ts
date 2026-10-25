@@ -4,6 +4,7 @@ import { courseContextHandlers } from '@/features/course/features/access/api/moc
 import { repositoryHandlers } from '@/features/course/features/repository/api/mock';
 import { attemptReviewHandlers } from '@/features/course/features/attempt-review/api/mock';
 import { reviewHandlers } from '@/features/course/features/review/api/mock';
+import { taskHandlers } from '@/features/course/features/task/api/mock';
 
 export const handlers = [
   ...authHandlers,
@@ -12,4 +13,5 @@ export const handlers = [
   ...repositoryHandlers,
   ...attemptReviewHandlers,
   ...reviewHandlers,
+  ...taskHandlers,
 ];

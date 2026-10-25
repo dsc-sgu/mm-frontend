@@ -10,15 +10,19 @@ import {
   TextAlignStart,
 } from 'lucide-react';
 
-import type { UserId } from '@/features/auth/model/identity';
+import { formatFullName } from '@/features/auth/model/full-name';
+import type { Session } from '@/features/auth/model/types';
 import type { CourseId } from '@/features/course/model/identity';
-import { useMarkTaskAttemptUpdatesSeenMutation } from '@/features/course/features/task/api/queries';
+import { useMarkAttemptUpdatesSeenMutation } from '@/features/course/features/task/api/queries';
 import {
   formatTaskDateTime,
   getDeadlineRelation,
 } from '@/features/course/features/task/model/deadline';
 import type { DeadlineRelation } from '@/features/course/features/task/model/deadline';
-import type { TaskAttempt } from '@/features/course/features/task/model/types';
+import type {
+  TaskAttempt,
+  TaskAttemptReview,
+} from '@/features/course/features/task/model/types';
 import {
   compareGrades,
   formatGrade,
@@ -34,7 +38,7 @@ export function TaskAttemptHistory({
   courseSlug,
   deadlineAt,
   maxGrade,
-  studentId,
+  student,
   taskId,
 }: {
   attempts: TaskAttempt[];
@@ -42,24 +46,25 @@ export function TaskAttemptHistory({
   courseSlug: string;
   deadlineAt: string;
   maxGrade: Grade;
-  studentId: UserId;
+  student: Pick<Session, 'userId' | 'username'>;
   taskId: string;
 }) {
-  const markUpdatesSeenMutation = useMarkTaskAttemptUpdatesSeenMutation();
+  const markUpdatesSeenMutation = useMarkAttemptUpdatesSeenMutation();
   const hasUnseenUpdates = attempts.some(
-    (attempt) => attempt.attention.status === 'unseen'
+    (attempt) => attempt.updates === 'unseen'
   );
 
   function markAttemptUpdatesSeen(attempt: TaskAttempt) {
-    if (attempt.attention.status === 'seen') {
+    if (attempt.updates === 'seen') {
       return;
     }
 
     markUpdatesSeenMutation.mutate({
+      viewerId: student.userId,
       courseId,
       taskId,
-      studentId,
-      attemptNumber: attempt.attemptNumber,
+      studentId: student.userId,
+      attemptId: attempt.id,
     });
   }
 
@@ -99,6 +104,7 @@ export function TaskAttemptHistory({
               courseSlug={courseSlug}
               deadlineAt={deadlineAt}
               maxGrade={maxGrade}
+              studentUsername={student.username}
               taskId={taskId}
               onOpenAttempt={markAttemptUpdatesSeen}
             />
@@ -116,6 +122,7 @@ function TaskAttemptHistoryItem({
   courseSlug,
   deadlineAt,
   maxGrade,
+  studentUsername,
   taskId,
   onOpenAttempt,
 }: {
@@ -123,6 +130,7 @@ function TaskAttemptHistoryItem({
   courseSlug: string;
   deadlineAt: string;
   maxGrade: Grade;
+  studentUsername: string;
   taskId: string;
   onOpenAttempt: (attempt: TaskAttempt) => void;
 }) {
@@ -130,8 +138,8 @@ function TaskAttemptHistoryItem({
     submittedAt: attempt.submittedAt,
     deadlineAt,
   });
-  const pending = attempt.review.status === 'pending';
-  const hasUnseenUpdates = attempt.attention.status === 'unseen';
+  const pending = attempt.review === null;
+  const hasUnseenUpdates = attempt.updates === 'unseen';
 
   return (
     <li
@@ -166,7 +174,7 @@ function TaskAttemptHistoryItem({
           'sm:border-l sm:border-border/70 sm:pl-4'
         )}
       >
-        {attempt.review.status === 'graded' && (
+        {attempt.review && (
           <GradeBadge grade={attempt.review.grade} maxGrade={maxGrade} />
         )}
 
@@ -176,7 +184,7 @@ function TaskAttemptHistoryItem({
             params={{
               courseSlug,
               taskId,
-              studentUsername: attempt.studentUsername,
+              studentUsername,
               attemptNumber: String(attempt.attemptNumber),
             }}
             onClick={() => onOpenAttempt(attempt)}
@@ -245,7 +253,7 @@ function ReviewStatus({ attempt }: { attempt: TaskAttempt }) {
         'sm:border-l sm:border-border/70 sm:px-4'
       )}
     >
-      {attempt.review.status === 'pending' ? (
+      {attempt.review === null ? (
         <div className="flex min-w-0 items-center gap-2">
           <CircleDashed
             className="size-4 shrink-0 text-amber-600 dark:text-amber-300"
@@ -256,27 +264,32 @@ function ReviewStatus({ attempt }: { attempt: TaskAttempt }) {
           </p>
         </div>
       ) : (
-        <div className="flex min-w-0 items-center gap-2">
-          <CircleCheck
-            className="size-4 shrink-0 text-emerald-600 dark:text-emerald-300"
-            aria-hidden="true"
-          />
-          <div className="min-w-0">
-            <p className="text-sm text-foreground/80">
-              Оценено{' '}
-              <time dateTime={attempt.review.gradedAt}>
-                {formatTaskDateTime(attempt.review.gradedAt)}
-              </time>
-            </p>
-            <p
-              className="truncate text-sm font-semibold"
-              title={attempt.review.graderName}
-            >
-              {attempt.review.graderName}
-            </p>
-          </div>
-        </div>
+        <PublishedReview review={attempt.review} />
       )}
+    </div>
+  );
+}
+
+function PublishedReview({ review }: { review: TaskAttemptReview }) {
+  const publisherName = formatFullName(review.publishedBy);
+
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <CircleCheck
+        className="size-4 shrink-0 text-emerald-600 dark:text-emerald-300"
+        aria-hidden="true"
+      />
+      <div className="min-w-0">
+        <p className="text-sm text-foreground/80">
+          Оценено{' '}
+          <time dateTime={review.publishedAt}>
+            {formatTaskDateTime(review.publishedAt)}
+          </time>
+        </p>
+        <p className="truncate text-sm font-semibold" title={publisherName}>
+          {publisherName}
+        </p>
+      </div>
     </div>
   );
 }

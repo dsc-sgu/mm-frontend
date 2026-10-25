@@ -89,6 +89,7 @@ test('the access world retains course-local memberships without Tasks or Attempt
     tasks,
     attempts,
     reviews,
+    unseenAttemptUpdates,
     session,
     nextUserNumber,
   } = mockBackend.state;
@@ -130,6 +131,7 @@ test('the access world retains course-local memberships without Tasks or Attempt
   expect(tasks).toEqual([]);
   expect(attempts).toEqual([]);
   expect(reviews).toEqual([]);
+  expect(unseenAttemptUpdates).toEqual([]);
   expect(session).toEqual({
     userId: accessWorld.users.anna.id,
     expiresAt: SESSION_EXPIRES_AT,
@@ -147,6 +149,7 @@ test('the review world explicitly extends the access world with its Task, Attemp
     tasks: [reviewWorld.task],
     attempts: reviewWorld.attempts,
     reviews: reviewWorld.reviews,
+    unseenAttemptUpdates: reviewWorld.unseenAttemptUpdates,
   });
 });
 
@@ -165,6 +168,7 @@ test.each(['dev', 'world:access', 'world:review'] as const)(
     previous.tasks.splice(0);
     previous.attempts.splice(0);
     previous.reviews.splice(0);
+    previous.unseenAttemptUpdates.splice(0);
     previous.session = null;
     previous.nextUserNumber = 100;
 

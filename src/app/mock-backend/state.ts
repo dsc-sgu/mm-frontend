@@ -118,6 +118,11 @@ export type MockBackendState = {
   tasks: MockTask[];
   attempts: MockAttempt[];
   reviews: MockReview[];
+  /**
+   * Attempts whose Review changed since their Student last looked. Temporary:
+   * REV8 replaces it with the Read State of the Review.
+   */
+  unseenAttemptUpdates: AttemptId[];
   /** The browser's sign-in session; MSW serves one client at a time. */
   session: MockSession | null;
   /** Sequence for identities created at runtime, so they repeat across runs. */
@@ -405,6 +410,8 @@ export const reviewWorld = {
   },
   attempts: reviewAttempts,
   reviews: [sashaFirstReview],
+  // Sasha has not looked at the Review of Attempt #1 yet.
+  unseenAttemptUpdates: [sashaFirstReview.attemptId],
 };
 
 const DEV_FIRST_SUBMISSION = Date.UTC(2026, 4, 20, 12, 0, 0);
@@ -429,6 +436,16 @@ function createDevState(): MockBackendState {
         )
       )
     );
+  const reviews = attempts
+    .filter(({ courseId }) =>
+      devMemberships.some(
+        (membership) =>
+          membership.courseId === courseId &&
+          membership.userId === seededUsers.mitTeacher.id &&
+          membership.role === 'teacher'
+      )
+    )
+    .flatMap((attempt) => devReview(attempt, seededUsers.mitTeacher.id) ?? []);
   return {
     users,
     courses: seededCourses,
@@ -442,18 +459,15 @@ function createDevState(): MockBackendState {
     })),
     attempts,
     // Only the Course the demo Teacher teaches has Reviews.
-    reviews: attempts
-      .filter(({ courseId }) =>
-        devMemberships.some(
-          (membership) =>
-            membership.courseId === courseId &&
-            membership.userId === seededUsers.mitTeacher.id &&
-            membership.role === 'teacher'
-        )
+    reviews,
+    // The two latest Reviews of every Student are not seen yet.
+    unseenAttemptUpdates: attempts
+      .filter(
+        ({ id, attemptNumber }) =>
+          attemptNumber >= 2 &&
+          reviews.some(({ attemptId }) => attemptId === id)
       )
-      .flatMap(
-        (attempt) => devReview(attempt, seededUsers.mitTeacher.id) ?? []
-      ),
+      .map(({ id }) => id),
     session: {
       userId: seededUsers.mitTeacher.id,
       expiresAt: SESSION_EXPIRES_AT,
@@ -471,6 +485,7 @@ function createAccessState(): MockBackendState {
     tasks: [],
     attempts: [],
     reviews: [],
+    unseenAttemptUpdates: [],
     session: {
       userId: accessWorld.users.anna.id,
       expiresAt: SESSION_EXPIRES_AT,
@@ -485,6 +500,7 @@ function createReviewState(): MockBackendState {
     tasks: [reviewWorld.task],
     attempts: reviewWorld.attempts,
     reviews: reviewWorld.reviews,
+    unseenAttemptUpdates: reviewWorld.unseenAttemptUpdates,
   };
 }
 

@@ -39,17 +39,38 @@ export function TaskPageLoading({ role }: { role: CourseRole }) {
         ) : null}
       </div>
 
-      {role === 'student' ? (
-        <div className="mt-7 sm:mt-9">
-          <div className="h-9 w-64 animate-pulse rounded-xl bg-muted" />
-          <div className="mt-5 divide-y overflow-hidden rounded-2xl border bg-card">
-            {Array.from({ length: 4 }, (_, index) => (
-              <div key={index} className="h-[84px] animate-pulse bg-muted/60" />
-            ))}
-          </div>
-        </div>
-      ) : null}
+      {role === 'student' ? <AttemptHistoryLoading /> : null}
     </main>
+  );
+}
+
+export function AttemptHistoryLoading() {
+  return (
+    <div className="mt-7 sm:mt-9" aria-busy="true">
+      <div className="h-9 w-64 animate-pulse rounded-xl bg-muted" />
+      <div className="mt-5 divide-y overflow-hidden rounded-2xl border bg-card">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="h-[84px] animate-pulse bg-muted/60" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AttemptHistoryError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <section className="mt-7 rounded-2xl border border-dashed bg-card px-6 py-10 text-center sm:mt-9">
+      <AlertCircle
+        className="mx-auto size-6 text-destructive"
+        aria-hidden="true"
+      />
+      <h2 className="mt-3 text-lg font-semibold">
+        Не удалось загрузить историю попыток
+      </h2>
+      <Button variant="outline" className="mt-4" onClick={onRetry}>
+        Повторить
+      </Button>
+    </section>
   );
 }
 

@@ -29,7 +29,7 @@ import {
   coursePageQueryOptions,
 } from '@/features/course/features/page/api/queries';
 import { repositoryLocatorKeys } from '@/features/course/features/repository/api/queries';
-import { taskPageKeys } from '@/features/course/features/task/api/queries';
+import { taskKeys } from '@/features/course/features/task/api/queries';
 import { reviewKeys } from '@/features/course/features/review/api/queries';
 import {
   CourseSlugSchema,
@@ -269,11 +269,8 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
     const one = 1 as AttemptNumber;
     const keys = [
       coursePageKeys.detail(algorithms.id),
-      taskPageKeys.detail({
-        courseId: algorithms.id,
-        taskId: '1',
-        studentId: sasha.id,
-      }),
+      taskKeys.page(algorithms.id, '1'),
+      taskKeys.attemptHistory(vera.id, algorithms.id, '1', sasha.id),
       courseAttemptsKeys.list(algorithms.id, {
         tasks: [],
         students: [],
