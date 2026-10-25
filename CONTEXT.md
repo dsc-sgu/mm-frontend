@@ -209,6 +209,24 @@ A human-readable address that resolves to an Identity, such as a Course slug, or
 _По-русски_: локатор
 _Avoid_: using a locator as Identity
 
+**Section policy**:
+The rule that decides which sections of a Course, such as the journal or Course Attempts, each course-local role may open. A section closed to a role is the one access denial shown as an explicit `403`: the member already knows that the Course and the section exist.
+_По-русски_: правила доступа к разделам курса
+
+**Participant-bound resource**:
+A resource that belongs to one participant of a Course, such as an Attempt, its Review or a Student's repository. Access to it is decided per resource rather than by Section policy and is rechecked on every request; a resource that does not exist and one the User may not read are denied alike, as `not-found`.
+_По-русски_: ресурс участника курса
+_Avoid_: revealing whether a denied resource exists
+
+**Redirect**:
+Sending the browser from the requested URL to another one, by the router or by the server, such as to the sign-in page when there is no sign-in session.
+_По-русски_: редирект
+_Avoid_: перенаправление
+
+**Preload**:
+Running a route's `beforeLoad` and `loader` and loading its code before the User navigates there, such as on hover over a `<Link preload="intent">`.
+_По-русски_: предзагрузка; at its first mention in a text — «предзагрузка (preload)»
+
 **Attempt page**:
 The page of one Attempt with its published Review (`…/$attemptNumber`). The Student sees the result there; a Teacher views it without the Review Lease.
 _По-русски_: страница попытки
@@ -264,6 +282,10 @@ _Avoid_: сеанс; сессия alone where the review session state machine o
 **Writer tab**:
 The one browser tab of a sign-in session that may write an editor's Working Copy to the server; the other tabs show its live copy. Handing over writing is a handoff, either voluntary or forced.
 _По-русски_: пишущая вкладка; live copy — лайв-копия; handoff — передача (добровольная или силовая)
+
+**Publish gate**:
+The conditions an editor checks before it lets a Teacher publish, such as a Review Revision or a Course Draft Snapshot: for example, that the Teacher holds the lease and the changes are valid. It reports every reason that currently blocks publication, not only the first.
+_По-русски_: условия публикации
 
 **Vertical**:
 A product area designed end to end, through model, API, UI and tests, such as Review → Grade → Student result, Course access or Transport kernel. A vertical is delivered as slices.
