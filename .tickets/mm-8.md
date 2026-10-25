@@ -1,12 +1,14 @@
 ---
 id: mm-8
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-02-01T16:39:33Z
 type: bug
 priority: 3
 external-ref: gh-8
+closed: 2026-10-25T06:54:07Z
+close-reason: not_planned
 ---
 # Отключить проверки для компонентов shadcn
 
