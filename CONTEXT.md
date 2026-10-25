@@ -44,9 +44,9 @@ _По-русски_: подгруппа — it is the Student Group itself, not 
 _Avoid_: учебная группа, which means an official university group; a nested level inside a Student Group; a Course or Student without a Student Group
 
 **Invite Link**:
-A link by which a User joins a Course. An Invite Link for Students always leads into one particular Student Group of the Course: a Student who follows it joins the Course already in that Student Group. An Invite Link can expire and can be revoked.
+A link by which a User joins a Course. An Invite Link for Students always leads into one particular Student Group of the Course: a Student who follows it joins the Course already in that Student Group. An Invite Link for Teachers leads into the Course without a Student Group, and only the User who created the Course can make one. An Invite Link can expire and can be revoked.
 _По-русски_: ссылка-приглашение
-_Avoid_: an Invite Link for Students without a Student Group
+_Avoid_: an Invite Link for Students without a Student Group; an Invite Link for Teachers made by anyone but the Course's creator
 
 ## Course structure and editing
 
