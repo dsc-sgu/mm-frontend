@@ -1,6 +1,6 @@
 ---
 id: mm-243-ACC4
-status: in_progress
+status: closed
 deps: [mm-266, mm-221]
 links: []
 created: 2026-10-15T11:59:56Z
@@ -10,6 +10,8 @@ assignee: t3m8ch
 external-ref: gh-243
 parent: mm-167
 tags: [ready-for-agent]
+closed: 2026-10-25T13:29:25Z
+close-reason: completed
 ---
 # ACC4: Реагировать на отказ в доступе от любого чтения по стабильным идентичностям
 
