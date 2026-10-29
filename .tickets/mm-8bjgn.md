@@ -2,7 +2,7 @@
 id: mm-8bjgn
 status: open
 deps: []
-links: [mm-xnr8a]
+links: [mm-xnr8a, mm-286]
 created: 2026-10-29T10:41:34Z
 type: feature
 priority: 3
