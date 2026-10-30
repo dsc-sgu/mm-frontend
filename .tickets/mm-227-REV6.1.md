@@ -2,7 +2,7 @@
 id: mm-227-REV6.1
 status: in_progress
 deps: [mm-222]
-links: []
+links: [mm-e2mcs]
 created: 2026-10-14T10:59:25Z
 type: task
 priority: 1
