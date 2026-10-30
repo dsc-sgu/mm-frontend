@@ -1,0 +1,61 @@
+flowchart TB
+  subgraph course_group["src/features/course"]
+    n3["course · общая модель, api и UI"]
+    n4["attempt-screen"]
+    n5["attempt-screen/rendered-markdown"]
+    n6["attempts"]
+    n7["course-shell"]
+    n8["page-document"]
+    n9["page-editor"]
+    n10["page-view"]
+    n11["repository"]
+    n12["review"]
+    n13["task"]
+  end
+  n0["app / routes · сборка"]
+  n1["auth"]
+  n2["code-block"]
+  n14["deadlines-calendar"]
+  n15["keyboard"]
+  n0 --> n1
+  n0 --> n3
+  n0 --> n4
+  n0 --> n6
+  n0 --> n7
+  n0 --> n9
+  n0 --> n12
+  n0 --> n13
+  n0 --> n14
+  n3 --> n1
+  n4 --> n1
+  n4 --> n3
+  n4 --> n5
+  n4 --> n12
+  n4 --> n15
+  n6 --> n3
+  n6 --> n15
+  n7 -.-> n1
+  n7 --> n3
+  n8 --> n2
+  n8 --> n3
+  n9 --> n2
+  n9 --> n3
+  n9 --> n8
+  n9 --> n15
+  n10 --> n3
+  n10 --> n8
+  n11 --> n1
+  n11 --> n3
+  n12 --> n1
+  n12 --> n3
+  n13 -.-> n1
+  n13 --> n3
+  n14 -.-> n3
+  classDef base fill:#ffffff,stroke:#94a3b8,color:#0f172a
+  classDef app fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+  classDef shared fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+  classDef shell fill:#dcfce7,stroke:#16a34a,color:#14532d
+  class n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15 base
+  class n0 app
+  class n3,n8 shared
+  class n7 shell
