@@ -2,7 +2,7 @@
 id: mm-e2mcs
 status: open
 deps: [mm-227, mm-pcsw7]
-links: [mm-227]
+links: [mm-227, mm-228]
 created: 2026-10-30T21:37:16Z
 type: task
 priority: 2
