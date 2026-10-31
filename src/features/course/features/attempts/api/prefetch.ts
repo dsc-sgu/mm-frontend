@@ -1,12 +1,10 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { courseAttemptsQueryOptions } from './queries';
-import type { LoadCourseAttemptsInput } from './load-course-attempts';
-export const attemptsPageQueries = (input: LoadCourseAttemptsInput) => ({
-  attempts: courseAttemptsQueryOptions(input),
-});
+import { attemptsPageQueries } from './queries';
+import type { CourseId } from '@/features/course/model/identity';
+import type { CourseAttemptsFilters } from '@/features/course/features/attempts/model/types';
 export function prefetchAttemptsPage(
   client: QueryClient,
-  input: LoadCourseAttemptsInput
+  input: { courseId: CourseId; filters: CourseAttemptsFilters }
 ) {
   void client.query(attemptsPageQueries(input).attempts).catch(() => {});
 }

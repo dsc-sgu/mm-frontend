@@ -38,7 +38,7 @@ function normalizeGraded(value: unknown): CourseAttemptGradedFilter {
 
 export function normalizeCourseAttemptsFilters(
   filters: Partial<CourseAttemptsFilters>
-): CourseAttemptsFilters {
+) {
   return {
     tasks: normalizeTokenList(filters.tasks).map((id) =>
       v.parse(TaskIdSchema, id)

@@ -14,7 +14,6 @@ import {
   type CourseId,
 } from '@/features/course/model/identity';
 import { normalizeCourseAttemptsFilters } from '@/features/course/features/attempts/model/filters';
-import type { CourseAttemptsFilters } from '@/features/course/features/attempts/model/types';
 const Timestamp = v.pipe(v.string(), v.isoTimestamp());
 const Task = v.object({
   id: TaskIdSchema,
@@ -41,14 +40,14 @@ const ResponseSchema = v.object({
         })
       ),
       reviewLock: v.nullable(
-        v.object({ teacherName: v.string(), lockedAt: Timestamp })
+        v.object({ teacher: UserRefSchema, lockedAt: Timestamp })
       ),
     })
   ),
 });
 export type LoadCourseAttemptsInput = {
   courseId: CourseId;
-  filters: CourseAttemptsFilters;
+  filters: ReturnType<typeof normalizeCourseAttemptsFilters>;
 };
 export function loadCourseAttempts(
   { courseId, filters }: LoadCourseAttemptsInput,

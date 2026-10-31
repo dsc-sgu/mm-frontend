@@ -35,7 +35,7 @@ type CourseAttemptGrade = {
 };
 
 export type CourseAttemptReviewLock = {
-  teacherName: string;
+  teacher: UserRef;
   lockedAt: string;
 };
 

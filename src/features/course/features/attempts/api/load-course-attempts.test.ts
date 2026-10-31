@@ -48,3 +48,27 @@ test('ATT-01: порядок и дубликаты стабильных id не 
     courseAttemptsKeys.list(courseId, { ...input().filters, students: [a, b] })
   );
 });
+
+test('ATT-04: равное время упорядочено по AttemptId, фильтрация сохраняет каталоги', async () => {
+  mockBackend.state.attempts.forEach((attempt) => {
+    attempt.submittedAt = '2026-05-22T09:00:00.000Z';
+  });
+  const result = await loadCourseAttempts(input());
+  expect(result.attempts.map((a) => a.id)).toEqual(
+    reviewWorld.attempts.map((a) => a.id)
+  );
+  const filtered = await loadCourseAttempts({
+    ...input(),
+    filters: { ...input().filters, students: [reviewWorld.users.sasha.id] },
+  });
+  expect(filtered.attempts).toHaveLength(2);
+  expect(filtered.students).toHaveLength(3);
+  expect(filtered.totalAttemptsCount).toBe(3);
+});
+test('отмена остаётся отменой', async () => {
+  const controller = new AbortController();
+  controller.abort();
+  await expect(
+    loadCourseAttempts(input(), controller.signal)
+  ).rejects.toMatchObject({ name: 'AbortError' });
+});

@@ -59,7 +59,10 @@ describe('createQuickGradeUpdate', () => {
     ['an erased Grade', graded, ''],
     [
       'a locked Attempt',
-      { ...ungraded, reviewLock: { teacherName: 'Анна', lockedAt: '' } },
+      {
+        ...ungraded,
+        reviewLock: { teacher: accessWorld.users.anna, lockedAt: '' },
+      },
       '8',
     ],
   ])('skips %s', (_name, attempt, draft) => {

@@ -256,7 +256,7 @@ export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
           )}
         >
           <LockKeyhole className="size-4" /> На проверке у{' '}
-          {attempt.reviewLock.teacherName}
+          {formatFullName(attempt.reviewLock.teacher)}
         </p>
       ) : null}
     </div>

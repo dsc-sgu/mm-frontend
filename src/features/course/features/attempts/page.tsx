@@ -101,6 +101,21 @@ export function CourseAttemptsPage({
   };
 
   function renderAttempts() {
+    if (attemptsQuery.isError && !attemptsQuery.data) {
+      return (
+        <div role="alert" className="p-6">
+          <p>Не удалось загрузить попытки курса.</p>
+          <button
+            type="button"
+            className="mt-3 underline"
+            onClick={() => void attemptsQuery.refetch()}
+          >
+            Повторить загрузку
+          </button>
+        </div>
+      );
+    }
+
     switch (pageMode) {
       case 'loading':
         return <AttemptsSkeleton />;

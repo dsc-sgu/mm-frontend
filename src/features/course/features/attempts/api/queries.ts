@@ -33,7 +33,11 @@ function courseAttemptsQueryOptions({
 }) {
   return queryOptions({
     queryKey: courseAttemptsKeys.list(courseId, filters),
-    queryFn: ({ signal }) => loadCourseAttempts({ courseId, filters }, signal),
+    queryFn: ({ signal }) =>
+      loadCourseAttempts(
+        { courseId, filters: normalizeCourseAttemptsFilters(filters) },
+        signal
+      ),
     staleTime: 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -49,7 +53,7 @@ export function useCourseAttemptsQuery({
   refetchPaused?: boolean;
 }) {
   return useQuery({
-    ...courseAttemptsQueryOptions({ courseId, filters }),
+    ...attemptsPageQueries({ courseId, filters }).attempts,
     enabled: !refetchPaused,
     refetchOnMount: !refetchPaused,
     refetchOnReconnect: !refetchPaused,
@@ -64,8 +68,13 @@ export function useSaveQuickGradesMutation() {
     mutationFn: (input: SaveQuickGradesInput) => saveQuickGrades(input),
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({
-        queryKey: courseAttemptsKeys.course(variables.courseId),
+        queryKey: courseKeys.byId(variables.courseId),
       });
     },
   });
 }
+
+export const attemptsPageQueries = (input: {
+  courseId: CourseId;
+  filters: CourseAttemptsFilters;
+}) => ({ attempts: courseAttemptsQueryOptions(input) });
