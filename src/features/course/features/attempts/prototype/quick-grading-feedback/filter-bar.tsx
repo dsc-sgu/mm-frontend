@@ -10,6 +10,7 @@
 // pending controls: the attempt count and "Быстрая оценка" would describe the
 // applied list, not what the pills show, so they are hidden rather than
 // disabled. Alt+G starts quick grading when nothing is pending.
+import { formatGrade } from '@/features/course/model/grade';
 import {
   useEffect,
   useState,
@@ -504,7 +505,7 @@ function taskOptions(tasks: readonly CourseAttemptTask[]): Option[] {
   return tasks.map((task) => ({
     value: task.id,
     label: task.title,
-    hint: `${task.maxScore} б.`,
+    hint: `${formatGrade(task.maxGrade)} б.`,
   }));
 }
 

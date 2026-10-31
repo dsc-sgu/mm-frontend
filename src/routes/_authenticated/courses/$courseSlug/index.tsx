@@ -33,7 +33,12 @@ function RouteComponent() {
     (variant === 'overlay' || variant === 'dock') &&
     courseRole === 'teacher'
   ) {
-    return <PrototypeCourseView course={{ ...course, courseId: courseSlug }} courseSlug={courseSlug} />;
+    return (
+      <PrototypeCourseView
+        course={{ ...course, courseId: courseSlug }}
+        courseSlug={courseSlug}
+      />
+    );
   }
 
   // A Page cached by CourseId may predate a slug change; links follow the

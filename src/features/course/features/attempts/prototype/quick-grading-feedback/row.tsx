@@ -22,7 +22,7 @@ import {
 import { Input } from '@/shadcn/components/ui/input';
 import { Spinner } from '@/shadcn/components/ui/spinner';
 import { cn } from '@/shadcn/lib/utils';
-import { normalizeScoreDraftInput } from '@/features/course/features/grading';
+import { gradeToNumber } from '@/features/course/model/grade';
 import {
   getDeadlineRelation,
   type DeadlineRelation,
@@ -32,6 +32,7 @@ import type {
   QuickEntry,
   RowOutcome,
 } from '@/features/course/features/attempts/prototype/quick-grading-feedback/session';
+import { normalizeGradeDraftInput } from './session';
 import { desktopColumns, type FeedbackColumn } from './columns';
 
 export type RowLayout = 'wide' | 'medium' | 'stacked';
@@ -304,7 +305,7 @@ function GradeZoneContent({
   onGradeKeyDown,
   onActivate,
 }: RowProps) {
-  const maxScore = attempt.task.maxScore;
+  const maxScore = gradeToNumber(attempt.task.maxGrade);
 
   if (gradeable) {
     return (
@@ -321,7 +322,7 @@ function GradeZoneContent({
           onFocus={onActivate}
           onKeyDown={onGradeKeyDown}
           onChange={(event) => {
-            const next = normalizeScoreDraftInput(event.target.value);
+            const next = normalizeGradeDraftInput(event.target.value);
 
             if (next !== null) {
               onGradeChange(next);
@@ -349,7 +350,12 @@ function GradeZoneContent({
   }
 
   if (attempt.grade) {
-    return <ScoreBadge score={attempt.grade.score} maxScore={maxScore} />;
+    return (
+      <ScoreBadge
+        score={gradeToNumber(attempt.grade.value)}
+        maxScore={maxScore}
+      />
+    );
   }
 
   return <span className="text-sm text-muted-foreground">—/{maxScore}</span>;

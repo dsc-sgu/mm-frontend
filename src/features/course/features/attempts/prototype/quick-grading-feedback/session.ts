@@ -1,5 +1,6 @@
 // PROTOTYPE (#121): in-memory quick-grading session. Not the real contract:
 // save is simulated locally, nothing reaches the mock backend.
+import { gradeToNumber } from '@/features/course/model/grade';
 import type { CourseAttempt } from '@/features/course/features/attempts/model/types';
 
 export type QuickEntry = {
@@ -187,7 +188,9 @@ export function simulateSave({
 
     if (!conflictUsed) {
       conflictUsed = true;
-      const publishedGrade = Math.round(attempt.task.maxScore * 0.6);
+      const publishedGrade = Math.round(
+        gradeToNumber(attempt.task.maxGrade) * 0.6
+      );
       const outcome: RowOutcome = {
         status: 'conflict',
         reason: 'Review уже появилась',
@@ -201,7 +204,7 @@ export function simulateSave({
         taskTitle: attempt.task.title,
         attemptNumber: attempt.attemptNumber,
         grade: entry.grade,
-        maxScore: attempt.task.maxScore,
+        maxScore: gradeToNumber(attempt.task.maxGrade),
         feedback: entry.feedback,
         reason: outcome.reason,
         author: outcome.author,
@@ -227,4 +230,15 @@ export function formatRecoveryEntry(entry: RecoveryEntry): string {
     entry.feedback ? `Ваш отзыв: ${entry.feedback}` : 'Ваш отзыв: —',
     `Причина: ${entry.reason}; опубликовал ${entry.author}, балл ${entry.publishedGrade}/${entry.maxScore}`,
   ].join('\n');
+}
+
+/** Keeps a grade being typed: digits with one `.` or `,`; null rejects. */
+export function normalizeGradeDraftInput(value: string): string | null {
+  const normalized = value.replace(',', '.');
+
+  if (normalized === '' || /^\d+(?:\.\d*)?$/.test(normalized)) {
+    return normalized;
+  }
+
+  return null;
 }
