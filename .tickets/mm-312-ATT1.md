@@ -1,11 +1,12 @@
 ---
 id: mm-312-ATT1
-status: open
+status: in_progress
 deps: [mm-173, mm-221, mm-222]
 links: []
 created: 2026-10-31T07:16:28Z
 type: task
 priority: 1
+assignee: t3m8ch
 aliases: [3cz39]
 parent: mm-299
 tags: [ready-for-agent]
