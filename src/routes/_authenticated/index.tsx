@@ -1,5 +1,9 @@
+import {
+  prefetchDashboard,
+  dashboardQueries,
+} from '@/features/deadlines-calendar/api/prefetch';
+import { useQuery } from '@tanstack/react-query';
 import { CourseCard, CourseCardSkeleton } from '@/features/course/ui/card';
-import { useCoursesQuery } from '@/features/course/api/queries';
 import { coursesFailureText } from '@/features/course/ui/failure-text';
 import { Button } from '@/shadcn/components/ui/button';
 import { DeadlinesCalendar } from '@/features/deadlines-calendar/calendar';
@@ -8,6 +12,9 @@ import type { ReactNode } from 'react';
 import { cn } from '@/shadcn/lib/utils';
 
 export const Route = createFileRoute('/_authenticated/')({
+  loader: ({ context }) => {
+    prefetchDashboard(context.queryClient, context.session.userId);
+  },
   staticData: {
     header: {
       getBreadcrumb: [{ label: 'Панель управления' }],
@@ -25,7 +32,7 @@ function RouteComponent() {
     error,
     isFetching,
     refetch,
-  } = useCoursesQuery(session.userId);
+  } = useQuery(dashboardQueries(session.userId).courses);
 
   function renderCourses() {
     if (isPending) {

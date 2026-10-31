@@ -1,3 +1,4 @@
+import { deadlinesKeys } from '@/features/deadlines-calendar/api/queries';
 import {
   queryOptions,
   useMutation,
@@ -45,6 +46,7 @@ function canRetrySessionCheck(failureCount: number, error: Error) {
 function removeSessionBoundCache(queryClient: QueryClient) {
   queryClient.removeQueries({ queryKey: courseContextKeys.all });
   queryClient.removeQueries({ queryKey: coursesKeys.all });
+  queryClient.removeQueries({ queryKey: deadlinesKeys.all });
   queryClient.removeQueries({ queryKey: courseKeys.all });
 }
 

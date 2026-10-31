@@ -1,5 +1,6 @@
 import { cn } from '@/shadcn/lib/utils';
-import { useRef } from 'react';
+import { Fragment, useRef } from 'react';
+import { Button } from '@/shadcn/components/ui/button';
 import { useDebounce } from 'use-debounce';
 import { DayCell } from './ui/day-cell';
 import { MonthCell } from './ui/month-cell';
@@ -81,7 +82,24 @@ function DeadlinesCalendarTitle({ isFetching }: { isFetching: boolean }) {
 
 function WeekRow({ weekIndex }: { weekIndex: number }) {
   const weekStart = getWeekStartDate(weekIndex);
-  const { data } = useDeadlinesQuery({ weekStart });
+  const { data, isError, isPending, refetch } = useDeadlinesQuery({
+    weekStart,
+  });
+  if (isError)
+    return (
+      <div role="alert" className="p-4">
+        Не удалось загрузить дедлайны.{' '}
+        <Button variant="outline" onClick={() => void refetch()}>
+          Повторить загрузку
+        </Button>
+      </div>
+    );
+  if (isPending)
+    return (
+      <div role="status" className="p-4">
+        Загрузка дедлайнов
+      </div>
+    );
 
   const allDays = Array.from({ length: 7 }, (_, dayOffset) => {
     const date = new Date(weekStart);
@@ -94,7 +112,7 @@ function WeekRow({ weekIndex }: { weekIndex: number }) {
       {allDays.map((date) => {
         const dateKey = formatDateKey(date);
         return (
-          <>
+          <Fragment key={dateKey}>
             {date.getDate() === 1 && (
               <MonthCell key={`month-${formatDateKey(date)}`} date={date} />
             )}
@@ -104,7 +122,7 @@ function WeekRow({ weekIndex }: { weekIndex: number }) {
               deadlines={data?.[dateKey] || []}
               isToday={isToday(date)}
             />
-          </>
+          </Fragment>
         );
       })}
     </div>

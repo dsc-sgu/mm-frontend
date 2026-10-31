@@ -82,7 +82,6 @@ const RAM_MOCK_IMPORTERS = [
   // Writes the canonical MSW state until the HTTP cutover of REV5 and REV6.2.
   'src/features/course/features/review/api/mutations.ts',
   'src/features/course/features/task/api/queries.ts',
-  'src/features/deadlines-calendar/api/queries.ts',
 ];
 
 const MOCK_AND_TEST_FILES = [

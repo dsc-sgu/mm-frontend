@@ -1,5 +1,5 @@
-import { useIsFetching, useQuery } from '@tanstack/react-query';
-import { fetchDeadlines } from './mock';
+import { queryOptions, useIsFetching, useQuery } from '@tanstack/react-query';
+import { loadDeadlines } from './load-deadlines';
 
 // Deadlines cross Courses, so the family stays outside the Course prefix.
 export const deadlinesKeys = {
@@ -26,15 +26,20 @@ type UseDeadlinesQueryOptions = {
   weekStart: Date;
 };
 
-export function useDeadlinesQuery({ weekStart }: UseDeadlinesQueryOptions) {
+export function deadlinesQueryOptions(weekStart: Date) {
   const { start, end } = getWeekBounds(weekStart);
 
-  return useQuery({
-    queryKey: deadlinesKeys.week(weekStart),
-    queryFn: () => fetchDeadlines(start, end),
+  return queryOptions({
+    queryKey: deadlinesKeys.week(start),
+    queryFn: ({ signal }) => loadDeadlines(start, end, signal),
+    retry: false,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
+}
+
+export function useDeadlinesQuery({ weekStart }: UseDeadlinesQueryOptions) {
+  return useQuery(deadlinesQueryOptions(weekStart));
 }
 
 export function useDeadlinesIsFetching(): boolean {

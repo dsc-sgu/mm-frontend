@@ -1,3 +1,4 @@
+import { deadlinesHandlers } from '@/features/deadlines-calendar/api/mock';
 import { authHandlers } from '@/features/auth/api/mock';
 import { courseHandlers } from '@/features/course/api/mock';
 import { courseContextHandlers } from '@/features/course/features/access/api/mock';
@@ -7,6 +8,7 @@ import { reviewHandlers } from '@/features/course/features/review/api/mock';
 import { taskHandlers } from '@/features/course/features/task/api/mock';
 
 export const handlers = [
+  ...deadlinesHandlers,
   ...authHandlers,
   ...courseHandlers,
   ...courseContextHandlers,

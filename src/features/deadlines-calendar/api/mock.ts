@@ -1,88 +1,41 @@
+import { http, HttpResponse } from 'msw';
 import { mockBackend } from '@/app/mock-backend/state';
-import type {
-  Deadline,
-  DeadlinesByDay,
-} from '@/features/deadlines-calendar/model/types';
 
-const MOCK_TASKS = [
-  'Лабораторная работа №1',
-  'Лабораторная работа №2',
-  'Лабораторная работа №3',
-  'Домашнее задание',
-  'Курсовой проект',
-  'Реферат',
-  'Контрольная работа',
-  'Оценка лабораторной работы №3',
-  'Задание №3',
-  'показать +3',
-];
-
-function getRandomDeadlineCount(): number {
-  const rand = Math.random();
-  if (rand < 0.3) {
-    return 0;
-  }
-  if (rand < 0.5) {
-    return 1;
-  }
-  if (rand < 0.7) {
-    return 2;
-  }
-  if (rand < 0.85) {
-    return 3;
-  }
-  if (rand < 0.95) {
-    return 4;
-  }
-  return 5;
-}
-
-function generateRandomDeadline(date: Date): Deadline {
-  const { courses } = mockBackend.state;
-  const course = courses[Math.floor(Math.random() * courses.length)];
-  const task = MOCK_TASKS[Math.floor(Math.random() * MOCK_TASKS.length)];
-
-  const dueDate = new Date(date);
-  const hour = 18 + Math.floor(Math.random() * 5);
-  const minute = Math.random() < 0.5 ? 0 : 25;
-  dueDate.setHours(hour, minute, 0, 0);
-
-  return {
-    id: `${date.toISOString()}-${Math.random().toString(36).slice(2, 11)}`,
-    courseShortTitle: course.shortTitle,
-    taskText: task,
-    dueDate,
-    courseColor: course.color,
-  };
-}
-
-// TODO: Fix DRY
-function formatDateKey(date: Date): string {
-  return date.toLocaleDateString('ru-RU');
-}
-
-export async function fetchDeadlines(
-  startDate: Date,
-  endDate: Date
-): Promise<DeadlinesByDay> {
-  const delay = 200 + Math.random() * 300;
-  await new Promise((resolve) => setTimeout(resolve, delay));
-
-  const deadlinesByDay: DeadlinesByDay = {};
-
-  const currentDate = new Date(startDate);
-  while (currentDate <= endDate) {
-    const dateKey = formatDateKey(currentDate);
-    const deadlineCount = getRandomDeadlineCount();
-
-    if (deadlineCount > 0) {
-      deadlinesByDay[dateKey] = Array.from({ length: deadlineCount }, () =>
-        generateRandomDeadline(new Date(currentDate))
-      );
+export const deadlinesHandlers = [
+  http.get('/api/v1/deadlines', ({ request }) => {
+    const { session, users, memberships, courses, tasks } = mockBackend.state;
+    if (!session || !users.some(({ id }) => id === session.userId)) {
+      return new HttpResponse(null, { status: 401 });
     }
-
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  return deadlinesByDay;
-}
+    const url = new URL(request.url);
+    const start = Date.parse(url.searchParams.get('start') ?? '');
+    const end = Date.parse(url.searchParams.get('end') ?? '');
+    if (!Number.isFinite(start) || !Number.isFinite(end) || start > end) {
+      return new HttpResponse(null, { status: 400 });
+    }
+    const courseIds = new Set(
+      memberships
+        .filter(({ userId }) => userId === session.userId)
+        .map(({ courseId }) => courseId)
+    );
+    return HttpResponse.json(
+      tasks.flatMap((task) => {
+        const course = courses.find(({ id }) => id === task.courseId);
+        const due = Date.parse(task.deadlineAt);
+        if (!course || !courseIds.has(course.id) || due < start || due > end)
+          return [];
+        return [
+          {
+            id: `${course.id}:${task.id}`,
+            courseId: course.id,
+            taskId: task.id,
+            courseShortTitle: course.shortTitle,
+            taskText: task.title,
+            dueDate: task.deadlineAt,
+            courseColor: course.color,
+          },
+        ];
+      })
+    );
+  }),
+];
