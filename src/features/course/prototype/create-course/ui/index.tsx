@@ -147,7 +147,7 @@ function AddressStatus({ control }: { control: Controller }) {
         </span>
       );
     case 'taken':
-      return <span className="text-destructive">Адрес недоступен</span>;
+      return <span className="text-destructive">Адрес уже занят</span>;
     case 'invalid':
       return (
         <span className="text-destructive">
@@ -365,52 +365,12 @@ export function VariantC({ control }: { control: Controller }) {
     </div>
   );
 }
-function CourseResult({ control }: { control: Controller }) {
-  if (!control.createdCourse) return null;
-  return (
-    <section className={styles.result}>
-      <button onClick={control.backToCourses} className={styles.back}>
-        <ArrowLeft className="size-4" />К списку курсов
-      </button>
-      <div className={styles.resultHeader}>
-        <BookOpen className={styles.blueBook} />
-        <div>
-          <span className={styles.badge}>В подготовке</span>
-          <h1>{control.createdCourse.name}</h1>
-        </div>
-      </div>
-      <div className={styles.editorLayout}>
-        <aside>
-          <FileText className="size-4" />
-          Страница курса
-          <div>
-            <Users className="size-4" />
-            Подгруппа 1
-          </div>
-        </aside>
-        <div className={styles.editor}>
-          <h2>Страница курса</h2>
-          <p>Добавьте описание курса, материалы и задания…</p>
-          <div
-            contentEditable
-            suppressContentEditableWarning
-            role="textbox"
-            aria-label="Содержимое страницы курса"
-            aria-multiline="true"
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
 export function CreateCoursePrototype({
   children,
 }: {
   children: (controls: {
     trigger: ReactNode;
     emptyState: ReactNode;
-    result: ReactNode | null;
-    courseCards?: ReactNode;
   }) => ReactNode;
 }) {
   const control = useCreationPrototype();
@@ -443,22 +403,7 @@ export function CreateCoursePrototype({
   const Variant = variant;
   return (
     <>
-      {children({
-        trigger,
-        emptyState: control.createdCourses.length ? null : emptyState,
-        courseCards: control.createdCourses.map((course) => (
-          <button
-            key={course.id}
-            className={styles.createdCard}
-            onClick={() => control.showEditor(course)}
-          >
-            <BookOpen className={styles.blueBook} />
-            <strong>{course.name}</strong>
-            <span className={styles.badge}>В подготовке</span>
-          </button>
-        )),
-        result: control.editorShown ? <CourseResult control={control} /> : null,
-      })}
+      {children({ trigger, emptyState })}
       {!control.open && <PrototypeBar control={control} />}
       <Dialog open={control.open} onOpenChange={control.setOpen}>
         <DialogContent

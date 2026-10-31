@@ -17,6 +17,7 @@ import {
   type AttemptNumber,
   type CourseId,
 } from '@/features/course/model/identity';
+import type { CoursePage } from '@/features/course/features/page/model/types';
 import type { CourseSummary, Teacher } from '@/features/course/model/types';
 import { GradeSchema, type Grade } from '@/features/course/model/grade';
 import {
@@ -46,6 +47,9 @@ export type MockSession = {
 
 export type MockCourse = CourseSummary & {
   accessState: 'draft' | 'open';
+  /** RAM page/subgroups supplied by the creation prototype; seeded courses use legacy fixtures. */
+  page?: CoursePage;
+  subgroups?: { id: string; name: string }[];
 };
 
 export type MockCourseMembership = {

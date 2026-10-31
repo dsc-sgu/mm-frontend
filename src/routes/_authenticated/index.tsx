@@ -92,8 +92,6 @@ function RouteComponent() {
   function renderDashboard(controls?: {
     trigger: ReactNode;
     emptyState: ReactNode;
-    result: ReactNode | null;
-    courseCards?: ReactNode;
   }) {
     return (
       <main
@@ -110,12 +108,7 @@ function RouteComponent() {
               bordered
               scrollable
             >
-              {controls?.result ?? (
-                <>
-                  {controls?.courseCards}
-                  {renderCourses(controls?.emptyState)}
-                </>
-              )}
+              {renderCourses(controls?.emptyState)}
             </DashboardSection>
 
             <DeadlinesCalendar

@@ -2,6 +2,13 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { coursesKeys } from '@/features/course/api/queries';
+import { invalidateCourseContextsAfterMetadataSave } from '@/features/course/features/access/api/queries';
+import {
+  checkMockSlug,
+  registerMockCourse,
+} from '@/features/course/prototype/create-course/model/mock-course';
 import {
   suggestSlug,
   transition,
@@ -28,13 +35,12 @@ export function useCreationPrototype() {
   const [slug, updateSlug] = useState('');
   const [slugMode, setSlugMode] = useState<'auto' | 'manual'>('auto');
   const [open, updateOpen] = useState(false);
-  const [editorCourse, setEditorCourse] = useState<CreatedCourse | null>(null);
-  const [createdCourses, setCreatedCourses] = useState<CreatedCourse[]>([]);
   const [scenario, updateScenario] = useState<Scenario>('success');
   const [check, setCheck] = useState<Check>('idle');
   const openRef = useRef(open);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const search = useSearch({ strict: false }) as { variant?: string };
   const variant =
     search.variant === 'B' || search.variant === 'C' ? search.variant : 'A';
@@ -51,12 +57,18 @@ export function useCreationPrototype() {
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
   useEffect(() => {
     if (!slug) return;
-    const timer = setTimeout(
-      () =>
-        setCheck(scenario === 'check-failure' ? 'unavailable' : 'available'),
-      600
-    );
-    return () => clearTimeout(timer);
+    let current = true;
+    const timer = setTimeout(async () => {
+      const result =
+        scenario === 'check-failure'
+          ? 'unavailable'
+          : await checkMockSlug(slug);
+      if (current) setCheck(result);
+    }, 600);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
   }, [slug, scenario]);
   function changedSlug(value: string) {
     updateSlug(value);
@@ -79,25 +91,38 @@ export function useCreationPrototype() {
     changedSlug(suggestSlug(name));
   }
   function showEditor(course: CreatedCourse) {
-    setEditorCourse(course);
     openRef.current = false;
     updateOpen(false);
+    void navigate({
+      to: '/courses/$courseSlug/edit',
+      params: { courseSlug: course.slug },
+    });
   }
-  function finish(course: CreatedCourse) {
+  async function finish(course: CreatedCourse) {
     clearTimers();
+    const result = await registerMockCourse(course);
+    if (result.status === 'conflict') {
+      dispatch({ type: 'conflict' });
+      return;
+    }
+    if (result.status === 'unavailable') {
+      dispatch({ type: 'timeout' });
+      toast.error('Для прототипа нужен режим mock-бэкенда');
+      return;
+    }
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: coursesKeys.all }),
+      invalidateCourseContextsAfterMetadataSave(
+        queryClient,
+        course.slug,
+        course.slug
+      ),
+    ]);
     dispatch({ type: 'succeed', course });
-    setCreatedCourses((courses) =>
-      courses.some((item) => item.id === course.id)
-        ? courses
-        : [course, ...courses]
-    );
     if (!openRef.current) {
       toast.success('Курс создан', {
         description: course.name,
-        action: {
-          label: 'Открыть курс',
-          onClick: () => showEditor(course),
-        },
+        action: { label: 'Открыть курс', onClick: () => showEditor(course) },
       });
     } else {
       showEditor(course);
@@ -127,13 +152,12 @@ export function useCreationPrototype() {
           dispatch({ type: 'conflict' });
           return;
         }
-        finish(command);
+        void finish(command);
       }, delay)
     );
   }
   function reset() {
     clearTimers();
-    setEditorCourse(null);
     dispatch({ type: 'reset' });
     updateName('');
     updateSlug('');
@@ -166,12 +190,7 @@ export function useCreationPrototype() {
       }
     },
     reset,
-    createdCourse:
-      editorCourse ?? (state.phase === 'success' ? state.course : null),
-    editorShown: editorCourse !== null,
-    createdCourses,
-    showEditor,
-    backToCourses: () => setEditorCourse(null),
+    createdCourse: state.phase === 'success' ? state.course : null,
     commandId:
       state.phase === 'sending' || state.phase === 'unknown'
         ? state.command.id

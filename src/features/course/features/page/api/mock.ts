@@ -45,6 +45,7 @@ function cloneCoursePage(course: CoursePage): CoursePage {
 }
 
 function createCoursePage(course: MockCourse): CoursePage {
+  if (course.page) return cloneCoursePage(course.page);
   const summary: CoursePageSummary = {
     courseId: course.slug,
     title: course.title,
@@ -462,6 +463,7 @@ export async function saveCoursePage(
     color: input.color,
     iconName: input.iconName,
   });
+  if (currentCourse.page) currentCourse.page = cloneCoursePage(nextPage);
   COURSE_PAGE_STORE.set(currentCourse, cloneCoursePage(nextPage));
 
   return cloneCoursePage(nextPage);
