@@ -4,7 +4,6 @@ import {
   serializePlateToCourseContent,
 } from './plate-content';
 import { editDocument } from '@/features/course/features/page-document/model/document';
-import { equalJson } from '@/features/course/features/page-document/model/equality';
 
 it('не создаёт изменений при открытии и возврате исходного документа', () => {
   const initial = editDocument([
@@ -51,6 +50,5 @@ it('не создаёт изменений при открытии и возвр
   const saved = serializePlateToCourseContent(
     deserializeCourseContentToPlate(initial.blocks)
   );
-  expect(saved).toEqual(initial.blocks);
-  expect(equalJson(saved, initial.blocks)).toBe(true);
+  expect(saved).toStrictEqual(initial.blocks);
 });

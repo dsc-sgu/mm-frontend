@@ -90,3 +90,50 @@ it('отклоняет блок задания внутри спойлера', (
     ])
   ).toEqual({ status: 'unsupported-content' });
 });
+
+it('canonicalizes missing and undefined optional fields identically', () => {
+  const omitted = [
+    { id: 'c', type: 'code', data: { formatVersion: 1, code: 'x' } },
+    { id: 'i', type: 'image', data: { formatVersion: 1, imageId: 'image' } },
+    {
+      id: 's',
+      type: 'spoiler',
+      data: { formatVersion: 1, title: [], children: [] },
+    },
+  ];
+  const explicit = [
+    {
+      id: 'c',
+      type: 'code',
+      data: {
+        formatVersion: 1,
+        code: 'x',
+        language: undefined,
+        fileName: undefined,
+      },
+    },
+    {
+      id: 'i',
+      type: 'image',
+      data: {
+        formatVersion: 1,
+        imageId: 'image',
+        alt: undefined,
+        caption: undefined,
+      },
+    },
+    {
+      id: 's',
+      type: 'spoiler',
+      data: {
+        formatVersion: 1,
+        title: [],
+        children: [],
+        defaultOpen: undefined,
+      },
+    },
+  ];
+  const normalized = editDocument(omitted);
+  expect(normalized.status).toBe('supported');
+  expect(normalized).toStrictEqual(editDocument(explicit));
+});

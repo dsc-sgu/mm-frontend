@@ -129,6 +129,7 @@ function normalizeBlocks(blocks: DocumentBlock[]): DocumentBlock[] {
           ...item,
           data: {
             ...item.data,
+            defaultOpen: item.data.defaultOpen,
             title: normalizeRichText(item.data.title),
             children: normalizeBlocks(
               item.data.children
@@ -140,13 +141,19 @@ function normalizeBlocks(blocks: DocumentBlock[]): DocumentBlock[] {
           ...item,
           data: {
             ...item.data,
+            alt: item.data.alt,
             caption: item.data.caption && normalizeRichText(item.data.caption),
           },
         };
       case 'code':
         return {
           ...item,
-          data: { ...item.data, code: item.data.code.replace(/\r\n?/g, '\n') },
+          data: {
+            ...item.data,
+            language: item.data.language,
+            fileName: item.data.fileName,
+            code: item.data.code.replace(/\r\n?/g, '\n'),
+          },
         };
       default:
         return item;

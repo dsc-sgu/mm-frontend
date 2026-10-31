@@ -1,5 +1,5 @@
-import { equalJson } from '@/features/course/features/page-document/model/equality';
-import { editDocument } from '@/features/course/features/page-document/model/document';
+import equal from 'fast-deep-equal';
+import { canonicalizeCoursePage } from '@/features/course/features/page/model/canonical-page';
 import type { CoursePage } from '@/features/course/features/page/model/types';
 import {
   hasCoursePageEditErrors,
@@ -23,7 +23,7 @@ function getCoursePageEditDerivedState(
     courseId: workingCopy.courseId,
     description: workingCopy.description,
   });
-  const isDirty = !equalJson(initialCourse, workingCopy);
+  const isDirty = !equal(initialCourse, workingCopy);
 
   return {
     errors,
@@ -39,12 +39,8 @@ export function getCoursePageEditWorkingCopyState(
   CoursePageEditStoreState,
   'canApply' | 'errors' | 'initialCourse' | 'isDirty' | 'workingCopy'
 > {
-  const initial = editDocument(initialCourse.content);
-  const current = editDocument(workingCopy.content);
-  if (initial.status === 'supported')
-    initialCourse = { ...initialCourse, content: initial.blocks };
-  if (current.status === 'supported')
-    workingCopy = { ...workingCopy, content: current.blocks };
+  initialCourse = canonicalizeCoursePage(initialCourse);
+  workingCopy = canonicalizeCoursePage(workingCopy);
   return {
     initialCourse,
     workingCopy,
