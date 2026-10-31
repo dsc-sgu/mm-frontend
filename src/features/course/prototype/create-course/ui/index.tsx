@@ -1,4 +1,4 @@
-// PROTOTYPE mm-277: четыре компоновки создания курса на главной странице.
+// PROTOTYPE mm-277: пять компоновок создания курса на главной странице.
 import { useEffect, useRef, type ReactNode } from 'react';
 import {
   ArrowLeft,
@@ -26,12 +26,13 @@ import { CharacterCount } from '@/features/course/ui/character-count';
 import styles from './creation.module.css';
 
 type Controller = ReturnType<typeof useCreationPrototype>;
-const variants = ['A', 'B', 'C', 'D'];
+const variants = ['A', 'B', 'C', 'D', 'E'];
 const names: Record<string, string> = {
   A: 'Короткая форма',
   B: 'Сначала название',
   C: 'С предпросмотром',
   D: 'Без подсказок',
+  E: 'Название — заголовок',
 };
 const scenarios: [Scenario, string][] = [
   ['success', 'Успешное создание'],
@@ -172,11 +173,9 @@ function AddressStatus({ control }: { control: Controller }) {
 function NameField({
   control,
   prominent = false,
-  withIcon = false,
 }: {
   control: Controller;
   prominent?: boolean;
-  withIcon?: boolean;
 }) {
   const input = (
     <Input
@@ -195,14 +194,7 @@ function NameField({
       <label htmlFor="course-name">
         Название курса <span aria-hidden="true">*</span>
       </label>
-      {withIcon ? (
-        <div className={styles.bigName}>
-          <BookOpen className={styles.blueBook} />
-          {input}
-        </div>
-      ) : (
-        input
-      )}
+      {input}
     </div>
   );
 }
@@ -466,7 +458,34 @@ export function VariantD({ control }: { control: Controller }) {
   return (
     <div className={styles.variantA}>
       <DialogTitle className="text-2xl leading-tight">Создать курс</DialogTitle>
-      <NameField control={control} prominent withIcon />
+      <NameField control={control} prominent />
+      <div className={styles.fields}>
+        <ShortTitleField control={control} />
+        <AddressField control={control} withoutHints />
+        <DescriptionField control={control} withoutHints />
+      </div>
+      <Unknown control={control} />
+      <Actions control={control} />
+    </div>
+  );
+}
+export function VariantE({ control }: { control: Controller }) {
+  return (
+    <div className={styles.variantA}>
+      <DialogTitle className="sr-only">Создать курс</DialogTitle>
+      <label className="sr-only" htmlFor="course-name">
+        Название курса
+      </label>
+      <textarea
+        id="course-name"
+        required
+        rows={1}
+        value={control.name}
+        disabled={control.phase !== 'editing'}
+        className={styles.titleInput}
+        placeholder="Название курса"
+        onChange={(event) => control.setName(event.target.value)}
+      />
       <div className={styles.fields}>
         <ShortTitleField control={control} />
         <AddressField control={control} withoutHints />
@@ -512,9 +531,13 @@ export function CreateCoursePrototype({
       </p>
     </div>
   );
-  const variant = { A: VariantA, B: VariantB, C: VariantC, D: VariantD }[
-    control.variant
-  ];
+  const variant = {
+    A: VariantA,
+    B: VariantB,
+    C: VariantC,
+    D: VariantD,
+    E: VariantE,
+  }[control.variant];
   const Variant = variant;
   return (
     <>
@@ -522,7 +545,7 @@ export function CreateCoursePrototype({
       {!control.open && <PrototypeBar control={control} />}
       <Dialog open={control.open} onOpenChange={control.setOpen}>
         <DialogContent
-          {...(control.variant === 'D'
+          {...(control.variant === 'D' || control.variant === 'E'
             ? { 'aria-describedby': undefined }
             : {})}
           showCloseButton={false}

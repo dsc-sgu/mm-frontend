@@ -27,7 +27,8 @@
   pointer-events: auto;
 }
 .panelA,
-.panelD {
+.panelD,
+.panelE {
   max-width: 480px;
 }
 .panelB {
@@ -483,4 +484,36 @@
 .descriptionInput:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.titleInput {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  field-sizing: content;
+  min-height: 44px;
+  max-height: 144px;
+  overflow-y: auto;
+  resize: none;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  padding: 0;
+  padding-right: 12px;
+  font: inherit;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  outline: none;
+}
+.titleInput::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+.titleInput:focus-visible {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ring) 45%, transparent);
+}
+.titleInput:disabled {
+  opacity: 0.5;
 }

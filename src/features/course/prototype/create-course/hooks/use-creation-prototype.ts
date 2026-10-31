@@ -45,8 +45,11 @@ export function useCreationPrototype() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const search = useSearch({ strict: false }) as { variant?: string };
-  const variant: 'A' | 'B' | 'C' | 'D' =
-    search.variant === 'B' || search.variant === 'C' || search.variant === 'D'
+  const variant: 'A' | 'B' | 'C' | 'D' | 'E' =
+    search.variant === 'B' ||
+    search.variant === 'C' ||
+    search.variant === 'D' ||
+    search.variant === 'E'
       ? search.variant
       : 'A';
   function setOpen(next: boolean) {
