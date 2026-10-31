@@ -1,4 +1,4 @@
-// PROTOTYPE mm-277: пять компоновок создания курса на главной странице.
+// PROTOTYPE mm-277: шесть компоновок создания курса на главной странице.
 import { useEffect, useRef, type ReactNode } from 'react';
 import {
   ArrowLeft,
@@ -26,13 +26,14 @@ import { CharacterCount } from '@/features/course/ui/character-count';
 import styles from './creation.module.css';
 
 type Controller = ReturnType<typeof useCreationPrototype>;
-const variants = ['A', 'B', 'C', 'D', 'E'];
+const variants = ['A', 'B', 'C', 'D', 'E', 'F'];
 const names: Record<string, string> = {
   A: 'Короткая форма',
   B: 'Сначала название',
   C: 'С предпросмотром',
   D: 'Без подсказок',
   E: 'Название — заголовок',
+  F: 'С иконкой',
 };
 const scenarios: [Scenario, string][] = [
   ['success', 'Успешное создание'],
@@ -496,6 +497,24 @@ export function VariantE({ control }: { control: Controller }) {
     </div>
   );
 }
+export function VariantF({ control }: { control: Controller }) {
+  return (
+    <div className={styles.variantA}>
+      <DialogTitle className="text-2xl leading-tight">Создать курс</DialogTitle>
+      <div className={styles.bigName}>
+        <BookOpen className={styles.blueBook} />
+        <NameField control={control} prominent />
+      </div>
+      <div className={styles.fields}>
+        <ShortTitleField control={control} />
+        <AddressField control={control} withoutHints />
+        <DescriptionField control={control} withoutHints />
+      </div>
+      <Unknown control={control} />
+      <Actions control={control} />
+    </div>
+  );
+}
 export function CreateCoursePrototype({
   children,
 }: {
@@ -537,6 +556,7 @@ export function CreateCoursePrototype({
     C: VariantC,
     D: VariantD,
     E: VariantE,
+    F: VariantF,
   }[control.variant];
   const Variant = variant;
   return (
@@ -545,7 +565,9 @@ export function CreateCoursePrototype({
       {!control.open && <PrototypeBar control={control} />}
       <Dialog open={control.open} onOpenChange={control.setOpen}>
         <DialogContent
-          {...(control.variant === 'D' || control.variant === 'E'
+          {...(control.variant === 'D' ||
+          control.variant === 'E' ||
+          control.variant === 'F'
             ? { 'aria-describedby': undefined }
             : {})}
           showCloseButton={false}
