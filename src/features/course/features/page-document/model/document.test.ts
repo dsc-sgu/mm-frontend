@@ -134,6 +134,6 @@ it('canonicalizes missing and undefined optional fields identically', () => {
     },
   ];
   const normalized = editDocument(omitted);
-  expect(normalized.status).toBe('supported');
+  expect(normalized).toStrictEqual({ status: 'supported', blocks: omitted });
   expect(normalized).toStrictEqual(editDocument(explicit));
 });
