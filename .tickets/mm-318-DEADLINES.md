@@ -1,11 +1,12 @@
 ---
 id: mm-318-DEADLINES
-status: open
+status: in_progress
 deps: [mm-173]
 links: []
 created: 2026-10-31T07:16:29Z
 type: task
 priority: 1
+assignee: t3m8ch
 aliases: [v8262]
 parent: mm-300
 tags: [ready-for-agent]
