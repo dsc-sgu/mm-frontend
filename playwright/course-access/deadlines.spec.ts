@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { selectAccessSession } from '@/../playwright/course-access/control';
+import { selectAccessSession } from './control';
 
 test('календарь читает дедлайны через HTTP из общего мок-бэкенда', async ({
   page,
