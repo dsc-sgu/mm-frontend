@@ -15,7 +15,7 @@ export function CharacterCount({ id, length, max }: CharacterCountProps) {
         'inline-flex shrink-0 items-center gap-1.5 text-xs font-normal tabular-nums',
         'text-muted-foreground',
         length >= max && 'text-destructive',
-        length < max && progress >= 0.8 && 'text-amber-600 dark:text-amber-400'
+        length < max && progress >= 0.7 && 'text-amber-600 dark:text-amber-400'
       )}
     >
       {length}/{max}

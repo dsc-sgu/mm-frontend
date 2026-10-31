@@ -172,25 +172,37 @@ function AddressStatus({ control }: { control: Controller }) {
 function NameField({
   control,
   prominent = false,
+  withIcon = false,
 }: {
   control: Controller;
   prominent?: boolean;
+  withIcon?: boolean;
 }) {
+  const input = (
+    <Input
+      id="course-name"
+      required
+      value={control.name}
+      disabled={control.phase !== 'editing'}
+      autoFocus
+      className={prominent ? styles.prominentInput : styles.input}
+      placeholder="Например, Алгоритмы 2026"
+      onChange={(event) => control.setName(event.target.value)}
+    />
+  );
   return (
     <div className={styles.field}>
       <label htmlFor="course-name">
         Название курса <span aria-hidden="true">*</span>
       </label>
-      <Input
-        id="course-name"
-        required
-        value={control.name}
-        disabled={control.phase !== 'editing'}
-        autoFocus
-        className={prominent ? styles.prominentInput : styles.input}
-        placeholder="Например, Алгоритмы 2026"
-        onChange={(event) => control.setName(event.target.value)}
-      />
+      {withIcon ? (
+        <div className={styles.bigName}>
+          <BookOpen className={styles.blueBook} />
+          {input}
+        </div>
+      ) : (
+        input
+      )}
     </div>
   );
 }
@@ -454,10 +466,7 @@ export function VariantD({ control }: { control: Controller }) {
   return (
     <div className={styles.variantA}>
       <DialogTitle className="text-2xl leading-tight">Создать курс</DialogTitle>
-      <div className={styles.bigName}>
-        <BookOpen className={styles.blueBook} />
-        <NameField control={control} prominent />
-      </div>
+      <NameField control={control} prominent withIcon />
       <div className={styles.fields}>
         <ShortTitleField control={control} />
         <AddressField control={control} withoutHints />
@@ -480,6 +489,7 @@ export function CreateCoursePrototype({
   const openerRef = useRef<HTMLButtonElement | null>(null);
   const trigger = (
     <Button
+      variant="outline"
       onClick={(event) => {
         openerRef.current = event.currentTarget;
         control.setOpen(true);
