@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
+import { cva } from 'class-variance-authority';
 import { Link } from '@tanstack/react-router';
 import {
   CalendarDays,
+  LockKeyhole,
   Paperclip,
   TriangleAlert,
   Trophy,
@@ -136,6 +138,65 @@ function MissingFile({ fileId }: { fileId: string }) {
       <span>Файл курса недоступен</span>
       <span className="font-mono text-xs">{fileId}</span>
     </div>
+  );
+}
+
+const taskCardVariants = cva(
+  [
+    'my-4 block rounded-xl border border-black/10 bg-primary/3 p-4',
+    'md:rounded-2xl md:p-5 dark:border-white/10',
+  ],
+  {
+    variants: {
+      interactive: {
+        true: [
+          'group transition-colors hover:bg-primary/6',
+          'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+        ],
+        false: '',
+      },
+    },
+  }
+);
+
+function TaskCardFrame({
+  assignment,
+  courseSlug,
+  children,
+}: {
+  assignment: Exclude<TaskSummary, { status: 'unavailable' }>;
+  courseSlug: string;
+  children: ReactNode;
+}) {
+  const className = taskCardVariants({
+    interactive: assignment.status !== 'locked',
+  });
+  if (assignment.status === 'locked') {
+    return (
+      <section className={className}>
+        {children}
+        <p
+          className={cn(
+            'mt-4 flex items-start gap-2 rounded-lg px-3 py-2 text-sm leading-6',
+            'bg-orange-500/10 text-orange-800 dark:text-orange-300'
+          )}
+        >
+          <LockKeyhole className="mt-1 size-4 shrink-0" aria-hidden="true" />
+          <span>
+            Задание закрыто. Сначала выполните: {assignment.prerequisite}
+          </span>
+        </p>
+      </section>
+    );
+  }
+  return (
+    <Link
+      to="/courses/$courseSlug/tasks/$taskId"
+      params={{ courseSlug, taskId: assignment.taskId }}
+      className={className}
+    >
+      {children}
+    </Link>
   );
 }
 
@@ -277,33 +338,8 @@ function CourseContentBlock({
         );
       }
 
-      if (assignment.status === 'locked')
-        return (
-          <section className="my-4 rounded-xl border border-border p-4">
-            <h3>{assignment.title}</h3>
-            {assignment.description && (
-              <p>
-                <CourseRichText nodes={assignment.description} />
-              </p>
-            )}
-            {assignment.dueDate && <p>{formatDueDate(assignment.dueDate)}</p>}
-            {assignment.maxGrade !== undefined && (
-              <p>Макс. оценка: {formatGrade(assignment.maxGrade)}</p>
-            )}
-            <p>Задание закрыто. Сначала выполните: {assignment.prerequisite}</p>
-          </section>
-        );
       return (
-        <Link
-          to="/courses/$courseSlug/tasks/$taskId"
-          params={{ courseSlug, taskId: assignment.taskId }}
-          className={cn(
-            'group my-4 block rounded-xl border border-black/10 bg-primary/3',
-            'p-4 transition-colors hover:bg-primary/6',
-            'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
-            'md:rounded-2xl md:p-5 dark:border-white/10'
-          )}
-        >
+        <TaskCardFrame assignment={assignment} courseSlug={courseSlug}>
           <div
             className={cn(
               'flex flex-col gap-4 md:flex-row md:items-start',
@@ -352,7 +388,7 @@ function CourseContentBlock({
               )}
             </div>
           </div>
-        </Link>
+        </TaskCardFrame>
       );
     }
   }
