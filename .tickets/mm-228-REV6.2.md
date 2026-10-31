@@ -1,7 +1,7 @@
 ---
 id: mm-228-REV6.2
 status: open
-deps: [mm-147, mm-226, mm-224, mm-223, mm-227, mm-294]
+deps: [mm-147, mm-226, mm-224, mm-223, mm-227]
 links: [mm-294]
 created: 2026-10-14T10:59:33Z
 type: task
