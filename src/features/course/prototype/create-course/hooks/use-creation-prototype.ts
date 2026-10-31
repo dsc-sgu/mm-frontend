@@ -32,6 +32,8 @@ export function useCreationPrototype() {
     conflict: false,
   });
   const [name, updateName] = useState('');
+  const [shortTitle, updateShortTitle] = useState('');
+  const [description, updateDescription] = useState('');
   const [slug, updateSlug] = useState('');
   const [slugMode, setSlugMode] = useState<'auto' | 'manual'>('auto');
   const [open, updateOpen] = useState(false);
@@ -128,16 +130,31 @@ export function useCreationPrototype() {
       showEditor(course);
     }
     updateName('');
+    updateShortTitle('');
+    updateDescription('');
     updateSlug('');
     setSlugMode('auto');
   }
   function submit() {
     if (state.phase === 'sending' || state.phase === 'success') return;
-    if (state.phase === 'editing' && (!name.trim() || !validSlug(slug))) return;
+    if (
+      state.phase === 'editing' &&
+      (!name.trim() ||
+        !shortTitle.trim() ||
+        !description.trim() ||
+        !validSlug(slug))
+    )
+      return;
     const retry = state.phase === 'unknown';
     const command = retry
       ? state.command
-      : { id: crypto.randomUUID(), name: name.trim(), slug };
+      : {
+          id: crypto.randomUUID(),
+          name: name.trim(),
+          shortTitle: shortTitle.trim(),
+          description: description.trim(),
+          slug,
+        };
     clearTimers();
     dispatch({ type: 'send', command });
     timers.current.push(
@@ -160,6 +177,8 @@ export function useCreationPrototype() {
     clearTimers();
     dispatch({ type: 'reset' });
     updateName('');
+    updateShortTitle('');
+    updateDescription('');
     updateSlug('');
     setSlugMode('auto');
     setCheck('idle');
@@ -172,6 +191,14 @@ export function useCreationPrototype() {
   if (state.phase === 'editing' && state.conflict) effectiveCheck = 'taken';
   return {
     name,
+    shortTitle,
+    description,
+    setShortTitle: (value: string) => {
+      if (state.phase === 'editing') updateShortTitle(value);
+    },
+    setDescription: (value: string) => {
+      if (state.phase === 'editing') updateDescription(value);
+    },
     slug,
     slugMode,
     check: effectiveCheck,

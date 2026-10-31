@@ -115,6 +115,8 @@ function PrototypeBar({ control }: { control: Controller }) {
               phase: control.phase,
               open: control.open,
               name: control.name,
+              shortTitle: control.shortTitle,
+              description: control.description,
               slug: control.slug,
               slugMode: control.slugMode,
               check: control.check,
@@ -186,6 +188,43 @@ function NameField({
     </div>
   );
 }
+function ShortTitleField({ control }: { control: Controller }) {
+  return (
+    <div className={styles.field}>
+      <label htmlFor="course-short-title">
+        Короткое название курса <span aria-hidden="true">*</span>
+      </label>
+      <Input
+        id="course-short-title"
+        required
+        value={control.shortTitle}
+        disabled={control.phase !== 'editing'}
+        className={styles.input}
+        placeholder="Например, АиСД"
+        onChange={(event) => control.setShortTitle(event.target.value)}
+      />
+    </div>
+  );
+}
+function DescriptionField({ control }: { control: Controller }) {
+  return (
+    <div className={styles.field}>
+      <label htmlFor="course-description">
+        Описание курса <span aria-hidden="true">*</span>
+      </label>
+      <textarea
+        id="course-description"
+        required
+        rows={3}
+        value={control.description}
+        disabled={control.phase !== 'editing'}
+        className={styles.descriptionInput}
+        placeholder="Чему посвящён курс и чему научатся студенты"
+        onChange={(event) => control.setDescription(event.target.value)}
+      />
+    </div>
+  );
+}
 function AddressField({ control }: { control: Controller }) {
   return (
     <div className={styles.field}>
@@ -235,6 +274,8 @@ function Submit({ control }: { control: Controller }) {
       disabled={
         control.phase === 'sending' ||
         !control.name.trim() ||
+        !control.shortTitle.trim() ||
+        !control.description.trim() ||
         !control.slug ||
         control.check === 'invalid' ||
         control.check === 'taken'
@@ -294,7 +335,9 @@ export function VariantA({ control }: { control: Controller }) {
       <Heading />
       <div className={styles.fields}>
         <NameField control={control} />
+        <ShortTitleField control={control} />
         <AddressField control={control} />
+        <DescriptionField control={control} />
       </div>
       <Unknown control={control} />
       <PreparationNote />
@@ -310,7 +353,9 @@ export function VariantB({ control }: { control: Controller }) {
         <BookOpen className={styles.blueBook} />
         <NameField control={control} prominent />
       </div>
+      <ShortTitleField control={control} />
       <AddressField control={control} />
+      <DescriptionField control={control} />
       <Unknown control={control} />
       <div className={styles.whatNext}>
         <div>
@@ -356,7 +401,9 @@ export function VariantC({ control }: { control: Controller }) {
         <Heading />
         <div className={styles.fields}>
           <NameField control={control} />
+          <ShortTitleField control={control} />
           <AddressField control={control} />
+          <DescriptionField control={control} />
         </div>
         <Unknown control={control} />
         <PreparationNote />

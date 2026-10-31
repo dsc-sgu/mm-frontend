@@ -5,7 +5,13 @@ export type Scenario =
   | 'check-failure'
   | 'timeout'
   | 'late-success';
-export type CreatedCourse = { id: string; name: string; slug: string };
+export type CreatedCourse = {
+  id: string;
+  name: string;
+  shortTitle: string;
+  description: string;
+  slug: string;
+};
 export type CreationState =
   | { phase: 'editing'; conflict: boolean }
   | { phase: 'sending'; command: CreatedCourse }
