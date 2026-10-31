@@ -205,3 +205,19 @@ export default defineConfig([
   },
 ]);
 ```
+
+## Unused code
+
+`bun run knip` reports unused files, exports, types and dependencies. It exits
+with a nonzero status when it finds issues; existing findings are not suppressed.
+Use `bun run knip --reporter json` for a machine-readable report.
+
+`knip.json` includes the application and compile-time `*.type-test.ts` checks as
+entry points. Knip discovers Vite, Vitest and Playwright configuration through
+its plugins. Keep the generated `src/routeTree.gen.ts` available (run
+`bun run build` in a fresh checkout) so the route imports can be followed.
+Web Workers referenced with `new URL(..., import.meta.url)` are followed too.
+
+Review findings before removing code, including the intentionally broad exports
+of generated shadcn components. The initial adoption does not gate CI; enable
+that once the existing findings have been reviewed and cleaned up.
