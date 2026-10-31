@@ -49,7 +49,9 @@ export function useCourseAttemptsFilters({
   const resetFilters = useCallback(() => {
     setDraftState({
       baseAppliedFilters: normalizedAppliedFilters,
-      draftFilters: EMPTY_COURSE_ATTEMPTS_FILTERS,
+      draftFilters: normalizeCourseAttemptsFilters(
+        EMPTY_COURSE_ATTEMPTS_FILTERS
+      ),
     });
     onApplyFilters(EMPTY_COURSE_ATTEMPTS_FILTERS);
   }, [normalizedAppliedFilters, onApplyFilters]);
