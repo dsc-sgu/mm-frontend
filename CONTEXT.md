@@ -21,7 +21,7 @@ A public key a User adds to their account so that MergeMinds recognises them in 
 _По-русски_: SSH-ключ
 
 **Course**:
-A learning space with a stable internal identity, mutable route slug, members, content, and tasks.
+A learning space with a stable internal identity, mutable route slug, members, content, and tasks. Its title may be any nonblank text, including symbols and emoji alone, and need not be unique.
 _По-русски_: курс
 _Avoid_: using course slug as Course identity
 
