@@ -14,7 +14,7 @@ test.prop([
   'канонизация идемпотентна для произвольных текстовых фрагментов',
   (children) => {
     const once = readDocument([
-      { id: 'p', type: 'paragraph', version: 1, data: { children } },
+      { id: 'p', type: 'paragraph', data: { formatVersion: 1, children } },
     ]);
     expect(readDocument(once)).toEqual(once);
   }

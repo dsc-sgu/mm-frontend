@@ -124,8 +124,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:intro`,
       type: 'heading',
-      version: 1,
       data: {
+        formatVersion: 1,
         level: 2,
         children: [
           {
@@ -138,8 +138,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:welcome`,
       type: 'paragraph',
-      version: 1,
       data: {
+        formatVersion: 1,
         children: [
           {
             type: 'text',
@@ -160,8 +160,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:outcomes`,
       type: 'heading',
-      version: 1,
       data: {
+        formatVersion: 1,
         level: 3,
         children: [
           {
@@ -174,8 +174,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:outcomes-list:practice`,
       type: 'list-item',
-      version: 1,
       data: {
+        formatVersion: 1,
         variant: 'unordered',
         children: [
           {
@@ -188,8 +188,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:outcomes-list:project`,
       type: 'list-item',
-      version: 1,
       data: {
+        formatVersion: 1,
         variant: 'unordered',
         children: [
           {
@@ -202,8 +202,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:outcomes-list:discussion`,
       type: 'list-item',
-      version: 1,
       data: {
+        formatVersion: 1,
         variant: 'unordered',
         children: [
           {
@@ -216,8 +216,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:quote`,
       type: 'quote',
-      version: 1,
       data: {
+        formatVersion: 1,
         children: [
           {
             type: 'text',
@@ -230,8 +230,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:workflow`,
       type: 'heading',
-      version: 1,
       data: {
+        formatVersion: 1,
         level: 3,
         children: [
           {
@@ -244,8 +244,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:workflow-list:lecture`,
       type: 'list-item',
-      version: 1,
       data: {
+        formatVersion: 1,
         variant: 'ordered',
         children: [
           {
@@ -258,8 +258,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:workflow-list:practice`,
       type: 'list-item',
-      version: 1,
       data: {
+        formatVersion: 1,
         variant: 'ordered',
         children: [
           {
@@ -272,8 +272,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:workflow-list:review`,
       type: 'list-item',
-      version: 1,
       data: {
+        formatVersion: 1,
         variant: 'ordered',
         children: [
           {
@@ -286,8 +286,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:spoiler`,
       type: 'spoiler',
-      version: 1,
       data: {
+        formatVersion: 1,
         title: [
           {
             type: 'text',
@@ -299,8 +299,8 @@ function buildCourseContent(
           {
             id: `${course.courseId}:spoiler:note`,
             type: 'paragraph',
-            version: 1,
             data: {
+              formatVersion: 1,
               children: [
                 {
                   type: 'text',
@@ -312,8 +312,8 @@ function buildCourseContent(
           {
             id: `${course.courseId}:spoiler:link`,
             type: 'paragraph',
-            version: 1,
             data: {
+              formatVersion: 1,
               children: [
                 {
                   type: 'text',
@@ -337,8 +337,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:code`,
       type: 'code',
-      version: 1,
       data: {
+        formatVersion: 1,
         language: 'ts',
         fileName: 'checklist.ts',
         code: "const steps = ['read', 'practice', 'review'];\n\nexport function isReady(done: string[]) {\n  return steps.every((step) => done.includes(step));\n}",
@@ -347,8 +347,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:image`,
       type: 'image',
-      version: 1,
       data: {
+        formatVersion: 1,
         imageId: `${course.courseId}:image:workspace`,
         alt: 'Рабочее место студента с ноутбуком и заметками',
         caption: [
@@ -362,8 +362,8 @@ function buildCourseContent(
     {
       id: `${course.courseId}:files`,
       type: 'files',
-      version: 1,
       data: {
+        formatVersion: 1,
         fileIds: [
           `${course.courseId}:files:syllabus`,
           `${course.courseId}:files:rubric`,
@@ -373,16 +373,13 @@ function buildCourseContent(
     {
       id: `${course.courseId}:assignment`,
       type: 'assignment',
-      version: 1,
-      data: {
-        taskId: '1',
-      },
+      data: { formatVersion: 1, taskId: '1' },
     },
     {
       id: `${course.courseId}:external`,
       type: 'paragraph',
-      version: 1,
       data: {
+        formatVersion: 1,
         children: [
           {
             type: 'text',

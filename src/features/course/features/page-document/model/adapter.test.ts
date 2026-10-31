@@ -11,14 +11,17 @@ it('не создаёт изменений при открытии и возвр
     {
       id: 'h',
       type: 'heading',
-      version: 1,
-      data: { level: 2, children: [{ type: 'text', text: 'Курс' }] },
+      data: {
+        formatVersion: 1,
+        level: 2,
+        children: [{ type: 'text', text: 'Курс' }],
+      },
     },
     {
       id: 'a',
       type: 'list-item',
-      version: 1,
       data: {
+        formatVersion: 1,
         variant: 'ordered',
         children: [{ type: 'text', text: 'Первый' }],
       },
@@ -26,8 +29,8 @@ it('не создаёт изменений при открытии и возвр
     {
       id: 'b',
       type: 'list-item',
-      version: 1,
       data: {
+        formatVersion: 1,
         variant: 'ordered',
         children: [{ type: 'text', text: 'Второй' }],
       },
@@ -35,8 +38,8 @@ it('не создаёт изменений при открытии и возвр
     {
       id: 'i',
       type: 'image',
-      version: 1,
       data: {
+        formatVersion: 1,
         imageId: 'img',
         alt: 'Рисунок',
         caption: [{ type: 'text', text: 'Подпись' }],

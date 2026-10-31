@@ -16,8 +16,7 @@ const block = <
   v.object({
     id: v.pipe(v.string(), v.nonEmpty()),
     type: v.literal(type),
-    version: v.literal(1),
-    data,
+    data: v.intersect([data, v.object({ formatVersion: v.literal(1) })]),
   });
 const paragraph = block('paragraph', v.object({ children: richText }));
 const heading = block(

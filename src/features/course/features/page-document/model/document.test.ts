@@ -7,8 +7,8 @@ describe('Документ страницы курса v1', () => {
       {
         id: 'p',
         type: 'paragraph',
-        version: 1,
         data: {
+          formatVersion: 1,
           children: [
             { type: 'text', text: '', marks: [] },
             { type: 'text', text: 'а\r\n', marks: ['italic', 'bold', 'bold'] },
@@ -22,16 +22,29 @@ describe('Документ страницы курса v1', () => {
       {
         id: 'p',
         type: 'paragraph',
-        version: 1,
         data: {
+          formatVersion: 1,
           children: [{ type: 'text', text: 'а\nб', marks: ['bold', 'italic'] }],
         },
       },
     ]);
     expect(readDocument(result)).toEqual(result);
   });
+  it('отклоняет прежнее расположение версии формата', () => {
+    expect(
+      editDocument([
+        { id: 'p', type: 'paragraph', version: 1, data: { children: [] } },
+      ])
+    ).toEqual({ status: 'unsupported-content' });
+  });
   it('сохраняет место невалидного блока и запрещает его редактирование', () => {
-    const input = [{ id: 'future', type: 'paragraph', version: 2, data: {} }];
+    const input = [
+      {
+        id: 'future',
+        type: 'paragraph',
+        data: { formatVersion: 2, children: [] },
+      },
+    ];
     expect(readDocument(input)).toEqual([
       { id: 'future', type: 'unsupported' },
     ]);
@@ -43,8 +56,7 @@ it('нормализует уровни по соседству и не допу
   const item = (id: string, indent: unknown) => ({
     id,
     type: 'list-item',
-    version: 1,
-    data: { variant: 'ordered', indent, children: [] },
+    data: { formatVersion: 1, variant: 'ordered', indent, children: [] },
   });
   const blocks = readDocument([
     item('a', 9),
@@ -62,11 +74,15 @@ it('нормализует уровни по соседству и не допу
       {
         id: 's',
         type: 'spoiler',
-        version: 1,
         data: {
+          formatVersion: 1,
           title: [],
           children: [
-            { id: 't', type: 'assignment', version: 1, data: { taskId: '1' } },
+            {
+              id: 't',
+              type: 'assignment',
+              data: { formatVersion: 1, taskId: '1' },
+            },
           ],
         },
       },

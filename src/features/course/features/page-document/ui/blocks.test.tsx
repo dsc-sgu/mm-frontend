@@ -6,15 +6,19 @@ it('показывает заглушку на месте неизвестног
   const item = (id: string, text: string, indent: number) => ({
     id,
     type: 'list-item',
-    version: 1,
-    data: { variant: 'ordered', indent, children: [{ type: 'text', text }] },
+    data: {
+      formatVersion: 1,
+      variant: 'ordered',
+      indent,
+      children: [{ type: 'text', text }],
+    },
   });
   const { container } = render(
     <CourseContentBlocks
       courseSlug="course"
       resources={{ images: [], files: [] }}
       blocks={[
-        { id: 'bad', type: 'future', version: 2, data: {} },
+        { id: 'bad', type: 'future', data: { formatVersion: 2 } },
         item('a', 'Первый', 1),
         item('b', 'Вложенный', 2),
         item('c', 'Второй', 1),
@@ -45,8 +49,16 @@ it('показывает саммари закрытого задания и н�
         { status: 'unavailable', taskId: '2' },
       ]}
       blocks={[
-        { id: 'a', type: 'assignment', version: 1, data: { taskId: '1' } },
-        { id: 'b', type: 'assignment', version: 1, data: { taskId: '2' } },
+        {
+          id: 'a',
+          type: 'assignment',
+          data: { formatVersion: 1, taskId: '1' },
+        },
+        {
+          id: 'b',
+          type: 'assignment',
+          data: { formatVersion: 1, taskId: '2' },
+        },
       ]}
     />
   );

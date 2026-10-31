@@ -14,8 +14,7 @@ it('продолжает родительскую нумерацию после 
     ].map(([id, indent, variant]) => ({
       id,
       type: 'list-item',
-      version: 1,
-      data: { indent, variant, children: [] },
+      data: { formatVersion: 1, indent, variant, children: [] },
     }))
   );
   if (result.status !== 'supported')

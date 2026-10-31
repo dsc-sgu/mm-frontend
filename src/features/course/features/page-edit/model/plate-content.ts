@@ -438,7 +438,11 @@ export function serializePlateToCourseContent(
       : serializeStandaloneBlock(element, index);
     if (!flat) throw new UnsupportedContentError();
     const { id, type, ...data } = flat;
-    blocks.push({ id, type, version: 1, data } as DocumentBlock);
+    blocks.push({
+      id,
+      type,
+      data: { ...data, formatVersion: 1 },
+    } as DocumentBlock);
   }
   const result = editDocument(blocks);
   if (result.status === 'unsupported-content')
@@ -447,7 +451,7 @@ export function serializePlateToCourseContent(
 }
 
 type Flatten<T> = T extends { id: string; type: string; data: object }
-  ? { id: T['id']; type: T['type'] } & T['data']
+  ? { id: T['id']; type: T['type'] } & Omit<T['data'], 'formatVersion'>
   : never;
 type FlatBlock = Flatten<DocumentBlock>;
 export class UnsupportedContentError extends Error {
