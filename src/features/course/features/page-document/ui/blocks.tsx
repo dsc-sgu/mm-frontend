@@ -1,6 +1,12 @@
 import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
-import { CalendarDays, Paperclip, Trophy } from 'lucide-react';
+import {
+  CalendarDays,
+  Paperclip,
+  TriangleAlert,
+  Trophy,
+  type LucideIcon,
+} from 'lucide-react';
 
 import { CodeBlock } from '@/features/code-block/ui/block';
 import { cn } from '@/shadcn/lib/utils';
@@ -75,7 +81,13 @@ function ListItems({ items }: { items: ListTreeItem[] }) {
   });
 }
 
-function MissingResource({ children }: { children: ReactNode }) {
+function MissingResource({
+  children,
+  icon: Icon = Paperclip,
+}: {
+  children: ReactNode;
+  icon?: LucideIcon;
+}) {
   return (
     <div
       className={cn(
@@ -83,7 +95,7 @@ function MissingResource({ children }: { children: ReactNode }) {
         'border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground'
       )}
     >
-      <Paperclip className="size-4" aria-hidden="true" />
+      <Icon className="size-4" aria-hidden="true" />
       <span>{children}</span>
     </div>
   );
@@ -366,7 +378,7 @@ export function CourseContentBlocks({
           return <ListItems key={index} items={node.items} />;
         if (node.block.type === 'unsupported')
           return (
-            <MissingResource key={index}>
+            <MissingResource key={index} icon={TriangleAlert}>
               Блок не удалось показать
             </MissingResource>
           );
