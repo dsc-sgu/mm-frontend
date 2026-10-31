@@ -1,3 +1,4 @@
+import { SHORT_TITLE_MAX_LENGTH } from '@/features/course/model/short-title';
 import * as v from 'valibot';
 import { CourseSlugSchema } from '@/features/course/model/identity';
 
@@ -37,6 +38,10 @@ export const coursePageEditSchema = v.object({
   ),
   shortTitle: v.pipe(
     v.string(),
+    v.maxLength(
+      SHORT_TITLE_MAX_LENGTH,
+      'Короткое название — не больше 10 символов.'
+    ),
     v.trim(),
     v.minLength(1, 'Введите короткое название курса.')
   ),

@@ -1,3 +1,4 @@
+import { SHORT_TITLE_MAX_LENGTH } from '@/features/course/model/short-title';
 // PROTOTYPE mm-277: one instance owned by the dashboard wrapper.
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -143,6 +144,7 @@ export function useCreationPrototype() {
       state.phase === 'editing' &&
       (!name.trim() ||
         !shortTitle.trim() ||
+        shortTitle.length > SHORT_TITLE_MAX_LENGTH ||
         !description.trim() ||
         !validSlug(slug))
     )

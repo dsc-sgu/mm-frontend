@@ -16,6 +16,7 @@ import type {
   Teacher,
 } from '@/features/course/model/types';
 import { COURSE_COLORS } from '@/features/course/ui/theme';
+import { SHORT_TITLE_MAX_LENGTH } from '@/features/course/model/short-title';
 
 const COURSE_COLOR_LABELS: Record<CourseColor, string> = {
   blue: 'Синий',
@@ -200,6 +201,8 @@ export function CoursePageEditHeroEditor({
           </Label>
           <Input
             id="course-edit-short-title"
+            maxLength={SHORT_TITLE_MAX_LENGTH}
+            aria-describedby="course-edit-short-title-count"
             value={course.shortTitle}
             onChange={(event) =>
               onChange({ ...course, shortTitle: event.target.value })
@@ -207,6 +210,12 @@ export function CoursePageEditHeroEditor({
             aria-invalid={!!errors.shortTitle}
             className="border-0 bg-background/55 shadow-none focus-visible:bg-background/80"
           />
+          <p
+            id="course-edit-short-title-count"
+            className="text-xs text-muted-foreground"
+          >
+            {course.shortTitle.length}/{SHORT_TITLE_MAX_LENGTH}
+          </p>
           <FieldError>{errors.shortTitle}</FieldError>
         </div>
 

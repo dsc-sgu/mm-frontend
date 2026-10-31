@@ -21,6 +21,7 @@ import { Button } from '@/shadcn/components/ui/button';
 import { Input } from '@/shadcn/components/ui/input';
 import { useCreationPrototype } from '@/features/course/prototype/create-course/hooks/use-creation-prototype';
 import type { Scenario } from '@/features/course/prototype/create-course/model/creation';
+import { SHORT_TITLE_MAX_LENGTH } from '@/features/course/model/short-title';
 import styles from './creation.module.css';
 
 type Controller = ReturnType<typeof useCreationPrototype>;
@@ -200,6 +201,8 @@ function ShortTitleField({ control }: { control: Controller }) {
       </label>
       <Input
         id="course-short-title"
+        maxLength={SHORT_TITLE_MAX_LENGTH}
+        aria-describedby="course-short-title-count"
         required
         value={control.shortTitle}
         disabled={control.phase !== 'editing'}
@@ -207,6 +210,9 @@ function ShortTitleField({ control }: { control: Controller }) {
         placeholder="Например, АиСД"
         onChange={(event) => control.setShortTitle(event.target.value)}
       />
+      <span id="course-short-title-count" className={styles.help}>
+        {control.shortTitle.length}/{SHORT_TITLE_MAX_LENGTH}
+      </span>
     </div>
   );
 }
@@ -301,6 +307,7 @@ function Submit({ control }: { control: Controller }) {
         control.phase === 'sending' ||
         !control.name.trim() ||
         !control.shortTitle.trim() ||
+        control.shortTitle.length > SHORT_TITLE_MAX_LENGTH ||
         !control.description.trim() ||
         !control.slug ||
         control.check === 'invalid' ||
