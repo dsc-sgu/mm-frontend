@@ -1,6 +1,6 @@
 ---
 id: mm-227-REV6.1
-status: in_progress
+status: closed
 deps: [mm-222]
 links: [mm-294]
 created: 2026-10-14T10:59:25Z
@@ -10,6 +10,8 @@ assignee: t3m8ch
 external-ref: gh-227
 parent: mm-218
 tags: [ready-for-agent]
+closed: 2026-10-31T07:50:26Z
+close-reason: completed
 ---
 # REV6.1: Сводить каждую версию проверки в кэш через observeReviewRevision
 
