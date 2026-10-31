@@ -11,18 +11,17 @@ import { sessionKeys, sessionOptions } from '@/features/auth/api/queries';
 const SESSION_URL = '/api/v1/auth/session';
 
 const SESSION_DTO = {
-  userID: '00000000-0000-4000-8000-0000000000aa',
+  userId: '00000000-0000-4000-8000-0000000000aa',
   firstName: 'Анна',
   lastName: 'Иванова',
   patronymic: '',
   username: 'anna',
   email: 'anna@example.com',
-  avatarURL: '',
+  avatarUrl: '',
   sessionExpiresAt: '2099-12-31T23:59:59.999Z',
 };
 
-const { userID, ...sessionFields } = SESSION_DTO;
-const SESSION = { userId: userID, ...sessionFields };
+const SESSION = SESSION_DTO;
 
 describe('TR-05: check-session statuses', () => {
   test.each([
@@ -62,14 +61,14 @@ describe('TR-05: check-session statuses', () => {
     }
   );
 
-  test('200 with an invalid userID → invalid-response', async () => {
+  test('200 with an invalid userId → invalid-response', async () => {
     server.use(
-      http.get(SESSION_URL, invalidBody({ ...SESSION_DTO, userID: 'anna' }))
+      http.get(SESSION_URL, invalidBody({ ...SESSION_DTO, userId: 'anna' }))
     );
 
     await expect(checkSession()).rejects.toMatchObject({
       operation: 'check-session',
-      reason: { kind: 'invalid-response', explanation: 'userID' },
+      reason: { kind: 'invalid-response', explanation: 'userId' },
     });
   });
 

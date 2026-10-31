@@ -7,6 +7,6 @@ export type Session = {
   firstName: string;
   lastName: string;
   patronymic: string;
-  avatarURL: string;
+  avatarUrl: string;
   sessionExpiresAt: string;
 };

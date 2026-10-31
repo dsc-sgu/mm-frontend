@@ -13,7 +13,7 @@ describe('TR-05: login statuses', () => {
   test.each([
     {
       status: 200,
-      body: { userID: '00000000-0000-4000-8000-0000000000aa' },
+      body: { userId: '00000000-0000-4000-8000-0000000000aa' },
       outcome: { status: 'signed-in' },
     },
     {

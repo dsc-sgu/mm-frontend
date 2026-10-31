@@ -9,10 +9,9 @@ import { UserIdSchema, UsernameSchema } from '@/features/auth/model/identity';
 import type { Session } from '@/features/auth/model/types';
 
 const SessionDtoSchema = v.object({
-  // mm-backend@ddd9849 does not return the user id from this endpoint yet;
-  // the name follows `userID` of its login response.
-  userID: UserIdSchema,
-  avatarURL: v.string(),
+  // mm-backend@ddd9849 does not return the user id from this endpoint yet.
+  userId: UserIdSchema,
+  avatarUrl: v.string(),
   email: v.pipe(v.string(), v.email()),
   firstName: v.string(),
   lastName: v.string(),
@@ -39,8 +38,8 @@ export function checkSession(signal?: AbortSignal): Promise<SessionOutcome> {
       }
       if (context.response.status !== 200) throw unexpectedHttpStatus(context);
 
-      const { userID, ...dto } = await readJson(context, SessionDtoSchema);
-      return { status: 'authorized', session: { userId: userID, ...dto } };
+      const session = await readJson(context, SessionDtoSchema);
+      return { status: 'authorized', session };
     }
   );
 }

@@ -36,7 +36,7 @@ export type MockUser = {
   firstName: string;
   lastName: string;
   patronymic: string;
-  avatarURL: string;
+  avatarUrl: string;
 };
 
 export type MockSession = {
@@ -161,7 +161,7 @@ export const seededUsers = {
     firstName: 'Преподаватель',
     lastName: 'СИТ',
     patronymic: '',
-    avatarURL: '',
+    avatarUrl: '',
   },
   mitStudent: {
     id: mockUserId(2),
@@ -171,7 +171,7 @@ export const seededUsers = {
     firstName: 'Студент',
     lastName: 'СИТ',
     patronymic: '',
-    avatarURL: '',
+    avatarUrl: '',
   },
   // The existing Review demos link to this Student's immutable submissions.
   student: {
@@ -182,7 +182,7 @@ export const seededUsers = {
     firstName: 'Сергей',
     lastName: 'Студентов',
     patronymic: '',
-    avatarURL: '',
+    avatarUrl: '',
   },
 } satisfies Record<string, MockUser>;
 
@@ -199,7 +199,7 @@ function accessUser(
     firstName,
     lastName: '',
     patronymic: '',
-    avatarURL: '',
+    avatarUrl: '',
   };
 }
 

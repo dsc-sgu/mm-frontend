@@ -196,7 +196,7 @@ function AuthorizedPart({
             aria-label="Меню пользователя"
           >
             <Avatar className="h-9 w-9">
-              <AvatarImage src={session.avatarURL} alt={session.username} />
+              <AvatarImage src={session.avatarUrl} alt={session.username} />
               <AvatarFallback className="text-xs text-foreground">
                 {sessionNameAbbreviation(session)}
               </AvatarFallback>

@@ -9,7 +9,8 @@ import {
 import { UsernameSchema } from '@/features/auth/model/identity';
 
 // MSW handlers for the auth endpoints of mm-backend@ddd9849
-// (internal/auth/users/handler.go): same URLs, statuses and payloads.
+// (internal/auth/users/handler.go): URLs and statuses follow the backend;
+// payload field names follow the frontend contract (mm-257, mm-113).
 
 const LoginBodySchema = v.object({
   email: v.string(),
@@ -37,13 +38,13 @@ export const authHandlers = [
 
     return HttpResponse.json({
       // mm-backend@ddd9849 does not return the user id from this endpoint yet.
-      userID: user.id,
+      userId: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       patronymic: user.patronymic,
       username: user.username,
       email: user.email,
-      avatarURL: user.avatarURL,
+      avatarUrl: user.avatarUrl,
       sessionExpiresAt: session.expiresAt,
     });
   }),
@@ -67,10 +68,10 @@ export const authHandlers = [
       expiresAt: SESSION_EXPIRES_AT,
     };
     return HttpResponse.json({
-      sessionID: user.id.replace('-8000-', '-9000-'),
+      sessionId: user.id.replace('-8000-', '-9000-'),
       createdAt: '2026-01-01T00:00:00.000Z',
       expiresAt: SESSION_EXPIRES_AT,
-      userID: user.id,
+      userId: user.id,
     });
   }),
 
@@ -93,7 +94,7 @@ export const authHandlers = [
     const user: MockUser = {
       ...body.output,
       id: mockUserId(state.nextUserNumber),
-      avatarURL: '',
+      avatarUrl: '',
     };
     state.users.push(user);
     state.nextUserNumber += 1;

@@ -62,6 +62,8 @@ url: apiPath('courses', courseId, 'repositories', studentUsername),
 7. Runtime validation ДОЛЖНА предшествовать преобразованию DTO в domain model. DTO МОЖЕТ быть преобразован в domain model только после успешной проверки.
 8. DTO schemas ДОЛЖНЫ принадлежать `api/` feature-владельца операции; schema одного ответа СЛЕДУЕТ держать рядом с операцией, а shared DTO schema — в том же API-слое. Доменные schemas МОГУТ переиспользоваться при проверке DTO, но domain model НЕ ДОЛЖНА зависеть от transport schemas. Полные правила размещения и границы статической проверки — в [`AGENTS.md`](../../AGENTS.md#valibot-schemas).
 
+9. Поля контрактов API и доменных типов фронтенда ДОЛЖНЫ использовать camelCase; аббревиатуры записываются как обычные слова: `userId`, `avatarUrl`, `courseId`, `sessionId`. Соглашения языка бэкенда не переносятся в имена полей фронтенда.
+
 Обязательный переход доверия:
 
 ```text
