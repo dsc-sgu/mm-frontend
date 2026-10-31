@@ -23,7 +23,7 @@ import {
   ReviewRevisionSchema,
   type ReviewRevision,
 } from '@/features/course/features/review/model/revision';
-import type { ReviewCommentSide } from '@/features/course/features/review/model/types';
+import type { DiffLineRange } from '@/features/course/features/review/model/types';
 import { devReview } from '@/app/mock-backend/reviews';
 
 // Stateful backend shared by the feature MSW handlers. Each reset clones a
@@ -76,10 +76,7 @@ export type MockReviewComment = {
   id: string;
   authorId: UserId;
   filePath: string;
-  side: ReviewCommentSide;
-  lineNumber: number;
-  endSide?: ReviewCommentSide;
-  endLineNumber?: number;
+  range: DiffLineRange;
   html: string;
   createdAt: string;
   updatedAt: string;
@@ -367,8 +364,10 @@ const sashaFirstReview: MockReview = {
         id: 'comment-anna-main-2',
         authorId: accessUsers.anna.id,
         filePath: 'src/main.ts',
-        side: 'additions',
-        lineNumber: 2,
+        range: {
+          start: { side: 'additions', lineNumber: 2 },
+          end: { side: 'additions', lineNumber: 2 },
+        },
         html: '<p>Сумму можно посчитать через <code>reduce</code>.</p>',
         createdAt: '2026-05-20T12:00:00.000Z',
         updatedAt: '2026-05-20T12:00:00.000Z',
@@ -377,8 +376,10 @@ const sashaFirstReview: MockReview = {
         id: 'comment-boris-readme-3',
         authorId: accessUsers.boris.id,
         filePath: 'README.md',
-        side: 'additions',
-        lineNumber: 3,
+        range: {
+          start: { side: 'additions', lineNumber: 3 },
+          end: { side: 'additions', lineNumber: 3 },
+        },
         html: '<p>Опишите, как запустить решение.</p>',
         createdAt: '2026-05-20T13:00:00.000Z',
         updatedAt: '2026-05-20T13:00:00.000Z',

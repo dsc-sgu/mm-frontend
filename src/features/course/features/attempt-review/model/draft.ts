@@ -132,10 +132,10 @@ function areLineCommentsEqual(
       other !== undefined &&
       comment.id === other.id &&
       comment.filePath === other.filePath &&
-      comment.side === other.side &&
-      comment.lineNumber === other.lineNumber &&
-      comment.endSide === other.endSide &&
-      comment.endLineNumber === other.endLineNumber &&
+      comment.range.start.side === other.range.start.side &&
+      comment.range.start.lineNumber === other.range.start.lineNumber &&
+      comment.range.end.side === other.range.end.side &&
+      comment.range.end.lineNumber === other.range.end.lineNumber &&
       comment.html === other.html &&
       comment.author.id === other.author.id &&
       comment.createdAt === other.createdAt &&

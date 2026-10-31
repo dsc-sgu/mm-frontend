@@ -4,6 +4,12 @@ import type { ReviewRevision } from './revision';
 
 export type ReviewCommentSide = 'deletions' | 'additions';
 
+/** A line on one side of the Attempt diff. */
+export type DiffLine = { side: ReviewCommentSide; lineNumber: number };
+
+/** A single line has equal start and end positions. */
+export type DiffLineRange = { start: DiffLine; end: DiffLine };
+
 export type ReviewAuthor = UserRef;
 
 export type ReviewReply = {
@@ -19,10 +25,7 @@ export type ReviewComment = {
   id: string;
   author: ReviewAuthor;
   filePath: string;
-  side: ReviewCommentSide;
-  lineNumber: number;
-  endSide?: ReviewCommentSide;
-  endLineNumber?: number;
+  range: DiffLineRange;
   html: string;
   createdAt: string;
   updatedAt: string;
@@ -51,11 +54,5 @@ export function unwrapPublishedReview(result: ReviewResult): Review | null {
 /** A root comment as the Review editor sends it; the backend keeps authors. */
 export type ReviewCommentInput = Pick<
   ReviewComment,
-  | 'id'
-  | 'filePath'
-  | 'side'
-  | 'lineNumber'
-  | 'endSide'
-  | 'endLineNumber'
-  | 'html'
+  'id' | 'filePath' | 'range' | 'html'
 >;

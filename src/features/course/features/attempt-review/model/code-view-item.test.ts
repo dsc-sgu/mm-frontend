@@ -2,6 +2,7 @@ import type { Username, UserId } from '@/features/auth/model/identity';
 import { parseDiffFromFile } from '@pierre/diffs';
 import { describe, expect, it } from 'vitest';
 
+import { formatAttemptReviewCommentRange } from './comment-range';
 import { createAttemptReviewCodeViewItems } from './code-view-item';
 import type {
   AttemptReviewChangedFile,
@@ -30,8 +31,10 @@ function lineComment(filePath: string): AttemptReviewLineComment {
   return {
     id: `comment-${filePath}`,
     filePath,
-    side: 'additions',
-    lineNumber: 1,
+    range: {
+      start: { side: 'additions', lineNumber: 1 },
+      end: { side: 'additions', lineNumber: 1 },
+    },
     html: '<p>Уточните формулировку.</p>',
     author: {
       id: '00000000-0000-4000-8000-000000000001' as UserId,
@@ -130,4 +133,36 @@ describe('createAttemptReviewCodeViewItems', () => {
       collapsed: true,
     });
   });
+});
+
+describe('Подпись привязки к строкам', () => {
+  it.each([
+    ['additions', 2, 'additions', 2, 'К новой строке #2'],
+    ['deletions', 3, 'deletions', 5, 'К старым строкам #3–5'],
+    ['deletions', 5, 'deletions', 3, 'К старым строкам #3–5'],
+    ['deletions', 3, 'additions', 5, 'К старой строке #3 → новой строке #5'],
+    ['deletions', 3, 'additions', 3, 'К старой строке #3 → новой строке #3'],
+  ] as const)(
+    '%s #%s → %s #%s',
+    (side, lineNumber, lastSide, lastLine, label) => {
+      const comment = {
+        ...lineComment('a.ts'),
+        range: {
+          start: { side, lineNumber },
+          end: { side: lastSide, lineNumber: lastLine },
+        },
+      };
+      expect(formatAttemptReviewCommentRange(comment)).toBe(label);
+      const [item] = createAttemptReviewCodeViewItems({
+        files: [changedFile('a.ts', 'old', 'new')],
+        commentsByFile: new Map([['a.ts', [comment]]]),
+        collapsedFilePaths: new Set(),
+        renderedFilePaths: new Set(),
+      });
+      expect(item.annotations?.[0]).toMatchObject({
+        side: lastSide,
+        lineNumber: lastLine,
+      });
+    }
+  );
 });

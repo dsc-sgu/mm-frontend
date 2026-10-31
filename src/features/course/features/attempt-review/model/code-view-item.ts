@@ -38,8 +38,8 @@ export function createAttemptReviewCodeViewItems({
         fileComments
       ),
       annotations: fileComments.map((comment) => ({
-        side: comment.endSide ?? comment.side,
-        lineNumber: comment.endLineNumber ?? comment.lineNumber,
+        side: comment.range.end.side,
+        lineNumber: comment.range.end.lineNumber,
         metadata: { type: 'line-comment', comment },
       })),
     };
@@ -95,10 +95,7 @@ function buildAttemptReviewCodeViewItemVersion(
       collapsed,
       comments: comments.map((comment) => ({
         id: comment.id,
-        side: comment.side,
-        lineNumber: comment.lineNumber,
-        endSide: comment.endSide,
-        endLineNumber: comment.endLineNumber,
+        range: comment.range,
         html: comment.html,
         authorId: comment.author.id,
         createdAt: comment.createdAt,

@@ -15,10 +15,7 @@ export function prepareLineCommentsForSave(
     .map((comment) => ({
       id: comment.id,
       filePath: comment.filePath,
-      side: comment.side,
-      lineNumber: comment.lineNumber,
-      endSide: comment.endSide,
-      endLineNumber: comment.endLineNumber,
+      range: comment.range,
       html: comment.html,
     }));
 }

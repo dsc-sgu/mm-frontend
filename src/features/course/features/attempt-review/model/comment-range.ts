@@ -4,21 +4,20 @@ import type { AttemptReviewLineComment } from './types';
 export function formatAttemptReviewCommentRange(
   comment: AttemptReviewLineComment
 ): string {
-  const startLabel = sideLabel(comment.side).toLowerCase();
-  const endSide = comment.endSide ?? comment.side;
-  const endLineNumber = comment.endLineNumber ?? comment.lineNumber;
+  const { start, end } = comment.range;
+  const startLabel = sideLabel(start.side).toLowerCase();
 
-  if (comment.side === endSide && comment.lineNumber === endLineNumber) {
-    return `К ${startLabel} #${comment.lineNumber}`;
+  if (start.side === end.side && start.lineNumber === end.lineNumber) {
+    return `К ${startLabel} #${start.lineNumber}`;
   }
 
-  if (comment.side === endSide) {
-    const from = Math.min(comment.lineNumber, endLineNumber);
-    const to = Math.max(comment.lineNumber, endLineNumber);
-    return `К ${pluralSideLabel(comment.side).toLowerCase()} #${from}–${to}`;
+  if (start.side === end.side) {
+    const from = Math.min(start.lineNumber, end.lineNumber);
+    const to = Math.max(start.lineNumber, end.lineNumber);
+    return `К ${pluralSideLabel(start.side).toLowerCase()} #${from}–${to}`;
   }
 
-  return `К ${startLabel} #${comment.lineNumber} → ${sideLabel(endSide).toLowerCase()} #${endLineNumber}`;
+  return `К ${startLabel} #${start.lineNumber} → ${sideLabel(end.side).toLowerCase()} #${end.lineNumber}`;
 }
 
 function sideLabel(side: ReviewCommentSide): string {

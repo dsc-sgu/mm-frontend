@@ -7,16 +7,9 @@ import {
 } from './comment-lifecycle';
 import type {
   ReviewAuthor,
-  ReviewCommentSide,
+  DiffLineRange,
 } from '@/features/course/features/review/model/types';
 import type { AttemptReviewLineComment } from './types';
-
-export type AttemptReviewLineRange = {
-  start: number;
-  side?: ReviewCommentSide;
-  end: number;
-  endSide?: ReviewCommentSide;
-};
 
 export function addLineComment({
   comments,
@@ -26,7 +19,7 @@ export function addLineComment({
 }: {
   comments: AttemptReviewLineComment[];
   filePath: string;
-  range: AttemptReviewLineRange;
+  range: DiffLineRange;
   currentReviewer: ReviewAuthor;
 }): AttemptReviewLineComment[] {
   return [
@@ -147,22 +140,15 @@ function createDraftLineComment({
   currentReviewer,
 }: {
   filePath: string;
-  range: AttemptReviewLineRange;
+  range: DiffLineRange;
   currentReviewer: ReviewAuthor;
 }): AttemptReviewLineComment {
-  const side = range.side ?? range.endSide ?? 'additions';
-  const endSide = range.endSide ?? side;
-  const lineNumber = range.start;
-  const endLineNumber = range.end;
+  const { start, end } = range;
 
   return {
-    id: `draft-${filePath}-${side}-${lineNumber}-${endSide}-${endLineNumber}-${Date.now()}`,
+    id: `draft-${filePath}-${start.side}-${start.lineNumber}-${end.side}-${end.lineNumber}-${Date.now()}`,
     filePath,
-    side,
-    lineNumber,
-    endSide:
-      endSide === side && endLineNumber === lineNumber ? undefined : endSide,
-    endLineNumber: endLineNumber === lineNumber ? undefined : endLineNumber,
+    range,
     html: '<p></p>',
     author: currentReviewer,
     createdAt: '',

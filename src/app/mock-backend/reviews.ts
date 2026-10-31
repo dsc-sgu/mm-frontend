@@ -70,8 +70,10 @@ const DEV_COMMENTS: Record<number, DevComment[]> = {
     {
       id: 'comment-a2-main-4',
       filePath: 'src/main.ts',
-      side: 'additions',
-      lineNumber: 4,
+      range: {
+        start: { side: 'additions', lineNumber: 4 },
+        end: { side: 'additions', lineNumber: 4 },
+      },
       html: '<p>Проверка пустого массива нужна, но после неё стоит добавить тест на этот случай.</p>',
     },
   ],
@@ -79,15 +81,19 @@ const DEV_COMMENTS: Record<number, DevComment[]> = {
     {
       id: 'comment-a3-main-4',
       filePath: 'src/main.ts',
-      side: 'additions',
-      lineNumber: 4,
+      range: {
+        start: { side: 'additions', lineNumber: 4 },
+        end: { side: 'additions', lineNumber: 4 },
+      },
       html: '<p>Классно, что отрицательные значения обработаны. Зафиксируйте это в тестах.</p>',
     },
     {
       id: 'comment-a3-summary-3',
       filePath: 'src/components/Summary.tsx',
-      side: 'additions',
-      lineNumber: 3,
+      range: {
+        start: { side: 'additions', lineNumber: 3 },
+        end: { side: 'additions', lineNumber: 3 },
+      },
       html: '<p>Компонент маленький и понятный. Можно добавить ссылку на <a href="/docs/components">гайд по компонентам</a>.</p>',
     },
   ],

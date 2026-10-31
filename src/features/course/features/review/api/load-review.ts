@@ -20,6 +20,8 @@ import type { ReviewResult } from '@/features/course/features/review/model/types
 const SideSchema = v.picklist(['deletions', 'additions']);
 const LineSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 
+const DiffLineSchema = v.object({ side: SideSchema, lineNumber: LineSchema });
+
 const ReviewResultSchema = v.variant('status', [
   v.object({
     status: v.literal('published'),
@@ -34,10 +36,7 @@ const ReviewResultSchema = v.variant('status', [
           id: v.string(),
           author: UserRefSchema,
           filePath: v.string(),
-          side: SideSchema,
-          lineNumber: LineSchema,
-          endSide: v.optional(SideSchema),
-          endLineNumber: v.optional(LineSchema),
+          range: v.object({ start: DiffLineSchema, end: DiffLineSchema }),
           html: v.string(),
           createdAt: v.pipe(v.string(), v.isoTimestamp()),
           updatedAt: v.pipe(v.string(), v.isoTimestamp()),

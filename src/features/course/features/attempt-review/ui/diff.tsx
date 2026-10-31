@@ -167,7 +167,16 @@ export function AttemptReviewDiff({
                 addLineComment({
                   comments,
                   filePath: context.item.id,
-                  range,
+                  range: {
+                    start: {
+                      side: range.side ?? range.endSide ?? 'additions',
+                      lineNumber: range.start,
+                    },
+                    end: {
+                      side: range.endSide ?? range.side ?? 'additions',
+                      lineNumber: range.end,
+                    },
+                  },
                   currentReviewer,
                 })
               );

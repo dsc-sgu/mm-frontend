@@ -66,8 +66,10 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
               firstName: 'Анна',
             },
             filePath: 'src/main.ts',
-            side: 'additions',
-            lineNumber: 2,
+            range: {
+              start: { side: 'additions', lineNumber: 2 },
+              end: { side: 'additions', lineNumber: 2 },
+            },
             replies: [
               {
                 author: {
@@ -132,8 +134,10 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
         {
           id: 'comment-anna-main-2',
           filePath: 'src/main.ts',
-          side: 'additions',
-          lineNumber: 2,
+          range: {
+            start: { side: 'additions', lineNumber: 2 },
+            end: { side: 'additions', lineNumber: 2 },
+          },
           html: '<p>Сумму можно посчитать через <code>reduce</code>.</p>',
         },
       ],
