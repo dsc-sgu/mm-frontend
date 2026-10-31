@@ -30,10 +30,10 @@ describe('Документ страницы курса v1', () => {
     ]);
     expect(readDocument(result)).toEqual(result);
   });
-  it('отклоняет прежнее расположение версии формата', () => {
+  it('отклоняет блок без data.formatVersion', () => {
     expect(
       editDocument([
-        { id: 'p', type: 'paragraph', version: 1, data: { children: [] } },
+        { id: 'p', type: 'paragraph', data: { children: [] } },
       ])
     ).toEqual({ status: 'unsupported-content' });
   });
