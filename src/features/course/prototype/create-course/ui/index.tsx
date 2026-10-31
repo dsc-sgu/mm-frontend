@@ -329,7 +329,7 @@ function Actions({ control }: { control: Controller }) {
         variant="outline"
         className="h-11"
         disabled={control.phase === 'sending'}
-        onClick={() => control.setOpen(false)}
+        onClick={control.cancel}
       >
         {control.phase === 'unknown' ? 'Закрыть' : 'Отмена'}
       </Button>
@@ -401,7 +401,7 @@ export function VariantB({ control }: { control: Controller }) {
           <button
             type="button"
             disabled={control.phase === 'sending'}
-            onClick={() => control.setOpen(false)}
+            onClick={control.cancel}
           >
             {control.phase === 'unknown' ? 'Закрыть' : 'Отмена'}
           </button>

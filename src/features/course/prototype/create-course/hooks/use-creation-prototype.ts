@@ -219,6 +219,10 @@ export function useCreationPrototype() {
       }
     },
     reset,
+    cancel: () => {
+      if (state.phase === 'editing') reset();
+      else setOpen(false);
+    },
     createdCourse: state.phase === 'success' ? state.course : null,
     commandId:
       state.phase === 'sending' || state.phase === 'unknown'
