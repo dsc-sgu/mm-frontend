@@ -2,9 +2,9 @@ import { expect, it } from 'vitest';
 import {
   deserializeCourseContentToPlate,
   serializePlateToCourseContent,
-} from '@/features/course/features/page-edit/model/plate-content';
-import { editDocument } from './document';
-import { equalJson } from './equality';
+} from './plate-content';
+import { editDocument } from '@/features/course/features/page-document/model/document';
+import { equalJson } from '@/features/course/features/page-document/model/equality';
 
 it('не создаёт изменений при открытии и возврате исходного документа', () => {
   const initial = editDocument([
