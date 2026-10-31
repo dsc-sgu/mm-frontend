@@ -1,8 +1,5 @@
 import type { ReactNode } from 'react';
-import {
-  isExternalCourseHref,
-  isSafeCourseHref,
-} from '@/features/course/model/links';
+import { isSafeCourseHref } from '@/features/course/model/links';
 
 import { cn } from '@/shadcn/lib/utils';
 import type { RichTextNode } from '@/features/course/model/rich-text';
@@ -37,7 +34,7 @@ function renderNode(node: RichTextNode, index: number) {
     return <span key={index}>{content}</span>;
   }
 
-  const opensInNewTab = isExternalCourseHref(node.href);
+  const opensInNewTab = /^https?:\/\//iu.test(node.href);
 
   if (!isSafeCourseHref(node.href)) return <span key={index}>{content}</span>;
   return (

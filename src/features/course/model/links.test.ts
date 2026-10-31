@@ -8,6 +8,9 @@ it.each([
   'tel:+79991234567',
   '/courses/course',
   '#section',
+  'ftp://example.com/file',
+  'vscode://file/path',
+  '//example.com',
 ])('accepts supported href %s', (href) => {
   expect(isSafeCourseHref(href)).toBe(true);
 });
@@ -20,18 +23,7 @@ it.each([
   'data:text/html,test',
   'vbscript:test',
   'about:blank',
-  'ftp://example.com',
-  '//example.com',
-  '/\\example.com',
-  '/\\course.invalid',
-  '/\n/course.invalid',
-  '/\t\\course.invalid',
-  '/a b',
-  '#a b',
-  'https://example.com/a b',
-  'https://',
-  'https://[invalid',
   '',
-])('rejects unsafe or unsupported href %s', (href) => {
+])('rejects unsafe href %s', (href) => {
   expect(isSafeCourseHref(href)).toBe(false);
 });

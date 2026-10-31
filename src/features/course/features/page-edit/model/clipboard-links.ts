@@ -84,7 +84,7 @@ export function normalizeCoursePageLinkInput(
 ): CoursePageLinkCandidate | null {
   const value = input.trim();
 
-  if (value.length === 0) {
+  if (value.length === 0 || !isSafeCourseHref(value)) {
     return null;
   }
 
@@ -117,7 +117,7 @@ export function normalizeCoursePageLinkInput(
   );
 
   if (!exactCandidate) {
-    return null;
+    return { start: 0, end: value.length, value, href: value, kind: 'url' };
   }
 
   return exactCandidate.href.startsWith('mailto:')

@@ -1,7 +1,4 @@
-import {
-  COURSE_LINK_SCHEMES,
-  isSafeCourseHref,
-} from '@/features/course/model/links';
+import { isSafeCourseHref } from '@/features/course/model/links';
 import { CodeBlockRules, unwrapCodeBlock } from '@platejs/code-block';
 import { CodeBlockPlugin, CodeLinePlugin } from '@platejs/code-block/react';
 import { IndentPlugin } from '@platejs/indent/react';
@@ -30,6 +27,7 @@ import {
 } from '@platejs/basic-nodes/react';
 import {
   KEYS,
+  isUrl,
   NodeIdPlugin,
   TrailingBlockPlugin,
   type SlateEditor,
@@ -267,8 +265,10 @@ export const coursePagePlatePlugins = [
   }),
   LinkPlugin.configure({
     options: {
-      isUrl: isSafeCourseHref,
-      allowedSchemes: COURSE_LINK_SCHEMES,
+      isUrl: (href) =>
+        isSafeCourseHref(href) &&
+        (href.startsWith('/') || href.startsWith('#') || isUrl(href)),
+      allowedSchemes: undefined,
     },
     inputRules: [
       LinkRules.markdown({ enabled: isMarkdownInputEnabled }),
