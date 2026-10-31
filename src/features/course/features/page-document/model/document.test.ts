@@ -48,107 +48,109 @@ describe('Документ страницы курса v1', () => {
     ]);
     expect(editDocument(input)).toEqual({ status: 'unsupported-content' });
   });
-});
 
-it('нормализует вложенность пунктов списка', () => {
-  const item = (id: string, indent: unknown) => ({
-    id,
-    type: 'list-item',
-    data: { formatVersion: 1, variant: 'ordered', indent, children: [] },
+  it('нормализует вложенность пунктов списка', () => {
+    const item = (id: string, indent: unknown) => ({
+      id,
+      type: 'list-item',
+      data: { formatVersion: 1, variant: 'ordered', indent, children: [] },
+    });
+    const blocks = readDocument([
+      item('a', 9),
+      item('b', 8),
+      item('c', NaN),
+      item('d', 2.7),
+    ]);
+    expect(
+      blocks.map((block) =>
+        block.type === 'list-item' ? block.data.indent : null
+      )
+    ).toEqual([1, 2, 1, 2]);
   });
-  const blocks = readDocument([
-    item('a', 9),
-    item('b', 8),
-    item('c', NaN),
-    item('d', 2.7),
-  ]);
-  expect(
-    blocks.map((block) =>
-      block.type === 'list-item' ? block.data.indent : null
-    )
-  ).toEqual([1, 2, 1, 2]);
-});
 
-it('отклоняет блок задания внутри спойлера', () => {
-  expect(
-    editDocument([
+  it('отклоняет блок задания внутри спойлера', () => {
+    expect(
+      editDocument([
+        {
+          id: 's',
+          type: 'spoiler',
+          data: {
+            formatVersion: 1,
+            title: [],
+            children: [
+              {
+                id: 't',
+                type: 'assignment',
+                data: { formatVersion: 1, taskId: '1' },
+              },
+            ],
+          },
+        },
+      ])
+    ).toEqual({ status: 'unsupported-content' });
+  });
+
+  it('canonicalizes missing and undefined optional fields identically', () => {
+    const omitted = [
+      { id: 'c', type: 'code', data: { formatVersion: 1, code: 'x' } },
+      { id: 'i', type: 'image', data: { formatVersion: 1, imageId: 'image' } },
+      {
+        id: 's',
+        type: 'spoiler',
+        data: { formatVersion: 1, title: [], children: [] },
+      },
+    ];
+    const explicit = [
+      {
+        id: 'c',
+        type: 'code',
+        data: {
+          formatVersion: 1,
+          code: 'x',
+          language: undefined,
+          fileName: undefined,
+        },
+      },
+      {
+        id: 'i',
+        type: 'image',
+        data: {
+          formatVersion: 1,
+          imageId: 'image',
+          alt: undefined,
+          caption: undefined,
+        },
+      },
       {
         id: 's',
         type: 'spoiler',
         data: {
           formatVersion: 1,
           title: [],
+          children: [],
+          defaultOpen: undefined,
+        },
+      },
+    ];
+    const normalized = editDocument(omitted);
+    expect(normalized).toStrictEqual({ status: 'supported', blocks: omitted });
+    expect(normalized).toStrictEqual(editDocument(explicit));
+  });
+
+  it('rejects unsafe saved links instead of replacing them with about:blank', () => {
+    const blocks = [
+      {
+        id: 'p',
+        type: 'paragraph',
+        data: {
+          formatVersion: 1,
           children: [
-            {
-              id: 't',
-              type: 'assignment',
-              data: { formatVersion: 1, taskId: '1' },
-            },
+            { type: 'link', text: 'Link', href: 'javascript:alert(1)' },
           ],
         },
       },
-    ])
-  ).toEqual({ status: 'unsupported-content' });
-});
-
-it('canonicalizes missing and undefined optional fields identically', () => {
-  const omitted = [
-    { id: 'c', type: 'code', data: { formatVersion: 1, code: 'x' } },
-    { id: 'i', type: 'image', data: { formatVersion: 1, imageId: 'image' } },
-    {
-      id: 's',
-      type: 'spoiler',
-      data: { formatVersion: 1, title: [], children: [] },
-    },
-  ];
-  const explicit = [
-    {
-      id: 'c',
-      type: 'code',
-      data: {
-        formatVersion: 1,
-        code: 'x',
-        language: undefined,
-        fileName: undefined,
-      },
-    },
-    {
-      id: 'i',
-      type: 'image',
-      data: {
-        formatVersion: 1,
-        imageId: 'image',
-        alt: undefined,
-        caption: undefined,
-      },
-    },
-    {
-      id: 's',
-      type: 'spoiler',
-      data: {
-        formatVersion: 1,
-        title: [],
-        children: [],
-        defaultOpen: undefined,
-      },
-    },
-  ];
-  const normalized = editDocument(omitted);
-  expect(normalized).toStrictEqual({ status: 'supported', blocks: omitted });
-  expect(normalized).toStrictEqual(editDocument(explicit));
-});
-
-it('rejects unsafe saved links instead of replacing them with about:blank', () => {
-  const blocks = [
-    {
-      id: 'p',
-      type: 'paragraph',
-      data: {
-        formatVersion: 1,
-        children: [{ type: 'link', text: 'Link', href: 'javascript:alert(1)' }],
-      },
-    },
-  ];
-  expect(editDocument(blocks)).toEqual({ status: 'unsupported-content' });
-  expect(readDocument(blocks)).toEqual([{ id: 'p', type: 'unsupported' }]);
+    ];
+    expect(editDocument(blocks)).toEqual({ status: 'unsupported-content' });
+    expect(readDocument(blocks)).toEqual([{ id: 'p', type: 'unsupported' }]);
+  });
 });
