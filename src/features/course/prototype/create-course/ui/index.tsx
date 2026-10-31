@@ -219,7 +219,7 @@ function AddressField({ control }: { control: Controller }) {
           disabled={control.phase !== 'editing'}
           onClick={control.resetSlug}
         >
-          Вернуть адрес из названия
+          Сформировать из названия
         </button>
       )}
     </div>
@@ -264,7 +264,7 @@ function Actions({ control }: { control: Controller }) {
         disabled={control.phase === 'sending'}
         onClick={() => control.setOpen(false)}
       >
-        Отмена
+        {control.phase === 'unknown' ? 'Закрыть' : 'Отмена'}
       </Button>
       <Submit control={control} />
     </div>
@@ -332,7 +332,7 @@ export function VariantB({ control }: { control: Controller }) {
             disabled={control.phase === 'sending'}
             onClick={() => control.setOpen(false)}
           >
-            Отмена
+            {control.phase === 'unknown' ? 'Закрыть' : 'Отмена'}
           </button>
         </div>
       </div>
