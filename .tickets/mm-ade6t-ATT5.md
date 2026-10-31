@@ -1,7 +1,7 @@
 ---
 id: mm-ade6t-ATT5
 status: open
-deps: [mm-93s1v, mm-228]
+deps: [mm-228]
 links: []
 created: 2026-10-31T07:16:29Z
 type: task
