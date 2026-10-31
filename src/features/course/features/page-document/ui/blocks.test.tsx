@@ -3,7 +3,18 @@ import { describe, expect, it } from 'vitest';
 import { CourseContentBlocks } from './blocks';
 
 describe('CourseContentBlocks', () => {
-  it('показывает заглушку на месте неизвестного блока и семантические вложенные списки', () => {
+  it('показывает заглушку на месте неизвестного блока', () => {
+    render(
+      <CourseContentBlocks
+        courseSlug="course"
+        resources={{ images: [], files: [] }}
+        blocks={[{ id: 'bad', type: 'future', data: { formatVersion: 2 } }]}
+      />
+    );
+    expect(screen.getByText('Блок не удалось показать')).toBeTruthy();
+  });
+
+  it('группирует пункты списка и вкладывает список в родительский пункт', () => {
     const item = (id: string, text: string, indent: number) => ({
       id,
       type: 'list-item',
@@ -19,14 +30,12 @@ describe('CourseContentBlocks', () => {
         courseSlug="course"
         resources={{ images: [], files: [] }}
         blocks={[
-          { id: 'bad', type: 'future', data: { formatVersion: 2 } },
           item('a', 'Первый', 1),
           item('b', 'Вложенный', 2),
           item('c', 'Второй', 1),
         ]}
       />
     );
-    expect(screen.getByText('Блок не удалось показать')).toBeTruthy();
     expect(container.querySelectorAll('div > ol')).toHaveLength(1);
     expect(container.querySelector('ol')?.children).toHaveLength(2);
     expect(
