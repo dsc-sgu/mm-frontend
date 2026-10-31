@@ -1,3 +1,4 @@
+import { formatFullName } from '@/features/auth/model/full-name';
 import { useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
 
@@ -32,8 +33,8 @@ const GRADED_FILTER_OPTIONS: Array<{
   label: string;
 }> = [
   { value: 'any', label: 'Неважно' },
-  { value: 'no', label: 'Нет' },
-  { value: 'yes', label: 'Да' },
+  { value: 'submitted', label: 'Нет' },
+  { value: 'graded', label: 'Да' },
 ];
 
 export function AttemptsFiltersContent({
@@ -114,7 +115,7 @@ export function AttemptsFiltersContent({
     () =>
       students
         .filter((student) =>
-          `${student.fullName} ${student.username}`
+          `${formatFullName(student)} ${student.username}`
             .toLowerCase()
             .includes(normalizedStudentSearch)
         )
@@ -123,8 +124,8 @@ export function AttemptsFiltersContent({
             firstStudent,
             secondStudent,
             appliedStudentSet,
-            (student) => student.username,
-            (student) => student.fullName
+            (student) => student.id,
+            (student) => formatFullName(student)
           )
         ),
     [appliedStudentSet, normalizedStudentSearch, students]
@@ -424,16 +425,14 @@ function StudentsFilterSection({
         placeholder="ФИО или username"
         emptyMessage="Студенты не найдены"
         options={students.map((student) => ({
-          value: student.username,
-          label: `${student.fullName} · ${student.group}`,
+          value: student.id,
+          label: `${formatFullName(student)} · `,
         }))}
         selectedOptions={context.students
-          .filter((student) =>
-            selectedStudentUsernames.includes(student.username)
-          )
+          .filter((student) => selectedStudentUsernames.includes(student.id))
           .map((student) => ({
-            value: student.username,
-            label: `${student.fullName} · ${student.group}`,
+            value: student.id,
+            label: `${formatFullName(student)} · `,
           }))}
         selectedValues={selectedStudentUsernames}
         loading={loading}

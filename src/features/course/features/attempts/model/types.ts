@@ -1,7 +1,12 @@
+import type { UserRef } from '@/features/auth/model/user-ref';
 import type { Grade } from '@/features/course/model/grade';
-import type { AttemptNumber, CourseId } from '@/features/course/model/identity';
+import type {
+  AttemptNumber,
+  CourseId,
+  TaskId,
+} from '@/features/course/model/identity';
 
-export type CourseAttemptGradedFilter = 'any' | 'no' | 'yes';
+export type CourseAttemptGradedFilter = 'any' | 'submitted' | 'graded';
 
 export type CourseAttemptsFilters = {
   tasks: string[];
@@ -16,27 +21,17 @@ export type CourseAttemptsRouteSearch = {
 };
 
 export type CourseAttemptTask = {
-  id: string;
+  id: TaskId;
   title: string;
   maxGrade: Grade;
 };
 
-export type CourseAttemptStudent = {
-  username: string;
-  fullName: string;
-  group: string;
-  subgroup?: string;
-};
-
-type CourseAttemptDiffStats = {
-  addedLines: number;
-  deletedLines: number;
-};
+export type CourseAttemptStudent = UserRef;
 
 type CourseAttemptGrade = {
   value: Grade;
   gradedAt: string;
-  gradedBy: string;
+  gradedBy: UserRef;
 };
 
 export type CourseAttemptReviewLock = {
@@ -51,12 +46,12 @@ export type CourseAttempt = {
   student: CourseAttemptStudent;
   submittedAt: string;
   deadlineAt: string;
-  diff: CourseAttemptDiffStats;
   grade: CourseAttemptGrade | null;
   reviewLock: CourseAttemptReviewLock | null;
 };
 
 export type CourseAttemptsListResult = {
+  totalAttemptsCount: number;
   attempts: CourseAttempt[];
   tasks: CourseAttemptTask[];
   students: CourseAttemptStudent[];

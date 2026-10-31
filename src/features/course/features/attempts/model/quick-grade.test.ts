@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { accessWorld } from '@/app/mock-backend/state';
 import { describe, expect, test } from 'vitest';
 import { formatGrade, GradeSchema } from '@/features/course/model/grade';
 import {
@@ -19,7 +20,7 @@ const graded: QuickGradeAttempt = {
   grade: {
     value: grade(7.5),
     gradedAt: '2026-05-20T12:00:00Z',
-    gradedBy: 'Анна',
+    gradedBy: accessWorld.users.anna,
   },
 };
 

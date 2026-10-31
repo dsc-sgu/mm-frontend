@@ -1,3 +1,4 @@
+import { formatFullName } from '@/features/auth/model/full-name';
 import { Link } from '@tanstack/react-router';
 import { Eye, FileCheck2, LockKeyhole } from 'lucide-react';
 
@@ -116,9 +117,7 @@ export function AttemptCard(props: AttemptCardProps) {
               ? 'translate-x-0'
               : '-translate-x-7 sm:translate-x-0'
           )}
-        >
-          <AttemptDiffStats attempt={props.attempt} />
-        </div>
+        ></div>
       </div>
 
       <div className="min-w-0">
@@ -197,25 +196,7 @@ function getGradeClassName(attempt: CourseAttempt): string {
   return 'font-semibold text-amber-700 dark:text-amber-300';
 }
 
-function AttemptDiffStats({ attempt }: { attempt: CourseAttempt }) {
-  return (
-    <div
-      className={cn(
-        'flex shrink-0 items-center gap-2 text-xs font-medium sm:gap-3',
-        'sm:text-sm'
-      )}
-    >
-      <span className="text-emerald-700 dark:text-emerald-300">
-        +{attempt.diff.addedLines}
-      </span>
-      <span className="text-rose-700 dark:text-rose-300">
-        −{attempt.diff.deletedLines}
-      </span>
-    </div>
-  );
-}
-
-function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
+export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
   const timing = getTimingLabel(attempt);
 
   return (
@@ -227,11 +208,9 @@ function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
     >
       <p className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-0">
         <span className="font-medium text-foreground">
-          {attempt.student.fullName}
+          {formatFullName(attempt.student)}
         </span>
-        <span className="whitespace-nowrap">
-          Группа «{getGroupLabel(attempt)}»
-        </span>
+        <span className="whitespace-nowrap"></span>
       </p>
       <p className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0">
         <span className="whitespace-nowrap">
@@ -257,7 +236,7 @@ function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
             Оценено {formatDateTime(attempt.grade.gradedAt)}
           </span>
           <span className="-mt-0.5 whitespace-nowrap sm:mt-0">
-            преподавателем {attempt.grade.gradedBy}{' '}
+            преподавателем {formatFullName(attempt.grade.gradedBy)}{' '}
             <span className={getGradeClassName(attempt)}>
               ({formatGrade(attempt.grade.value)}/
               {formatGrade(attempt.task.maxGrade)})
@@ -347,15 +326,6 @@ function formatDuration(value: number): string {
   return [hours > 0 ? `${hours} ч` : '', minutes > 0 ? `${minutes} мин` : '']
     .filter(Boolean)
     .join(' ');
-}
-
-function getGroupLabel(attempt: CourseAttempt): string {
-  return [
-    attempt.student.group,
-    attempt.student.subgroup ? `${attempt.student.subgroup} подгр.` : '',
-  ]
-    .filter(Boolean)
-    .join(' · ');
 }
 
 function getAttemptRouteParams(courseSlug: string, attempt: CourseAttempt) {

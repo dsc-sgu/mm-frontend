@@ -1,3 +1,6 @@
+import * as v from 'valibot';
+import { TaskIdSchema } from '@/features/course/model/identity';
+import { UserIdSchema } from '@/features/auth/model/identity';
 import type {
   CourseAttemptGradedFilter,
   CourseAttemptsFilters,
@@ -30,15 +33,19 @@ function normalizeTokenList(value: unknown): string[] {
 }
 
 function normalizeGraded(value: unknown): CourseAttemptGradedFilter {
-  return value === 'yes' || value === 'no' ? value : 'any';
+  return value === 'graded' || value === 'submitted' ? value : 'any';
 }
 
 export function normalizeCourseAttemptsFilters(
   filters: Partial<CourseAttemptsFilters>
 ): CourseAttemptsFilters {
   return {
-    tasks: normalizeTokenList(filters.tasks),
-    students: normalizeTokenList(filters.students),
+    tasks: normalizeTokenList(filters.tasks).map((id) =>
+      v.parse(TaskIdSchema, id)
+    ),
+    students: normalizeTokenList(filters.students)
+      .filter((id) => v.is(UserIdSchema, id))
+      .map((id) => v.parse(UserIdSchema, id)),
     graded: normalizeGraded(filters.graded),
   };
 }
@@ -61,8 +68,12 @@ export function filtersFromCourseAttemptsSearch(
   search: CourseAttemptsRouteSearch
 ): CourseAttemptsFilters {
   return {
-    tasks: normalizeTokenList(search.tasks),
-    students: normalizeTokenList(search.students),
+    tasks: normalizeTokenList(search.tasks).map((id) =>
+      v.parse(TaskIdSchema, id)
+    ),
+    students: normalizeTokenList(search.students)
+      .filter((id) => v.is(UserIdSchema, id))
+      .map((id) => v.parse(UserIdSchema, id)),
     graded: normalizeGraded(search.graded),
   };
 }

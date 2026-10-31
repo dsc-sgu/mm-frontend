@@ -10,11 +10,9 @@ import {
   type MockReview,
   type MockReviewComment,
 } from '@/app/mock-backend/state';
-import { formatFullName } from '@/features/auth/model/full-name';
 import type { UserId } from '@/features/auth/model/identity';
 import { gradeToNumber, type Grade } from '@/features/course/model/grade';
 import type { AttemptId, CourseId } from '@/features/course/model/identity';
-import { upsertMockCourseAttemptGrade } from '@/features/course/features/attempts/api/mock';
 import { ReviewRevisionSchema } from '@/features/course/features/review/model/revision';
 import type {
   ReviewAuthor,
@@ -152,7 +150,7 @@ export async function saveReview(input: SaveReviewInput): Promise<void> {
     },
     replies: previous?.replies ?? [],
   };
-  const { reviews, users, unseenAttemptUpdates } = mockBackend.state;
+  const { reviews, unseenAttemptUpdates } = mockBackend.state;
   mockBackend.state.reviews = [
     ...reviews.filter(({ attemptId }) => attemptId !== attempt.id),
     review,
@@ -163,20 +161,6 @@ export async function saveReview(input: SaveReviewInput): Promise<void> {
       ...unseenAttemptUpdates,
       attempt.id,
     ];
-  }
-
-  // Course Attempts still read their own RAM mock until ATT1 removes this.
-  const student = users.find(({ id }) => id === attempt.studentId);
-  if (student) {
-    upsertMockCourseAttemptGrade({
-      courseId: attempt.courseId,
-      taskId: attempt.taskId,
-      studentUsername: student.username,
-      attemptNumber: attempt.attemptNumber,
-      grade: input.grade,
-      gradedAt: now,
-      gradedBy: formatFullName(author(viewerId)),
-    });
   }
 }
 

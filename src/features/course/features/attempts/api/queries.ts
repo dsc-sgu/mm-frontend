@@ -1,3 +1,5 @@
+import { loadCourseAttempts } from './load-course-attempts';
+import { normalizeCourseAttemptsFilters } from '@/features/course/features/attempts/model/filters';
 import {
   queryOptions,
   useMutation,
@@ -6,7 +8,7 @@ import {
 } from '@tanstack/react-query';
 import { courseKeys } from '@/features/course/api/queries';
 import type { CourseId } from '@/features/course/model/identity';
-import { fetchCourseAttemptsList, saveQuickGrades } from './mock';
+import { saveQuickGrades } from './mock';
 import type {
   CourseAttemptsFilters,
   SaveQuickGradesInput,
@@ -16,7 +18,10 @@ export const courseAttemptsKeys = {
   course: (courseId: CourseId) =>
     [...courseKeys.byId(courseId), 'attempts'] as const,
   list: (courseId: CourseId, filters: CourseAttemptsFilters) =>
-    [...courseAttemptsKeys.course(courseId), { filters }] as const,
+    [
+      ...courseAttemptsKeys.course(courseId),
+      { filters: normalizeCourseAttemptsFilters(filters) },
+    ] as const,
 };
 
 function courseAttemptsQueryOptions({
@@ -28,7 +33,7 @@ function courseAttemptsQueryOptions({
 }) {
   return queryOptions({
     queryKey: courseAttemptsKeys.list(courseId, filters),
-    queryFn: () => fetchCourseAttemptsList({ courseId, filters }),
+    queryFn: ({ signal }) => loadCourseAttempts({ courseId, filters }, signal),
     staleTime: 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

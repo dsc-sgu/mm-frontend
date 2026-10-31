@@ -1,3 +1,4 @@
+import { formatFullName } from '@/features/auth/model/full-name';
 import { useCallback, useEffect, useRef } from 'react';
 import type { Set as ImmutableSetType } from 'immutable';
 import { toast } from 'sonner';
@@ -81,7 +82,7 @@ function renderLockedSelectionToastDescription(attempts: CourseAttempt[]) {
       <ul className="max-w-full space-y-1 overflow-hidden">
         {visibleAttempts.map((attempt) => (
           <li key={attempt.id} className="max-w-full break-words">
-            {attempt.task.title} — {attempt.student.fullName}
+            {attempt.task.title} — {formatFullName(attempt.student)}
           </li>
         ))}
         {hiddenAttemptsCount > 0 ? <li>И ещё: {hiddenAttemptsCount}</li> : null}

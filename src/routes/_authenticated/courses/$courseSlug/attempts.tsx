@@ -1,3 +1,4 @@
+import { prefetchAttemptsPage } from '@/features/course/features/attempts/api/prefetch';
 import { CourseAttemptsPage } from '@/features/course/features/attempts/page';
 import {
   filtersFromCourseAttemptsSearch,
@@ -22,6 +23,13 @@ export const Route = createFileRoute(
     },
   },
   validateSearch: validateCourseAttemptsSearch,
+  loaderDeps: ({ search }) => filtersFromCourseAttemptsSearch(search),
+  loader: ({ context, deps }) => {
+    prefetchAttemptsPage(context.queryClient, {
+      courseId: context.course.id,
+      filters: deps,
+    });
+  },
   component: RouteComponent,
 });
 

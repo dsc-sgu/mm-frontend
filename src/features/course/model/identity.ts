@@ -35,3 +35,10 @@ export type CourseSlug = v.InferOutput<typeof CourseSlugSchema>;
 export type AttemptId = v.InferOutput<typeof AttemptIdSchema>;
 
 export type AttemptNumber = v.InferOutput<typeof AttemptNumberSchema>;
+
+export const TaskIdSchema = v.pipe(
+  v.string(),
+  v.regex(/^[a-zA-Z0-9_-]+$/),
+  v.brand('TaskId')
+);
+export type TaskId = v.InferOutput<typeof TaskIdSchema>;
