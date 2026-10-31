@@ -1,4 +1,4 @@
-// PROTOTYPE mm-277: три компоновки создания курса на главной странице.
+// PROTOTYPE mm-277: четыре компоновки создания курса на главной странице.
 import { useEffect, useRef, type ReactNode } from 'react';
 import {
   ArrowLeft,
@@ -24,11 +24,12 @@ import type { Scenario } from '@/features/course/prototype/create-course/model/c
 import styles from './creation.module.css';
 
 type Controller = ReturnType<typeof useCreationPrototype>;
-const variants = ['A', 'B', 'C'];
+const variants = ['A', 'B', 'C', 'D'];
 const names: Record<string, string> = {
   A: 'Короткая форма',
   B: 'Сначала название',
   C: 'С предпросмотром',
+  D: 'Без подсказок',
 };
 const scenarios: [Scenario, string][] = [
   ['success', 'Успешное создание'],
@@ -41,7 +42,10 @@ const scenarios: [Scenario, string][] = [
 function PrototypeBar({ control }: { control: Controller }) {
   function cycle(direction: number) {
     control.setVariant(
-      variants[(variants.indexOf(control.variant) + direction + 3) % 3]
+      variants[
+        (variants.indexOf(control.variant) + direction + variants.length) %
+          variants.length
+      ]
     );
   }
   useEffect(() => {
@@ -58,8 +62,8 @@ function PrototypeBar({ control }: { control: Controller }) {
         control.setVariant(
           variants[
             (variants.indexOf(control.variant) +
-              (event.key === 'ArrowLeft' ? 2 : 1)) %
-              3
+              (event.key === 'ArrowLeft' ? variants.length - 1 : 1)) %
+              variants.length
           ]
         );
       }
@@ -206,7 +210,13 @@ function ShortTitleField({ control }: { control: Controller }) {
     </div>
   );
 }
-function DescriptionField({ control }: { control: Controller }) {
+function DescriptionField({
+  control,
+  withoutHints = false,
+}: {
+  control: Controller;
+  withoutHints?: boolean;
+}) {
   return (
     <div className={styles.field}>
       <label htmlFor="course-description">
@@ -219,13 +229,23 @@ function DescriptionField({ control }: { control: Controller }) {
         value={control.description}
         disabled={control.phase !== 'editing'}
         className={styles.descriptionInput}
-        placeholder="Чему посвящён курс и чему научатся студенты"
+        placeholder={
+          withoutHints
+            ? undefined
+            : 'Чему посвящён курс и чему научатся студенты'
+        }
         onChange={(event) => control.setDescription(event.target.value)}
       />
     </div>
   );
 }
-function AddressField({ control }: { control: Controller }) {
+function AddressField({
+  control,
+  withoutHints = false,
+}: {
+  control: Controller;
+  withoutHints?: boolean;
+}) {
   return (
     <div className={styles.field}>
       <label htmlFor="course-address">
@@ -238,19 +258,25 @@ function AddressField({ control }: { control: Controller }) {
           required
           value={control.slug}
           disabled={control.phase !== 'editing'}
-          aria-describedby="address-help"
+          aria-describedby={
+            withoutHints && control.check === 'idle'
+              ? undefined
+              : 'address-help'
+          }
           aria-invalid={
             control.check === 'invalid' || control.check === 'taken'
           }
-          placeholder="algoritmy-2026"
+          placeholder={withoutHints ? undefined : 'algoritmy-2026'}
           autoCapitalize="none"
           spellCheck={false}
           onChange={(event) => control.setSlug(event.target.value)}
         />
       </div>
-      <div id="address-help" className={styles.help} aria-live="polite">
-        <AddressStatus control={control} />
-      </div>
+      {(!withoutHints || control.check !== 'idle') && (
+        <div id="address-help" className={styles.help} aria-live="polite">
+          <AddressStatus control={control} />
+        </div>
+      )}
       {control.slugMode === 'manual' && (
         <button
           className={styles.reset}
@@ -412,6 +438,24 @@ export function VariantC({ control }: { control: Controller }) {
     </div>
   );
 }
+export function VariantD({ control }: { control: Controller }) {
+  return (
+    <div className={styles.variantA}>
+      <DialogTitle className="text-2xl leading-tight">Создать курс</DialogTitle>
+      <div className={styles.bigName}>
+        <BookOpen className={styles.blueBook} />
+        <NameField control={control} prominent />
+      </div>
+      <div className={styles.fields}>
+        <ShortTitleField control={control} />
+        <AddressField control={control} withoutHints />
+        <DescriptionField control={control} withoutHints />
+      </div>
+      <Unknown control={control} />
+      <Actions control={control} />
+    </div>
+  );
+}
 export function CreateCoursePrototype({
   children,
 }: {
@@ -446,7 +490,9 @@ export function CreateCoursePrototype({
       </p>
     </div>
   );
-  const variant = { A: VariantA, B: VariantB, C: VariantC }[control.variant];
+  const variant = { A: VariantA, B: VariantB, C: VariantC, D: VariantD }[
+    control.variant
+  ];
   const Variant = variant;
   return (
     <>
@@ -454,6 +500,9 @@ export function CreateCoursePrototype({
       {!control.open && <PrototypeBar control={control} />}
       <Dialog open={control.open} onOpenChange={control.setOpen}>
         <DialogContent
+          {...(control.variant === 'D'
+            ? { 'aria-describedby': undefined }
+            : {})}
           showCloseButton={false}
           className={styles.dialogShell}
           onCloseAutoFocus={(event) => {

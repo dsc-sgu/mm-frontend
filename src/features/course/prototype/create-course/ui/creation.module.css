@@ -26,7 +26,8 @@
   box-shadow: 0 24px 72px #0002;
   pointer-events: auto;
 }
-.panelA {
+.panelA,
+.panelD {
   max-width: 480px;
 }
 .panelB {

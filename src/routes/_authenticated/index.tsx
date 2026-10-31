@@ -32,7 +32,7 @@ function RouteComponent() {
   const prototypeActive = usePrototypeActive('create-course');
   const setActive = useActivePrototypeStore((state) => state.setActive);
   const requestedPrototype =
-    PROTOTYPES_ENABLED && ['A', 'B', 'C'].includes(variant ?? '');
+    PROTOTYPES_ENABLED && ['A', 'B', 'C', 'D'].includes(variant ?? '');
   const creationActive = prototypeActive || requestedPrototype;
   useEffect(() => {
     if (requestedPrototype) setActive('create-course');
