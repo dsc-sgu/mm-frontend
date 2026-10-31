@@ -2,6 +2,7 @@
 // on prototype/* branches.
 
 export const PROTOTYPES = [
+  { id: 'create-course', issue: 277, title: 'Создание курса' },
   { id: 'quick-grading', issue: 121, title: 'Быстрое оценивание' },
   { id: 'task-deadlines', issue: 181, title: 'Задания и дедлайны' },
 ] as const;

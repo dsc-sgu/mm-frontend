@@ -1,3 +1,10 @@
+import { useEffect } from 'react';
+import {
+  useActivePrototypeStore,
+  usePrototypeActive,
+} from '@/app/prototypes/active';
+import { PROTOTYPES_ENABLED } from '@/app/prototypes/enabled';
+import { CreateCoursePrototype } from '@/features/course/prototype/create-course/ui';
 import { CourseCard, CourseCardSkeleton } from '@/features/course/ui/card';
 import { useCoursesQuery } from '@/features/course/api/queries';
 import { coursesFailureText } from '@/features/course/ui/failure-text';
@@ -8,6 +15,9 @@ import type { ReactNode } from 'react';
 import { cn } from '@/shadcn/lib/utils';
 
 export const Route = createFileRoute('/_authenticated/')({
+  validateSearch: (search: Record<string, unknown>): { variant?: string } => ({
+    ...(typeof search.variant === 'string' ? { variant: search.variant } : {}),
+  }),
   staticData: {
     header: {
       getBreadcrumb: [{ label: 'Панель управления' }],
@@ -18,6 +28,15 @@ export const Route = createFileRoute('/_authenticated/')({
 
 function RouteComponent() {
   const { session } = Route.useRouteContext();
+  const { variant } = Route.useSearch();
+  const prototypeActive = usePrototypeActive('create-course');
+  const setActive = useActivePrototypeStore((state) => state.setActive);
+  const requestedPrototype =
+    PROTOTYPES_ENABLED && ['A', 'B', 'C'].includes(variant ?? '');
+  const creationActive = prototypeActive || requestedPrototype;
+  useEffect(() => {
+    if (requestedPrototype) setActive('create-course');
+  }, [requestedPrototype, setActive]);
   const {
     data: courses = [],
     isPending,
@@ -27,7 +46,7 @@ function RouteComponent() {
     refetch,
   } = useCoursesQuery(session.userId);
 
-  function renderCourses() {
+  function renderCourses(emptyState?: ReactNode) {
     if (isPending) {
       return <CourseListSkeleton />;
     }
@@ -49,6 +68,7 @@ function RouteComponent() {
       );
     }
     if (courses.length === 0) {
+      if (emptyState) return emptyState;
       return (
         <SectionPlaceholder>
           Вы пока не состоите ни в одном курсе. Когда курсы появятся, они
@@ -69,30 +89,52 @@ function RouteComponent() {
     );
   }
 
-  return (
-    <main
-      className={cn(
-        'min-h-[calc(100vh-3.5rem)] bg-muted/30 xl:h-[calc(100vh-3.5rem)]',
-        'xl:overflow-hidden'
-      )}
-    >
-      <div className="box-border h-full px-4 py-6 md:px-6 lg:px-8">
-        <div className="grid w-full gap-6 xl:h-full xl:min-h-0 xl:grid-cols-2">
-          <DashboardSection title="Мои курсы" bordered scrollable>
-            {renderCourses()}
-          </DashboardSection>
+  function renderDashboard(controls?: {
+    trigger: ReactNode;
+    emptyState: ReactNode;
+    result: ReactNode | null;
+    courseCards?: ReactNode;
+  }) {
+    return (
+      <main
+        className={cn(
+          'min-h-[calc(100vh-3.5rem)] bg-muted/30 xl:h-[calc(100vh-3.5rem)]',
+          'xl:overflow-hidden'
+        )}
+      >
+        <div className="box-border h-full px-4 py-6 md:px-6 lg:px-8">
+          <div className="grid w-full gap-6 xl:h-full xl:min-h-0 xl:grid-cols-2">
+            <DashboardSection
+              title="Мои курсы"
+              action={controls?.trigger}
+              bordered
+              scrollable
+            >
+              {controls?.result ?? (
+                <>
+                  {controls?.courseCards}
+                  {renderCourses(controls?.emptyState)}
+                </>
+              )}
+            </DashboardSection>
 
-          <DeadlinesCalendar
-            className={cn('h-[720px] w-full', 'xl:h-full xl:min-h-0')}
-          />
+            <DeadlinesCalendar
+              className={cn('h-[720px] w-full', 'xl:h-full xl:min-h-0')}
+            />
+          </div>
         </div>
-      </div>
-    </main>
-  );
+      </main>
+    );
+  }
+  if (creationActive) {
+    return <CreateCoursePrototype>{renderDashboard}</CreateCoursePrototype>;
+  }
+  return renderDashboard();
 }
 
 type DashboardSectionProps = {
   title: string;
+  action?: ReactNode;
   children: ReactNode;
   contentClassName?: string;
   bordered?: boolean;
@@ -101,6 +143,7 @@ type DashboardSectionProps = {
 
 function DashboardSection({
   title,
+  action,
   children,
   contentClassName,
   bordered = false,
@@ -115,7 +158,7 @@ function DashboardSection({
     >
       <div
         className={cn(
-          'z-10 border-b border-border/70 px-6 py-5 md:px-7',
+          'z-10 flex items-center justify-between gap-3 border-b border-border/70 px-6 py-5 md:px-7',
           'bg-background/70 backdrop-blur-2xl supports-backdrop-filter:bg-background/45',
           scrollable ? 'absolute inset-x-0 top-0' : 'sticky top-0 shrink-0'
         )}
@@ -123,6 +166,7 @@ function DashboardSection({
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
           {title}
         </h2>
+        {action}
       </div>
 
       <div

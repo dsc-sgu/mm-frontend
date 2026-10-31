@@ -27,6 +27,7 @@ const PROTOTYPE_ONLY_ROUTES: readonly string[] = [
 ];
 
 const SCREEN_ROUTES: Record<PrototypeId, readonly string[]> = {
+  'create-course': ['/_authenticated/'],
   'quick-grading': ['/_authenticated/courses/$courseSlug/attempts'],
   'task-deadlines': [
     '/_authenticated/courses/$courseSlug/',
@@ -36,6 +37,7 @@ const SCREEN_ROUTES: Record<PrototypeId, readonly string[]> = {
 };
 
 const OPEN_LABEL: Record<PrototypeId, string> = {
+  'create-course': 'Открыть панель управления',
   'quick-grading': 'Открыть попытки курса',
   'task-deadlines': 'Открыть курс-песочницу',
 };
@@ -64,6 +66,9 @@ export function PrototypeBar() {
 
   function open(id: PrototypeId) {
     switch (id) {
+      case 'create-course':
+        void navigate({ to: '/', search: { variant: 'A' } });
+        return;
       case 'quick-grading':
         void navigate({
           to: '/courses/$courseSlug/attempts',
