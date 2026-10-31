@@ -137,3 +137,18 @@ it('canonicalizes missing and undefined optional fields identically', () => {
   expect(normalized).toStrictEqual({ status: 'supported', blocks: omitted });
   expect(normalized).toStrictEqual(editDocument(explicit));
 });
+
+it('rejects unsafe saved links instead of replacing them with about:blank', () => {
+  const blocks = [
+    {
+      id: 'p',
+      type: 'paragraph',
+      data: {
+        formatVersion: 1,
+        children: [{ type: 'link', text: 'Link', href: 'javascript:alert(1)' }],
+      },
+    },
+  ];
+  expect(editDocument(blocks)).toEqual({ status: 'unsupported-content' });
+  expect(readDocument(blocks)).toEqual([{ id: 'p', type: 'unsupported' }]);
+});

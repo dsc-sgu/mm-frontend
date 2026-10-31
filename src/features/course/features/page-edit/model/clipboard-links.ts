@@ -1,3 +1,4 @@
+import { isSafeCourseHref } from '@/features/course/model/links';
 import { findPhoneNumbersInText } from 'libphonenumber-js/min';
 import { find } from 'linkifyjs';
 
@@ -69,11 +70,13 @@ export function findCoursePageLinkCandidates(
     })
   );
 
-  return uniqueNonOverlappingCandidates([
-    ...linkifyCandidates,
-    ...phoneCandidates,
-    ...findCoursePageInternalLinkCandidates(text),
-  ]);
+  return uniqueNonOverlappingCandidates(
+    [
+      ...linkifyCandidates,
+      ...phoneCandidates,
+      ...findCoursePageInternalLinkCandidates(text),
+    ].filter((candidate) => isSafeCourseHref(candidate.href))
+  );
 }
 
 export function normalizeCoursePageLinkInput(
@@ -85,7 +88,20 @@ export function normalizeCoursePageLinkInput(
     return null;
   }
 
-  if (/^tel:\+\d+(?:;ext=\d+)?$/u.test(value)) {
+  if (
+    (value.startsWith('/') || value.startsWith('#')) &&
+    isSafeCourseHref(value)
+  ) {
+    return {
+      start: 0,
+      end: value.length,
+      value,
+      href: value,
+      kind: 'internal',
+    };
+  }
+
+  if (/^tel:\+\d+(?:;ext=\d+)?$/u.test(value) && isSafeCourseHref(value)) {
     return {
       end: value.length,
       href: value,

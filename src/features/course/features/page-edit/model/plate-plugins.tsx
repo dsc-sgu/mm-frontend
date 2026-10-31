@@ -1,3 +1,7 @@
+import {
+  COURSE_LINK_SCHEMES,
+  isSafeCourseHref,
+} from '@/features/course/model/links';
 import { CodeBlockRules, unwrapCodeBlock } from '@platejs/code-block';
 import { CodeBlockPlugin, CodeLinePlugin } from '@platejs/code-block/react';
 import { IndentPlugin } from '@platejs/indent/react';
@@ -262,6 +266,10 @@ export const coursePagePlatePlugins = [
     shortcuts: { toggle: { keys: 'mod+e' } },
   }),
   LinkPlugin.configure({
+    options: {
+      isUrl: isSafeCourseHref,
+      allowedSchemes: COURSE_LINK_SCHEMES,
+    },
     inputRules: [
       LinkRules.markdown({ enabled: isMarkdownInputEnabled }),
       LinkRules.autolink({
