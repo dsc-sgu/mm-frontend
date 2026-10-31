@@ -10,7 +10,7 @@ export const Route = createFileRoute('/_authenticated/courses/$courseSlug/')({
 });
 
 function RouteComponent() {
-  const { course: confirmed, courseSlug } = Route.useRouteContext();
+  const { course: confirmed, courseSlug, courseRole } = Route.useRouteContext();
   const { data: course, isPending } = useCoursePageQuery(confirmed.id);
 
   if (isPending) {
@@ -23,5 +23,10 @@ function RouteComponent() {
 
   // A Page cached by CourseId may predate a slug change; links follow the
   // slug the route has just confirmed.
-  return <CoursePage course={{ ...course, courseId: courseSlug }} />;
+  return (
+    <CoursePage
+      role={courseRole}
+      course={{ ...course, courseId: courseSlug }}
+    />
+  );
 }

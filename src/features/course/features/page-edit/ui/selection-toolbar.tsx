@@ -470,13 +470,6 @@ export function CoursePageSelectionToolbar() {
       skipValidation: true,
       url: candidate.href,
     });
-    editor.tf.setNodes(
-      { linkType: candidate.kind === 'internal' ? 'internal' : 'external' },
-      {
-        at: editor.selection ?? activeLinkEditor.selection,
-        match: { type: editor.getType(KEYS.link) },
-      }
-    );
     editor.tf.focus();
     setLinkEditor(CLOSED_LINK_EDITOR_STATE);
   }

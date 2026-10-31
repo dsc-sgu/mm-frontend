@@ -1,5 +1,6 @@
+import { equalJson } from '@/features/course/features/page-document/model/equality';
+import { editDocument } from '@/features/course/features/page-document/model/document';
 import type { CoursePage } from '@/features/course/features/page/model/types';
-import { compareCoursePages } from '@/features/course/features/page-edit/model/dirty-compare';
 import {
   hasCoursePageEditErrors,
   validateCoursePageEdit,
@@ -22,7 +23,7 @@ function getCoursePageEditDerivedState(
     courseId: workingCopy.courseId,
     description: workingCopy.description,
   });
-  const isDirty = compareCoursePages(initialCourse, workingCopy);
+  const isDirty = !equalJson(initialCourse, workingCopy);
 
   return {
     errors,
@@ -38,6 +39,12 @@ export function getCoursePageEditWorkingCopyState(
   CoursePageEditStoreState,
   'canApply' | 'errors' | 'initialCourse' | 'isDirty' | 'workingCopy'
 > {
+  const initial = editDocument(initialCourse.content);
+  const current = editDocument(workingCopy.content);
+  if (initial.status === 'supported')
+    initialCourse = { ...initialCourse, content: initial.blocks };
+  if (current.status === 'supported')
+    workingCopy = { ...workingCopy, content: current.blocks };
   return {
     initialCourse,
     workingCopy,

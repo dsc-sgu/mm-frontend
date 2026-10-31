@@ -44,14 +44,10 @@ function getRichTextPlainText(nodes: RichTextNode[] | undefined) {
   return nodes?.map((node) => node.text).join('') ?? '';
 }
 
-function createCaptionNodes(
-  imageId: string,
-  text: string
-): RichTextNode[] | undefined {
+function createCaptionNodes(text: string): RichTextNode[] | undefined {
   return text.length > 0
     ? [
         {
-          id: `${imageId}:caption`,
           type: 'text',
           text,
         },
@@ -386,28 +382,21 @@ function MissingResource({ children }: { children: ReactNode }) {
 
 export function CourseImageElement({ children, ...props }: PlateElementProps) {
   const element = getElement(props.element);
-  const changeResources = useCoursePageEditStore(
-    (state) => state.changeResources
-  );
+  const editor = props.editor;
   const resources = useCoursePageEditStore(
     (state) => state.workingCopy.resources
   );
   const imageId = typeof element.imageId === 'string' ? element.imageId : '';
   const image = resources.images.find((item) => item.id === imageId);
-  const captionText = getRichTextPlainText(image?.caption);
+  const captionText = getRichTextPlainText(
+    element.caption as RichTextNode[] | undefined
+  );
 
   function updateCaption(nextCaptionText: string) {
-    changeResources({
-      ...resources,
-      images: resources.images.map((resource) =>
-        resource.id === imageId
-          ? {
-              ...resource,
-              caption: createCaptionNodes(imageId, nextCaptionText),
-            }
-          : resource
-      ),
-    });
+    editor.tf.setNodes(
+      { caption: createCaptionNodes(nextCaptionText) },
+      { at: editor.api.findPath(props.element) }
+    );
   }
 
   return (
@@ -417,7 +406,7 @@ export function CourseImageElement({ children, ...props }: PlateElementProps) {
           <figure className="overflow-hidden rounded-3xl border border-border bg-card">
             <img
               src={image.src}
-              alt={image.alt}
+              alt={typeof element.alt === 'string' ? element.alt : ''}
               className="max-h-[28rem] w-full object-cover"
             />
             <figcaption className="px-4 py-3 text-sm leading-6 text-muted-foreground">
@@ -515,18 +504,16 @@ export function CourseAssignmentElement({
   ...props
 }: PlateElementProps) {
   const element = getElement(props.element);
-  const resources = useCoursePageEditStore(
-    (state) => state.workingCopy.resources
+  const taskSummaries = useCoursePageEditStore(
+    (state) => state.workingCopy.taskSummaries
   );
   const taskId = typeof element.taskId === 'string' ? element.taskId : '';
-  const assignment = resources.assignments.find(
-    (item) => item.taskId === taskId
-  );
+  const assignment = taskSummaries.find((item) => item.taskId === taskId);
 
   return (
     <CoursePageBlockFrame frameClassName="my-4" {...props}>
       <div contentEditable={false} className="cursor-default select-none">
-        {assignment ? (
+        {assignment && assignment.status !== 'unavailable' ? (
           <div
             className={cn(
               'block rounded-xl border border-black/10 bg-primary/3 p-4',

@@ -15,7 +15,7 @@ import {
   transformBlock,
   typeBlocks,
 } from './editor';
-import { PENDING_DOC1, PENDING_DOC5 } from './slices';
+import { PENDING_DOC5 } from './slices';
 
 // DOC-14: list numbering scenarios from #74, fixture `doc:lists-74`. The
 // tests type every list themselves and assert only what the reader sees.
@@ -76,7 +76,6 @@ const SAVED_LIST_DOCUMENTS: SavedListDocument[] = [
     outline: ['1. Alpha', '2. Beta', '3. Gamma'],
     // Each command gives its item its own hidden list id, and saving splits
     // the run into three lists: 1, 1, 1.
-    pendingSlice: PENDING_DOC1,
     typeContent: typeCommandList,
   },
 ];
@@ -190,7 +189,6 @@ test.describe('DOC-14: нумерация списков', () => {
     page,
   }) => {
     // The editor continues the ordered run across the bullet: 1 / • / 2.
-    test.fail(true, PENDING_DOC1);
 
     const editable = await openEmptyEditor(page);
 

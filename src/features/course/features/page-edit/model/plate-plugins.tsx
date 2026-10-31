@@ -32,7 +32,7 @@ import {
 } from 'platejs';
 import { createPlatePlugin, ParagraphPlugin } from 'platejs/react';
 
-import { clampCourseListIndent } from '@/features/course/features/page/model/list-indent';
+import { clampCourseListIndent } from '@/features/course/features/page-document/model/list-indent';
 import {
   COURSE_ASSIGNMENT_NODE,
   COURSE_FILES_NODE,
@@ -155,20 +155,6 @@ function isCourseListElement(node: unknown): node is CoursePlateElement {
   return element.listStyleType === KEYS.ol || element.listStyleType === KEYS.ul;
 }
 
-function isSameCourseList(
-  current: CoursePlateElement,
-  previous: CoursePlateElement
-) {
-  const currentListId = current.courseListId;
-  const previousListId = previous.courseListId;
-
-  if (typeof currentListId === 'string' || typeof previousListId === 'string') {
-    return currentListId === previousListId;
-  }
-
-  return true;
-}
-
 const CourseListIndentPlugin = createPlatePlugin({
   key: 'course_list_indent',
 }).overrideEditor(({ editor, tf: { normalizeNode } }) => ({
@@ -181,11 +167,9 @@ const CourseListIndentPlugin = createPlatePlugin({
             ? editor.api.node([...path.slice(0, -1), itemIndex - 1])
             : undefined;
         const previousNode = previousEntry?.[0];
-        const previousIndent =
-          isCourseListElement(previousNode) &&
-          isSameCourseList(node, previousNode)
-            ? previousNode.indent
-            : null;
+        const previousIndent = isCourseListElement(previousNode)
+          ? previousNode.indent
+          : null;
         const indent = clampCourseListIndent(node.indent, previousIndent);
 
         if (node.indent !== indent) {
@@ -301,6 +285,9 @@ export const coursePagePlatePlugins = [
     },
   }),
   ListPlugin.configure({
+    options: {
+      getSiblingListOptions: { breakOnEqIndentNeqListStyleType: true },
+    },
     inputRules: [
       BulletedListRules.markdown({
         enabled: isMarkdownInputEnabled,

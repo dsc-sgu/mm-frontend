@@ -1,14 +1,14 @@
 import { KEYS, type Value } from 'platejs';
 
+import { serializeCourseListIndent } from '@/features/course/features/page-document/model/list-indent';
 import {
-  clampCourseListIndent,
-  serializeCourseListIndent,
-} from '@/features/course/features/page/model/list-indent';
-import { sortRankedContent } from '@/features/course/features/page/model/rank';
+  editDocument,
+  type DocumentBlock,
+} from '@/features/course/features/page-document/model/document';
+import { buildListTree } from '@/features/course/features/page-document/model/lists';
 import type {
   CourseContentBlockItem,
   CourseHeadingBlock,
-  CourseListBlock,
   RichTextMark,
   RichTextNode,
 } from '@/features/course/features/page/model/types';
@@ -47,7 +47,6 @@ export type CoursePlateText = {
 export type CoursePlateLink = {
   type: typeof KEYS.link;
   url: string;
-  linkType?: 'internal' | 'external';
   children: CoursePlateText[];
 };
 
@@ -68,10 +67,6 @@ function createId(prefix = 'block') {
   return `${prefix}-${Math.random().toString(36).slice(2)}`;
 }
 
-function createRank(index: number) {
-  return index.toString(36).padStart(4, '0');
-}
-
 function textMarks(node: RichTextNode) {
   return {
     bold: node.marks?.includes('bold') || undefined,
@@ -90,7 +85,6 @@ function deserializeRichText(nodes: RichTextNode[]): CoursePlateInline[] {
       return {
         type: KEYS.link,
         url: node.href,
-        linkType: node.linkType,
         children: [{ text: node.text, ...textMarks(node) }],
       };
     }
@@ -142,7 +136,6 @@ function serializeRichText(
     if (isTextNode(child)) {
       return [
         {
-          id: createId('text'),
           type: 'text',
           text: child.text,
           marks: serializeTextMarks(child),
@@ -155,11 +148,9 @@ function serializeRichText(
 
       return [
         {
-          id: createId('link'),
           type: 'link',
           text: getTextContent(child.children),
           href: typeof child.url === 'string' ? child.url : '',
-          linkType: child.linkType === 'internal' ? 'internal' : 'external',
           marks: firstText ? serializeTextMarks(firstText) : undefined,
         },
       ];
@@ -173,43 +164,8 @@ function serializeRichText(
   });
 }
 
-// Plate renders every flattened list item in a separate <ol>, so omitting
-// listStart makes all ordered items display as 1. Track counters per nesting
-// level and variant so nested mixed lists do not break their parent numbering.
-function deserializeListBlock(block: CourseListBlock): CoursePlateElement[] {
-  const levels: Array<
-    | {
-        count: number;
-        variant: CourseListBlock['items'][number]['variant'];
-      }
-    | undefined
-  > = [];
-  let previousIndent: number | null = null;
-
-  return sortRankedContent(block.items).map((item) => {
-    const indent = clampCourseListIndent(item.indent, previousIndent);
-
-    previousIndent = indent;
-    levels.length = indent;
-
-    const level = levels[indent - 1];
-    const listStart = level?.variant === item.variant ? level.count + 1 : 1;
-
-    levels[indent - 1] = { count: listStart, variant: item.variant };
-
-    return {
-      id: item.id,
-      type: KEYS.p,
-      listStyleType: item.variant === 'ordered' ? KEYS.ol : KEYS.ul,
-      listStart: item.variant === 'ordered' ? listStart : undefined,
-      indent,
-      courseListId: block.id,
-      children: deserializeRichText(item.children),
-    };
-  });
-}
-
-function deserializeBlock(block: CourseContentBlockItem): CoursePlateElement[] {
+function deserializeBlock(item: CourseContentBlockItem): CoursePlateElement[] {
+  const block = { ...item.data, id: item.id, type: item.type } as FlatBlock;
   switch (block.type) {
     case 'paragraph':
       return [
@@ -240,8 +196,16 @@ function deserializeBlock(block: CourseContentBlockItem): CoursePlateElement[] {
           ],
         },
       ];
-    case 'list':
-      return deserializeListBlock(block);
+    case 'list-item':
+      return [
+        {
+          id: block.id,
+          type: KEYS.p,
+          listStyleType: block.variant === 'ordered' ? KEYS.ol : KEYS.ul,
+          indent: block.indent,
+          children: deserializeRichText(block.children),
+        },
+      ];
     case 'spoiler':
       return [
         {
@@ -253,7 +217,7 @@ function deserializeBlock(block: CourseContentBlockItem): CoursePlateElement[] {
               type: COURSE_SPOILER_TITLE_NODE,
               children: deserializeRichText(block.title),
             },
-            ...sortRankedContent(block.children).flatMap(deserializeBlock),
+            ...deserializeCourseContentToPlate(block.children),
           ],
         },
       ];
@@ -276,6 +240,8 @@ function deserializeBlock(block: CourseContentBlockItem): CoursePlateElement[] {
           id: block.id,
           type: COURSE_IMAGE_NODE,
           imageId: block.imageId,
+          alt: block.alt,
+          caption: block.caption,
           children: [{ text: '' }],
         },
       ];
@@ -303,7 +269,31 @@ function deserializeBlock(block: CourseContentBlockItem): CoursePlateElement[] {
 export function deserializeCourseContentToPlate(
   content: CourseContentBlockItem[]
 ): Value {
-  const value = sortRankedContent(content).flatMap(deserializeBlock);
+  const result = editDocument(content);
+  if (result.status === 'unsupported-content')
+    throw new UnsupportedContentError();
+  const starts = new Map<string, number>();
+  function collect(items: ReturnType<typeof buildListTree>) {
+    for (const item of items) {
+      starts.set(item.block.id, item.number);
+      collect(item.nestedItems);
+    }
+  }
+  let run: Extract<DocumentBlock, { type: 'list-item' }>[] = [];
+  for (const block of [...result.blocks, null]) {
+    if (block?.type === 'list-item') run.push(block);
+    else {
+      collect(buildListTree(run));
+      run = [];
+    }
+  }
+  const value = result.blocks
+    .flatMap(deserializeBlock)
+    .map((node) =>
+      node.listStyleType === KEYS.ol
+        ? { ...node, listStart: starts.get(node.id!) }
+        : node
+    );
 
   return value.length > 0
     ? value
@@ -324,13 +314,9 @@ function isListElement(element: CoursePlateElement) {
   return element.listStyleType === KEYS.ul || element.listStyleType === KEYS.ol;
 }
 
-function serializeCode(
-  element: CoursePlateElement,
-  index: number
-): CourseContentBlockItem {
+function serializeCode(element: CoursePlateElement, index: number): FlatBlock {
   return {
     id: getBlockId(element, index),
-    rank: createRank(index),
     type: 'code',
     code: element.children
       .map((line) => {
@@ -349,10 +335,9 @@ function serializeCode(
 function serializeStandaloneBlock(
   element: CoursePlateElement,
   index: number
-): CourseContentBlockItem | null {
+): FlatBlock | null {
   const base = {
     id: getBlockId(element, index),
-    rank: createRank(index),
   };
 
   switch (element.type) {
@@ -392,7 +377,7 @@ function serializeStandaloneBlock(
         ...base,
         type: 'spoiler',
         title: titleNode ? serializeRichText(titleNode.children) : [],
-        children: serializePlateToCourseContent(bodyChildren),
+        children: serializeSpoilerBody(bodyChildren),
         defaultOpen:
           typeof element.defaultOpen === 'boolean'
             ? element.defaultOpen
@@ -401,7 +386,15 @@ function serializeStandaloneBlock(
     }
     case COURSE_IMAGE_NODE:
       return typeof element.imageId === 'string'
-        ? { ...base, type: 'image', imageId: element.imageId }
+        ? {
+            ...base,
+            type: 'image',
+            imageId: element.imageId,
+            alt: typeof element.alt === 'string' ? element.alt : undefined,
+            caption: Array.isArray(element.caption)
+              ? (element.caption as RichTextNode[])
+              : undefined,
+          }
         : null;
     case COURSE_FILES_NODE:
       return Array.isArray(element.fileIds)
@@ -418,11 +411,7 @@ function serializeStandaloneBlock(
         ? { ...base, type: 'assignment', taskId: element.taskId }
         : null;
     default:
-      return {
-        ...base,
-        type: 'paragraph',
-        children: serializeRichText(element.children),
-      };
+      throw new UnsupportedContentError();
   }
 }
 
@@ -436,51 +425,47 @@ export function serializePlateToCourseContent(
       'type' in node &&
       'children' in node
   );
-  const blocks: CourseContentBlockItem[] = [];
-  let currentList: CourseListBlock | null = null;
+  const blocks: DocumentBlock[] = [];
+  for (const [index, element] of elements.entries()) {
+    const flat: FlatBlock | null = isListElement(element)
+      ? {
+          id: getBlockId(element, index),
+          type: 'list-item',
+          children: serializeRichText(element.children),
+          indent: serializeCourseListIndent(element.indent),
+          variant: element.listStyleType === KEYS.ol ? 'ordered' : 'unordered',
+        }
+      : serializeStandaloneBlock(element, index);
+    if (!flat) throw new UnsupportedContentError();
+    const { id, type, ...data } = flat;
+    blocks.push({ id, type, version: 1, data } as DocumentBlock);
+  }
+  const result = editDocument(blocks);
+  if (result.status === 'unsupported-content')
+    throw new UnsupportedContentError();
+  return result.blocks;
+}
 
-  elements.forEach((element, index) => {
-    if (isListElement(element)) {
-      const courseListId =
-        typeof element.courseListId === 'string'
-          ? element.courseListId
-          : undefined;
-      const startsAnotherList =
-        currentList && courseListId && currentList.id !== courseListId;
+type Flatten<T> = T extends { id: string; type: string; data: object }
+  ? { id: T['id']; type: T['type'] } & T['data']
+  : never;
+type FlatBlock = Flatten<DocumentBlock>;
+export class UnsupportedContentError extends Error {
+  readonly kind = 'unsupported-content';
+  constructor() {
+    super('Содержимое не поддерживается. Обновите приложение.');
+  }
+}
 
-      if (!currentList || startsAnotherList) {
-        currentList = {
-          id: courseListId ?? createId('list'),
-          rank: createRank(blocks.length),
-          type: 'list',
-          items: [],
-        };
-        blocks.push(currentList);
-      }
-
-      const previousItem = currentList.items.at(-1);
-      const indent = clampCourseListIndent(
-        element.indent,
-        previousItem ? previousItem.indent : null
-      );
-
-      currentList.items.push({
-        id: getBlockId(element, index),
-        rank: createRank(currentList.items.length),
-        children: serializeRichText(element.children),
-        indent: serializeCourseListIndent(indent),
-        variant: element.listStyleType === KEYS.ol ? 'ordered' : 'unordered',
-      });
-      return;
-    }
-
-    currentList = null;
-    const block = serializeStandaloneBlock(element, blocks.length);
-
-    if (block) {
-      blocks.push(block);
-    }
-  });
-
-  return blocks.map((block, index) => ({ ...block, rank: createRank(index) }));
+function serializeSpoilerBody(value: Value) {
+  const blocks = serializePlateToCourseContent(value);
+  if (
+    blocks.some(
+      (block) => block.type === 'spoiler' || block.type === 'assignment'
+    )
+  )
+    throw new UnsupportedContentError();
+  return blocks.filter(
+    (block) => block.type !== 'spoiler' && block.type !== 'assignment'
+  );
 }

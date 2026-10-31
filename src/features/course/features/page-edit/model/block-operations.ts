@@ -281,7 +281,6 @@ export function createEmptyPlateBlock(
         listStyleType: input.variant === 'ordered' ? KEYS.ol : KEYS.ul,
         listStart: input.variant === 'ordered' ? 1 : undefined,
         indent: 1,
-        courseListId: createId('list'),
         children: [createEmptyText()],
       };
     case 'spoiler':
@@ -356,9 +355,6 @@ export function createTransformedPlateBlock(
         id: element.id ?? nextBlock.id,
         children: inlineChildren,
         indent: isExistingListItem ? element.indent : nextBlock.indent,
-        courseListId: isExistingListItem
-          ? element.courseListId
-          : nextBlock.courseListId,
       };
     }
     case 'quote':

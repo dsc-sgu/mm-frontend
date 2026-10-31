@@ -1,95 +1,20 @@
 import type { Grade } from '@/features/course/model/grade';
 import type { CourseId } from '@/features/course/model/identity';
 import type { CourseSummary } from '@/features/course/model/types';
-
-export type RichTextMark = 'bold' | 'italic' | 'code';
-
-export type RichTextTextNode = {
-  id: string;
-  type: 'text';
-  text: string;
-  marks?: RichTextMark[];
-};
-
-export type RichTextLinkNode = {
-  id: string;
-  type: 'link';
-  text: string;
-  href: string;
-  linkType: 'internal' | 'external';
-  marks?: RichTextMark[];
-};
-
-export type RichTextNode = RichTextTextNode | RichTextLinkNode;
-
-export type RankedContent = {
-  id: string;
-  rank: string;
-};
-
-export type CourseParagraphBlock = RankedContent & {
-  type: 'paragraph';
-  children: RichTextNode[];
-};
-
-export type CourseHeadingBlock = RankedContent & {
-  type: 'heading';
-  level: 1 | 2 | 3;
-  children: RichTextNode[];
-};
-
-export type CourseQuoteBlock = RankedContent & {
-  type: 'quote';
-  children: RichTextNode[];
-};
-
-export type CourseListVariant = 'ordered' | 'unordered';
-
-export type CourseListItem = RankedContent & {
-  children: RichTextNode[];
-  indent?: number;
-  variant: CourseListVariant;
-};
-
-export type CourseListBlock = RankedContent & {
-  type: 'list';
-  items: CourseListItem[];
-};
-
-export type CourseSpoilerBlock = RankedContent & {
-  type: 'spoiler';
-  title: RichTextNode[];
-  children: CourseContentBlockItem[];
-  defaultOpen?: boolean;
-};
-
-export type CourseCodeBlock = RankedContent & {
-  type: 'code';
-  code: string;
-  language?: string;
-  fileName?: string;
-};
-
-export type CourseImageBlock = RankedContent & {
-  type: 'image';
-  imageId: string;
-};
-
-export type CourseFilesBlock = RankedContent & {
-  type: 'files';
-  fileIds: string[];
-};
-
-export type CourseAssignmentBlock = RankedContent & {
-  type: 'assignment';
-  taskId: string;
-};
-
+import type { RichTextNode } from '@/features/course/model/rich-text';
+import type { DocumentBlock } from '@/features/course/features/page-document/model/document';
+export type {
+  RichTextNode,
+  RichTextMark,
+} from '@/features/course/model/rich-text';
+export type CourseContentBlockItem = DocumentBlock;
+export type CourseHeadingBlock = Extract<
+  DocumentBlock,
+  { type: 'heading' }
+>['data'];
 export type CourseImageResource = {
   id: string;
   src: string;
-  alt: string;
-  caption?: RichTextNode[];
 };
 
 export type CourseFileResource = {
@@ -100,7 +25,7 @@ export type CourseFileResource = {
   mimeType?: string;
 };
 
-export type CourseAssignmentResource = {
+export type TaskSummaryData = {
   taskId: string;
   title: string;
   description?: RichTextNode[];
@@ -111,21 +36,7 @@ export type CourseAssignmentResource = {
 export type CoursePageResources = {
   images: CourseImageResource[];
   files: CourseFileResource[];
-  assignments: CourseAssignmentResource[];
 };
-
-// TODO: Надо что-то сделать с неймингом DTOшек и компонентов,
-// и что у них могут быть коллизии
-export type CourseContentBlockItem =
-  | CourseParagraphBlock
-  | CourseHeadingBlock
-  | CourseQuoteBlock
-  | CourseListBlock
-  | CourseSpoilerBlock
-  | CourseCodeBlock
-  | CourseImageBlock
-  | CourseFilesBlock
-  | CourseAssignmentBlock;
 
 export type CoursePage = Pick<
   CourseSummary,
@@ -135,6 +46,7 @@ export type CoursePage = Pick<
   courseId: string;
   description: string;
   resources: CoursePageResources;
+  taskSummaries: TaskSummary[];
   content: CourseContentBlockItem[];
 };
 
@@ -150,3 +62,9 @@ export type SaveCoursePageInput = {
   content: CourseContentBlockItem[];
   resources?: CoursePageResources;
 };
+
+export type TaskSummary =
+  | { status: 'unavailable'; taskId: string }
+  | ({ status: 'open' } & TaskSummaryData)
+  | ({ status: 'locked'; prerequisite: string } & TaskSummaryData)
+  | ({ status: 'teacher' } & TaskSummaryData);

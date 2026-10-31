@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
+import {
+  isExternalCourseHref,
+  isSafeCourseHref,
+} from '@/features/course/model/links';
 
 import { cn } from '@/shadcn/lib/utils';
-import type { RichTextNode } from '@/features/course/features/page/model/types';
+import type { RichTextNode } from '@/features/course/model/rich-text';
 
 type CourseRichTextProps = {
   nodes: RichTextNode[];
@@ -26,19 +30,19 @@ function applyMarks(node: RichTextNode, children: ReactNode) {
   }, children);
 }
 
-function renderNode(node: RichTextNode) {
+function renderNode(node: RichTextNode, index: number) {
   const content = applyMarks(node, node.text);
 
   if (node.type === 'text') {
-    return <span key={node.id}>{content}</span>;
+    return <span key={index}>{content}</span>;
   }
 
-  const opensInNewTab =
-    node.linkType === 'external' && /^https?:\/\//iu.test(node.href);
+  const opensInNewTab = isExternalCourseHref(node.href);
 
+  if (!isSafeCourseHref(node.href)) return <span key={index}>{content}</span>;
   return (
     <a
-      key={node.id}
+      key={index}
       href={node.href}
       target={opensInNewTab ? '_blank' : undefined}
       rel={opensInNewTab ? 'noreferrer' : undefined}
@@ -54,7 +58,7 @@ function renderNode(node: RichTextNode) {
 
 export function CourseRichText({ nodes, className }: CourseRichTextProps) {
   return (
-    <span className={cn('wrap-break-word', className)}>
+    <span className={cn('wrap-break-word whitespace-pre-wrap', className)}>
       {nodes.map(renderNode)}
     </span>
   );

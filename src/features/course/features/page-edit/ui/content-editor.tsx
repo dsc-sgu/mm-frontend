@@ -1,3 +1,4 @@
+import { editDocument } from '@/features/course/features/page-document/model/document';
 import { memo, useCallback, useMemo, useRef, type RefObject } from 'react';
 import {
   closestCenter,
@@ -258,6 +259,17 @@ function CoursePageContentEditorBase() {
   // already flow into Zustand through onValueChange. The reset-only content
   // snapshot is updated together with its revision, so editor remounts
   // never depend on a reactive live document read during render.
+
+  if (
+    editDocument(contentEditorReset.initialContent).status ===
+    'unsupported-content'
+  ) {
+    return (
+      <p role="alert" data-status="unsupported-content">
+        Содержимое не поддерживается. Обновите приложение.
+      </p>
+    );
+  }
 
   return (
     <CoursePagePlateEditor

@@ -5,13 +5,18 @@ import { CalendarDays, Paperclip, Trophy } from 'lucide-react';
 import { CodeBlock } from '@/features/code-block/ui/block';
 import { cn } from '@/shadcn/lib/utils';
 import { formatGrade } from '@/features/course/model/grade';
-import { clampCourseListIndent } from '@/features/course/features/page/model/list-indent';
-import { sortRankedContent } from '@/features/course/features/page/model/rank';
+import {
+  readDocument,
+  type DocumentBlock,
+} from '@/features/course/features/page-document/model/document';
+import {
+  buildListTree,
+  type ListTreeItem,
+} from '@/features/course/features/page-document/model/lists';
+import type { TaskSummary } from '@/features/course/features/page/model/types';
 import type {
   CourseContentBlockItem,
   CourseFileResource,
-  CourseListBlock,
-  CourseListItem,
   CoursePageResources,
 } from '@/features/course/features/page/model/types';
 import { CourseRichText } from '@/features/course/ui/rich-text';
@@ -26,77 +31,40 @@ function formatDueDate(value: string) {
   }).format(new Date(value));
 }
 
-type RenderableCourseListItem = CourseListItem & {
-  nestedItems: RenderableCourseListItem[];
-};
-
-function buildListTree(items: CourseListItem[]) {
-  const rootItems: RenderableCourseListItem[] = [];
-  const stack: Array<{ indent: number; items: RenderableCourseListItem[] }> = [
-    { indent: 1, items: rootItems },
-  ];
-  let previousIndent: number | null = null;
-
-  items.forEach((item) => {
-    const indent = clampCourseListIndent(item.indent, previousIndent);
-    const listItem = { ...item, nestedItems: [] };
-
-    previousIndent = indent;
-
-    while (stack.length > 1 && indent < stack[stack.length - 1].indent) {
-      stack.pop();
-    }
-
-    const currentLevel = stack[stack.length - 1];
-
-    if (indent > currentLevel.indent) {
-      const parentItem = currentLevel.items.at(-1);
-
-      if (parentItem) {
-        stack.push({ indent, items: parentItem.nestedItems });
-      }
-    }
-
-    stack[stack.length - 1].items.push(listItem);
-  });
-
-  return rootItems;
-}
-
-function groupListItemsByVariant(items: RenderableCourseListItem[]) {
+function groupListItemsByVariant(items: ListTreeItem[]) {
   return items.reduce<
     Array<{
-      items: RenderableCourseListItem[];
-      variant: CourseListItem['variant'];
+      items: ListTreeItem[];
+      variant: 'ordered' | 'unordered';
     }>
   >((groups, item) => {
     const currentGroup = groups.at(-1);
 
-    if (currentGroup?.variant === item.variant) {
+    if (currentGroup?.variant === item.block.data.variant) {
       currentGroup.items.push(item);
     } else {
-      groups.push({ items: [item], variant: item.variant });
+      groups.push({ items: [item], variant: item.block.data.variant });
     }
 
     return groups;
   }, []);
 }
 
-function ListItems({ items }: { items: RenderableCourseListItem[] }) {
+function ListItems({ items }: { items: ListTreeItem[] }) {
   return groupListItemsByVariant(items).map((group) => {
     const ListTag = group.variant === 'ordered' ? 'ol' : 'ul';
 
     return (
       <ListTag
-        key={group.items[0].id}
+        key={group.items[0].block.id}
         className={cn(
           'space-y-2 pl-6 text-base leading-7 text-foreground/90',
           group.variant === 'ordered' ? 'list-decimal' : 'list-disc'
         )}
       >
         {group.items.map((item) => (
-          <li key={item.id} className="my-1">
-            <CourseRichText nodes={item.children} />
+          <li key={item.block.id} className="my-1">
+            <CourseRichText nodes={item.block.data.children} />
             {item.nestedItems.length > 0 && (
               <ListItems items={item.nestedItems} />
             )}
@@ -105,14 +73,6 @@ function ListItems({ items }: { items: RenderableCourseListItem[] }) {
       </ListTag>
     );
   });
-}
-
-function ListBlock({ block }: { block: CourseListBlock }) {
-  return (
-    <div className="my-4">
-      <ListItems items={buildListTree(sortRankedContent(block.items))} />
-    </div>
-  );
 }
 
 function MissingResource({ children }: { children: ReactNode }) {
@@ -168,14 +128,17 @@ function MissingFile({ fileId }: { fileId: string }) {
 }
 
 function CourseContentBlock({
-  block,
+  block: item,
+  taskSummaries,
   courseSlug,
   resources,
 }: {
   block: CourseContentBlockItem;
+  taskSummaries: TaskSummary[];
   courseSlug: string;
   resources: CoursePageResources;
 }) {
+  const block = { ...item.data, id: item.id, type: item.type } as FlatBlock;
   switch (block.type) {
     case 'paragraph':
       return (
@@ -210,8 +173,8 @@ function CourseContentBlock({
           </p>
         </blockquote>
       );
-    case 'list':
-      return <ListBlock block={block} />;
+    case 'list-item':
+      return null;
     case 'spoiler':
       return (
         <details className="my-5" open={block.defaultOpen}>
@@ -226,6 +189,7 @@ function CourseContentBlock({
           </summary>
           <CourseContentBlocks
             blocks={block.children}
+            taskSummaries={taskSummaries}
             courseSlug={courseSlug}
             resources={resources}
             className="border-l border-border/80 pl-4"
@@ -259,16 +223,16 @@ function CourseContentBlock({
         >
           <img
             src={image.src}
-            alt={image.alt}
+            alt={block.alt ?? ''}
             className="max-h-[28rem] w-full object-cover"
           />
-          {image.caption && (
+          {block.caption && (
             <figcaption
               className={cn(
                 'px-4 py-3 text-sm leading-6 text-muted-foreground'
               )}
             >
-              <CourseRichText nodes={image.caption} />
+              <CourseRichText nodes={block.caption} />
             </figcaption>
           )}
         </figure>
@@ -289,11 +253,11 @@ function CourseContentBlock({
         </section>
       );
     case 'assignment': {
-      const assignment = resources.assignments.find(
+      const assignment = taskSummaries.find(
         (item) => item.taskId === block.taskId
       );
 
-      if (!assignment) {
+      if (!assignment || assignment.status === 'unavailable') {
         return (
           <MissingResource>
             Задание курса недоступно: {block.taskId}
@@ -301,6 +265,22 @@ function CourseContentBlock({
         );
       }
 
+      if (assignment.status === 'locked')
+        return (
+          <section className="my-4 rounded-xl border border-border p-4">
+            <h3>{assignment.title}</h3>
+            {assignment.description && (
+              <p>
+                <CourseRichText nodes={assignment.description} />
+              </p>
+            )}
+            {assignment.dueDate && <p>{formatDueDate(assignment.dueDate)}</p>}
+            {assignment.maxGrade !== undefined && (
+              <p>Макс. оценка: {formatGrade(assignment.maxGrade)}</p>
+            )}
+            <p>Задание закрыто. Сначала выполните: {assignment.prerequisite}</p>
+          </section>
+        );
       return (
         <Link
           to="/courses/$courseSlug/tasks/$taskId"
@@ -368,25 +348,62 @@ function CourseContentBlock({
 
 export function CourseContentBlocks({
   blocks,
+  taskSummaries = [],
   courseSlug,
   resources,
   className,
 }: {
-  blocks: CourseContentBlockItem[];
+  blocks: readonly unknown[];
+  taskSummaries?: TaskSummary[];
   courseSlug: string;
   resources: CoursePageResources;
   className?: string;
 }) {
   return (
     <div className={className}>
-      {sortRankedContent(blocks).map((block) => (
-        <CourseContentBlock
-          key={block.id}
-          block={block}
-          courseSlug={courseSlug}
-          resources={resources}
-        />
-      ))}
+      {renderNodes(blocks).map((node, index) => {
+        if (node.kind === 'list')
+          return <ListItems key={index} items={node.items} />;
+        if (node.block.type === 'unsupported')
+          return (
+            <MissingResource key={index}>
+              Блок не удалось показать
+            </MissingResource>
+          );
+        return (
+          <CourseContentBlock
+            key={index}
+            block={node.block}
+            courseSlug={courseSlug}
+            resources={resources}
+            taskSummaries={taskSummaries}
+          />
+        );
+      })}
     </div>
   );
+}
+type Flatten<T> = T extends { id: string; type: string; data: object }
+  ? { id: T['id']; type: T['type'] } & T['data']
+  : never;
+type FlatBlock = Flatten<DocumentBlock>;
+function renderNodes(input: readonly unknown[]) {
+  const result: (
+    | { kind: 'list'; items: ListTreeItem[] }
+    | { kind: 'block'; block: ReturnType<typeof readDocument>[number] }
+  )[] = [];
+  let run: Extract<DocumentBlock, { type: 'list-item' }>[] = [];
+  function flush() {
+    if (run.length) result.push({ kind: 'list', items: buildListTree(run) });
+    run = [];
+  }
+  for (const block of readDocument(input)) {
+    if (block.type === 'list-item') run.push(block);
+    else {
+      flush();
+      result.push({ kind: 'block', block });
+    }
+  }
+  flush();
+  return result;
 }
