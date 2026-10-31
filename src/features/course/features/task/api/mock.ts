@@ -200,6 +200,10 @@ function toHistoryReview({ revision }: MockReview) {
     revision: revision.number,
     grade: gradeToNumber(revision.grade),
     publishedAt: revision.publishedAt,
-    publishedBy: { id: publisher.id, ...mockUserName(publisher) },
+    publishedBy: {
+      id: publisher.id,
+      username: publisher.username,
+      ...mockUserName(publisher),
+    },
   };
 }

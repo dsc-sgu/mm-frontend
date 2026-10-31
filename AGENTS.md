@@ -309,7 +309,9 @@ Before adding or modifying code that performs HTTP requests, consumes external r
 
 ### People in contracts
 
-A person in a DTO or domain type is its identity plus the parts of the Full Name: `{ id: UserId, lastName, firstName, patronymic? }` (compose `FullNameSchema` from `@/features/auth/model/full-name`). A patronymic is always optional: an omitted field and an empty string both mean none. Only the frontend joins the parts, through `formatFullName()`, which gives «Фамилия Имя Отчество». Compare people by `id`, never by a name or `username`. Known exception until #259: the course Teacher in `loadCourses` has no `id` and lists key it by `username`; do not copy it.
+A person in a DTO or domain type is `UserRef`: `{ id, username, lastName, firstName, patronymic? }`. Use `UserRefSchema` and `UserRef` from `@/features/auth/model/user-ref` instead of assembling the shape locally. A patronymic is always optional: an omitted field and an empty string both mean none. Only the frontend joins the parts, through `formatFullName()`, which gives «Фамилия Имя Отчество».
+
+`username` is mutable: use it only for display and as a locator in links. Compare people and key caches and lists only by `id`, never by a name or `username`. Data beyond `UserRef` (avatars, contacts) comes from a separate read by `id` (mm-3), rather than with every list. Known exception until mm-259: the course Teacher in `loadCourses` has no `id` and lists key it by `username`; do not copy it.
 
 Do not add a pre-joined name string (`name`, `fullName`, `authorName`, `gradedBy`, `teacherName`) or a local name formatter. Legacy aggregates still carry such strings, e.g. `features/attempts`; when moving one to new operations, replace the string with the parts instead of carrying it over.
 

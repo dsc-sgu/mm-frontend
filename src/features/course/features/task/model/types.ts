@@ -1,5 +1,4 @@
-import type { FullName } from '@/features/auth/model/full-name';
-import type { UserId } from '@/features/auth/model/identity';
+import type { UserRef } from '@/features/auth/model/user-ref';
 import type { Grade } from '@/features/course/model/grade';
 import type {
   AttemptId,
@@ -31,7 +30,7 @@ export type TaskAttemptReview = {
   revision: ReviewRevision;
   grade: Grade;
   publishedAt: string;
-  publishedBy: { id: UserId } & FullName;
+  publishedBy: UserRef;
 };
 
 export type TaskAttempt = {

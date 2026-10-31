@@ -5,8 +5,8 @@ import {
   runHttpOperation,
   unexpectedHttpStatus,
 } from '@/app/remote-data/http';
-import { FullNameSchema } from '@/features/auth/model/full-name';
-import { UserIdSchema, type UserId } from '@/features/auth/model/identity';
+import { UserRefSchema } from '@/features/auth/model/user-ref';
+import type { UserId } from '@/features/auth/model/identity';
 import { GradeSchema } from '@/features/course/model/grade';
 import {
   AttemptIdSchema,
@@ -33,10 +33,7 @@ const AttemptHistorySchema = v.object({
           revision: ReviewRevisionSchema,
           grade: GradeSchema,
           publishedAt: v.pipe(v.string(), v.isoTimestamp()),
-          publishedBy: v.object({
-            id: UserIdSchema,
-            ...FullNameSchema.entries,
-          }),
+          publishedBy: UserRefSchema,
         })
       ),
       updates: v.picklist(['seen', 'unseen']),

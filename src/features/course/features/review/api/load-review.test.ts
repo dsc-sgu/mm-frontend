@@ -51,19 +51,41 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
         revision: 2,
         overallFeedbackHtml: expect.stringContaining('пустой список'),
         // world:review Users have only a given name, so no patronymic.
-        publishedBy: { id: boris.id, lastName: '', firstName: 'Борис' },
+        publishedBy: {
+          id: boris.id,
+          username: boris.username,
+          lastName: '',
+          firstName: 'Борис',
+        },
         comments: [
           {
-            author: { id: anna.id, lastName: '', firstName: 'Анна' },
+            author: {
+              id: anna.id,
+              username: anna.username,
+              lastName: '',
+              firstName: 'Анна',
+            },
             filePath: 'src/main.ts',
             side: 'additions',
             lineNumber: 2,
             replies: [
-              { author: { id: sasha.id, lastName: '', firstName: 'Саша' } },
+              {
+                author: {
+                  id: sasha.id,
+                  username: sasha.username,
+                  lastName: '',
+                  firstName: 'Саша',
+                },
+              },
             ],
           },
           {
-            author: { id: boris.id, lastName: '', firstName: 'Борис' },
+            author: {
+              id: boris.id,
+              username: boris.username,
+              lastName: '',
+              firstName: 'Борис',
+            },
             filePath: 'README.md',
             replies: [],
           },
@@ -144,8 +166,8 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
 
   test.each([sasha, anna])(
     'a reply belongs to the signed-in $username after reloading',
-    async ({ id, lastName, firstName }) => {
-      const author = { id, lastName, firstName };
+    async ({ id, username, lastName, firstName }) => {
+      const author = { id, username, lastName, firstName };
       signIn(id);
 
       const created = await createReply({
@@ -214,12 +236,33 @@ describe('TR-05: load-review statuses', () => {
     publishedAt: '2026-05-20T13:05:00.000Z',
     publishedBy: {
       id: anna.id,
+      username: anna.username,
       lastName: 'Смирнова',
       firstName: 'Анна',
       patronymic: 'Сергеевна',
     },
     comments: [],
   };
+
+  test('ответ без username опубликовавшего проверку отклоняется', async () => {
+    server.use(
+      http.get(
+        REVIEW_URL,
+        reply(200, {
+          status: 'published',
+          review: {
+            ...review,
+            publishedBy: { ...review.publishedBy, username: undefined },
+          },
+        })
+      )
+    );
+
+    await expect(loadReview(COURSE_ID, sashaFirst.id)).rejects.toMatchObject({
+      operation: 'load-review',
+      kind: 'invalid-response',
+    });
+  });
 
   test('200 with a valid body resolves the declared outcome', async () => {
     server.use(

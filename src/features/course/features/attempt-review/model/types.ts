@@ -3,8 +3,7 @@ import type {
   AttemptId,
   AttemptNumber,
 } from '@/features/course/model/identity';
-import type { FullName } from '@/features/auth/model/full-name';
-import type { UserId } from '@/features/auth/model/identity';
+import type { UserRef } from '@/features/auth/model/user-ref';
 import type { Grade } from '@/features/course/model/grade';
 import type { ReviewRevision } from '@/features/course/features/review/model/revision';
 import type {
@@ -26,7 +25,7 @@ export type AttemptSummary = {
     title: string;
     maxGrade: Grade;
   };
-  student: { id: UserId } & FullName;
+  student: UserRef;
 };
 
 /** One of the Student's Attempts at the Task, as the selector lists it. */

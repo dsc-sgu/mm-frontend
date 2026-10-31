@@ -177,9 +177,10 @@ function AttemptReviewPageLoaded({
       return undefined;
     }
 
-    const { userId, lastName, firstName, patronymic } = sessionData.session;
+    const { userId, username, lastName, firstName, patronymic } =
+      sessionData.session;
 
-    return { id: userId, lastName, firstName, patronymic };
+    return { id: userId, username, lastName, firstName, patronymic };
   }, [sessionData]);
   const {
     draft,

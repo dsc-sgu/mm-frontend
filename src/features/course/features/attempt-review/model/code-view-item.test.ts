@@ -1,4 +1,4 @@
-import type { UserId } from '@/features/auth/model/identity';
+import type { Username, UserId } from '@/features/auth/model/identity';
 import { parseDiffFromFile } from '@pierre/diffs';
 import { describe, expect, it } from 'vitest';
 
@@ -37,6 +37,7 @@ function lineComment(filePath: string): AttemptReviewLineComment {
       id: '00000000-0000-4000-8000-000000000001' as UserId,
       lastName: 'Смирнова',
       firstName: 'Анна',
+      username: 'anna' as Username,
     },
     createdAt: '2026-10-01T10:00:00.000Z',
     updatedAt: '2026-10-01T10:00:00.000Z',

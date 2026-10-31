@@ -5,8 +5,7 @@ import {
   runHttpOperation,
   unexpectedHttpStatus,
 } from '@/app/remote-data/http';
-import { FullNameSchema } from '@/features/auth/model/full-name';
-import { UserIdSchema } from '@/features/auth/model/identity';
+import { UserRefSchema } from '@/features/auth/model/user-ref';
 import { GradeSchema } from '@/features/course/model/grade';
 import type { AttemptId, CourseId } from '@/features/course/model/identity';
 import { ReviewRevisionSchema } from '@/features/course/features/review/model/revision';
@@ -18,10 +17,6 @@ import type { ReviewResult } from '@/features/course/features/review/model/types
 
 // Working Review wire contract pending backend confirmation #113: the latest
 // revision carries its number, and replies come inside their root comment.
-const AuthorSchema = v.object({
-  id: UserIdSchema,
-  ...FullNameSchema.entries,
-});
 const SideSchema = v.picklist(['deletions', 'additions']);
 const LineSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 
@@ -33,11 +28,11 @@ const ReviewResultSchema = v.variant('status', [
       grade: GradeSchema,
       overallFeedbackHtml: v.string(),
       publishedAt: v.pipe(v.string(), v.isoTimestamp()),
-      publishedBy: AuthorSchema,
+      publishedBy: UserRefSchema,
       comments: v.array(
         v.object({
           id: v.string(),
-          author: AuthorSchema,
+          author: UserRefSchema,
           filePath: v.string(),
           side: SideSchema,
           lineNumber: LineSchema,
@@ -49,7 +44,7 @@ const ReviewResultSchema = v.variant('status', [
           replies: v.array(
             v.object({
               id: v.string(),
-              author: AuthorSchema,
+              author: UserRefSchema,
               html: v.string(),
               createdAt: v.pipe(v.string(), v.isoTimestamp()),
               updatedAt: v.pipe(v.string(), v.isoTimestamp()),

@@ -61,14 +61,30 @@ const operations: Operation[] = [
       submittedAt: '2026-05-22T09:00:00.000Z',
       deadlineAt: '2026-05-25T20:59:59.000Z',
       task: { title: 'Сортировки', maxGrade: 10 },
-      student: { id: sasha.id, lastName: '', firstName: 'Саша' },
+      student: {
+        id: sasha.id,
+        username: sasha.username,
+        lastName: '',
+        firstName: 'Саша',
+      },
     },
     invalid: [
       ['attemptNumber', { attemptNumber: 0 }],
+      [
+        'студент без username',
+        { student: { id: sasha.id, lastName: '', firstName: 'Саша' } },
+      ],
       ['maxGrade', { task: { title: 'Сортировки', maxGrade: 10.0001 } }],
       [
         'student',
-        { student: { id: 'sasha', lastName: '', firstName: 'Саша' } },
+        {
+          student: {
+            id: 'sasha',
+            username: sasha.username,
+            lastName: '',
+            firstName: 'Саша',
+          },
+        },
       ],
       ['submittedAt', { submittedAt: 'вчера' }],
     ],
@@ -173,7 +189,12 @@ describe('Attempt projections from the canonical state', () => {
         submittedAt: '2026-05-22T09:00:00.000Z',
         deadlineAt: '2026-05-25T20:59:59.000Z',
         task: { title: 'Сортировки', maxGrade: v.parse(GradeSchema, 10) },
-        student: { id: sasha.id, lastName: '', firstName: 'Саша' },
+        student: {
+          id: sasha.id,
+          username: sasha.username,
+          lastName: '',
+          firstName: 'Саша',
+        },
       },
     });
   });

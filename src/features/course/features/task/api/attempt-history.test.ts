@@ -38,7 +38,12 @@ const HISTORY_ATTEMPT = {
     revision: 2,
     grade: 7.5,
     publishedAt: '2026-05-20T13:05:00.000Z',
-    publishedBy: { id: boris.id, lastName: '', firstName: 'Борис' },
+    publishedBy: {
+      id: boris.id,
+      username: boris.username,
+      lastName: '',
+      firstName: 'Борис',
+    },
   },
   updates: 'unseen',
 };
@@ -245,6 +250,21 @@ const operations: Operation[] = [
     success: { status: 200, body: { attempts: [HISTORY_ATTEMPT] } },
     invalid: [
       [
+        'опубликовавший проверку без username',
+        {
+          attempts: [
+            {
+              ...HISTORY_ATTEMPT,
+              review: {
+                ...HISTORY_ATTEMPT.review,
+                publishedBy: { id: boris.id, lastName: '', firstName: 'Борис' },
+              },
+            },
+          ],
+        },
+      ],
+
+      [
         'a Grade without its revision',
         {
           attempts: [
@@ -263,7 +283,11 @@ const operations: Operation[] = [
               ...HISTORY_ATTEMPT,
               review: {
                 ...HISTORY_ATTEMPT.review,
-                publishedBy: { lastName: '', firstName: 'Борис' },
+                publishedBy: {
+                  username: boris.username,
+                  lastName: '',
+                  firstName: 'Борис',
+                },
               },
             },
           ],

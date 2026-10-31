@@ -72,7 +72,7 @@ function toReply({
 function author(userId: UserId): ReviewAuthor {
   const user = mockBackend.state.users.find(({ id }) => id === userId);
   if (!user) throw new Error(`The mock backend has no User ${userId}`);
-  return { id: user.id, ...mockUserName(user) };
+  return { id: user.id, username: user.username, ...mockUserName(user) };
 }
 
 function findReview(attemptId: AttemptId): MockReview | undefined {
