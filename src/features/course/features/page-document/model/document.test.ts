@@ -32,9 +32,7 @@ describe('Документ страницы курса v1', () => {
   });
   it('отклоняет блок без data.formatVersion', () => {
     expect(
-      editDocument([
-        { id: 'p', type: 'paragraph', data: { children: [] } },
-      ])
+      editDocument([{ id: 'p', type: 'paragraph', data: { children: [] } }])
     ).toEqual({ status: 'unsupported-content' });
   });
   it('сохраняет место невалидного блока и запрещает его редактирование', () => {
