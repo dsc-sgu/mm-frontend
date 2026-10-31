@@ -1,11 +1,12 @@
 ---
 id: mm-301-DOC1
-status: open
+status: in_progress
 deps: [mm-149]
 links: []
 created: 2026-10-31T07:16:27Z
 type: task
 priority: 1
+assignee: t3m8ch
 aliases: [j9vv2]
 parent: mm-298
 tags: [ready-for-agent]
