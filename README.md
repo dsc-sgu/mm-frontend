@@ -206,6 +206,17 @@ export default defineConfig([
 ]);
 ```
 
+## Codex edit checks
+
+The project hook in `.codex/hooks.json` runs ESLint on existing `.ts` and `.tsx`
+files added, updated or moved by `apply_patch`. Deleted files and other file
+types are skipped. Failures return diagnostics to the agent without changing
+the files. Edits made through shell commands do not trigger this hook; run
+`bun run lint` before finishing work.
+
+Review and trust the hook with `/hooks` in the Codex terminal UI, launched from
+this repository. New or changed hook definitions are skipped until trusted.
+
 ## Unused code
 
 `bun run knip` reports unused files, exports, types and dependencies. It exits
