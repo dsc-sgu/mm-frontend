@@ -22,6 +22,7 @@ import { Input } from '@/shadcn/components/ui/input';
 import { useCreationPrototype } from '@/features/course/prototype/create-course/hooks/use-creation-prototype';
 import type { Scenario } from '@/features/course/prototype/create-course/model/creation';
 import { SHORT_TITLE_MAX_LENGTH } from '@/features/course/model/short-title';
+import { CharacterCount } from '@/features/course/ui/character-count';
 import styles from './creation.module.css';
 
 type Controller = ReturnType<typeof useCreationPrototype>;
@@ -196,9 +197,16 @@ function NameField({
 function ShortTitleField({ control }: { control: Controller }) {
   return (
     <div className={styles.field}>
-      <label htmlFor="course-short-title">
-        Короткое название курса <span aria-hidden="true">*</span>
-      </label>
+      <div className="flex items-center justify-between gap-2">
+        <label htmlFor="course-short-title">
+          Короткое название курса <span aria-hidden="true">*</span>
+        </label>
+        <CharacterCount
+          id="course-short-title-count"
+          length={control.shortTitle.length}
+          max={SHORT_TITLE_MAX_LENGTH}
+        />
+      </div>
       <Input
         id="course-short-title"
         maxLength={SHORT_TITLE_MAX_LENGTH}
@@ -210,9 +218,6 @@ function ShortTitleField({ control }: { control: Controller }) {
         placeholder="Например, АиСД"
         onChange={(event) => control.setShortTitle(event.target.value)}
       />
-      <span id="course-short-title-count" className={styles.help}>
-        {control.shortTitle.length}/{SHORT_TITLE_MAX_LENGTH}
-      </span>
     </div>
   );
 }
