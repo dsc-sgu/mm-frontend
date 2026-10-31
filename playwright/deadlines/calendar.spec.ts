@@ -15,5 +15,9 @@ test('календарь читает дедлайны через HTTP из об
   await expect(
     page.getByRole('heading', { name: 'Календарь дедлайнов' })
   ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Алгоритмы', exact: true })
+    .first()
+    .hover();
   await expect(page.getByText('Сортировки').first()).toBeVisible();
 });
