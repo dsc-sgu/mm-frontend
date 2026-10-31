@@ -1,12 +1,13 @@
 ---
-id: mm-m1e5k-FINAL
+id: mm-320-FINAL
 status: open
-deps: [mm-5g0m3, mm-f7dh8, mm-2ehnr, mm-bgv2j, mm-v8262, mm-228, mm-232, mm-233]
+deps: [mm-305, mm-310, mm-311, mm-317, mm-318, mm-228, mm-232, mm-233]
 links: []
 created: 2026-10-31T07:16:29Z
 type: task
 priority: 2
-parent: mm-8bwwt
+aliases: [m1e5k]
+parent: mm-300
 tags: [ready-for-agent]
 ---
 # FINAL: Удалить оставшиеся RAM-моки и временные исключения после перевода потребителей

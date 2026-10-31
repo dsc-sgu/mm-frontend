@@ -1,12 +1,13 @@
 ---
-id: mm-j9vv2-DOC1
+id: mm-301-DOC1
 status: open
 deps: [mm-149]
 links: []
 created: 2026-10-31T07:16:27Z
 type: task
 priority: 1
-parent: mm-v9mxz
+aliases: [j9vv2]
+parent: mm-298
 tags: [ready-for-agent]
 ---
 # DOC1: Ввести документ страницы курса v1 и общее отображение для чтения

@@ -1,12 +1,13 @@
 ---
-id: mm-bgv2j-ATT6
+id: mm-317-ATT6
 status: open
-deps: [mm-ade6t]
+deps: [mm-316]
 links: []
 created: 2026-10-31T07:16:29Z
 type: task
 priority: 2
-parent: mm-t1gys
+aliases: [bgv2j]
+parent: mm-299
 tags: [ready-for-agent]
 ---
 # ATT6: Публиковать первые проверки в режиме быстрого оценивания

@@ -1,12 +1,13 @@
 ---
-id: mm-c952d-DRF3
+id: mm-309-DRF3
 status: open
-deps: [mm-wrp77]
+deps: [mm-308]
 links: []
 created: 2026-10-31T07:16:28Z
 type: task
 priority: 1
-parent: mm-v9mxz
+aliases: [c952d]
+parent: mm-298
 tags: [ready-for-agent]
 ---
 # DRF3: Синхронизировать рабочую копию по блокам в фоне

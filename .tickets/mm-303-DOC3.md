@@ -1,12 +1,13 @@
 ---
-id: mm-bjjw2-DOC3
+id: mm-303-DOC3
 status: open
-deps: [mm-j9vv2]
+deps: [mm-301]
 links: []
 created: 2026-10-31T07:16:27Z
 type: task
 priority: 1
-parent: mm-v9mxz
+aliases: [bjjw2]
+parent: mm-298
 tags: [ready-for-agent]
 ---
 # DOC3: Сохранять документ без потерь и проверять вставленное содержимое

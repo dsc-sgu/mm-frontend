@@ -1,12 +1,13 @@
 ---
-id: mm-8238z-ATT3
+id: mm-314-ATT3
 status: open
-deps: [mm-3cz39]
+deps: [mm-312]
 links: []
 created: 2026-10-31T07:16:28Z
 type: task
 priority: 1
-parent: mm-t1gys
+aliases: [8238z]
+parent: mm-299
 tags: [ready-for-agent]
 ---
 # ATT3: Показывать загрузку, перепроверку и устаревший список попыток явно

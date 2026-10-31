@@ -1,12 +1,13 @@
 ---
-id: mm-wrp77-DRF2
+id: mm-308-DRF2
 status: open
-deps: [mm-3sc88, mm-147]
+deps: [mm-307, mm-147]
 links: []
 created: 2026-10-31T07:16:28Z
 type: task
 priority: 1
-parent: mm-v9mxz
+aliases: [wrp77]
+parent: mm-298
 tags: [ready-for-agent]
 ---
 # DRF2: Открывать, публиковать и отменять свои черновики блоков
