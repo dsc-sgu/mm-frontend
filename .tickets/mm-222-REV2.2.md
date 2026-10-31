@@ -1,6 +1,6 @@
 ---
 id: mm-222-REV2.2
-status: in_progress
+status: closed
 deps: [mm-221]
 links: [mm-280]
 created: 2026-10-14T10:58:44Z
@@ -10,6 +10,8 @@ assignee: t3m8ch
 external-ref: gh-222
 parent: mm-218
 tags: [ready-for-agent]
+closed: 2026-10-31T07:50:22Z
+close-reason: completed
 ---
 # REV2.2: Строить историю попыток на странице задания из того же состояния
 
