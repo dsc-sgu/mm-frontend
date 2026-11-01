@@ -4,7 +4,7 @@ import type {
   RegisteredRouter,
 } from '@tanstack/react-router';
 
-export type HeaderLinkTarget = {
+type HeaderLinkTarget = {
   to: string;
   params?: Record<string, string | number | undefined>;
 };
@@ -29,7 +29,7 @@ export type HeaderDataContext = {
 
 export type HeaderDataGetter<T> = (context: HeaderDataContext) => T;
 
-export type HeaderStaticData = {
+type HeaderStaticData = {
   getBreadcrumb?:
     | HeaderBreadcrumbItem[]
     | HeaderDataGetter<HeaderBreadcrumbItem[]>;

@@ -172,7 +172,7 @@ export function AttemptCard(props: AttemptCardProps) {
   );
 }
 
-export function AttemptTitle({ attempt }: { attempt: CourseAttempt }) {
+function AttemptTitle({ attempt }: { attempt: CourseAttempt }) {
   return (
     <>
       <span className="font-semibold">Попытка #{attempt.attemptNumber}: </span>
@@ -197,7 +197,7 @@ function getGradeClassName(attempt: CourseAttempt): string {
   return 'font-semibold text-amber-700 dark:text-amber-300';
 }
 
-export function AttemptDiffStats({ attempt }: { attempt: CourseAttempt }) {
+function AttemptDiffStats({ attempt }: { attempt: CourseAttempt }) {
   return (
     <div
       className={cn(
@@ -215,7 +215,7 @@ export function AttemptDiffStats({ attempt }: { attempt: CourseAttempt }) {
   );
 }
 
-export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
+function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
   const timing = getTimingLabel(attempt);
 
   return (

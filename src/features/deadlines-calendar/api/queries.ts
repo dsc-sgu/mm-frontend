@@ -8,7 +8,7 @@ export const deadlinesKeys = {
     [...deadlinesKeys.all, weekStart.toISOString()] as const,
 };
 
-export function getWeekBounds(date: Date): { start: Date; end: Date } {
+function getWeekBounds(date: Date): { start: Date; end: Date } {
   const start = new Date(date);
   const day = start.getDay();
   const diff = day === 0 ? -6 : 1 - day;

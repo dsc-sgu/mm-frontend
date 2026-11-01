@@ -117,7 +117,7 @@ export async function applyChanges(page: Page) {
   await expect(page.getByText('Изменения применены')).toBeVisible();
 }
 
-export function topLevelBlocks(editable: Locator) {
+function topLevelBlocks(editable: Locator) {
   return editable.locator(':scope > [data-slate-node="element"]');
 }
 
@@ -253,7 +253,7 @@ function readScreenRank(block: Locator) {
 }
 
 // Visible text of every top-level block, without editor chrome.
-export function readBlockTexts(editable: Locator) {
+function readBlockTexts(editable: Locator) {
   return topLevelBlocks(editable).evaluateAll((blocks) =>
     blocks.map((block) => {
       const clone = block.cloneNode(true) as HTMLElement;

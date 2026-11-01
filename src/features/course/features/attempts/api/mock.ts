@@ -98,7 +98,7 @@ const TEACHERS = [
   'Инна Батраева',
 ];
 
-export const MOCK_STUDENTS = buildMockStudents();
+const MOCK_STUDENTS = buildMockStudents();
 // RAM attempts are addressed by the CourseId the Course lookup returns.
 const attemptsByCourse = new Map<CourseId, CourseAttempt[]>();
 

@@ -154,21 +154,6 @@ export function unexpectedHttpStatus(context: HttpResponseContext) {
 }
 
 /**
- * Creates an `invalid-response` failure for a contract check outside a JSON
- * schema, such as an unexpected media type. The explanation is an internal
- * English diagnostic. Use as `throw invalidResponse(context, explanation)`.
- */
-export function invalidResponse(
-  context: HttpResponseContext,
-  explanation: string
-) {
-  return new OperationFailure(context.operation, {
-    kind: 'invalid-response',
-    explanation,
-  });
-}
-
-/**
  * Serializes a value into a Fetch body with JSON Accept and Content-Type
  * headers. Spread the result into the request. The headers are a complete
  * property: another `headers` in the same object replaces them or is replaced.

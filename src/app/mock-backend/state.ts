@@ -39,7 +39,7 @@ export type MockUser = {
   avatarURL: string;
 };
 
-export type MockSession = {
+type MockSession = {
   userId: UserId;
   expiresAt: string;
 };
@@ -48,13 +48,13 @@ export type MockCourse = CourseSummary & {
   accessState: 'draft' | 'open';
 };
 
-export type MockCourseMembership = {
+type MockCourseMembership = {
   courseId: CourseId;
   userId: UserId;
   role: CourseRole;
 };
 
-export type MockTask = {
+type MockTask = {
   courseId: CourseId;
   id: string;
   title: string;
@@ -82,7 +82,7 @@ export type MockReviewComment = {
   updatedAt: string;
 };
 
-export type MockReviewRevision = {
+type MockReviewRevision = {
   number: ReviewRevision;
   grade: Grade;
   overallFeedbackHtml: string;
@@ -92,7 +92,7 @@ export type MockReviewRevision = {
 };
 
 /** Replies sit next to their root comment, outside every revision. */
-export type MockReviewReply = {
+type MockReviewReply = {
   id: string;
   commentId: string;
   authorId: UserId;

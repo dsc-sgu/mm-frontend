@@ -16,7 +16,7 @@ export type CourseHeadingBlock = Extract<
   { type: 'heading' }
 >['data'];
 
-export type CourseImageResource = {
+type CourseImageResource = {
   id: string;
   src: string;
 };
@@ -29,7 +29,7 @@ export type CourseFileResource = {
   mimeType?: string;
 };
 
-export type TaskSummaryData = {
+type TaskSummaryData = {
   taskId: string;
   title: string;
   description?: RichTextNode[];

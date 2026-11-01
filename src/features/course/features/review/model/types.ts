@@ -5,7 +5,7 @@ import type { ReviewRevision } from './revision';
 export type ReviewCommentSide = 'deletions' | 'additions';
 
 /** A line on one side of the Attempt diff. */
-export type DiffLine = { side: ReviewCommentSide; lineNumber: number };
+type DiffLine = { side: ReviewCommentSide; lineNumber: number };
 
 /** A single line has equal start and end positions. */
 export type DiffLineRange = { start: DiffLine; end: DiffLine };

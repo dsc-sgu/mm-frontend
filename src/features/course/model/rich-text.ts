@@ -2,7 +2,7 @@ import * as v from 'valibot';
 import { isSafeCourseHref } from './links';
 import { omitUndefined } from './omit-undefined';
 
-export const RichTextMarkSchema = v.picklist(['bold', 'italic', 'code']);
+const RichTextMarkSchema = v.picklist(['bold', 'italic', 'code']);
 
 export type RichTextMark = v.InferOutput<typeof RichTextMarkSchema>;
 

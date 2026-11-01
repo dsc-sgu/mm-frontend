@@ -260,24 +260,24 @@ function getParam(context: HeaderDataContext, key: string) {
   return '';
 }
 
-export function formatCommitLabel(commitId: string) {
+function formatCommitLabel(commitId: string) {
   return commitId.length > 7 ? commitId.slice(0, 7) : commitId;
 }
 
-export function formatAttemptLabel(attemptNumber: string) {
+function formatAttemptLabel(attemptNumber: string) {
   return `Попытка #${attemptNumber}`;
 }
 
-export function formatAttemptReviewLabel(attemptNumber: string) {
+function formatAttemptReviewLabel(attemptNumber: string) {
   return `Оценка попытки #${attemptNumber}`;
 }
 
 // Temporary task/student labels until their detail operations provide names.
 
-export function getStubTaskTitle(taskId: string) {
+function getStubTaskTitle(taskId: string) {
   return `Задание №${taskId}`;
 }
 
-export function getStubStudentName(username: string) {
+function getStubStudentName(username: string) {
   return username;
 }

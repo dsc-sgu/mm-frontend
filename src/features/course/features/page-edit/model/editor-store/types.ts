@@ -8,11 +8,7 @@ import type {
 import type { CoursePageBlockInsertPanelState } from '@/features/course/features/page-edit/model/insert-panel-targeting';
 import type { CoursePageEditValidationErrors } from '@/features/course/features/page-edit/model/validation';
 
-export type {
-  CoursePageBlockInsertPanelState,
-  CoursePageBlockInsertPanelVisibleState,
-  CoursePageBlockInsertPlacement,
-} from '@/features/course/features/page-edit/model/insert-panel-targeting';
+export type { CoursePageBlockInsertPanelVisibleState } from '@/features/course/features/page-edit/model/insert-panel-targeting';
 
 export type CoursePageWorkingCopyUpdate =
   | CoursePage
@@ -61,7 +57,7 @@ export type CoursePageEditStoreOptions = {
   course: CoursePage;
 };
 
-export type CoursePageEditStoreCreator = StateCreator<CoursePageEditStore>;
+type CoursePageEditStoreCreator = StateCreator<CoursePageEditStore>;
 
 export type CoursePageEditStoreSet = Parameters<CoursePageEditStoreCreator>[0];
 

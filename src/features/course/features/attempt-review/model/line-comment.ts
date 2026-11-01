@@ -28,7 +28,7 @@ export function addLineComment({
   ];
 }
 
-export function updateLineComment(
+function updateLineComment(
   comments: AttemptReviewLineComment[],
   commentId: string,
   update: (comment: AttemptReviewLineComment) => AttemptReviewLineComment | null

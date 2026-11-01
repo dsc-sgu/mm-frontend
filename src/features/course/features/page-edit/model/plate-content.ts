@@ -44,7 +44,7 @@ export type CoursePlateText = {
   code?: boolean;
 };
 
-export type CoursePlateLink = {
+type CoursePlateLink = {
   type: typeof KEYS.link;
   url: string;
   children: CoursePlateText[];
@@ -477,7 +477,7 @@ type Flatten<T> = T extends { id: string; type: string; data: object }
 
 type FlatBlock = Flatten<DocumentBlock>;
 
-export class UnsupportedContentError extends Error {
+class UnsupportedContentError extends Error {
   readonly kind = 'unsupported-content';
   constructor() {
     super('Содержимое не поддерживается. Обновите приложение.');

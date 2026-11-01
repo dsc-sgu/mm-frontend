@@ -41,7 +41,7 @@ export type StudentAttempt = {
   commentCount: number;
 };
 
-export type AttemptReviewFileContents = {
+type AttemptReviewFileContents = {
   oldText: string;
   newText: string;
 };

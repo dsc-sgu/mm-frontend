@@ -1,4 +1,14 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["src/main.tsx", "src/**/*.type-test.ts"]
+  "entry": ["src/main.tsx", "src/**/*.type-test.ts"],
+  "ignoreIssues": {
+    "src/shadcn/components/ui/button.tsx": ["exports"],
+    "src/shadcn/components/ui/card.tsx": ["exports"],
+    "src/shadcn/components/ui/avatar.tsx": ["exports"],
+    "src/shadcn/components/ui/dropdown-menu.tsx": ["exports"],
+    "src/shadcn/components/ui/drawer.tsx": ["exports"],
+    "src/shadcn/components/ui/popover.tsx": ["exports"],
+    "src/shadcn/components/ui/command.tsx": ["exports"],
+    "src/shadcn/components/ui/dialog.tsx": ["exports"]
+  }
 }

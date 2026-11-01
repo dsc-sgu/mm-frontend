@@ -5,7 +5,7 @@ import {
   type CoursePageBlockTarget,
 } from '@/features/course/features/page-edit/model/block-target';
 
-export type CoursePageBlockInsertPlacement = 'before' | 'after';
+type CoursePageBlockInsertPlacement = 'before' | 'after';
 
 export type CoursePageBlockInsertPanelState =
   | { status: 'hidden' }

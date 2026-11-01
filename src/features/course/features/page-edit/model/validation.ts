@@ -29,7 +29,7 @@ export const COURSE_EDIT_COLOR_OPTIONS = [
   'green',
 ] as const satisfies readonly CourseColor[];
 
-export const coursePageEditSchema = v.object({
+const coursePageEditSchema = v.object({
   title: v.pipe(
     v.string(),
     v.trim(),

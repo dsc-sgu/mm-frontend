@@ -256,7 +256,7 @@ function findBlockEntryByIdInChildren(
   return null;
 }
 
-export function createEmptyPlateBlock(
+function createEmptyPlateBlock(
   input: CreatePlateBlockInput
 ): CoursePlateElement {
   switch (input.type) {
@@ -331,7 +331,7 @@ export function createEmptyPlateBlock(
   }
 }
 
-export function createTransformedPlateBlock(
+function createTransformedPlateBlock(
   element: CoursePlateElement,
   input: CreatePlateBlockInput
 ): CoursePlateElement {
@@ -396,7 +396,7 @@ export function createTransformedPlateBlock(
   }
 }
 
-export function getTopLevelBlockEntries(
+function getTopLevelBlockEntries(
   editor: SlateEditor
 ): CoursePageEditorBlockEntry[] {
   return editor.children.flatMap(
@@ -416,11 +416,11 @@ export function getTopLevelBlockEntries(
   );
 }
 
-export function getBlockEntryById(editor: SlateEditor, blockId: string) {
+function getBlockEntryById(editor: SlateEditor, blockId: string) {
   return findBlockEntryByIdInChildren(editor.children, blockId);
 }
 
-export function getBlockEntryAtPath(editor: SlateEditor, path: Path) {
+function getBlockEntryAtPath(editor: SlateEditor, path: Path) {
   const node = getNodeAtPath(editor.children, path);
 
   if (!isElementNode(node)) {
@@ -434,7 +434,7 @@ export function getBlockEntryAtPath(editor: SlateEditor, path: Path) {
   } satisfies CoursePageEditorBlockEntry;
 }
 
-export function insertBlockRelative(
+function insertBlockRelative(
   editor: SlateEditor,
   path: Path,
   placement: 'before' | 'after',
@@ -456,7 +456,7 @@ export function insertBlockRelative(
   return true;
 }
 
-export function insertBlockBelow(
+function insertBlockBelow(
   editor: SlateEditor,
   path: Path,
   block: CoursePlateElement
@@ -472,7 +472,7 @@ export function insertParagraphRelative(
   return insertBlockRelative(editor, path, placement, createParagraph());
 }
 
-export function insertParagraphBelow(editor: SlateEditor, path: Path) {
+function insertParagraphBelow(editor: SlateEditor, path: Path) {
   return insertParagraphRelative(editor, path, 'after');
 }
 
@@ -565,7 +565,7 @@ function isEditorBlockEntryKey(entry: CoursePageEditorBlockEntry, key: string) {
   );
 }
 
-export function moveBlock(editor: SlateEditor, path: Path, direction: -1 | 1) {
+function moveBlock(editor: SlateEditor, path: Path, direction: -1 | 1) {
   const nextValue = getEditorValue(editor);
   const parentPath = getParentPath(path);
   const parentChildren = getChildrenAtPath(nextValue, parentPath);
@@ -624,22 +624,6 @@ export function transformBlock(
   selectPathSoon(editor, path);
 
   return true;
-}
-
-export function insertBlockBelowById(
-  editor: SlateEditor,
-  blockId: string,
-  block: CoursePlateElement
-) {
-  const entry = getBlockEntryById(editor, blockId);
-
-  return entry ? insertBlockBelow(editor, entry.path, block) : false;
-}
-
-export function insertParagraphBelowById(editor: SlateEditor, blockId: string) {
-  const entry = getBlockEntryById(editor, blockId);
-
-  return entry ? insertParagraphBelow(editor, entry.path) : false;
 }
 
 export function insertParagraphRelativeById(

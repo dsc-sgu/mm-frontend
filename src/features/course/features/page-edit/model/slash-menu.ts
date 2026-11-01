@@ -27,7 +27,7 @@ export type CoursePageSlashMenuState =
       triggerRange: Range;
     };
 
-export const COURSE_PAGE_SLASH_MENU_ITEMS: CoursePageSlashMenuItem[] = [
+const COURSE_PAGE_SLASH_MENU_ITEMS: CoursePageSlashMenuItem[] = [
   {
     id: 'heading-1',
     label: 'Заголовок 1',

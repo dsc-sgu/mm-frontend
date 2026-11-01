@@ -19,7 +19,7 @@ export type DiffReadiness =
   | { status: 'ready'; pool: DiffWorkerPool }
   | { status: 'failed' };
 
-export type DiffReadinessStore = {
+type DiffReadinessStore = {
   readiness: DiffReadiness;
   /** Creates the Workers; a started store keeps its pool. */
   start: () => void;

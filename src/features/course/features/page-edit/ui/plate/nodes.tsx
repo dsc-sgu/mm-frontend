@@ -1,11 +1,5 @@
 import { Children, type ReactNode } from 'react';
-import {
-  CalendarDays,
-  FileText,
-  ImageIcon,
-  Paperclip,
-  Trophy,
-} from 'lucide-react';
+import { CalendarDays, FileText, Paperclip, Trophy } from 'lucide-react';
 import {
   PlateElement,
   PlateLeaf,
@@ -554,25 +548,6 @@ export function CourseAssignmentElement({
           <MissingResource>Задание курса недоступно: {taskId}</MissingResource>
         )}
       </div>
-      {children}
-    </CoursePageBlockFrame>
-  );
-}
-
-export function CourseUnknownElement({
-  children,
-  ...props
-}: PlateElementProps) {
-  return (
-    <CoursePageBlockFrame
-      frameClassName="my-4"
-      contentClassName="rounded-xl border border-dashed border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground outline-none"
-      {...props}
-    >
-      <span className="inline-flex items-center gap-2">
-        <ImageIcon className="size-4" aria-hidden="true" />
-        Неизвестный блок
-      </span>
       {children}
     </CoursePageBlockFrame>
   );

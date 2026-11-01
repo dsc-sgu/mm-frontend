@@ -28,12 +28,12 @@ export type CourseAttemptStudent = {
   subgroup?: string;
 };
 
-export type CourseAttemptDiffStats = {
+type CourseAttemptDiffStats = {
   addedLines: number;
   deletedLines: number;
 };
 
-export type CourseAttemptGrade = {
+type CourseAttemptGrade = {
   value: Grade;
   gradedAt: string;
   gradedBy: string;

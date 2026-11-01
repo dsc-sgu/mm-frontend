@@ -1,6 +1,6 @@
 const MIN_COURSE_LIST_INDENT = 1;
 
-export function normalizeCourseListIndent(value: unknown) {
+function normalizeCourseListIndent(value: unknown) {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return MIN_COURSE_LIST_INDENT;
   }

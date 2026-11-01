@@ -55,9 +55,7 @@ export function useAttemptReviewDraft(review: ReviewResult, maxGrade: Grade) {
   };
 }
 
-export function createAttemptReviewDraft(
-  review: ReviewResult
-): AttemptReviewDraft {
+function createAttemptReviewDraft(review: ReviewResult): AttemptReviewDraft {
   if (review.status === 'none') {
     return { grade: '', overallFeedbackHtml: '', lineComments: [] };
   }

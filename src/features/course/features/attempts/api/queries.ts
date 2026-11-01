@@ -19,7 +19,7 @@ export const courseAttemptsKeys = {
     [...courseAttemptsKeys.course(courseId), { filters }] as const,
 };
 
-export function courseAttemptsQueryOptions({
+function courseAttemptsQueryOptions({
   courseId,
   filters,
 }: {

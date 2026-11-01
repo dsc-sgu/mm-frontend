@@ -6,10 +6,10 @@ import {
   CourseSlugSchema,
 } from '@/features/course/model/identity';
 
-export const courseSlugParamSchema = CourseSlugSchema;
-export const usernameParamSchema = UsernameSchema;
+const courseSlugParamSchema = CourseSlugSchema;
+const usernameParamSchema = UsernameSchema;
 
-export const positiveIntegerParamSchema = v.pipe(
+const positiveIntegerParamSchema = v.pipe(
   v.string(),
   v.regex(/^[1-9]\d*$/),
   v.transform(Number),

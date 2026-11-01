@@ -64,7 +64,7 @@ const body = v.variant('type', [
   image,
   files,
 ]);
-export const BlockSchema = v.variant('type', [
+const BlockSchema = v.variant('type', [
   paragraph,
   heading,
   quote,
@@ -85,7 +85,7 @@ export const BlockSchema = v.variant('type', [
 
 export type DocumentBlock = v.InferOutput<typeof BlockSchema>;
 
-export type UnsupportedBlock = { id: string; type: 'unsupported' };
+type UnsupportedBlock = { id: string; type: 'unsupported' };
 
 export type ReadBlock = DocumentBlock | UnsupportedBlock;
 

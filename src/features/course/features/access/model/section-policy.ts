@@ -1,6 +1,6 @@
 import type { CourseRole } from './types';
 
-export const courseSectionAccess = {
+const courseSectionAccess = {
   page: 'member',
   journal: 'member',
   attempts: 'teacher',

@@ -8,7 +8,7 @@ import { loadAttemptMaterial } from './load-material';
 import { loadStudentAttempts } from './load-student-attempts';
 import { loadAttemptSummary } from './load-summary';
 
-export function attemptSummaryOptions(
+function attemptSummaryOptions(
   viewerId: UserId,
   courseId: CourseId,
   attemptId: AttemptId
@@ -21,7 +21,7 @@ export function attemptSummaryOptions(
 }
 
 /** Immutable: an Attempt's material never changes once submitted. */
-export function attemptMaterialOptions(
+function attemptMaterialOptions(
   viewerId: UserId,
   courseId: CourseId,
   attemptId: AttemptId

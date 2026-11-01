@@ -44,7 +44,7 @@ export const taskKeys = {
     ] as const,
 };
 
-export function taskOptions(courseId: CourseId, taskId: string) {
+function taskOptions(courseId: CourseId, taskId: string) {
   return queryOptions({
     queryKey: taskKeys.page(courseId, taskId),
     queryFn: () => fetchTaskPage({ courseId, taskId }),

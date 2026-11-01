@@ -29,7 +29,7 @@ export function CoursePageEditStoreProvider({
   );
 }
 
-export function useCoursePageEditStoreApi() {
+function useCoursePageEditStoreApi() {
   const store = useContext(CoursePageEditStoreContext);
 
   if (!store) {
