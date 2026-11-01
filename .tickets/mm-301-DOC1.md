@@ -1,6 +1,6 @@
 ---
 id: mm-301-DOC1
-status: in_progress
+status: closed
 deps: [mm-149]
 links: [mm-324, mm-325, mm-327]
 created: 2026-10-31T07:16:27Z
@@ -10,6 +10,8 @@ assignee: t3m8ch
 aliases: [j9vv2]
 parent: mm-298
 tags: [ready-for-agent]
+closed: 2026-11-01T11:48:22Z
+close-reason: completed
 ---
 # DOC1: Ввести документ страницы курса v1 и общее отображение для чтения
 
