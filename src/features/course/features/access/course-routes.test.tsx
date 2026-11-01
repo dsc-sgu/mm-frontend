@@ -1,3 +1,4 @@
+import { editDocument } from '@/features/course/features/page-document/model/document';
 import {
   act,
   cleanup,
@@ -263,9 +264,9 @@ test('saved Course metadata replaces the confirmed Header title without changing
   });
   await screen.findByRole('heading', { name: 'Базы данных' });
   const page = await queryClient.ensureQueryData(
-    coursePageQueryOptions(DATABASES_ID)
+    coursePageQueryOptions(DATABASES_ID, accessWorld.users.vera.id)
   );
-  if (!page) {
+  if (!page || 'status' in page) {
     throw new Error('The Course fixture has no published Page');
   }
   const mutation = renderHook(() => useSaveCoursePageMutation(), {
@@ -277,6 +278,7 @@ test('saved Course metadata replaces the confirmed Header title without changing
   await act(async () => {
     await mutation.result.current.mutateAsync({
       ...page,
+      content: supportedContent(page.content),
       courseId: DATABASES_ID,
       previousSlug: accessWorld.courses.databases.slug,
       slug: 'databases',
@@ -296,9 +298,9 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
   const { queryClient } = renderRoutes([], DATABASES_PATH, { appRoutes: true });
   await screen.findByRole('heading', { name: 'Базы данных' });
   const page = await queryClient.ensureQueryData(
-    coursePageQueryOptions(DATABASES_ID)
+    coursePageQueryOptions(DATABASES_ID, accessWorld.users.vera.id)
   );
-  if (!page) {
+  if (!page || 'status' in page) {
     throw new Error('The Course fixture has no published Page');
   }
   const mutation = renderHook(() => useSaveCoursePageMutation(), {
@@ -311,6 +313,7 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
     await expect(
       mutation.result.current.mutateAsync({
         ...page,
+        content: supportedContent(page.content),
         courseId: DATABASES_ID,
         previousSlug: accessWorld.courses.databases.slug,
         slug: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -320,8 +323,10 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
   });
 
   await expect(
-    queryClient.fetchQuery(coursePageQueryOptions(DATABASES_ID))
-  ).resolves.toMatchObject({ courseId: 'databases', title: 'Базы данных' });
+    queryClient.fetchQuery(
+      coursePageQueryOptions(DATABASES_ID, accessWorld.users.vera.id)
+    )
+  ).resolves.toMatchObject({ courseId: DATABASES_ID, title: 'Базы данных' });
   await queryClient.invalidateQueries();
   await screen.findByRole('heading', { name: 'Базы данных' });
   expect(screen.getByRole('link', { name: 'Редактирование' })).toBeDefined();
@@ -514,3 +519,9 @@ test('an unmatched nested route remains a resource 404 inside the confirmed Cour
   expect(screen.getByRole('link', { name: 'Редактирование' })).toBeDefined();
   expect(router.history.location.href).toBe(path);
 });
+
+function supportedContent(content: readonly unknown[]) {
+  const result = editDocument(content);
+  if (result.status !== 'supported') throw new Error('Unsupported fixture');
+  return result.blocks;
+}

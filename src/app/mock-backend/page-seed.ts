@@ -1,0 +1,377 @@
+import * as v from 'valibot';
+import type { MockCourse } from './state';
+import { GradeSchema } from '@/features/course/model/grade';
+import type {
+  CoursePage,
+  CoursePageResources,
+  TaskSummary,
+  CourseContentBlockItem,
+} from '@/features/course/features/page/model/types';
+type CoursePageSummary = Omit<
+  CoursePage,
+  'description' | 'resources' | 'content' | 'taskSummaries'
+>;
+const COURSE_DESCRIPTIONS: Record<string, string> = {
+  'algorithms-and-data-structures':
+    'Практический курс о классических алгоритмах, структурах данных и способах оценивать сложность решений до того, как код попадёт в продакшен.',
+  databases:
+    'Курс помогает разобраться в моделировании данных, SQL, транзакциях и проектировании надёжного слоя хранения для прикладных систем.',
+  'programming-languages':
+    'Разбираем, как устроены языки программирования: типы, интерпретаторы, компиляторы и выразительные средства современных экосистем.',
+  'frontend-engineering':
+    'Курс про инженерный подход к интерфейсам: архитектура, состояние, доступность, производительность и качество пользовательского опыта.',
+  'operating-systems':
+    'Изучаем процессы, память, файловые системы, конкурентность и то, как операционная система связывает железо с пользовательскими программами.',
+  'computer-networks':
+    'От сетевых моделей и маршрутизации до HTTP, диагностики и практик построения устойчивых распределённых приложений.',
+  'modern-information-technologies':
+    'Обзор современных технологий разработки: командная работа, веб-платформы, облачная инфраструктура и безопасная доставка изменений.',
+};
+// Keyed by canonical Course objects: resetting the backend also resets these
+// lazily generated RAM pages, and renaming a slug keeps the same Course.
+
+export function createCoursePage(course: MockCourse): CoursePage {
+  const summary: CoursePageSummary = {
+    courseId: course.slug,
+    title: course.title,
+    shortTitle: course.shortTitle,
+    color: course.color,
+    iconName: course.iconName,
+    teachers: course.teachers,
+  };
+  return {
+    ...summary,
+    description:
+      COURSE_DESCRIPTIONS[course.slug] ??
+      'Материалы курса, задания и полезные ссылки собраны в одном месте.',
+    resources: buildCourseResources(summary),
+    content: buildCourseContent(summary),
+    taskSummaries: buildTaskSummaries(),
+  };
+}
+function buildCourseResources(course: CoursePageSummary): CoursePageResources {
+  return {
+    images: [
+      {
+        id: `${course.courseId}:image:workspace`,
+        src: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80',
+      },
+    ],
+    files: [
+      {
+        id: `${course.courseId}:files:syllabus`,
+        name: 'Силлабус курса.pdf',
+        href: `/courses/${course.courseId}/files`,
+        size: '420 KB',
+        mimeType: 'application/pdf',
+      },
+      {
+        id: `${course.courseId}:files:rubric`,
+        name: 'Критерии оценивания.md',
+        href: `/courses/${course.courseId}/files`,
+        size: '18 KB',
+        mimeType: 'text/markdown',
+      },
+    ],
+  };
+}
+function buildTaskSummaries(): TaskSummary[] {
+  return [
+    {
+      status: 'open',
+      taskId: '1',
+      title: 'Вводное практическое задание',
+      description: [
+        {
+          type: 'text',
+          text: 'Покажите, что окружение готово, и отправьте первый небольшой результат.',
+        },
+      ],
+      dueDate: '2026-06-01T20:59:00Z',
+      maxGrade: v.parse(GradeSchema, 10),
+    },
+  ];
+}
+function buildCourseContent(
+  course: CoursePageSummary
+): CourseContentBlockItem[] {
+  return [
+    {
+      id: `${course.courseId}:intro`,
+      type: 'heading',
+      data: {
+        formatVersion: 1,
+        level: 2,
+        children: [
+          {
+            type: 'text',
+            text: 'О курсе',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:welcome`,
+      type: 'paragraph',
+      data: {
+        formatVersion: 1,
+        children: [
+          {
+            type: 'text',
+            text: 'Добро пожаловать на курс ',
+          },
+          {
+            type: 'text',
+            text: course.title,
+            marks: ['bold'],
+          },
+          {
+            type: 'text',
+            text: '. Здесь собраны материалы, задания и ориентиры, которые помогут двигаться по темам последовательно.',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:outcomes`,
+      type: 'heading',
+      data: {
+        formatVersion: 1,
+        level: 3,
+        children: [
+          {
+            type: 'text',
+            text: 'Что получится к концу модуля',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:outcomes-list:practice`,
+      type: 'list-item',
+      data: {
+        formatVersion: 1,
+        variant: 'unordered',
+        children: [
+          {
+            type: 'text',
+            text: 'Разобрать ключевые понятия на коротких практических примерах.',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:outcomes-list:project`,
+      type: 'list-item',
+      data: {
+        formatVersion: 1,
+        variant: 'unordered',
+        children: [
+          {
+            type: 'text',
+            text: 'Собрать мини-проект и оформить решение для проверки.',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:outcomes-list:discussion`,
+      type: 'list-item',
+      data: {
+        formatVersion: 1,
+        variant: 'unordered',
+        children: [
+          {
+            type: 'text',
+            text: 'Научиться объяснять решения и обсуждать компромиссы.',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:quote`,
+      type: 'quote',
+      data: {
+        formatVersion: 1,
+        children: [
+          {
+            type: 'text',
+            text: 'Материалы курса лучше проходить небольшими итерациями: прочитать, попробовать, получить обратную связь и улучшить решение.',
+            marks: ['italic'],
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:workflow`,
+      type: 'heading',
+      data: {
+        formatVersion: 1,
+        level: 3,
+        children: [
+          {
+            type: 'text',
+            text: 'Рекомендуемый порядок работы',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:workflow-list:lecture`,
+      type: 'list-item',
+      data: {
+        formatVersion: 1,
+        variant: 'ordered',
+        children: [
+          {
+            type: 'text',
+            text: 'Просмотрите конспект и отметьте непонятные места.',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:workflow-list:practice`,
+      type: 'list-item',
+      data: {
+        formatVersion: 1,
+        variant: 'ordered',
+        children: [
+          {
+            type: 'text',
+            text: 'Выполните практикум и приложите результат к заданию.',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:workflow-list:review`,
+      type: 'list-item',
+      data: {
+        formatVersion: 1,
+        variant: 'ordered',
+        children: [
+          {
+            type: 'text',
+            text: 'Сверьтесь с чек-листом и отправьте работу на ревью.',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:spoiler`,
+      type: 'spoiler',
+      data: {
+        formatVersion: 1,
+        title: [
+          {
+            type: 'text',
+            text: 'Подсказки для первого задания',
+          },
+        ],
+        defaultOpen: false,
+        children: [
+          {
+            id: `${course.courseId}:spoiler:note`,
+            type: 'paragraph',
+            data: {
+              formatVersion: 1,
+              children: [
+                {
+                  type: 'text',
+                  text: 'Начните с маленького примера и проверьте граничные случаи до основного решения.',
+                },
+              ],
+            },
+          },
+          {
+            id: `${course.courseId}:spoiler:link`,
+            type: 'paragraph',
+            data: {
+              formatVersion: 1,
+              children: [
+                {
+                  type: 'text',
+                  text: 'Если застряли, откройте ',
+                },
+                {
+                  type: 'link',
+                  text: 'страницу файлов курса',
+                  href: `/courses/${course.courseId}/files`,
+                },
+                {
+                  type: 'text',
+                  text: ' и найдите дополнительные материалы.',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:code`,
+      type: 'code',
+      data: {
+        formatVersion: 1,
+        language: 'ts',
+        fileName: 'checklist.ts',
+        code: "const steps = ['read', 'practice', 'review'];\n\nexport function isReady(done: string[]) {\n  return steps.every((step) => done.includes(step));\n}",
+      },
+    },
+    {
+      id: `${course.courseId}:image`,
+      type: 'image',
+      data: {
+        formatVersion: 1,
+        imageId: `${course.courseId}:image:workspace`,
+        alt: 'Рабочее место студента с ноутбуком и заметками',
+        caption: [
+          {
+            type: 'text',
+            text: 'Материалы курса рассчитаны на работу в браузере, редакторе кода и системе контроля версий.',
+          },
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:files`,
+      type: 'files',
+      data: {
+        formatVersion: 1,
+        fileIds: [
+          `${course.courseId}:files:syllabus`,
+          `${course.courseId}:files:rubric`,
+        ],
+      },
+    },
+    {
+      id: `${course.courseId}:assignment`,
+      type: 'assignment',
+      data: { formatVersion: 1, taskId: '1' },
+    },
+    {
+      id: `${course.courseId}:external`,
+      type: 'paragraph',
+      data: {
+        formatVersion: 1,
+        children: [
+          {
+            type: 'text',
+            text: 'Для дополнительного чтения используйте ',
+          },
+          {
+            type: 'link',
+            text: 'MDN Web Docs',
+            href: 'https://developer.mozilla.org/',
+            marks: ['bold'],
+          },
+          {
+            type: 'text',
+            text: ' и материалы, которые преподаватели публикуют в течение семестра.',
+          },
+        ],
+      },
+    },
+  ];
+}

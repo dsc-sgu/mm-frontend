@@ -1,3 +1,4 @@
+import { editDocument } from '@/features/course/features/page-document/model/document';
 import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
@@ -213,16 +214,38 @@ export function CoursePageEditPage({
   courseId: CourseId;
   courseSlug: CourseSlug;
 }) {
-  const { data: course, isPending } = useCoursePageQuery(courseId);
+  const {
+    data: course,
+    isPending,
+    isError,
+    refetch,
+  } = useCoursePageQuery(courseId);
+
+  if (isError)
+    return (
+      <div role="alert">
+        Не удалось загрузить страницу{' '}
+        <button
+          onClick={() => {
+            void refetch();
+          }}
+        >
+          Повторить
+        </button>
+      </div>
+    );
 
   if (isPending) {
     return <CoursePageLoading />;
   }
 
-  if (!course) {
+  if (!course || 'status' in course) {
     return null;
   }
 
+  const document = editDocument(course.content);
+  if (document.status === 'unsupported-content')
+    return <p>Содержимое не поддерживается редактором</p>;
   return (
     <CoursePageEditLoaded
       key={courseSlug}
@@ -230,7 +253,7 @@ export function CoursePageEditPage({
       courseSlug={courseSlug}
       // A Page cached by CourseId may predate a slug change; the working copy
       // starts from the slug the route has just confirmed.
-      course={{ ...course, courseId: courseSlug }}
+      course={{ ...course, content: document.blocks, courseId: courseSlug }}
     />
   );
 }

@@ -1,3 +1,4 @@
+import { prefetchCoursePage } from '@/features/course/features/page/api/queries';
 import { CoursePageEditPage } from '@/features/course/features/page-edit/page';
 import { createCourseSectionBreadcrumb } from '@/features/course/routing/header';
 import { createFileRoute } from '@tanstack/react-router';
@@ -13,6 +14,13 @@ export const Route = createFileRoute(
         '/courses/$courseSlug/edit'
       ),
     },
+  },
+  loader: ({ context }) => {
+    prefetchCoursePage(
+      context.queryClient,
+      context.course.id,
+      context.session.userId
+    );
   },
   component: RouteComponent,
 });

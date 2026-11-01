@@ -23,6 +23,15 @@ export function courseContextOptions(userId: UserId, courseSlug: CourseSlug) {
       if (previous?.status === 'found' && result.status === 'not-found') {
         client.removeQueries({ queryKey: courseKeys.byId(previous.course.id) });
       }
+      if (
+        previous?.status === 'found' &&
+        result.status === 'found' &&
+        previous.role !== result.role
+      ) {
+        await client.invalidateQueries({
+          queryKey: [...courseKeys.byId(result.course.id), 'page'],
+        });
+      }
       return result;
     },
     staleTime: 0,
