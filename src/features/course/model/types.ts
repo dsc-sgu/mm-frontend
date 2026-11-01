@@ -12,12 +12,14 @@ export const CourseColorSchema = v.picklist([
   'orange',
   'green',
 ]);
+
 export type CourseColor = v.InferOutput<typeof CourseColorSchema>;
 
 export const CourseIconNameSchema = v.custom<keyof typeof dynamicIconImports>(
   (input) =>
     typeof input === 'string' && Object.hasOwn(dynamicIconImports, input)
 );
+
 export type LucideIconName = v.InferOutput<typeof CourseIconNameSchema>;
 
 export type Teacher = {

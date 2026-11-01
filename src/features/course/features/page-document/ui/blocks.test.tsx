@@ -25,6 +25,7 @@ describe('CourseContentBlocks', () => {
         children: [{ type: 'text', text }],
       },
     });
+
     const { container } = render(
       <CourseContentBlocks
         courseSlug="course"

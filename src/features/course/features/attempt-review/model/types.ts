@@ -12,7 +12,9 @@ import type {
 } from '@/features/course/features/review/model/types';
 
 export type AttemptReviewMode = 'editable' | 'readonly';
+
 export type AttemptReviewDiffViewMode = 'unified' | 'split';
+
 export type AttemptReviewFileStatus = 'added' | 'deleted' | 'changed';
 
 /** What the page header says about the Attempt. */

@@ -404,7 +404,15 @@ features/deadlines-calendar/ui/calendar.module.css
 app/router-pending.module.css
 ```
 
+### Readability and test scenarios
+
+Separate logical phases within a function or test with blank lines. This is a semantic review requirement: the linter cannot identify logical phases or decide whether scenarios are independent.
+
+Give independent scenarios with their own setup and expected result separate tests; use parameterized tests for equivalent variants. Sequential actions in one user scenario may stay in one test. Multiple assertions about the same result are welcome: do not impose one `expect` per test or use assertion counts as a proxy for scenario independence.
+
 ### ESLint
+
+The autofixable `local/blank-lines` rule runs after `prettierRecommended` for `src/` and `playwright/`. It requires a blank line after the last import (including type-only and side-effect imports), around function/type declarations and multiline `const` functions/components, and between neighboring test/group/hook declarations imported from Vitest or Playwright (including aliases and parameterized calls). Ordinary variables and expressions may remain compact. These are mechanical boundaries; logical phases and scenario independence still need review.
 
 The `curly: ['error', 'all']` rule requires braces around every `if`, `else`, `for`, `while`, and `do...while` body in `src/` and `playwright/`. It is enabled after `prettierRecommended` so the Prettier configuration does not disable it. ESLint fixes missing braces automatically.
 

@@ -8,6 +8,7 @@ export const loginSchema = v.object({
   ),
   password: v.string('Пароль обязателен'),
 });
+
 export type LoginFormData = v.InferOutput<typeof loginSchema>;
 
 export const registrationSchema = v.pipe(
@@ -44,4 +45,5 @@ export const registrationSchema = v.pipe(
     ['confirmPassword']
   )
 );
+
 export type RegistrationFormData = v.InferOutput<typeof registrationSchema>;

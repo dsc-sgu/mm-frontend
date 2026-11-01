@@ -11,4 +11,5 @@ export const UsernameSchema = v.pipe(
 );
 
 export type UserId = v.InferOutput<typeof UserIdSchema>;
+
 export type Username = v.InferOutput<typeof UsernameSchema>;

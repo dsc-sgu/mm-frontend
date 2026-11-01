@@ -81,9 +81,15 @@ describe('Grade arithmetic', () => {
     expect(formatGrade(addGrades(grade(0.1), grade(0.2)))).toBe('0,3');
   });
 
-  test('compares in whole thousandths', () => {
+  test('compares equal grades in whole thousandths', () => {
     expect(compareGrades(grade(7.125), grade(7.125))).toBe(0);
+  });
+
+  test('compares a lower grade in whole thousandths', () => {
     expect(compareGrades(grade(7.124), grade(7.125))).toBeLessThan(0);
+  });
+
+  test('compares a higher grade in whole thousandths', () => {
     expect(compareGrades(grade(10), grade(9.999))).toBeGreaterThan(0);
   });
 
@@ -96,10 +102,12 @@ describe('Grade arithmetic', () => {
     });
   });
 
-  test('formats without trailing zeros', () => {
-    expect(formatGrade(grade(7.1))).toBe('7,1');
-    expect(formatGrade(grade(7.01))).toBe('7,01');
-    expect(formatGrade(grade(12))).toBe('12');
+  test.each([
+    [7.1, '7,1'],
+    [7.01, '7,01'],
+    [12, '12'],
+  ])('formats %s as %s without trailing zeros', (value, expected) => {
+    expect(formatGrade(grade(value))).toBe(expected);
   });
 });
 

@@ -3,15 +3,19 @@ import type { CourseId } from '@/features/course/model/identity';
 import type { CourseSummary } from '@/features/course/model/types';
 import type { RichTextNode } from '@/features/course/model/rich-text';
 import type { DocumentBlock } from '@/features/course/features/page-document/model/document';
+
 export type {
   RichTextNode,
   RichTextMark,
 } from '@/features/course/model/rich-text';
+
 export type CourseContentBlockItem = DocumentBlock;
+
 export type CourseHeadingBlock = Extract<
   DocumentBlock,
   { type: 'heading' }
 >['data'];
+
 export type CourseImageResource = {
   id: string;
   src: string;

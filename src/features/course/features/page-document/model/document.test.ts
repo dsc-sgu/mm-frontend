@@ -30,11 +30,13 @@ describe('Course page document v1', () => {
     ]);
     expect(readDocument(result)).toEqual(result);
   });
+
   it('rejects a block without data.formatVersion', () => {
     expect(
       editDocument([{ id: 'p', type: 'paragraph', data: { children: [] } }])
     ).toEqual({ status: 'unsupported-content' });
   });
+
   it('preserves the position of an invalid block and prevents editing it', () => {
     const input = [
       {
@@ -55,6 +57,7 @@ describe('Course page document v1', () => {
       type: 'list-item',
       data: { formatVersion: 1, variant: 'ordered', indent, children: [] },
     });
+
     const blocks = readDocument([
       item('a', 9),
       item('b', 8),

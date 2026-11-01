@@ -284,12 +284,14 @@ export function deserializeCourseContentToPlate(
     throw new UnsupportedContentError();
   }
   const starts = new Map<string, number>();
+
   function collect(items: ReturnType<typeof buildListTree>) {
     for (const item of items) {
       starts.set(item.block.id, item.number);
       collect(item.nestedItems);
     }
   }
+
   let run: Extract<DocumentBlock, { type: 'list-item' }>[] = [];
   for (const block of [...result.blocks, null]) {
     if (block?.type === 'list-item') {
@@ -472,7 +474,9 @@ export function serializePlateToCourseContent(
 type Flatten<T> = T extends { id: string; type: string; data: object }
   ? { id: T['id']; type: T['type'] } & Omit<T['data'], 'formatVersion'>
   : never;
+
 type FlatBlock = Flatten<DocumentBlock>;
+
 export class UnsupportedContentError extends Error {
   readonly kind = 'unsupported-content';
   constructor() {

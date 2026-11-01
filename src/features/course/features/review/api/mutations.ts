@@ -52,6 +52,7 @@ export function useSaveReviewMutation(attempt: ReviewedAttempt) {
 export function useReplyMutations(attempt: ReviewedAttempt) {
   const queryClient = useQueryClient();
   const { courseId, attemptId } = attempt;
+
   const onSuccess = () =>
     queryClient.invalidateQueries({
       queryKey: reviewKeys.attempt(courseId, attemptId),

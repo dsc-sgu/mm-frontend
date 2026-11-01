@@ -18,6 +18,7 @@ test('ACC-E4: after Vera logs out and Sasha logs in, no Vera Course, role or nav
     const leaks: string[] = [];
     const checked = new Set<string>();
     let left = false;
+
     const inspect = () => {
       left ||= location.pathname !== '/courses/databases';
       if (!left) {
@@ -50,6 +51,7 @@ test('ACC-E4: after Vera logs out and Sasha logs in, no Vera Course, role or nav
         leaks.push(`Teacher navigation at ${location.pathname}`);
       }
     };
+
     Object.assign(window, {
       __sessionLeaks: leaks,
       __sessionChecked: checked,

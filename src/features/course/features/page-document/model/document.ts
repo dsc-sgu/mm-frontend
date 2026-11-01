@@ -7,6 +7,7 @@ import {
 import { clampCourseListIndent } from './list-indent';
 
 const richText = v.array(RichTextNodeSchema);
+
 const block = <
   T extends string,
   S extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>,
@@ -19,6 +20,7 @@ const block = <
     type: v.literal(type),
     data: v.intersect([data, v.object({ formatVersion: v.literal(1) })]),
   });
+
 const paragraph = block('paragraph', v.object({ children: richText }));
 const heading = block(
   'heading',
@@ -80,8 +82,11 @@ export const BlockSchema = v.variant('type', [
     })
   ),
 ]);
+
 export type DocumentBlock = v.InferOutput<typeof BlockSchema>;
+
 export type UnsupportedBlock = { id: string; type: 'unsupported' };
+
 export type ReadBlock = DocumentBlock | UnsupportedBlock;
 
 function normalizeBlocks(blocks: DocumentBlock[]): DocumentBlock[] {

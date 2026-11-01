@@ -2,11 +2,13 @@ import type { DocumentBlock } from './document';
 import { clampCourseListIndent } from './list-indent';
 
 type ListItem = Extract<DocumentBlock, { type: 'list-item' }>;
+
 export type ListTreeItem = {
   block: ListItem;
   number: number;
   nestedItems: ListTreeItem[];
 };
+
 export function buildListTree(items: ListItem[]): ListTreeItem[] {
   const roots: ListTreeItem[] = [];
   const levels: ListTreeItem[][] = [roots];

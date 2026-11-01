@@ -62,5 +62,7 @@ export type CoursePageEditStoreOptions = {
 };
 
 export type CoursePageEditStoreCreator = StateCreator<CoursePageEditStore>;
+
 export type CoursePageEditStoreSet = Parameters<CoursePageEditStoreCreator>[0];
+
 export type CoursePageEditStoreGet = Parameters<CoursePageEditStoreCreator>[1];

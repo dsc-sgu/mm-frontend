@@ -433,22 +433,27 @@ export function CourseContentBlocks({
     </div>
   );
 }
+
 type Flatten<T> = T extends { id: string; type: string; data: object }
   ? { id: T['id']; type: T['type'] } & T['data']
   : never;
+
 type FlatBlock = Flatten<DocumentBlock>;
+
 function renderNodes(input: readonly unknown[]) {
   const result: (
     | { kind: 'list'; items: ListTreeItem[] }
     | { kind: 'block'; block: ReturnType<typeof readDocument>[number] }
   )[] = [];
   let run: Extract<DocumentBlock, { type: 'list-item' }>[] = [];
+
   function flush() {
     if (run.length) {
       result.push({ kind: 'list', items: buildListTree(run) });
     }
     run = [];
   }
+
   for (const block of readDocument(input)) {
     if (block.type === 'list-item') {
       run.push(block);

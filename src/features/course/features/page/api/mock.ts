@@ -12,10 +12,12 @@ import {
   CourseSlugSchema,
   type CourseId,
 } from '@/features/course/model/identity';
+
 type CoursePageSummary = Omit<
   CoursePage,
   'description' | 'resources' | 'content' | 'taskSummaries'
 >;
+
 const COURSE_DESCRIPTIONS: Record<string, string> = {
   'algorithms-and-data-structures':
     'Практический курс о классических алгоритмах, структурах данных и способах оценивать сложность решений до того, как код попадёт в продакшен.',
@@ -35,9 +37,11 @@ const COURSE_DESCRIPTIONS: Record<string, string> = {
 // Keyed by canonical Course objects: resetting the backend also resets these
 // lazily generated RAM pages, and renaming a slug keeps the same Course.
 const COURSE_PAGE_STORE = new WeakMap<MockCourse, CoursePage>();
+
 function cloneCoursePage(course: CoursePage): CoursePage {
   return structuredClone(course);
 }
+
 function createCoursePage(course: MockCourse): CoursePage {
   const summary: CoursePageSummary = {
     courseId: course.slug,
@@ -57,6 +61,7 @@ function createCoursePage(course: MockCourse): CoursePage {
     taskSummaries: buildTaskSummaries(),
   };
 }
+
 function ensureCoursePage(courseId: CourseId): CoursePage | null {
   const course = findCourse(courseId);
   if (!course) {
@@ -70,10 +75,12 @@ function ensureCoursePage(courseId: CourseId): CoursePage | null {
   COURSE_PAGE_STORE.set(course, page);
   return page;
 }
+
 // RAM operations address the same CourseId the Course lookup returns.
 function findCourse(courseId: CourseId): MockCourse | undefined {
   return mockBackend.state.courses.find(({ id }) => id === courseId);
 }
+
 function buildCourseResources(course: CoursePageSummary): CoursePageResources {
   return {
     images: [
@@ -100,6 +107,7 @@ function buildCourseResources(course: CoursePageSummary): CoursePageResources {
     ],
   };
 }
+
 function buildTaskSummaries(): TaskSummary[] {
   return [
     {
@@ -117,6 +125,7 @@ function buildTaskSummaries(): TaskSummary[] {
     },
   ];
 }
+
 function buildCourseContent(
   course: CoursePageSummary
 ): CourseContentBlockItem[] {
@@ -400,6 +409,7 @@ function buildCourseContent(
     },
   ];
 }
+
 export async function fetchCoursePage(
   courseId: CourseId
 ): Promise<CoursePage | null> {
@@ -407,6 +417,7 @@ export async function fetchCoursePage(
   const page = ensureCoursePage(courseId);
   return page ? cloneCoursePage(page) : null;
 }
+
 export async function saveCoursePage(
   input: SaveCoursePageInput
 ): Promise<CoursePage> {

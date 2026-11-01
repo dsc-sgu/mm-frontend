@@ -193,9 +193,11 @@ test.each([
 
 test('the route starts every page read before the page mounts', async () => {
   const requested: string[] = [];
+
   const onRequest = ({ request }: { request: Request }) => {
     requested.push(new URL(request.url).pathname);
   };
+
   server.events.on('request:start', onRequest);
   try {
     const { queryClient, router } = renderRoutes([], '/courses/algorithms', {
@@ -250,9 +252,11 @@ test('the route starts every page read before the page mounts', async () => {
 
 test('hovering another Attempt in the selector preloads its reads without switching', async () => {
   const requested: string[] = [];
+
   const onRequest = ({ request }: { request: Request }) => {
     requested.push(new URL(request.url).pathname);
   };
+
   server.events.on('request:start', onRequest);
   try {
     const user = userEvent.setup();

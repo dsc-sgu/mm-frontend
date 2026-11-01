@@ -29,6 +29,9 @@ export const AttemptNumberSchema = v.pipe(
 );
 
 export type CourseId = v.InferOutput<typeof CourseIdSchema>;
+
 export type CourseSlug = v.InferOutput<typeof CourseSlugSchema>;
+
 export type AttemptId = v.InferOutput<typeof AttemptIdSchema>;
+
 export type AttemptNumber = v.InferOutput<typeof AttemptNumberSchema>;

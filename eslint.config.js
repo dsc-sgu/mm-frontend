@@ -5,6 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
+import blankLines from './tooling/eslint/blank-lines.js';
 
 const TRANSPORT_MODULE = 'src/app/remote-data/http.ts';
 
@@ -201,8 +202,10 @@ export default defineConfig([
   prettierRecommended,
   {
     files: ['src/**/*.{ts,tsx}', 'playwright/**/*.{ts,tsx}'],
+    plugins: { local: { rules: { 'blank-lines': blankLines } } },
     rules: {
       curly: ['error', 'all'],
+      'local/blank-lines': 'error',
     },
   },
 ]);

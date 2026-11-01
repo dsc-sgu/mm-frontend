@@ -55,6 +55,12 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 - **Middle Man**: a class or function that mostly just delegates onward. → cut it, call the real target direct.
 - **Refused Bequest**: a subclass or implementer that ignores or overrides most of what it inherits. → drop the inheritance, use composition.
 
+### Readability and scenario boundaries
+
+The Standards review also checks semantic readability that ESLint cannot infer: blank lines separate logical phases inside functions and tests. Independent scenarios with their own setup and expected result belong in separate tests; equivalent variants may use parameterized tests. Sequential actions of one user scenario may remain together. Several assertions about one result are allowed; never impose one `expect` per test or use assertion counts as a scenario-independence check. Mechanical import/declaration/test spacing is enforced by `local/blank-lines`; do not duplicate that lint check in review.
+
+Include these requirements in the Standards sub-agent prompt alongside the smell baseline.
+
 ### 4. Spawn both sub-agents in parallel
 
 **Standards sub-agent prompt** should include:

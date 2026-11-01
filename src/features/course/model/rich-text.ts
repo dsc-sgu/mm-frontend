@@ -3,7 +3,9 @@ import { isSafeCourseHref } from './links';
 import { omitUndefined } from './omit-undefined';
 
 export const RichTextMarkSchema = v.picklist(['bold', 'italic', 'code']);
+
 export type RichTextMark = v.InferOutput<typeof RichTextMarkSchema>;
+
 const fields = {
   text: v.string(),
   marks: v.optional(v.array(RichTextMarkSchema)),
@@ -16,6 +18,7 @@ export const RichTextNodeSchema = v.variant('type', [
     href: v.pipe(v.string(), v.check(isSafeCourseHref)),
   }),
 ]);
+
 export type RichTextNode = v.InferOutput<typeof RichTextNodeSchema>;
 
 export function normalizeRichText(nodes: RichTextNode[]): RichTextNode[] {
