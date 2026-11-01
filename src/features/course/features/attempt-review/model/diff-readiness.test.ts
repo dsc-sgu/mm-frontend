@@ -27,7 +27,9 @@ function fakePools() {
         pool.terminated = true;
       },
       report(status) {
-        for (const listener of listeners) listener(status);
+        for (const listener of listeners) {
+          listener(status);
+        }
       },
     };
     created.push(pool);

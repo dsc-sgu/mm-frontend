@@ -47,7 +47,9 @@ export function installTestControl(worker: SetupWorker) {
     try {
       decoded = JSON.parse(stored);
     } catch (error) {
-      if (!(error instanceof SyntaxError)) throw error;
+      if (!(error instanceof SyntaxError)) {
+        throw error;
+      }
     }
     const selection = v.safeParse(SelectionSchema, decoded);
     if (selection.success) {
@@ -103,7 +105,9 @@ export function installTestControl(worker: SetupWorker) {
               { status: 400 }
             );
           }
-          for (const gate of held.values()) gate.response.release();
+          for (const gate of held.values()) {
+            gate.response.release();
+          }
           held.clear();
           mockBackend.reset(command.world);
           world = command.world;

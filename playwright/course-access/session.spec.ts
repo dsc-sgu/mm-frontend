@@ -20,7 +20,9 @@ test('ACC-E4: after Vera logs out and Sasha logs in, no Vera Course, role or nav
     let left = false;
     const inspect = () => {
       left ||= location.pathname !== '/courses/databases';
-      if (!left) return;
+      if (!left) {
+        return;
+      }
       checked.add(location.pathname);
       const header = document.querySelector('header')?.textContent ?? '';
       if (header.includes('Базы данных') || header.includes('БД')) {

@@ -19,7 +19,9 @@ function formatMonth(month: number): string {
 
 export function useCalendarHeaderText(visibleDates: Date[]): string {
   return useMemo(() => {
-    if (visibleDates.length === 0) return '';
+    if (visibleDates.length === 0) {
+      return '';
+    }
 
     const uniqueMonths = new Map<string, MonthInfo>();
 

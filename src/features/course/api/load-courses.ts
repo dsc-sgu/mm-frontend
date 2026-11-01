@@ -45,7 +45,9 @@ export function loadCourses(signal?: AbortSignal): Promise<CourseSummary[]> {
       signal,
     },
     async (context) => {
-      if (context.response.status !== 200) throw unexpectedHttpStatus(context);
+      if (context.response.status !== 200) {
+        throw unexpectedHttpStatus(context);
+      }
       return readJson(context, CoursesDtoSchema);
     }
   );

@@ -36,7 +36,9 @@ function renderNode(node: RichTextNode, index: number) {
 
   const opensInNewTab = /^https?:\/\//iu.test(node.href);
 
-  if (!isSafeCourseHref(node.href)) return <span key={index}>{content}</span>;
+  if (!isSafeCourseHref(node.href)) {
+    return <span key={index}>{content}</span>;
+  }
   return (
     <a
       key={index}

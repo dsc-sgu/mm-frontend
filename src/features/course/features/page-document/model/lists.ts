@@ -14,8 +14,12 @@ export function buildListTree(items: ListItem[]): ListTreeItem[] {
   for (const block of items) {
     const indent = clampCourseListIndent(block.data.indent, previous);
     previous = indent;
-    while (levels.length > indent) levels.pop();
-    if (levels.length < indent) levels.push(levels.at(-1)!.at(-1)!.nestedItems);
+    while (levels.length > indent) {
+      levels.pop();
+    }
+    if (levels.length < indent) {
+      levels.push(levels.at(-1)!.at(-1)!.nestedItems);
+    }
     const siblings = levels.at(-1)!;
     const last = siblings.at(-1);
     const number =

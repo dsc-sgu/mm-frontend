@@ -320,7 +320,9 @@ export async function saveQuickGrades({
   const user = mockBackend.state.users.find(
     ({ id }) => id === mockBackend.state.session?.userId
   );
-  if (!user) throw new Error('No signed-in User to save grades');
+  if (!user) {
+    throw new Error('No signed-in User to save grades');
+  }
 
   const now = new Date().toISOString();
   const updateById = new Map(

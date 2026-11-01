@@ -22,7 +22,9 @@ export function normalizeRichText(nodes: RichTextNode[]): RichTextNode[] {
   const result: RichTextNode[] = [];
   for (const node of nodes) {
     const text = node.text.replace(/\r\n?/g, '\n');
-    if (!text) continue;
+    if (!text) {
+      continue;
+    }
     const marks = (['bold', 'italic', 'code'] as const).filter((mark) =>
       node.marks?.includes(mark)
     );
@@ -40,7 +42,9 @@ export function normalizeRichText(nodes: RichTextNode[]): RichTextNode[] {
       JSON.stringify(previous.marks) === JSON.stringify(normalized.marks)
     ) {
       previous.text += text;
-    } else result.push(normalized);
+    } else {
+      result.push(normalized);
+    }
   }
   return result;
 }

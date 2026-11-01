@@ -48,8 +48,12 @@ export function loadAttemptSummary(
     },
     async (context) => {
       const denial = readResourceDenial(context);
-      if (denial) return denial;
-      if (context.response.status !== 200) throw unexpectedHttpStatus(context);
+      if (denial) {
+        return denial;
+      }
+      if (context.response.status !== 200) {
+        throw unexpectedHttpStatus(context);
+      }
       const summary = await readJson(context, AttemptSummarySchema);
       return { status: 'found', summary };
     }

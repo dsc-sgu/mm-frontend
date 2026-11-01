@@ -31,9 +31,13 @@ export const reviewHandlers = [
         String(params.courseId),
         String(params.attemptId)
       );
-      if (access.status !== 'found') return accessDenial(access.status);
+      if (access.status !== 'found') {
+        return accessDenial(access.status);
+      }
       const review = findReview(access.attempt.id);
-      if (!review) return HttpResponse.json({ status: 'none' });
+      if (!review) {
+        return HttpResponse.json({ status: 'none' });
+      }
       return HttpResponse.json({
         status: 'published',
         review: toReviewDto(review),
@@ -71,7 +75,9 @@ function toReply({
 
 function author(userId: UserId): ReviewAuthor {
   const user = mockBackend.state.users.find(({ id }) => id === userId);
-  if (!user) throw new Error(`The mock backend has no User ${userId}`);
+  if (!user) {
+    throw new Error(`The mock backend has no User ${userId}`);
+  }
   return { id: user.id, username: user.username, ...mockUserName(user) };
 }
 

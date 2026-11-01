@@ -20,7 +20,9 @@ vi.stubGlobal(
 // so the Attempt page uses its desktop layout; any other query never matches.
 function matchesWidth(query: string): boolean {
   const width = /^\((min|max)-width:\s*(\d+)px\)$/.exec(query);
-  if (!width) return false;
+  if (!width) {
+    return false;
+  }
   const limit = Number(width[2]);
   return width[1] === 'min'
     ? window.innerWidth >= limit

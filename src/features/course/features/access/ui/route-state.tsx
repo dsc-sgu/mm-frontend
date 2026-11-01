@@ -100,8 +100,12 @@ export function CourseRouteOutcome({ kind }: { kind: 'lookup' | 'resource' }) {
   });
   const requestedSlug = useRequestedCourseSlug();
   const courseSlug = parseCourseSlug(rawSlug);
-  if (requestedSlug !== rawSlug) return <CourseContextLoading />;
-  if (!courseSlug) return <CourseAccessState state="course-not-found" />;
+  if (requestedSlug !== rawSlug) {
+    return <CourseContextLoading />;
+  }
+  if (!courseSlug) {
+    return <CourseAccessState state="course-not-found" />;
+  }
   return (
     <CourseLocatorOutcome
       kind={kind}
@@ -152,7 +156,9 @@ function CourseLocatorOutcome({
     router,
   ]);
 
-  if (requestedSlug !== courseSlug) return <CourseContextLoading />;
+  if (requestedSlug !== courseSlug) {
+    return <CourseContextLoading />;
+  }
   if (query.isError) {
     return (
       <CourseAccessState

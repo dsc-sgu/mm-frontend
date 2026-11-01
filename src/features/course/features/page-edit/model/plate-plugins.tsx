@@ -150,7 +150,9 @@ const CourseCodeBlockBackspacePlugin = createPlatePlugin({
 }));
 
 function isCourseListElement(node: unknown): node is CoursePlateElement {
-  if (typeof node !== 'object' || node === null) return false;
+  if (typeof node !== 'object' || node === null) {
+    return false;
+  }
 
   const element = node as CoursePlateElement;
 
@@ -311,7 +313,9 @@ export const coursePagePlatePlugins = [
     },
     render: {
       belowNodes: (props) => {
-        if (!props.element.listStyleType) return;
+        if (!props.element.listStyleType) {
+          return;
+        }
 
         return CourseListWrapper;
       },

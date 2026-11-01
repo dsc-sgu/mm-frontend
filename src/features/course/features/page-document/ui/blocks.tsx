@@ -410,14 +410,16 @@ export function CourseContentBlocks({
   return (
     <div className={className}>
       {renderNodes(blocks).map((node, index) => {
-        if (node.kind === 'list')
+        if (node.kind === 'list') {
           return <ListItems key={index} items={node.items} />;
-        if (node.block.type === 'unsupported')
+        }
+        if (node.block.type === 'unsupported') {
           return (
             <MissingResource key={index} icon={TriangleAlert}>
               Блок не удалось показать
             </MissingResource>
           );
+        }
         return (
           <CourseContentBlock
             key={index}
@@ -442,12 +444,15 @@ function renderNodes(input: readonly unknown[]) {
   )[] = [];
   let run: Extract<DocumentBlock, { type: 'list-item' }>[] = [];
   function flush() {
-    if (run.length) result.push({ kind: 'list', items: buildListTree(run) });
+    if (run.length) {
+      result.push({ kind: 'list', items: buildListTree(run) });
+    }
     run = [];
   }
   for (const block of readDocument(input)) {
-    if (block.type === 'list-item') run.push(block);
-    else {
+    if (block.type === 'list-item') {
+      run.push(block);
+    } else {
       flush();
       result.push({ kind: 'block', block });
     }

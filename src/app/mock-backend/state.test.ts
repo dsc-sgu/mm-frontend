@@ -34,7 +34,9 @@ test('the default development world retains its Users, Courses and submissions',
   const mit = seededCourses.find(
     ({ slug }) => slug === 'modern-information-technologies'
   );
-  if (!mit) throw new Error('The development fixture has no MIT Course');
+  if (!mit) {
+    throw new Error('The development fixture has no MIT Course');
+  }
   expect(
     state.memberships.filter(({ courseId }) => courseId === mit.id)
   ).toEqual([

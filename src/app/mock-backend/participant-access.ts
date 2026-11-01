@@ -33,8 +33,12 @@ export function resolveAttemptAccess(courseId: string, attemptId: string) {
     courseId,
     (user) => user.id === attempt?.studentId
   );
-  if (result.status !== 'found') return result;
-  if (!attempt) return { status: 'not-found' } as const;
+  if (result.status !== 'found') {
+    return result;
+  }
+  if (!attempt) {
+    return { status: 'not-found' } as const;
+  }
   return { status: 'found', attempt } as const;
 }
 
@@ -47,7 +51,9 @@ function authorizeStudent(
     return { status: 'unauthenticated' } as const;
   }
   const course = courses.find(({ id }) => id === courseId);
-  if (!course) return { status: 'not-found' } as const;
+  if (!course) {
+    return { status: 'not-found' } as const;
+  }
   const viewer = memberships.find(
     (membership) =>
       membership.courseId === course.id && membership.userId === session.userId
@@ -64,8 +70,9 @@ function authorizeStudent(
         membership.userId === student.id &&
         membership.role === 'student'
     )
-  )
+  ) {
     return { status: 'not-found' } as const;
+  }
   if (viewer.role !== 'teacher' && viewer.userId !== student.id) {
     return { status: 'not-found' } as const;
   }

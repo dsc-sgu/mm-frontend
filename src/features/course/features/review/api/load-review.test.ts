@@ -32,7 +32,9 @@ function signIn(userId: UserId) {
 
 async function studentAttempts(studentId: UserId) {
   const result = await loadStudentAttempts(COURSE_ID, '1', studentId);
-  if (result.status !== 'found') throw new Error('Expected the Attempts');
+  if (result.status !== 'found') {
+    throw new Error('Expected the Attempts');
+  }
   return result.attempts;
 }
 
@@ -94,7 +96,9 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
         ],
       },
     });
-    if (result.status !== 'published') throw new Error('Expected a Review');
+    if (result.status !== 'published') {
+      throw new Error('Expected a Review');
+    }
     expect(result.review.grade).toEqual(v.parse(GradeSchema, 7.5));
   });
 
@@ -183,7 +187,9 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
 
       expect(created.author).toEqual(author);
       const result = await loadReview(COURSE_ID, sashaFirst.id);
-      if (result.status !== 'published') throw new Error('Expected a Review');
+      if (result.status !== 'published') {
+        throw new Error('Expected a Review');
+      }
       expect(
         result.review.comments
           .flatMap(({ replies }) => replies)

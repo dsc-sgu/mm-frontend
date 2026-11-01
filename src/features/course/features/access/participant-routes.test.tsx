@@ -144,7 +144,9 @@ test('a failed denial recheck is a technical error, not a fabricated 404', async
   server.use(
     http.get('/api/v1/courses/:locator', (args) => {
       lookups += 1;
-      if (lookups > 1) return networkFailure(args);
+      if (lookups > 1) {
+        return networkFailure(args);
+      }
     })
   );
   renderRoutes([], `${COURSE_PATH}/tasks/1/attempts/petya/1`, {

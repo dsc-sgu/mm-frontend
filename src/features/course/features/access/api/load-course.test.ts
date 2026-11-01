@@ -77,7 +77,9 @@ describe('ACC-04: course lookup against canonical memberships', () => {
     const course = mockBackend.state.courses.find(
       ({ id }) => id === accessWorld.courses.algorithms.id
     );
-    if (!course) throw new Error('The fixture has no Algorithms Course');
+    if (!course) {
+      throw new Error('The fixture has no Algorithms Course');
+    }
     const canonicalId = v.parse(
       CourseIdSchema,
       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'

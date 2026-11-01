@@ -406,6 +406,8 @@ app/router-pending.module.css
 
 ### ESLint
 
+The `curly: ['error', 'all']` rule requires braces around every `if`, `else`, `for`, `while`, and `do...while` body in `src/` and `playwright/`. It is enabled after `prettierRecommended` so the Prettier configuration does not disable it. ESLint fixes missing braces automatically.
+
 The project should enforce type aliases over interfaces:
 
 ```ts

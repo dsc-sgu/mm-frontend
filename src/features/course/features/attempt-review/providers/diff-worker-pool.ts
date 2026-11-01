@@ -66,8 +66,12 @@ const highlighterOptions: WorkerInitializationRenderOptions = {
 };
 
 function getPoolStatus(stats: WorkerStats): DiffWorkerPoolStatus {
-  if (stats.workersFailed) return 'failed';
-  if (stats.managerState === 'initialized') return 'ready';
+  if (stats.workersFailed) {
+    return 'failed';
+  }
+  if (stats.managerState === 'initialized') {
+    return 'ready';
+  }
   return 'loading';
 }
 

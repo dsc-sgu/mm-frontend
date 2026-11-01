@@ -19,11 +19,21 @@ const MOCK_TASKS = [
 
 function getRandomDeadlineCount(): number {
   const rand = Math.random();
-  if (rand < 0.3) return 0;
-  if (rand < 0.5) return 1;
-  if (rand < 0.7) return 2;
-  if (rand < 0.85) return 3;
-  if (rand < 0.95) return 4;
+  if (rand < 0.3) {
+    return 0;
+  }
+  if (rand < 0.5) {
+    return 1;
+  }
+  if (rand < 0.7) {
+    return 2;
+  }
+  if (rand < 0.85) {
+    return 3;
+  }
+  if (rand < 0.95) {
+    return 4;
+  }
   return 5;
 }
 

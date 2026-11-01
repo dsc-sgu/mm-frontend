@@ -15,7 +15,9 @@ export function canonicalizeCoursePage(page: CoursePage): CoursePage {
       files: page.resources.files.map(omitUndefined),
     },
     taskSummaries: page.taskSummaries.map((summary) => {
-      if (summary.status === 'unavailable') return summary;
+      if (summary.status === 'unavailable') {
+        return summary;
+      }
       return omitUndefined({
         ...summary,
         description:

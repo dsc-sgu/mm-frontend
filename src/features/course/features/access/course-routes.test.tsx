@@ -191,7 +191,9 @@ test('ACC-14: a technical lookup failure is retryable, not a denial', async () =
   server.use(
     http.get(LOOKUP_URL, (args) => {
       requests += 1;
-      if (requests === 1) return networkFailure(args);
+      if (requests === 1) {
+        return networkFailure(args);
+      }
     })
   );
   const { router } = renderRoutes([], ALGORITHMS_PATH, { appRoutes: true });
@@ -263,7 +265,9 @@ test('saved Course metadata replaces the confirmed Header title without changing
   const page = await queryClient.ensureQueryData(
     coursePageQueryOptions(DATABASES_ID)
   );
-  if (!page) throw new Error('The Course fixture has no published Page');
+  if (!page) {
+    throw new Error('The Course fixture has no published Page');
+  }
   const mutation = renderHook(() => useSaveCoursePageMutation(), {
     wrapper: ({ children }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -294,7 +298,9 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
   const page = await queryClient.ensureQueryData(
     coursePageQueryOptions(DATABASES_ID)
   );
-  if (!page) throw new Error('The Course fixture has no published Page');
+  if (!page) {
+    throw new Error('The Course fixture has no published Page');
+  }
   const mutation = renderHook(() => useSaveCoursePageMutation(), {
     wrapper: ({ children }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -346,7 +352,9 @@ test('reconnect rechecks an initially failed lookup and confirms Course context'
   server.use(
     http.get(LOOKUP_URL, (args) => {
       requests += 1;
-      if (requests === 1) return networkFailure(args);
+      if (requests === 1) {
+        return networkFailure(args);
+      }
     })
   );
   const { router } = renderRoutes([], ALGORITHMS_PATH, { appRoutes: true });
@@ -373,7 +381,9 @@ test('focus rechecks an initial denial and establishes the newly confirmed Membe
       courseId === accessWorld.courses.algorithms.id &&
       userId === accessWorld.users.vera.id
   );
-  if (!membership) throw new Error('The fixture has no Vera Membership');
+  if (!membership) {
+    throw new Error('The fixture has no Vera Membership');
+  }
   mockBackend.state.memberships = mockBackend.state.memberships.filter(
     (candidate) => candidate !== membership
   );
@@ -415,7 +425,9 @@ test('manual retry rechecks a cached context after its background lookup failed'
   server.use(
     http.get(LOOKUP_URL, (args) => {
       requests += 1;
-      if (requests === 2) return networkFailure(args);
+      if (requests === 2) {
+        return networkFailure(args);
+      }
     })
   );
   const { router } = renderRoutes([], ALGORITHMS_PATH, { appRoutes: true });

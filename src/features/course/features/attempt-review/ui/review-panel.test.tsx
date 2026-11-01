@@ -21,7 +21,9 @@ async function review(
   attempt: (typeof reviewWorld.attempts)[number]
 ): Promise<ReviewResult> {
   const result = await loadReview(attempt.courseId, attempt.id);
-  if (isResourceDenial(result)) throw new Error('Expected a readable Review');
+  if (isResourceDenial(result)) {
+    throw new Error('Expected a readable Review');
+  }
   return result;
 }
 

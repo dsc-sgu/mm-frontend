@@ -199,4 +199,10 @@ export default defineConfig([
     },
   },
   prettierRecommended,
+  {
+    files: ['src/**/*.{ts,tsx}', 'playwright/**/*.{ts,tsx}'],
+    rules: {
+      curly: ['error', 'all'],
+    },
+  },
 ]);

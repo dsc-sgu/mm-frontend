@@ -56,7 +56,9 @@ export const attemptReviewHandlers = [
       String(params.courseId),
       String(params.attemptId)
     );
-    if (access.status !== 'found') return accessDenial(access.status);
+    if (access.status !== 'found') {
+      return accessDenial(access.status);
+    }
     const { attempt } = access;
     const { tasks, users } = mockBackend.state;
     const task = tasks.find(
@@ -64,7 +66,9 @@ export const attemptReviewHandlers = [
         courseId === attempt.courseId && id === attempt.taskId
     );
     const student = users.find(({ id }) => id === attempt.studentId);
-    if (!task || !student) throw new Error('The mock Attempt is incomplete');
+    if (!task || !student) {
+      throw new Error('The mock Attempt is incomplete');
+    }
     return HttpResponse.json({
       id: attempt.id,
       attemptNumber: attempt.attemptNumber,
@@ -85,7 +89,9 @@ export const attemptReviewHandlers = [
         String(params.courseId),
         String(params.studentId)
       );
-      if (access.status !== 'found') return accessDenial(access.status);
+      if (access.status !== 'found') {
+        return accessDenial(access.status);
+      }
       const attempts = studentAttempts(
         String(params.courseId),
         String(params.taskId),
@@ -120,7 +126,9 @@ export const attemptReviewHandlers = [
         String(params.courseId),
         String(params.attemptId)
       );
-      if (access.status !== 'found') return accessDenial(access.status);
+      if (access.status !== 'found') {
+        return accessDenial(access.status);
+      }
       return HttpResponse.json({
         baselineAttemptNumber:
           findBaseline(access.attempt)?.attemptNumber ?? null,
@@ -170,7 +178,9 @@ function changedFiles(attempt: MockAttempt): ChangedFile[] {
   return paths.flatMap((path): ChangedFile[] => {
     const oldText = previousFiles[path] ?? '';
     const newText = currentFiles[path] ?? '';
-    if (oldText === newText) return [];
+    if (oldText === newText) {
+      return [];
+    }
     return [
       {
         path,
@@ -187,8 +197,12 @@ function fileStatus(
   previousFiles: Record<string, string>,
   currentFiles: Record<string, string>
 ): ChangedFile['status'] {
-  if (!(path in previousFiles)) return 'added';
-  if (!(path in currentFiles)) return 'deleted';
+  if (!(path in previousFiles)) {
+    return 'added';
+  }
+  if (!(path in currentFiles)) {
+    return 'deleted';
+  }
   return 'changed';
 }
 

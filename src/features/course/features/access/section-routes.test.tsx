@@ -89,7 +89,9 @@ test('ACC-15: a confirmed demotion replaces Teacher content and navigation witho
       courseId === accessWorld.courses.databases.id &&
       userId === accessWorld.users.vera.id
   );
-  if (!membership) throw new Error('The fixture has no Vera Membership');
+  if (!membership) {
+    throw new Error('The fixture has no Vera Membership');
+  }
   membership.role = 'student';
 
   try {
@@ -129,7 +131,9 @@ test('ACC-15: a demoted Member keeps the Task Page but loses Teacher actions', a
       courseId === accessWorld.courses.databases.id &&
       userId === accessWorld.users.vera.id
   );
-  if (!membership) throw new Error('The fixture has no Vera Membership');
+  if (!membership) {
+    throw new Error('The fixture has no Vera Membership');
+  }
   membership.role = 'student';
 
   try {

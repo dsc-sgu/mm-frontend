@@ -56,22 +56,30 @@ export function createDiffReadinessStore(
 
   return createStore<DiffReadinessStore>()((set, get) => {
     function update(next: DiffReadiness) {
-      if (next.status === get().readiness.status) return;
+      if (next.status === get().readiness.status) {
+        return;
+      }
       set({ readiness: next });
     }
 
     function start() {
-      if (running) return;
+      if (running) {
+        return;
+      }
       const pool = createPool();
       running = { pool, unsubscribe: () => {} };
       const current = running;
       current.unsubscribe = pool.subscribe((status) => {
-        if (running === current) update(toReadiness(status, pool));
+        if (running === current) {
+          update(toReadiness(status, pool));
+        }
       });
     }
 
     function stop() {
-      if (!running) return;
+      if (!running) {
+        return;
+      }
       const { pool, unsubscribe } = running;
       running = null;
       unsubscribe();
@@ -84,7 +92,9 @@ export function createDiffReadinessStore(
       start,
       stop,
       retry() {
-        if (get().readiness.status !== 'failed') return;
+        if (get().readiness.status !== 'failed') {
+          return;
+        }
         stop();
         start();
       },

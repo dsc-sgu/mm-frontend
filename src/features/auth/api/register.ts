@@ -25,7 +25,9 @@ export function register(input: RegisterInput): Promise<void> {
     },
     async (context) => {
       // The body ({ id }) is not read: nothing uses it before sign-in.
-      if (context.response.status !== 201) throw unexpectedHttpStatus(context);
+      if (context.response.status !== 201) {
+        throw unexpectedHttpStatus(context);
+      }
     }
   );
 }

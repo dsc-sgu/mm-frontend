@@ -182,7 +182,9 @@ export function readDocument(input: readonly unknown[]): ReadBlock[] {
     if (item.type === 'unsupported') {
       result.push(...normalizeBlocks(run), item);
       run = [];
-    } else run.push(item);
+    } else {
+      run.push(item);
+    }
   }
   return [...result, ...normalizeBlocks(run)];
 }
@@ -193,8 +195,9 @@ export function editDocument(
   | { status: 'supported'; blocks: DocumentBlock[] }
   | { status: 'unsupported-content' } {
   const parsed = readDocument(input);
-  if (parsed.some((item) => item.type === 'unsupported'))
+  if (parsed.some((item) => item.type === 'unsupported')) {
     return { status: 'unsupported-content' };
+  }
   return {
     status: 'supported',
     blocks: normalizeBlocks(parsed as DocumentBlock[]),

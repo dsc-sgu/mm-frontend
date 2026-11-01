@@ -62,8 +62,9 @@ export async function waitForHeldCourseLookup(page: Page) {
       const body: unknown = await page.evaluate(async (url) => {
         // eslint-disable-next-line no-restricted-globals
         const response = await fetch(url);
-        if (!response.ok)
+        if (!response.ok) {
           throw new Error(`Test control HTTP ${response.status}`);
+        }
         const payload: unknown = await response.json();
         return payload;
       }, CONTROL_URL);

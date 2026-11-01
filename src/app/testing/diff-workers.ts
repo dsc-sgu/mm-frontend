@@ -61,9 +61,13 @@ export function createFakeDiffWorkers(
     },
     report(status) {
       for (const pool of pools) {
-        if (pool.terminated) continue;
+        if (pool.terminated) {
+          continue;
+        }
         pool.status = status;
-        for (const listener of pool.listeners) listener(status);
+        for (const listener of pool.listeners) {
+          listener(status);
+        }
       }
     },
     created: () => pools.length,

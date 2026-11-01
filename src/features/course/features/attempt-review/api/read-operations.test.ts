@@ -117,7 +117,9 @@ const operations: Operation[] = [
 
 async function material(attemptId: AttemptId) {
   const result = await loadAttemptMaterial(COURSE_ID, attemptId);
-  if (result.status !== 'found') throw new Error('Expected the material');
+  if (result.status !== 'found') {
+    throw new Error('Expected the material');
+  }
   return result.material;
 }
 

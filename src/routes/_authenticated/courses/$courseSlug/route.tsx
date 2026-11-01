@@ -112,8 +112,12 @@ function RouteComponent() {
   if (requestedCourseSlug !== courseSlug) {
     return <CourseContextLoading />;
   }
-  if (query.isError) return <CourseRouteOutcome kind="lookup" />;
-  if (!query.data) return <CourseContextLoading />;
+  if (query.isError) {
+    return <CourseRouteOutcome kind="lookup" />;
+  }
+  if (!query.data) {
+    return <CourseContextLoading />;
+  }
   if (query.data.status !== 'found') {
     return <CourseAccessState state="course-not-found" />;
   }
@@ -132,6 +136,8 @@ function RouteComponent() {
   }
   // Do not leave role-sensitive actions mounted while Router reconciles the
   // latest confirmed role into its child context.
-  if (roleChanged) return <CourseContextLoading />;
+  if (roleChanged) {
+    return <CourseContextLoading />;
+  }
   return <Outlet />;
 }

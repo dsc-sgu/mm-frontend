@@ -282,7 +282,9 @@ function AttemptReviewPageLoaded({
       comments: prepareLineCommentsForSave(draft.lineComments),
     });
     // A denial replaces the cached Review, and with it this whole page.
-    if (!isResourceDenial(savedReview)) resetToReview(savedReview);
+    if (!isResourceDenial(savedReview)) {
+      resetToReview(savedReview);
+    }
   }
 
   return (

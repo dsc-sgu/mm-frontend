@@ -18,8 +18,9 @@ describe('buildListTree', () => {
         data: { formatVersion: 1, indent, variant, children: [] },
       }))
     );
-    if (result.status !== 'supported')
+    if (result.status !== 'supported') {
       throw new Error('Ожидается поддерживаемый документ');
+    }
     const tree = buildListTree(
       result.blocks.filter((block) => block.type === 'list-item')
     );

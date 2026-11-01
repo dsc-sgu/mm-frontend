@@ -46,8 +46,9 @@ describe('Plate content adapter', () => {
         },
       },
     ]);
-    if (initial.status !== 'supported')
+    if (initial.status !== 'supported') {
       throw new Error('Нужен поддерживаемый документ');
+    }
     const saved = serializePlateToCourseContent(
       deserializeCourseContentToPlate(initial.blocks)
     );

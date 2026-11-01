@@ -99,9 +99,15 @@ function deserializeRichText(nodes: RichTextNode[]): CoursePlateInline[] {
 function serializeTextMarks(text: CoursePlateText): RichTextMark[] | undefined {
   const marks: RichTextMark[] = [];
 
-  if (text.bold) marks.push('bold');
-  if (text.italic) marks.push('italic');
-  if (text.code) marks.push('code');
+  if (text.bold) {
+    marks.push('bold');
+  }
+  if (text.italic) {
+    marks.push('italic');
+  }
+  if (text.code) {
+    marks.push('code');
+  }
 
   return marks.length > 0 ? marks : undefined;
 }
@@ -121,8 +127,12 @@ function isElementNode(
 function getTextContent(children: CoursePlateElement['children']): string {
   return children
     .map((child) => {
-      if (isTextNode(child)) return child.text;
-      if (isElementNode(child)) return getTextContent(child.children);
+      if (isTextNode(child)) {
+        return child.text;
+      }
+      if (isElementNode(child)) {
+        return getTextContent(child.children);
+      }
 
       return '';
     })
@@ -270,8 +280,9 @@ export function deserializeCourseContentToPlate(
   content: CourseContentBlockItem[]
 ): Value {
   const result = editDocument(content);
-  if (result.status === 'unsupported-content')
+  if (result.status === 'unsupported-content') {
     throw new UnsupportedContentError();
+  }
   const starts = new Map<string, number>();
   function collect(items: ReturnType<typeof buildListTree>) {
     for (const item of items) {
@@ -281,8 +292,9 @@ export function deserializeCourseContentToPlate(
   }
   let run: Extract<DocumentBlock, { type: 'list-item' }>[] = [];
   for (const block of [...result.blocks, null]) {
-    if (block?.type === 'list-item') run.push(block);
-    else {
+    if (block?.type === 'list-item') {
+      run.push(block);
+    } else {
       collect(buildListTree(run));
       run = [];
     }
@@ -320,8 +332,12 @@ function serializeCode(element: CoursePlateElement, index: number): FlatBlock {
     type: 'code',
     code: element.children
       .map((line) => {
-        if (isTextNode(line)) return line.text;
-        if (isElementNode(line)) return getTextContent(line.children);
+        if (isTextNode(line)) {
+          return line.text;
+        }
+        if (isElementNode(line)) {
+          return getTextContent(line.children);
+        }
 
         return '';
       })
@@ -436,7 +452,9 @@ export function serializePlateToCourseContent(
           variant: element.listStyleType === KEYS.ol ? 'ordered' : 'unordered',
         }
       : serializeStandaloneBlock(element, index);
-    if (!flat) throw new UnsupportedContentError();
+    if (!flat) {
+      throw new UnsupportedContentError();
+    }
     const { id, type, ...data } = flat;
     blocks.push({
       id,
@@ -445,8 +463,9 @@ export function serializePlateToCourseContent(
     } as DocumentBlock);
   }
   const result = editDocument(blocks);
-  if (result.status === 'unsupported-content')
+  if (result.status === 'unsupported-content') {
     throw new UnsupportedContentError();
+  }
   return result.blocks;
 }
 
@@ -467,8 +486,9 @@ function serializeSpoilerBody(value: Value) {
     blocks.some(
       (block) => block.type === 'spoiler' || block.type === 'assignment'
     )
-  )
+  ) {
     throw new UnsupportedContentError();
+  }
   return blocks.filter(
     (block) => block.type !== 'spoiler' && block.type !== 'assignment'
   );

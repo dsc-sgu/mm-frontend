@@ -37,7 +37,9 @@ export function checkSession(signal?: AbortSignal): Promise<SessionOutcome> {
       if (context.response.status === 401) {
         return { status: 'not-authorized' };
       }
-      if (context.response.status !== 200) throw unexpectedHttpStatus(context);
+      if (context.response.status !== 200) {
+        throw unexpectedHttpStatus(context);
+      }
 
       const { userID, ...dto } = await readJson(context, SessionDtoSchema);
       return { status: 'authorized', session: { userId: userID, ...dto } };

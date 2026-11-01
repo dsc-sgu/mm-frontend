@@ -139,7 +139,9 @@ describe('ACC-08: backend resolves participant resources without a client roster
 
   test('renaming a User locator leaves resolved identities and content keys unchanged', async () => {
     const user = mockBackend.state.users.find(({ id }) => id === sasha.id);
-    if (!user) throw new Error('Missing Sasha');
+    if (!user) {
+      throw new Error('Missing Sasha');
+    }
     user.username = v.parse(UsernameSchema, 'renamed-sasha');
     await expect(loadRepository(COURSE, user.username)).resolves.toEqual({
       status: 'found',

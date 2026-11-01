@@ -207,7 +207,9 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
       const course = mockBackend.state.courses.find(
         ({ id }) => id === databases.id
       );
-      if (!course) throw new Error('The databases fixture is missing');
+      if (!course) {
+        throw new Error('The databases fixture is missing');
+      }
       course.slug = renamed;
 
       await expect(
@@ -242,7 +244,9 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
     const course = mockBackend.state.courses.find(
       ({ id }) => id === databases.id
     );
-    if (!course) throw new Error('The databases fixture is missing');
+    if (!course) {
+      throw new Error('The databases fixture is missing');
+    }
     course.slug = v.parse(CourseSlugSchema, 'relational-databases');
 
     await router.navigate({ to: '/' });
