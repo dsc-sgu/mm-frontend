@@ -51,7 +51,17 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
       status: 'published',
       review: {
         revision: 2,
-        overallFeedbackHtml: expect.stringContaining('пустой список'),
+        overallFeedbackText: {
+          version: 1,
+          children: [
+            {
+              type: 'p',
+              children: [
+                { text: 'Сортировка работает, но пустой список не обработан.' },
+              ],
+            },
+          ],
+        },
         // world:review Users have only a given name, so no patronymic.
         publishedBy: {
           id: boris.id,
@@ -133,7 +143,10 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
       courseId: COURSE_ID,
       attemptId: sashaFirst.id,
       grade: v.parse(GradeSchema, 8.25),
-      overallFeedbackHtml: '<p>Исправлено</p>',
+      overallFeedbackText: {
+        version: 1,
+        children: [{ type: 'p', children: [{ text: 'Исправлено' }] }],
+      },
       comments: [
         {
           id: 'comment-anna-main-2',
@@ -142,7 +155,19 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
             start: { side: 'additions', lineNumber: 2 },
             end: { side: 'additions', lineNumber: 2 },
           },
-          html: '<p>Сумму можно посчитать через <code>reduce</code>.</p>',
+          text: {
+            version: 1,
+            children: [
+              {
+                type: 'p',
+                children: [
+                  { text: 'Сумму можно посчитать через ' },
+                  { text: 'reduce', code: true },
+                  { text: '.' },
+                ],
+              },
+            ],
+          },
         },
       ],
     });
@@ -182,7 +207,10 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
         courseId: COURSE_ID,
         attemptId: sashaFirst.id,
         commentId: 'comment-boris-readme-3',
-        html: '<p>Добавлю.</p>',
+        text: {
+          version: 1,
+          children: [{ type: 'p', children: [{ text: 'Добавлю.' }] }],
+        },
       });
 
       expect(created.author).toEqual(author);
@@ -196,7 +224,10 @@ describe('REV-04: Review is loaded by AttemptId with its revision', () => {
           .find(({ id }) => id === created.id)
       ).toMatchObject({
         author,
-        html: '<p>Добавлю.</p>',
+        text: {
+          version: 1,
+          children: [{ type: 'p', children: [{ text: 'Добавлю.' }] }],
+        },
       });
     }
   );
@@ -242,7 +273,7 @@ describe('TR-05: load-review statuses', () => {
   const review = {
     revision: 1,
     grade: 7.5,
-    overallFeedbackHtml: '',
+    overallFeedbackText: null,
     publishedAt: '2026-05-20T13:05:00.000Z',
     publishedBy: {
       id: anna.id,
@@ -287,6 +318,55 @@ describe('TR-05: load-review statuses', () => {
 
   test.each([
     ['an unknown status', { status: 'draft' }],
+    [
+      'неизвестная версия текста',
+      {
+        status: 'published',
+        review: {
+          ...review,
+          overallFeedbackText: { version: 2, children: [] },
+        },
+      },
+    ],
+    [
+      'неизвестное форматирование текста',
+      {
+        status: 'published',
+        review: {
+          ...review,
+          overallFeedbackText: {
+            version: 1,
+            children: [
+              { type: 'p', children: [{ text: 'Отзыв', underline: true }] },
+            ],
+          },
+        },
+      },
+    ],
+    [
+      'запрещённый адрес ссылки',
+      {
+        status: 'published',
+        review: {
+          ...review,
+          overallFeedbackText: {
+            version: 1,
+            children: [
+              {
+                type: 'p',
+                children: [
+                  {
+                    type: 'a',
+                    url: 'javascript:alert(1)',
+                    children: [{ text: 'Ссылка' }],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    ],
     [
       'a Review without a revision',
       { status: 'published', review: { ...review, revision: undefined } },

@@ -1,3 +1,4 @@
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { CodeView } from '@pierre/diffs/react';
 import { AttemptReviewCodeViewHeader } from './code-view-header';
@@ -55,11 +56,14 @@ type AttemptReviewDiffProps = {
   viewMode?: 'unified' | 'split';
   className?: string;
   onCommentsChange?: (comments: AttemptReviewLineComment[]) => void;
-  onReplySubmit?: (commentId: string, html: string) => Promise<ReviewReply>;
+  onReplySubmit?: (
+    commentId: string,
+    text: ReviewTextDocument | null
+  ) => Promise<ReviewReply>;
   onReplyUpdate?: (
     commentId: string,
     replyId: string,
-    html: string
+    text: ReviewTextDocument | null
   ) => Promise<ReviewReply>;
   onReplyDelete?: (commentId: string, replyId: string) => Promise<void>;
   onViewerChange?: (viewer: AttemptReviewCodeViewHandle | null) => void;
@@ -219,8 +223,8 @@ export function AttemptReviewDiff({
     return nextComments;
   }
 
-  function submitComment(commentId: string, html: string) {
-    applyComments(submitLineComment(comments, commentId, html));
+  function submitComment(commentId: string, text: ReviewTextDocument | null) {
+    applyComments(submitLineComment(comments, commentId, text));
     clearSelectedLines();
   }
 
@@ -243,22 +247,29 @@ export function AttemptReviewDiff({
     );
   }
 
-  async function submitReply(commentId: string, html: string) {
+  async function submitReply(
+    commentId: string,
+    text: ReviewTextDocument | null
+  ) {
     if (!currentReviewer || !onReplySubmit) {
       return;
     }
 
-    const reply = await onReplySubmit(commentId, html);
+    const reply = await onReplySubmit(commentId, text);
 
     applyComments(addLineCommentReply({ comments, commentId, reply }));
   }
 
-  async function updateReply(commentId: string, replyId: string, html: string) {
+  async function updateReply(
+    commentId: string,
+    replyId: string,
+    text: ReviewTextDocument | null
+  ) {
     if (!onReplyUpdate) {
       return;
     }
 
-    const reply = await onReplyUpdate(commentId, replyId, html);
+    const reply = await onReplyUpdate(commentId, replyId, text);
 
     applyComments(updateLineCommentReply({ comments, commentId, reply }));
   }
@@ -356,7 +367,7 @@ export function AttemptReviewDiff({
 
           return (
             <AttemptReviewLineCommentCard
-              key={`${comment.id}:${getLineCommentStatus(comment)}:${comment.isEditing === true ? 'editing' : 'readonly'}:${comment.html}`}
+              key={`${comment.id}:${getLineCommentStatus(comment)}:${comment.isEditing === true ? 'editing' : 'readonly'}:${JSON.stringify(comment.text)}`}
               comment={comment}
               mode={mode}
               canDelete={mode === 'editable' && canManageLineComment(comment)}
@@ -373,14 +384,14 @@ export function AttemptReviewDiff({
               currentUserId={
                 canReplyToLineComment(comment) ? currentReviewer?.id : undefined
               }
-              onSubmit={(html) => submitComment(comment.id, html)}
+              onSubmit={(text) => submitComment(comment.id, text)}
               onCancel={() => cancelComment(comment.id)}
               onEdit={() => editComment(comment.id)}
               onDelete={() => deleteComment(comment.id)}
               onRevertPending={() => revertPendingComment(comment.id)}
-              onReplySubmit={(html) => submitReply(comment.id, html)}
-              onReplyUpdate={(replyId, html) =>
-                updateReply(comment.id, replyId, html)
+              onReplySubmit={(text) => submitReply(comment.id, text)}
+              onReplyUpdate={(replyId, text) =>
+                updateReply(comment.id, replyId, text)
               }
               onReplyDelete={(replyId) => deleteReply(comment.id, replyId)}
             />

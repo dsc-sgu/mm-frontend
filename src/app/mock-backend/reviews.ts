@@ -1,3 +1,4 @@
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import * as v from 'valibot';
 import type { MockAttempt, MockReview } from '@/app/mock-backend/state';
 import type { UserId } from '@/features/auth/model/identity';
@@ -28,7 +29,7 @@ export function devReview(
     revision: {
       number: v.parse(ReviewRevisionSchema, 1),
       grade: v.parse(GradeSchema, DEV_GRADES[attempt.attemptNumber]),
-      overallFeedbackHtml: DEV_FEEDBACK[attempt.attemptNumber] ?? '',
+      overallFeedbackText: DEV_FEEDBACK[attempt.attemptNumber] ?? null,
       comments: comments.map((comment) => ({
         ...comment,
         authorId: teacherId,
@@ -54,10 +55,45 @@ function shift(isoTime: string, milliseconds: number): string {
 
 const DEV_GRADES: Record<number, number> = { 1: 5.5, 2: 6.8, 3: 8.1 };
 
-const DEV_FEEDBACK: Record<number, string> = {
-  1: '<p><strong>Хорошее начало.</strong> Проверьте стиль именования и добавьте обработку пустых входных данных.</p>',
-  2: '<p>Решение стало устойчивее. Обратите внимание на <code>formatTotal</code> и локализацию вывода.</p>',
-  3: '<p>Отрицательные значения обработаны, вывод локализован.</p>',
+const DEV_FEEDBACK: Record<number, ReviewTextDocument> = {
+  1: {
+    version: 1,
+    children: [
+      {
+        type: 'p',
+        children: [
+          { text: 'Хорошее начало.', bold: true },
+          {
+            text: ' Проверьте стиль именования и добавьте обработку пустых входных данных.',
+          },
+        ],
+      },
+    ],
+  },
+  2: {
+    version: 1,
+    children: [
+      {
+        type: 'p',
+        children: [
+          { text: 'Решение стало устойчивее. Обратите внимание на ' },
+          { text: 'formatTotal', code: true },
+          { text: ' и локализацию вывода.' },
+        ],
+      },
+    ],
+  },
+  3: {
+    version: 1,
+    children: [
+      {
+        type: 'p',
+        children: [
+          { text: 'Отрицательные значения обработаны, вывод локализован.' },
+        ],
+      },
+    ],
+  },
 };
 
 type DevComment = Omit<
@@ -74,7 +110,19 @@ const DEV_COMMENTS: Record<number, DevComment[]> = {
         start: { side: 'additions', lineNumber: 4 },
         end: { side: 'additions', lineNumber: 4 },
       },
-      html: '<p>Проверка пустого массива нужна, но после неё стоит добавить тест на этот случай.</p>',
+      text: {
+        version: 1,
+        children: [
+          {
+            type: 'p',
+            children: [
+              {
+                text: 'Проверка пустого массива нужна, но после неё стоит добавить тест на этот случай.',
+              },
+            ],
+          },
+        ],
+      },
     },
   ],
   3: [
@@ -85,7 +133,19 @@ const DEV_COMMENTS: Record<number, DevComment[]> = {
         start: { side: 'additions', lineNumber: 4 },
         end: { side: 'additions', lineNumber: 4 },
       },
-      html: '<p>Классно, что отрицательные значения обработаны. Зафиксируйте это в тестах.</p>',
+      text: {
+        version: 1,
+        children: [
+          {
+            type: 'p',
+            children: [
+              {
+                text: 'Классно, что отрицательные значения обработаны. Зафиксируйте это в тестах.',
+              },
+            ],
+          },
+        ],
+      },
     },
     {
       id: 'comment-a3-summary-3',
@@ -94,7 +154,25 @@ const DEV_COMMENTS: Record<number, DevComment[]> = {
         start: { side: 'additions', lineNumber: 3 },
         end: { side: 'additions', lineNumber: 3 },
       },
-      html: '<p>Компонент маленький и понятный. Можно добавить ссылку на <a href="/docs/components">гайд по компонентам</a>.</p>',
+      text: {
+        version: 1,
+        children: [
+          {
+            type: 'p',
+            children: [
+              {
+                text: 'Компонент маленький и понятный. Можно добавить ссылку на ',
+              },
+              {
+                type: 'a',
+                url: '/docs/components',
+                children: [{ text: 'гайд по компонентам' }],
+              },
+              { text: '.' },
+            ],
+          },
+        ],
+      },
     },
   ],
 };
@@ -108,7 +186,15 @@ const DEV_REPLIES: Record<number, DevReply[]> = {
   2: [
     {
       commentId: 'comment-a2-main-4',
-      html: '<p>Согласен, добавлю тест отдельным коммитом.</p>',
+      text: {
+        version: 1,
+        children: [
+          {
+            type: 'p',
+            children: [{ text: 'Согласен, добавлю тест отдельным коммитом.' }],
+          },
+        ],
+      },
     },
   ],
 };

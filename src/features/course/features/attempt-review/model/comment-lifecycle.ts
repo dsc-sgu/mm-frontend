@@ -1,3 +1,4 @@
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import type {
   AttemptReviewLineComment,
   AttemptReviewLineCommentStatus,
@@ -37,7 +38,7 @@ export function isEditableLineComment({
 
 export function submitLineCommentChange(
   comment: AttemptReviewLineComment,
-  html: string
+  text: ReviewTextDocument | null
 ): AttemptReviewLineComment {
   const status = getLineCommentStatus(comment);
   const nextStatus =
@@ -47,7 +48,7 @@ export function submitLineCommentChange(
 
   return {
     ...comment,
-    html,
+    text,
     status: nextStatus,
     isEditing: false,
   };

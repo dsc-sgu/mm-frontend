@@ -1,3 +1,9 @@
+import {
+  NonemptyReviewTextSchema,
+  areReviewTextsEqual,
+  normalizeReviewText,
+} from '@/features/course/features/review/model/text-document';
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import * as v from 'valibot';
 import { http, HttpResponse } from 'msw';
 import {
@@ -50,7 +56,7 @@ function toReviewDto({ revision, replies }: MockReview) {
   return {
     revision: revision.number,
     grade: gradeToNumber(revision.grade),
-    overallFeedbackHtml: revision.overallFeedbackHtml,
+    overallFeedbackText: revision.overallFeedbackText,
     publishedAt: revision.publishedAt,
     publishedBy: author(revision.publishedBy),
     comments: revision.comments.map(({ authorId, ...comment }) => ({
@@ -66,11 +72,11 @@ function toReviewDto({ revision, replies }: MockReview) {
 function toReply({
   id,
   authorId,
-  html,
+  text,
   createdAt,
   updatedAt,
 }: MockReview['replies'][number]): ReviewReply {
-  return { id, author: author(authorId), html, createdAt, updatedAt };
+  return { id, author: author(authorId), text, createdAt, updatedAt };
 }
 
 function author(userId: UserId): ReviewAuthor {
@@ -98,19 +104,19 @@ type AttemptAddress = {
 
 export type SaveReviewInput = AttemptAddress & {
   grade: Grade;
-  overallFeedbackHtml: string;
+  overallFeedbackText: ReviewTextDocument | null;
   comments: ReviewCommentInput[];
 };
 
 export type CreateReplyInput = AttemptAddress & {
   commentId: string;
-  html: string;
+  text: ReviewTextDocument | null;
 };
 
 export type UpdateReplyInput = AttemptAddress & {
   commentId: string;
   replyId: string;
-  html: string;
+  text: ReviewTextDocument | null;
 };
 
 export type DeleteReplyInput = AttemptAddress & {
@@ -129,12 +135,16 @@ export async function saveReview(input: SaveReviewInput): Promise<void> {
   );
   const now = new Date().toISOString();
   const comments = input.comments.map((comment): MockReviewComment => {
+    v.parse(NonemptyReviewTextSchema, comment.text);
     const saved = previousComments.get(comment.id);
     return {
       ...comment,
       authorId: saved?.authorId ?? viewerId,
       createdAt: saved?.createdAt ?? now,
-      updatedAt: saved && saved.html === comment.html ? saved.updatedAt : now,
+      updatedAt:
+        saved && areReviewTextsEqual(saved.text, comment.text)
+          ? saved.updatedAt
+          : now,
     };
   });
   const review: MockReview = {
@@ -145,7 +155,9 @@ export async function saveReview(input: SaveReviewInput): Promise<void> {
         (previous?.revision.number ?? 0) + 1
       ),
       grade: input.grade,
-      overallFeedbackHtml: input.overallFeedbackHtml,
+      overallFeedbackText:
+        input.overallFeedbackText &&
+        normalizeReviewText(input.overallFeedbackText),
       comments,
       publishedAt: now,
       publishedBy: viewerId,
@@ -183,6 +195,7 @@ export async function saveReview(input: SaveReviewInput): Promise<void> {
 export async function createReply(
   input: CreateReplyInput
 ): Promise<ReviewReply> {
+  v.parse(NonemptyReviewTextSchema, input.text);
   await new Promise((resolve) => setTimeout(resolve, 180));
 
   const { review, viewerId } = findCommentReview(input);
@@ -191,7 +204,7 @@ export async function createReply(
     id: `reply-${input.commentId}-${Date.now()}`,
     commentId: input.commentId,
     authorId: viewerId,
-    html: input.html,
+    text: input.text,
     createdAt: now,
     updatedAt: now,
   };
@@ -202,11 +215,12 @@ export async function createReply(
 export async function updateReply(
   input: UpdateReplyInput
 ): Promise<ReviewReply> {
+  v.parse(NonemptyReviewTextSchema, input.text);
   await new Promise((resolve) => setTimeout(resolve, 180));
 
   const { review, viewerId } = findCommentReview(input);
   const reply = findOwnReply(review, input, viewerId);
-  reply.html = input.html;
+  reply.text = input.text;
   reply.updatedAt = new Date().toISOString();
   return toReply(reply);
 }

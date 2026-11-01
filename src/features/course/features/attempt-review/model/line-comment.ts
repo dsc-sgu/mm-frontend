@@ -1,3 +1,4 @@
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import {
   cancelLineCommentChange,
   deleteLineCommentChange,
@@ -46,10 +47,10 @@ function updateLineComment(
 export function submitLineComment(
   comments: AttemptReviewLineComment[],
   commentId: string,
-  html: string
+  text: ReviewTextDocument | null
 ): AttemptReviewLineComment[] {
   return updateLineComment(comments, commentId, (comment) =>
-    submitLineCommentChange(comment, html)
+    submitLineCommentChange(comment, text)
   );
 }
 
@@ -149,7 +150,7 @@ function createDraftLineComment({
     id: `draft-${filePath}-${start.side}-${start.lineNumber}-${end.side}-${end.lineNumber}-${Date.now()}`,
     filePath,
     range,
-    html: '<p></p>',
+    text: { version: 1 as const, children: [] },
     author: currentReviewer,
     createdAt: '',
     updatedAt: '',

@@ -1,3 +1,4 @@
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -190,7 +191,7 @@ function AttemptReviewPageLoaded({
     gradeChanged,
     savableGrade,
     setGrade,
-    setOverallFeedbackHtml,
+    setOverallFeedbackText,
     setLineComments,
     discard,
     resetToReview,
@@ -254,17 +255,17 @@ function AttemptReviewPageLoaded({
 
   async function submitCommentReply(
     commentId: string,
-    html: string
+    text: ReviewTextDocument | null
   ): Promise<ReviewReply> {
-    return replyMutations.create.mutateAsync({ commentId, html });
+    return replyMutations.create.mutateAsync({ commentId, text });
   }
 
   async function updateCommentReply(
     commentId: string,
     replyId: string,
-    html: string
+    text: ReviewTextDocument | null
   ): Promise<ReviewReply> {
-    return replyMutations.update.mutateAsync({ commentId, replyId, html });
+    return replyMutations.update.mutateAsync({ commentId, replyId, text });
   }
 
   async function deleteCommentReply(commentId: string, replyId: string) {
@@ -278,7 +279,7 @@ function AttemptReviewPageLoaded({
 
     const savedReview = await saveMutation.mutateAsync({
       grade: savableGrade,
-      overallFeedbackHtml: draft.overallFeedbackHtml,
+      overallFeedbackText: draft.overallFeedbackText,
       comments: prepareLineCommentsForSave(draft.lineComments),
     });
     // A denial replaces the cached Review, and with it this whole page.
@@ -351,7 +352,7 @@ function AttemptReviewPageLoaded({
               savePending={saveMutation.isPending}
               className="mx-0 border-0 sm:mx-0 lg:mx-0"
               onGradeChange={setGrade}
-              onFeedbackChange={setOverallFeedbackHtml}
+              onFeedbackChange={setOverallFeedbackText}
               onDiscard={discard}
               onSave={saveReview}
             />
@@ -445,7 +446,7 @@ function AttemptReviewPageLoaded({
                   isReviewPanelCollapsed && 'hidden'
                 )}
                 onGradeChange={setGrade}
-                onFeedbackChange={setOverallFeedbackHtml}
+                onFeedbackChange={setOverallFeedbackText}
                 onDiscard={discard}
                 onSave={saveReview}
               />

@@ -1,3 +1,5 @@
+import { areReviewTextsEqual } from '@/features/course/features/review/model/text-document';
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import { useState } from 'react';
 import { Check, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 
@@ -13,7 +15,7 @@ import {
   RichTextContent,
   RichTextEditor,
 } from '@/features/course/features/attempt-review/ui/rich-text/editor';
-import { isRichTextHtmlEmpty } from '@/features/course/features/attempt-review/ui/rich-text/empty';
+import { isRichTextEmpty } from '@/features/course/features/attempt-review/ui/rich-text/empty';
 import { useUnsentCommentText } from '@/features/course/features/attempt-review/hooks/use-unsent-comment-text';
 import { unsentCommentTextKeys } from '@/features/course/features/attempt-review/model/unsent-comment-text';
 import { AttemptReviewCommentTimestamp } from './timestamp';
@@ -23,7 +25,10 @@ import { cn } from '@/shadcn/lib/utils';
 type AttemptReviewCommentReplyItemProps = {
   reply: ReviewReply;
   canManage: boolean;
-  onUpdate: (replyId: string, html: string) => void | Promise<void>;
+  onUpdate: (
+    replyId: string,
+    text: ReviewTextDocument | null
+  ) => void | Promise<void>;
   onDelete: (replyId: string) => void | Promise<void>;
 };
 
@@ -32,14 +37,14 @@ type ReplyItemState =
   | { mode: 'view'; pending: 'delete' }
   | {
       mode: 'editing';
-      draftHtml: string;
-      sourceHtml: string;
+      draftText: ReviewTextDocument | null;
+      sourceText: ReviewTextDocument | null;
       pending: false;
     }
   | {
       mode: 'editing';
-      draftHtml: string;
-      sourceHtml: string;
+      draftText: ReviewTextDocument | null;
+      sourceText: ReviewTextDocument | null;
       pending: 'update';
     };
 
@@ -52,24 +57,25 @@ export function AttemptReviewCommentReplyItem({
   const unsentTextStore = useUnsentCommentText();
   const textKey = unsentCommentTextKeys.replyEdit(reply.id);
   const [state, setState] = useState<ReplyItemState>(() => {
-    const unsentHtml = unsentTextStore.read(textKey, reply.html);
+    const unsentText = unsentTextStore.read(textKey, reply.text);
 
-    return unsentHtml === undefined
+    return unsentText === undefined
       ? { mode: 'view', pending: false }
       : {
           mode: 'editing',
-          draftHtml: unsentHtml,
-          sourceHtml: reply.html,
+          draftText: unsentText,
+          sourceText: reply.text,
           pending: false,
         };
   });
   const isEditing = state.mode === 'editing';
   const isPending = state.pending !== false;
-  const draftHtml =
-    state.mode === 'editing' && state.sourceHtml === reply.html
-      ? state.draftHtml
-      : reply.html;
-  const isSubmitDisabled = isPending || isRichTextHtmlEmpty(draftHtml);
+  const draftText =
+    state.mode === 'editing' &&
+    areReviewTextsEqual(state.sourceText, reply.text)
+      ? state.draftText
+      : reply.text;
+  const isSubmitDisabled = isPending || isRichTextEmpty(draftText);
   const submitShortcutLabels = getShortcutLabels(commentSubmitShortcut);
   const cancelShortcutLabels = getShortcutLabels(commentCancelShortcut);
 
@@ -77,13 +83,13 @@ export function AttemptReviewCommentReplyItem({
     unsentTextStore.clear(textKey);
     setState({
       mode: 'editing',
-      draftHtml: reply.html,
-      sourceHtml: reply.html,
+      draftText: reply.text,
+      sourceText: reply.text,
       pending: false,
     });
   }
 
-  function changeDraftHtml(nextDraftHtml: string) {
+  function changeDraftText(nextDraftText: ReviewTextDocument | null) {
     setState((current) => {
       if (current.mode !== 'editing' || current.pending === 'update') {
         return current;
@@ -91,14 +97,14 @@ export function AttemptReviewCommentReplyItem({
 
       return {
         mode: 'editing',
-        draftHtml: nextDraftHtml,
-        sourceHtml: reply.html,
+        draftText: nextDraftText,
+        sourceText: reply.text,
         pending: false,
       };
     });
     unsentTextStore.write(textKey, {
-      sourceHtml: reply.html,
-      html: nextDraftHtml,
+      sourceText: reply.text,
+      text: nextDraftText,
     });
   }
 
@@ -107,11 +113,11 @@ export function AttemptReviewCommentReplyItem({
       return;
     }
 
-    const submittedHtml = draftHtml;
+    const submittedText = draftText;
     setState({
       mode: 'editing',
-      draftHtml: submittedHtml,
-      sourceHtml: reply.html,
+      draftText: submittedText,
+      sourceText: reply.text,
       pending: 'update',
     });
     // Cleared before the request: a card remounted while it is in flight
@@ -119,17 +125,17 @@ export function AttemptReviewCommentReplyItem({
     unsentTextStore.clear(textKey);
 
     try {
-      await onUpdate(reply.id, submittedHtml);
+      await onUpdate(reply.id, submittedText);
       setState({ mode: 'view', pending: false });
     } catch (error) {
       unsentTextStore.write(textKey, {
-        sourceHtml: reply.html,
-        html: submittedHtml,
+        sourceText: reply.text,
+        text: submittedText,
       });
       setState({
         mode: 'editing',
-        draftHtml: submittedHtml,
-        sourceHtml: reply.html,
+        draftText: submittedText,
+        sourceText: reply.text,
         pending: false,
       });
       throw error;
@@ -178,12 +184,12 @@ export function AttemptReviewCommentReplyItem({
           />
         </div>
         <RichTextEditor
-          value={draftHtml}
+          value={draftText}
           editable
           autoFocus
           minHeightClassName="min-h-16"
           placeholder="Ответить на комментарий…"
-          onChange={changeDraftHtml}
+          onChange={changeDraftText}
           onSubmitShortcut={() => {
             void submitEdit();
           }}
@@ -279,7 +285,7 @@ export function AttemptReviewCommentReplyItem({
           </div>
         ) : null}
       </div>
-      <RichTextContent html={reply.html} />
+      <RichTextContent text={reply.text} />
     </div>
   );
 }

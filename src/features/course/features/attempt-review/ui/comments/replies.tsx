@@ -1,3 +1,4 @@
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import type { UserId } from '@/features/auth/model/identity';
 import { Check, MessageSquare, X } from 'lucide-react';
 
@@ -17,13 +18,16 @@ type AttemptReviewCommentRepliesProps = {
   canReply: boolean;
   currentUserId?: UserId;
   isReplying: boolean;
-  replyHtml: string;
+  replyText: ReviewTextDocument | null;
   isReplySubmitDisabled: boolean;
-  onReplyHtmlChange: (html: string) => void;
+  onReplyTextChange: (text: ReviewTextDocument | null) => void;
   onStartReply: () => void;
   onCancelReply: () => void;
   onSubmitReply: () => void;
-  onReplyUpdate: (replyId: string, html: string) => void | Promise<void>;
+  onReplyUpdate: (
+    replyId: string,
+    text: ReviewTextDocument | null
+  ) => void | Promise<void>;
   onReplyDelete: (replyId: string) => void | Promise<void>;
 };
 
@@ -32,9 +36,9 @@ export function AttemptReviewCommentReplies({
   canReply,
   currentUserId,
   isReplying,
-  replyHtml,
+  replyText,
   isReplySubmitDisabled,
-  onReplyHtmlChange,
+  onReplyTextChange,
   onStartReply,
   onCancelReply,
   onSubmitReply,
@@ -67,12 +71,12 @@ export function AttemptReviewCommentReplies({
       {isReplying ? (
         <div className="grid gap-2 border-l-2 border-primary/30 pl-3">
           <RichTextEditor
-            value={replyHtml}
+            value={replyText}
             editable
             autoFocus
             minHeightClassName="min-h-16"
             placeholder="Ответить на комментарий…"
-            onChange={onReplyHtmlChange}
+            onChange={onReplyTextChange}
             onSubmitShortcut={() => {
               if (!isReplySubmitDisabled) {
                 onSubmitReply();

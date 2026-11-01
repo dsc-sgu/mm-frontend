@@ -1,3 +1,5 @@
+import { areReviewTextsEqual } from '@/features/course/features/review/model/text-document';
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 
 import {
@@ -18,7 +20,7 @@ import type { AttemptReviewLineComment } from './types';
 export type AttemptReviewDraft = {
   /** The Grade field's text; it becomes a Grade only by parsing on Save. */
   grade: string;
-  overallFeedbackHtml: string;
+  overallFeedbackText: ReviewTextDocument | null;
   lineComments: AttemptReviewLineComment[];
 };
 
@@ -47,7 +49,7 @@ export function useAttemptReviewDraft(review: ReviewResult, maxGrade: Grade) {
     gradeChanged,
     hasChanges,
     setGrade: createDraftSetter(setDraft, 'grade'),
-    setOverallFeedbackHtml: createDraftSetter(setDraft, 'overallFeedbackHtml'),
+    setOverallFeedbackText: createDraftSetter(setDraft, 'overallFeedbackText'),
     setLineComments: createDraftSetter(setDraft, 'lineComments'),
     discard: () => setDraft(savedDraft),
     resetToReview: (nextReview: ReviewResult) =>
@@ -57,12 +59,12 @@ export function useAttemptReviewDraft(review: ReviewResult, maxGrade: Grade) {
 
 function createAttemptReviewDraft(review: ReviewResult): AttemptReviewDraft {
   if (review.status === 'none') {
-    return { grade: '', overallFeedbackHtml: '', lineComments: [] };
+    return { grade: '', overallFeedbackText: null, lineComments: [] };
   }
 
   return {
     grade: formatGrade(review.review.grade),
-    overallFeedbackHtml: review.review.overallFeedbackHtml,
+    overallFeedbackText: review.review.overallFeedbackText,
     lineComments: review.review.comments.map(cloneLineComment),
   };
 }
@@ -107,8 +109,10 @@ function areAttemptReviewDraftsEqual(
   second: AttemptReviewDraft
 ): boolean {
   return (
-    first.overallFeedbackHtml === second.overallFeedbackHtml &&
-    areLineCommentsEqual(first.lineComments, second.lineComments)
+    areReviewTextsEqual(
+      first.overallFeedbackText,
+      second.overallFeedbackText
+    ) && areLineCommentsEqual(first.lineComments, second.lineComments)
   );
 }
 
@@ -134,7 +138,7 @@ function areLineCommentsEqual(
       comment.range.start.lineNumber === other.range.start.lineNumber &&
       comment.range.end.side === other.range.end.side &&
       comment.range.end.lineNumber === other.range.end.lineNumber &&
-      comment.html === other.html &&
+      areReviewTextsEqual(comment.text, other.text) &&
       comment.author.id === other.author.id &&
       comment.createdAt === other.createdAt &&
       comment.updatedAt === other.updatedAt &&
@@ -158,7 +162,7 @@ function areRepliesEqual(
     return (
       other !== undefined &&
       reply.id === other.id &&
-      reply.html === other.html &&
+      areReviewTextsEqual(reply.text, other.text) &&
       reply.author.id === other.author.id &&
       reply.createdAt === other.createdAt &&
       reply.updatedAt === other.updatedAt

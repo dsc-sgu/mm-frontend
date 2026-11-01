@@ -1,3 +1,5 @@
+import { areReviewTextsEqual } from '@/features/course/features/review/model/text-document';
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import type { UserId } from '@/features/auth/model/identity';
 import { formatFullName } from '@/features/auth/model/full-name';
 import { useState } from 'react';
@@ -24,7 +26,7 @@ import {
   RichTextContent,
   RichTextEditor,
 } from '@/features/course/features/attempt-review/ui/rich-text/editor';
-import { isRichTextHtmlEmpty } from '@/features/course/features/attempt-review/ui/rich-text/empty';
+import { isRichTextEmpty } from '@/features/course/features/attempt-review/ui/rich-text/empty';
 import { useUnsentCommentText } from '@/features/course/features/attempt-review/hooks/use-unsent-comment-text';
 import { unsentCommentTextKeys } from '@/features/course/features/attempt-review/model/unsent-comment-text';
 import type {
@@ -39,22 +41,25 @@ type AttemptReviewLineCommentCardProps = {
   canEdit: boolean;
   canReply: boolean;
   currentUserId?: UserId;
-  onSubmit: (html: string) => void;
+  onSubmit: (text: ReviewTextDocument | null) => void;
   onCancel: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onRevertPending: () => void;
-  onReplySubmit: (html: string) => void | Promise<void>;
-  onReplyUpdate: (replyId: string, html: string) => void | Promise<void>;
+  onReplySubmit: (text: ReviewTextDocument | null) => void | Promise<void>;
+  onReplyUpdate: (
+    replyId: string,
+    text: ReviewTextDocument | null
+  ) => void | Promise<void>;
   onReplyDelete: (replyId: string) => void | Promise<void>;
 };
 
 type ReplyComposerState =
   | { status: 'idle' }
-  | { status: 'editing'; html: string }
-  | { status: 'submitting'; html: string };
+  | { status: 'editing'; text: ReviewTextDocument | null }
+  | { status: 'submitting'; text: ReviewTextDocument | null };
 
-const EMPTY_REPLY_HTML = '<p></p>';
+const EMPTY_REPLY_TEXT = { version: 1 as const, children: [] };
 
 export function AttemptReviewLineCommentCard({
   comment,
@@ -80,36 +85,39 @@ export function AttemptReviewLineCommentCard({
   const unsentTextStore = useUnsentCommentText();
   const commentTextKey = unsentCommentTextKeys.comment(comment.id);
   const replyTextKey = unsentCommentTextKeys.reply(comment.id);
-  const [draftState, setDraftState] = useState(() => ({
-    sourceHtml: comment.html,
-    html: unsentTextStore.read(commentTextKey, comment.html) ?? comment.html,
-  }));
-  const [replyComposer, setReplyComposer] = useState<ReplyComposerState>(() => {
-    const html = unsentTextStore.read(replyTextKey, EMPTY_REPLY_HTML);
-
-    return html === undefined
-      ? { status: 'idle' }
-      : { status: 'editing', html };
+  const [draftState, setDraftState] = useState(() => {
+    const unsent = unsentTextStore.read(commentTextKey, comment.text);
+    return {
+      sourceText: comment.text,
+      text: unsent === undefined ? comment.text : unsent,
+    };
   });
-  const draftHtml =
-    draftState.sourceHtml === comment.html ? draftState.html : comment.html;
-  const isSubmitDisabled = isRichTextHtmlEmpty(draftHtml);
+  const [replyComposer, setReplyComposer] = useState<ReplyComposerState>(() => {
+    const text = unsentTextStore.read(replyTextKey, EMPTY_REPLY_TEXT);
+
+    return text === undefined
+      ? { status: 'idle' }
+      : { status: 'editing', text };
+  });
+  const draftText = areReviewTextsEqual(draftState.sourceText, comment.text)
+    ? draftState.text
+    : comment.text;
+  const isSubmitDisabled = isRichTextEmpty(draftText);
   const isReplying = replyComposer.status !== 'idle';
   const isReplySubmitting = replyComposer.status === 'submitting';
-  const replyHtml = isReplying ? replyComposer.html : EMPTY_REPLY_HTML;
-  const isReplySubmitDisabled =
-    isReplySubmitting || isRichTextHtmlEmpty(replyHtml);
+  const replyText = isReplying ? replyComposer.text : EMPTY_REPLY_TEXT;
+  const isReplySubmitDisabled = isReplySubmitting || isRichTextEmpty(replyText);
   const submitShortcutLabels = getShortcutLabels(commentSubmitShortcut);
   const cancelShortcutLabels = getShortcutLabels(commentCancelShortcut);
 
-  function changeDraftHtml(html: string) {
-    setDraftState({ sourceHtml: comment.html, html });
-    unsentTextStore.write(commentTextKey, { sourceHtml: comment.html, html });
+  function changeDraftText(text: ReviewTextDocument | null) {
+    setDraftState({ sourceText: comment.text, text });
+    unsentTextStore.write(commentTextKey, { sourceText: comment.text, text });
   }
 
-  function submitComment(html: string) {
+  function submitComment(text: ReviewTextDocument | null) {
     unsentTextStore.clear(commentTextKey);
-    onSubmit(html);
+    onSubmit(text);
   }
 
   function cancelComment() {
@@ -126,44 +134,44 @@ export function AttemptReviewLineCommentCard({
   async function submitReply() {
     if (
       replyComposer.status !== 'editing' ||
-      isRichTextHtmlEmpty(replyComposer.html)
+      isRichTextEmpty(replyComposer.text)
     ) {
       return;
     }
 
-    const submittedHtml = replyComposer.html;
-    setReplyComposer({ status: 'submitting', html: submittedHtml });
+    const submittedText = replyComposer.text;
+    setReplyComposer({ status: 'submitting', text: submittedText });
     // Cleared before the request: a card remounted while it is in flight
     // must not reopen the composer with text that is already being sent.
     unsentTextStore.clear(replyTextKey);
 
     try {
-      await onReplySubmit(submittedHtml);
+      await onReplySubmit(submittedText);
       setReplyComposer({ status: 'idle' });
     } catch (error) {
       unsentTextStore.write(replyTextKey, {
-        sourceHtml: EMPTY_REPLY_HTML,
-        html: submittedHtml,
+        sourceText: EMPTY_REPLY_TEXT,
+        text: submittedText,
       });
-      setReplyComposer({ status: 'editing', html: submittedHtml });
+      setReplyComposer({ status: 'editing', text: submittedText });
       throw error;
     }
   }
 
-  function changeReplyHtml(html: string) {
+  function changeReplyText(text: ReviewTextDocument | null) {
     setReplyComposer((current) => {
       if (current.status !== 'editing') {
         return current;
       }
 
-      return { status: 'editing', html };
+      return { status: 'editing', text };
     });
-    unsentTextStore.write(replyTextKey, { sourceHtml: EMPTY_REPLY_HTML, html });
+    unsentTextStore.write(replyTextKey, { sourceText: EMPTY_REPLY_TEXT, text });
   }
 
   function startReply() {
     unsentTextStore.clear(replyTextKey);
-    setReplyComposer({ status: 'editing', html: EMPTY_REPLY_HTML });
+    setReplyComposer({ status: 'editing', text: EMPTY_REPLY_TEXT });
   }
 
   function cancelReply() {
@@ -277,15 +285,15 @@ export function AttemptReviewLineCommentCard({
       {isEditableComment ? (
         <div className="grid gap-2">
           <RichTextEditor
-            value={draftHtml}
+            value={draftText}
             editable
             autoFocus
             minHeightClassName="min-h-20"
             placeholder="Комментарий к строке…"
-            onChange={changeDraftHtml}
+            onChange={changeDraftText}
             onSubmitShortcut={() => {
               if (!isSubmitDisabled) {
-                submitComment(draftHtml);
+                submitComment(draftText);
               }
             }}
             onCancelShortcut={cancelComment}
@@ -296,7 +304,7 @@ export function AttemptReviewLineCommentCard({
               size="sm"
               className="rounded-xl"
               disabled={isSubmitDisabled}
-              onClick={() => submitComment(draftHtml)}
+              onClick={() => submitComment(draftText)}
             >
               <Check className="size-4" />
               Отправить
@@ -328,7 +336,7 @@ export function AttemptReviewLineCommentCard({
           </div>
         </div>
       ) : (
-        <RichTextContent html={comment.html} />
+        <RichTextContent text={comment.text} />
       )}
 
       {commentStatus !== 'draft' ? (
@@ -337,9 +345,9 @@ export function AttemptReviewLineCommentCard({
           canReply={canReply && !isEditableComment && !isPendingComment}
           currentUserId={isPendingComment ? undefined : currentUserId}
           isReplying={isReplying}
-          replyHtml={replyHtml}
+          replyText={replyText}
           isReplySubmitDisabled={isReplySubmitDisabled}
-          onReplyHtmlChange={changeReplyHtml}
+          onReplyTextChange={changeReplyText}
           onStartReply={startReply}
           onCancelReply={cancelReply}
           onSubmitReply={() => {

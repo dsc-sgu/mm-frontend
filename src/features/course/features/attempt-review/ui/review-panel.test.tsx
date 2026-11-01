@@ -80,7 +80,12 @@ test('REV-03: an empty Grade invalidates the edits of a first Review', async () 
   );
   expect(result.current.gradeError).toBeNull();
 
-  act(() => result.current.setOverallFeedbackHtml('<p>Отзыв</p>'));
+  act(() =>
+    result.current.setOverallFeedbackText({
+      version: 1,
+      children: [{ type: 'p', children: [{ text: 'Отзыв' }] }],
+    })
+  );
 
   expect(result.current.hasChanges).toBe(true);
   expect(result.current.savableGrade).toBeNull();
@@ -162,7 +167,7 @@ test('REV-03: Save has no command to clear a Grade', () => {
   const input: ReviewEdits = {
     // @ts-expect-error Save always carries a Grade.
     grade: null,
-    overallFeedbackHtml: '',
+    overallFeedbackText: null,
     comments: [],
   };
   expect(input.grade).toBeNull();

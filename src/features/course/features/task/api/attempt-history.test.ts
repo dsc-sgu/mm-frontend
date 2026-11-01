@@ -92,7 +92,7 @@ describe('REV-04: the attempt history carries the Review revision', () => {
       courseId: COURSE_ID,
       attemptId: sashaSecond.id,
       grade: v.parse(GradeSchema, 9),
-      overallFeedbackHtml: '',
+      overallFeedbackText: null,
       comments: [],
     });
     signIn(sasha.id);

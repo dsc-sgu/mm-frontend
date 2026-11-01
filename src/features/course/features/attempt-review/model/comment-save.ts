@@ -16,6 +16,6 @@ export function prepareLineCommentsForSave(
       id: comment.id,
       filePath: comment.filePath,
       range: comment.range,
-      html: comment.html,
+      text: comment.text,
     }));
 }

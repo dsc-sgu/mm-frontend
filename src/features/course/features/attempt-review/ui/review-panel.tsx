@@ -1,3 +1,4 @@
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import { Check, RotateCcw, Save } from 'lucide-react';
 import { useId } from 'react';
 
@@ -36,7 +37,7 @@ type AttemptReviewReviewPanelProps = {
   id?: string;
   className?: string;
   onGradeChange: (grade: string) => void;
-  onFeedbackChange: (html: string) => void;
+  onFeedbackChange: (text: ReviewTextDocument | null) => void;
   onDiscard: () => void;
   onSave: () => Promise<void>;
 };
@@ -182,7 +183,7 @@ export function AttemptReviewReviewPanel({
         <h2 className="font-semibold">Общий отзыв</h2>
         {mode === 'editable' ? (
           <RichTextEditor
-            value={draft.overallFeedbackHtml}
+            value={draft.overallFeedbackText}
             placeholder="Итоговый отзыв по попытке…"
             className="flex min-h-0 flex-1 flex-col"
             minHeightClassName="min-h-0 flex-1 lg:overflow-y-auto"
@@ -190,7 +191,7 @@ export function AttemptReviewReviewPanel({
           />
         ) : (
           <RichTextContent
-            html={published?.overallFeedbackHtml ?? ''}
+            text={published?.overallFeedbackText ?? null}
             className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
           />
         )}

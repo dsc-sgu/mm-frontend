@@ -1,3 +1,4 @@
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import * as v from 'valibot';
 import { seededCourses } from '@/app/mock-backend/courses';
 import type { FullName } from '@/features/auth/model/full-name';
@@ -77,7 +78,7 @@ export type MockReviewComment = {
   authorId: UserId;
   filePath: string;
   range: DiffLineRange;
-  html: string;
+  text: ReviewTextDocument | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -85,7 +86,7 @@ export type MockReviewComment = {
 type MockReviewRevision = {
   number: ReviewRevision;
   grade: Grade;
-  overallFeedbackHtml: string;
+  overallFeedbackText: ReviewTextDocument | null;
   comments: MockReviewComment[];
   publishedAt: string;
   publishedBy: UserId;
@@ -96,7 +97,7 @@ type MockReviewReply = {
   id: string;
   commentId: string;
   authorId: UserId;
-  html: string;
+  text: ReviewTextDocument | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -357,8 +358,17 @@ const sashaFirstReview: MockReview = {
   revision: {
     number: v.parse(ReviewRevisionSchema, 2),
     grade: v.parse(GradeSchema, 7.5),
-    overallFeedbackHtml:
-      '<p>Сортировка работает, но пустой список не обработан.</p>',
+    overallFeedbackText: {
+      version: 1,
+      children: [
+        {
+          type: 'p',
+          children: [
+            { text: 'Сортировка работает, но пустой список не обработан.' },
+          ],
+        },
+      ],
+    },
     comments: [
       {
         id: 'comment-anna-main-2',
@@ -368,7 +378,19 @@ const sashaFirstReview: MockReview = {
           start: { side: 'additions', lineNumber: 2 },
           end: { side: 'additions', lineNumber: 2 },
         },
-        html: '<p>Сумму можно посчитать через <code>reduce</code>.</p>',
+        text: {
+          version: 1,
+          children: [
+            {
+              type: 'p',
+              children: [
+                { text: 'Сумму можно посчитать через ' },
+                { text: 'reduce', code: true },
+                { text: '.' },
+              ],
+            },
+          ],
+        },
         createdAt: '2026-05-20T12:00:00.000Z',
         updatedAt: '2026-05-20T12:00:00.000Z',
       },
@@ -380,7 +402,15 @@ const sashaFirstReview: MockReview = {
           start: { side: 'additions', lineNumber: 3 },
           end: { side: 'additions', lineNumber: 3 },
         },
-        html: '<p>Опишите, как запустить решение.</p>',
+        text: {
+          version: 1,
+          children: [
+            {
+              type: 'p',
+              children: [{ text: 'Опишите, как запустить решение.' }],
+            },
+          ],
+        },
         createdAt: '2026-05-20T13:00:00.000Z',
         updatedAt: '2026-05-20T13:00:00.000Z',
       },
@@ -393,7 +423,12 @@ const sashaFirstReview: MockReview = {
       id: 'reply-sasha-main-2',
       commentId: 'comment-anna-main-2',
       authorId: accessUsers.sasha.id,
-      html: '<p>Перепишу во второй попытке.</p>',
+      text: {
+        version: 1,
+        children: [
+          { type: 'p', children: [{ text: 'Перепишу во второй попытке.' }] },
+        ],
+      },
       createdAt: '2026-05-20T15:00:00.000Z',
       updatedAt: '2026-05-20T15:00:00.000Z',
     },

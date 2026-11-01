@@ -35,7 +35,10 @@ function lineComment(filePath: string): AttemptReviewLineComment {
       start: { side: 'additions', lineNumber: 1 },
       end: { side: 'additions', lineNumber: 1 },
     },
-    html: '<p>Уточните формулировку.</p>',
+    text: {
+      version: 1,
+      children: [{ type: 'p', children: [{ text: 'Уточните формулировку.' }] }],
+    },
     author: {
       id: '00000000-0000-4000-8000-000000000001' as UserId,
       lastName: 'Смирнова',

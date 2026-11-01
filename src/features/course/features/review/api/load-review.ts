@@ -1,3 +1,7 @@
+import {
+  NonemptyReviewTextSchema,
+  isReviewTextEmpty,
+} from '@/features/course/features/review/model/text-document';
 import * as v from 'valibot';
 import { apiPath } from '@/app/remote-data/api-path';
 import {
@@ -28,7 +32,7 @@ const ReviewResultSchema = v.variant('status', [
     review: v.object({
       revision: ReviewRevisionSchema,
       grade: GradeSchema,
-      overallFeedbackHtml: v.string(),
+      overallFeedbackText: v.nullable(NonemptyReviewTextSchema),
       publishedAt: v.pipe(v.string(), v.isoTimestamp()),
       publishedBy: UserRefSchema,
       comments: v.array(
@@ -37,14 +41,20 @@ const ReviewResultSchema = v.variant('status', [
           author: UserRefSchema,
           filePath: v.string(),
           range: v.object({ start: DiffLineSchema, end: DiffLineSchema }),
-          html: v.string(),
+          text: v.pipe(
+            NonemptyReviewTextSchema,
+            v.check((document) => !isReviewTextEmpty(document))
+          ),
           createdAt: v.pipe(v.string(), v.isoTimestamp()),
           updatedAt: v.pipe(v.string(), v.isoTimestamp()),
           replies: v.array(
             v.object({
               id: v.string(),
               author: UserRefSchema,
-              html: v.string(),
+              text: v.pipe(
+                NonemptyReviewTextSchema,
+                v.check((document) => !isReviewTextEmpty(document))
+              ),
               createdAt: v.pipe(v.string(), v.isoTimestamp()),
               updatedAt: v.pipe(v.string(), v.isoTimestamp()),
             })

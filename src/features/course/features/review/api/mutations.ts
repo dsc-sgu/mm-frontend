@@ -1,3 +1,4 @@
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ReviewCommentInput } from '@/features/course/features/review/model/types';
 import type { Grade } from '@/features/course/model/grade';
@@ -13,7 +14,7 @@ import { reviewOptions, type ReviewedAttempt } from './queries';
 
 export type ReviewEdits = {
   grade: Grade;
-  overallFeedbackHtml: string;
+  overallFeedbackText: ReviewTextDocument | null;
   comments: ReviewCommentInput[];
 };
 
@@ -60,15 +61,17 @@ export function useReplyMutations(attempt: ReviewedAttempt) {
 
   return {
     create: useMutation({
-      mutationFn: (input: { commentId: string; html: string }) =>
-        createReply({ courseId, attemptId, ...input }),
+      mutationFn: (input: {
+        commentId: string;
+        text: ReviewTextDocument | null;
+      }) => createReply({ courseId, attemptId, ...input }),
       onSuccess,
     }),
     update: useMutation({
       mutationFn: (input: {
         commentId: string;
         replyId: string;
-        html: string;
+        text: ReviewTextDocument | null;
       }) => updateReply({ courseId, attemptId, ...input }),
       onSuccess,
     }),

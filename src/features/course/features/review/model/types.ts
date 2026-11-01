@@ -1,3 +1,4 @@
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 import type { UserRef } from '@/features/auth/model/user-ref';
 import type { Grade } from '@/features/course/model/grade';
 import type { ReviewRevision } from './revision';
@@ -15,7 +16,7 @@ export type ReviewAuthor = UserRef;
 export type ReviewReply = {
   id: string;
   author: ReviewAuthor;
-  html: string;
+  text: ReviewTextDocument | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -26,7 +27,7 @@ export type ReviewComment = {
   author: ReviewAuthor;
   filePath: string;
   range: DiffLineRange;
-  html: string;
+  text: ReviewTextDocument | null;
   createdAt: string;
   updatedAt: string;
   replies: ReviewReply[];
@@ -36,7 +37,7 @@ export type ReviewComment = {
 export type Review = {
   revision: ReviewRevision;
   grade: Grade;
-  overallFeedbackHtml: string;
+  overallFeedbackText: ReviewTextDocument | null;
   publishedAt: string;
   publishedBy: ReviewAuthor;
   comments: ReviewComment[];
@@ -54,5 +55,5 @@ export function unwrapPublishedReview(result: ReviewResult): Review | null {
 /** A root comment as the Review editor sends it; the backend keeps authors. */
 export type ReviewCommentInput = Pick<
   ReviewComment,
-  'id' | 'filePath' | 'range' | 'html'
+  'id' | 'filePath' | 'range' | 'text'
 >;

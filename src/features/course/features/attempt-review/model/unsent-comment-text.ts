@@ -1,15 +1,20 @@
+import { areReviewTextsEqual } from '@/features/course/features/review/model/text-document';
+import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
 // Text typed into a comment or reply editor and not sent yet. CodeView
 // unmounts a comment card when its file leaves the rendered window or
 // switches between the source and rendered views, so the card keeps its
 // unsent text here and restores it when it mounts again.
 type UnsentText = {
   // The saved text the editor started from; a stale entry is ignored.
-  sourceHtml: string;
-  html: string;
+  sourceText: ReviewTextDocument | null;
+  text: ReviewTextDocument | null;
 };
 
 export type UnsentCommentTextStore = {
-  read: (key: string, sourceHtml: string) => string | undefined;
+  read: (
+    key: string,
+    sourceText: ReviewTextDocument | null
+  ) => ReviewTextDocument | null | undefined;
   write: (key: string, text: UnsentText) => void;
   clear: (key: string) => void;
 };
@@ -24,10 +29,12 @@ export function createUnsentCommentTextStore(): UnsentCommentTextStore {
   const texts = new Map<string, UnsentText>();
 
   return {
-    read: (key, sourceHtml) => {
+    read: (key, sourceText) => {
       const text = texts.get(key);
 
-      return text?.sourceHtml === sourceHtml ? text.html : undefined;
+      return text && areReviewTextsEqual(text.sourceText, sourceText)
+        ? text.text
+        : undefined;
     },
     write: (key, text) => {
       texts.set(key, text);

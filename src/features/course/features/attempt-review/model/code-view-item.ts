@@ -96,7 +96,7 @@ function buildAttemptReviewCodeViewItemVersion(
       comments: comments.map((comment) => ({
         id: comment.id,
         range: comment.range,
-        html: comment.html,
+        text: comment.text,
         authorId: comment.author.id,
         createdAt: comment.createdAt,
         updatedAt: comment.updatedAt,

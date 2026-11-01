@@ -1,159 +1,164 @@
-import type { ReactNode } from 'react';
-import type { Editor } from '@tiptap/react';
-import {
-  Bold,
-  Code,
-  Code2,
-  ImagePlus,
-  Italic,
-  LinkIcon,
-  List,
-  ListOrdered,
-  Unlink,
-} from 'lucide-react';
-
+import { toggleCodeBlock } from '@platejs/code-block';
+import { useState } from 'react';
+import { useEditorRef } from 'platejs/react';
+import { upsertLink, unwrapLink } from '@platejs/link';
+import { toggleList } from '@platejs/list';
+import { isSafeReviewHref } from '@/features/course/model/links';
 import { Button } from '@/shadcn/components/ui/button';
+import { Input } from '@/shadcn/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/shadcn/components/ui/dialog';
 
-export function RichTextEditorToolbar({ editor }: { editor: Editor | null }) {
-  const disabled = !editor;
-
+type LinkState =
+  | { status: 'closed' }
+  | { status: 'open'; url: string; error: string | null };
+export function RichTextEditorToolbar() {
+  const editor = useEditorRef();
+  const [link, setLink] = useState<LinkState>({ status: 'closed' });
   return (
-    <div className="flex flex-wrap items-center gap-1 rounded-t-xl border-b bg-muted/40 p-1.5">
-      <ToolbarButton
-        label="Жирный текст"
-        active={editor?.isActive('bold')}
-        disabled={disabled}
-        onClick={() => editor?.chain().focus().toggleBold().run()}
-      >
-        <Bold className="size-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Курсив"
-        active={editor?.isActive('italic')}
-        disabled={disabled}
-        onClick={() => editor?.chain().focus().toggleItalic().run()}
-      >
-        <Italic className="size-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Встроенный код"
-        active={editor?.isActive('code')}
-        disabled={disabled}
-        onClick={() => editor?.chain().focus().toggleCode().run()}
-      >
-        <Code className="size-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Блок кода"
-        active={editor?.isActive('codeBlock')}
-        disabled={disabled}
-        onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-      >
-        <Code2 className="size-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Маркированный список"
-        active={editor?.isActive('bulletList')}
-        disabled={disabled}
-        onClick={() => editor?.chain().focus().toggleBulletList().run()}
-      >
-        <List className="size-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Нумерованный список"
-        active={editor?.isActive('orderedList')}
-        disabled={disabled}
-        onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-      >
-        <ListOrdered className="size-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Добавить внутреннюю или внешнюю ссылку"
-        active={editor?.isActive('link')}
-        disabled={disabled}
-        onClick={() => setEditorLink(editor)}
-      >
-        <LinkIcon className="size-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Убрать ссылку"
-        disabled={disabled || !editor?.isActive('link')}
-        onClick={() =>
-          editor?.chain().focus().extendMarkRange('link').unsetLink().run()
-        }
-      >
-        <Unlink className="size-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        label="Вставить изображение по URL"
-        disabled={disabled}
-        onClick={() => setEditorImage(editor)}
-      >
-        <ImagePlus className="size-4" />
-      </ToolbarButton>
-    </div>
-  );
-}
-
-function setEditorLink(editor: Editor | null) {
-  if (!editor) {
-    return;
-  }
-
-  const previousUrl = editor.getAttributes('link').href as string | undefined;
-  const url = window.prompt('URL ссылки', previousUrl ?? '');
-
-  if (url === null) {
-    return;
-  }
-
-  if (url.trim() === '') {
-    editor.chain().focus().extendMarkRange('link').unsetLink().run();
-    return;
-  }
-
-  editor
-    .chain()
-    .focus()
-    .extendMarkRange('link')
-    .setLink({ href: url.trim() })
-    .run();
-}
-
-function setEditorImage(editor: Editor | null) {
-  const url = window.prompt('URL изображения');
-
-  if (url?.trim()) {
-    editor?.chain().focus().setImage({ src: url.trim() }).run();
-  }
-}
-
-function ToolbarButton({
-  label,
-  active = false,
-  disabled = false,
-  children,
-  onClick,
-}: {
-  label: string;
-  active?: boolean;
-  disabled?: boolean;
-  children: ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <Button
-      type="button"
-      variant={active ? 'secondary' : 'ghost'}
-      size="icon-sm"
-      disabled={disabled}
-      aria-label={label}
-      title={label}
-      aria-pressed={active}
-      onClick={onClick}
-      className="rounded-lg focus-visible:ring-2 focus-visible:ring-ring"
+    <div
+      className="flex flex-wrap gap-1 border-b p-1.5"
+      onMouseDownCapture={() => {
+        const selection = window.getSelection();
+        if (!selection?.rangeCount) return;
+        const range = editor.api.toSlateRange(selection, {
+          exactMatch: false,
+          suppressThrow: true,
+        });
+        if (range) editor.tf.select(range);
+      }}
     >
-      {children}
-    </Button>
+      {[
+        { mark: 'bold', label: 'Жирный текст' },
+        { mark: 'italic', label: 'Курсив' },
+        { mark: 'strikethrough', label: 'Зачёркнутый текст' },
+        { mark: 'code', label: 'Встроенный код' },
+      ].map(({ mark, label }) => (
+        <Button
+          key={mark}
+          type="button"
+          variant="ghost"
+          size="sm"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => {
+            editor.tf.toggleMark(mark);
+            editor.tf.focus();
+          }}
+        >
+          {label}
+        </Button>
+      ))}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => {
+          editor.tf.toggleBlock('blockquote');
+          editor.tf.focus();
+        }}
+      >
+        Цитата
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => {
+          toggleCodeBlock(editor);
+          editor.tf.focus();
+        }}
+      >
+        Блок кода
+      </Button>
+      {['disc', 'decimal'].map((style) => (
+        <Button
+          key={style}
+          type="button"
+          variant="ghost"
+          size="sm"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => {
+            toggleList(editor, { listStyleType: style });
+            editor.tf.focus();
+          }}
+        >
+          {style === 'disc' ? 'Маркированный список' : 'Нумерованный список'}
+        </Button>
+      ))}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => setLink({ status: 'open', url: '', error: null })}
+      >
+        Ссылка
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => {
+          unwrapLink(editor);
+          editor.tf.focus();
+        }}
+      >
+        Убрать ссылку
+      </Button>
+      <Dialog
+        open={link.status === 'open'}
+        onOpenChange={(open) => {
+          if (!open) setLink({ status: 'closed' });
+        }}
+      >
+        <DialogContent
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            editor.tf.focus();
+          }}
+        >
+          <DialogTitle>Ссылка</DialogTitle>
+          {link.status === 'open' && (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!isSafeReviewHref(link.url)) {
+                  setLink({
+                    ...link,
+                    error: 'Введите http, https или путь от корня сайта',
+                  });
+                  return;
+                }
+                upsertLink(editor, { url: link.url, skipValidation: true });
+                setLink({ status: 'closed' });
+              }}
+            >
+              <label htmlFor="review-link">Адрес ссылки</label>
+              <Input
+                id="review-link"
+                value={link.url}
+                aria-invalid={Boolean(link.error)}
+                aria-describedby={link.error ? 'review-link-error' : undefined}
+                onChange={(event) =>
+                  setLink({ ...link, url: event.target.value, error: null })
+                }
+              />
+              {link.error && (
+                <p id="review-link-error" role="alert">
+                  {link.error}
+                </p>
+              )}
+              <Button type="submit">Вставить</Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
