@@ -1,11 +1,12 @@
 ---
 id: mm-307-READ
-status: open
+status: in_progress
 deps: [mm-146, mm-173, mm-301]
 links: []
 created: 2026-10-31T07:16:28Z
 type: task
 priority: 1
+assignee: t3m8ch
 aliases: [3sc88]
 parent: mm-298
 tags: [ready-for-agent]
