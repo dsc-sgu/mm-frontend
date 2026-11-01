@@ -250,7 +250,7 @@ const operations: Operation[] = [
     success: { status: 200, body: { attempts: [HISTORY_ATTEMPT] } },
     invalid: [
       [
-        'опубликовавший проверку без username',
+        'a review publisher without username',
         {
           attempts: [
             {

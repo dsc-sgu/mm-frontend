@@ -70,7 +70,7 @@ function expectCaretInOneOf(editable: Locator, blocks: [number, string][]) {
     .toBe('in one of the blocks');
 }
 
-test.describe('DOC-18: фокус после команд', () => {
+test.describe('DOC-18: focus after commands', () => {
   let editable: Locator;
 
   test.beforeEach(async ({ page }) => {
@@ -78,14 +78,14 @@ test.describe('DOC-18: фокус после команд', () => {
     await typeAllBlocks(page, editable);
   });
 
-  test('«Добавить ниже» ставит каретку в новый блок', async () => {
+  test('«Добавить ниже» places the caret in the new block', async () => {
     await runBlockCommand(blockWithText(editable, 'Alpha'), 'Добавить ниже');
 
     await expectBlocks(editable, ['Alpha', '', ...BLOCKS.slice(1)]);
     await expectCaretIn(editable, 1, '');
   });
 
-  test('«Добавить выше» ставит каретку в новый блок', async () => {
+  test('«Добавить выше» places the caret in the new block', async () => {
     await runBlockCommand(blockWithText(editable, 'Delta'), 'Добавить выше');
 
     await expectBlocks(editable, [
@@ -96,7 +96,7 @@ test.describe('DOC-18: фокус после команд', () => {
     await expectCaretIn(editable, 3, '');
   });
 
-  test('«Дублировать» ставит каретку в копию', async () => {
+  test('«Дублировать» places the caret in the copy', async () => {
     await runBlockCommand(blockWithText(editable, 'Epsilon'), 'Дублировать');
 
     await expectBlocks(editable, [
@@ -107,7 +107,7 @@ test.describe('DOC-18: фокус после команд', () => {
     await expectCaretIn(editable, 5, 'Epsilon');
   });
 
-  test('«Переместить вверх» оставляет каретку в блоке', async () => {
+  test('«Переместить вверх» keeps the caret in the block', async () => {
     await runBlockCommand(blockWithText(editable, 'Zeta'), 'Переместить вверх');
 
     await expectBlocks(editable, [
@@ -119,14 +119,14 @@ test.describe('DOC-18: фокус после команд', () => {
     await expectCaretIn(editable, 4, 'Zeta');
   });
 
-  test('«Переместить вниз» оставляет каретку в блоке', async () => {
+  test('«Переместить вниз» keeps the caret in the block', async () => {
     await runBlockCommand(blockWithText(editable, 'Beta'), 'Переместить вниз');
 
     await expectBlocks(editable, BETA_BELOW_GAMMA);
     await expectCaretIn(editable, 2, 'Beta');
   });
 
-  test('«Удалить» ставит каретку в соседний блок', async () => {
+  test('«Удалить» places the caret in a neighboring block', async () => {
     await runBlockCommand(blockWithText(editable, 'Beta'), 'Удалить');
 
     await expectBlocks(editable, ['Alpha', ...BLOCKS.slice(2)]);
@@ -137,14 +137,14 @@ test.describe('DOC-18: фокус после команд', () => {
     ]);
   });
 
-  test('«Превратить в» оставляет каретку в блоке', async () => {
+  test('«Превратить в» keeps the caret in the block', async () => {
     await transformBlock(blockWithText(editable, 'Beta'), 'Заголовок 2');
 
     await expect(editable.getByRole('heading', { name: 'Beta' })).toBeVisible();
     await expectCaretIn(editable, 1, 'Beta');
   });
 
-  test('перетаскивание оставляет каретку в перемещённом блоке', async () => {
+  test('dragging keeps the caret in the moved block', async () => {
     // The editor drops the block without focusing it.
     test.fail(true, PENDING_DOC5);
 
@@ -162,7 +162,7 @@ test.describe('DOC-18: фокус после команд', () => {
     await expectCaretIn(editable, 0, 'Gamma');
   });
 
-  test('undo возвращает каретку в затронутый блок', async ({ page }) => {
+  test('undo restores the caret to the affected block', async ({ page }) => {
     // Undo restores the order but puts the caret back where typing ended.
     test.fail(true, PENDING_DOC4);
 
@@ -175,7 +175,7 @@ test.describe('DOC-18: фокус после команд', () => {
     await expectCaretIn(editable, 1, 'Beta');
   });
 
-  test('redo возвращает каретку в затронутый блок', async ({ page }) => {
+  test('redo restores the caret to the affected block', async ({ page }) => {
     await runBlockCommand(blockWithText(editable, 'Beta'), 'Переместить вниз');
     await expectCaretIn(editable, 2, 'Beta');
     await page.keyboard.press('ControlOrMeta+z');
@@ -187,7 +187,7 @@ test.describe('DOC-18: фокус после команд', () => {
     await expectCaretIn(editable, 2, 'Beta');
   });
 
-  test('перетаскивание с клавиатуры возвращает фокус на handle', async () => {
+  test('keyboard dragging restores focus to the handle', async () => {
     await dragBlockWithKeyboard(blockWithText(editable, 'Beta'), 'ArrowDown');
 
     await expectBlocks(editable, BETA_BELOW_GAMMA);

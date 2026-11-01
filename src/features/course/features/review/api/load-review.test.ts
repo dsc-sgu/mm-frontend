@@ -254,7 +254,7 @@ describe('TR-05: load-review statuses', () => {
     comments: [],
   };
 
-  test('ответ без username опубликовавшего проверку отклоняется', async () => {
+  test('rejects a response without the review publisher username', async () => {
     server.use(
       http.get(
         REVIEW_URL,

@@ -6,7 +6,7 @@ import {
 import { editDocument } from '@/features/course/features/page-document/model/document';
 
 describe('Plate content adapter', () => {
-  it('не создаёт изменений при открытии и возврате исходного документа', () => {
+  it('produces no changes when opening and returning the original document', () => {
     const initial = editDocument([
       {
         id: 'h',

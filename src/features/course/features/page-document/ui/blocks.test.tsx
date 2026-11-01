@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { CourseContentBlocks } from './blocks';
 
 describe('CourseContentBlocks', () => {
-  it('показывает заглушку на месте неизвестного блока', () => {
+  it('shows a placeholder for an unsupported block', () => {
     render(
       <CourseContentBlocks
         courseSlug="course"
@@ -14,7 +14,7 @@ describe('CourseContentBlocks', () => {
     expect(screen.getByText('Блок не удалось показать')).toBeTruthy();
   });
 
-  it('группирует пункты списка и вкладывает список в родительский пункт', () => {
+  it('groups list items and nests a list in its parent item', () => {
     const item = (id: string, text: string, indent: number) => ({
       id,
       type: 'list-item',
@@ -44,7 +44,7 @@ describe('CourseContentBlocks', () => {
     ).toBe('Вложенный');
   });
 
-  it('показывает саммари закрытого задания и недоступность без ссылки на содержимое', () => {
+  it('shows a closed task summary and its unavailable state without a content link', () => {
     const { container } = render(
       <CourseContentBlocks
         courseSlug="course"

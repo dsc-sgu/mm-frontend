@@ -15,7 +15,7 @@ async function openReview(page: Page) {
   return markdownView;
 }
 
-test('Markdown-файл переключается между исходным и отрисованным диффом', async ({
+test('switches a Markdown file between source and rendered diffs', async ({
   page,
 }) => {
   test.slow();
@@ -56,7 +56,7 @@ test('Markdown-файл переключается между исходным �
   ).toContainText('# Практика');
 });
 
-test('черновик комментария к Markdown-файлу переживает смену вида', async ({
+test('preserves a Markdown file comment draft when switching views', async ({
   page,
 }) => {
   test.slow();

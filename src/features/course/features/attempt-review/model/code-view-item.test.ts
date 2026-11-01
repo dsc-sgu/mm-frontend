@@ -135,7 +135,7 @@ describe('createAttemptReviewCodeViewItems', () => {
   });
 });
 
-describe('Подпись привязки к строкам', () => {
+describe('Line anchor label', () => {
   it.each([
     ['additions', 2, 'additions', 2, 'К новой строке #2'],
     ['deletions', 3, 'deletions', 5, 'К старым строкам #3–5'],

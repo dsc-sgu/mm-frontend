@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 // mock backend, a service worker controls the page and its workers; Firefox
 // never runs a module worker whose script a service worker answered
 // (mswjs/msw#2654), and the diff stayed on its loading state.
-test('страница проверки попытки открывается с mock backend', async ({
+test('opens the attempt review page with the mock backend', async ({
   page,
 }) => {
   test.slow();

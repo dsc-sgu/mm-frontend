@@ -3,7 +3,7 @@ import { editDocument } from './document';
 import { buildListTree } from './lists';
 
 describe('buildListTree', () => {
-  it('продолжает родительскую нумерацию после вложенного списка и сбрасывает её при смене маркера', () => {
+  it('continues parent numbering after a nested list and resets it when the marker changes', () => {
     const result = editDocument(
       [
         ['a', 1, 'ordered'],

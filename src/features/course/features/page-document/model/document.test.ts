@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { readDocument, editDocument } from './document';
 
-describe('Документ страницы курса v1', () => {
-  it('канонизирует текст и остаётся неизменным при повторной загрузке', () => {
+describe('Course page document v1', () => {
+  it('canonicalizes text and stays unchanged when loaded again', () => {
     const input = [
       {
         id: 'p',
@@ -30,12 +30,12 @@ describe('Документ страницы курса v1', () => {
     ]);
     expect(readDocument(result)).toEqual(result);
   });
-  it('отклоняет блок без data.formatVersion', () => {
+  it('rejects a block without data.formatVersion', () => {
     expect(
       editDocument([{ id: 'p', type: 'paragraph', data: { children: [] } }])
     ).toEqual({ status: 'unsupported-content' });
   });
-  it('сохраняет место невалидного блока и запрещает его редактирование', () => {
+  it('preserves the position of an invalid block and prevents editing it', () => {
     const input = [
       {
         id: 'future',
@@ -49,7 +49,7 @@ describe('Документ страницы курса v1', () => {
     expect(editDocument(input)).toEqual({ status: 'unsupported-content' });
   });
 
-  it('нормализует вложенность пунктов списка', () => {
+  it('normalizes list item nesting', () => {
     const item = (id: string, indent: unknown) => ({
       id,
       type: 'list-item',
@@ -68,7 +68,7 @@ describe('Документ страницы курса v1', () => {
     ).toEqual([1, 2, 1, 2]);
   });
 
-  it('отклоняет блок задания внутри спойлера', () => {
+  it('rejects a task block inside a spoiler', () => {
     expect(
       editDocument([
         {

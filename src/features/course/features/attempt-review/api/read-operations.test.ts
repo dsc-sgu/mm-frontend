@@ -71,7 +71,7 @@ const operations: Operation[] = [
     invalid: [
       ['attemptNumber', { attemptNumber: 0 }],
       [
-        'студент без username',
+        'a student without username',
         { student: { id: sasha.id, lastName: '', firstName: 'Саша' } },
       ],
       ['maxGrade', { task: { title: 'Сортировки', maxGrade: 10.0001 } }],

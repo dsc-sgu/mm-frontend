@@ -46,7 +46,7 @@ type SavedListDocument = {
 // so a rule the current editor breaks fails only its own tests.
 const SAVED_LIST_DOCUMENTS: SavedListDocument[] = [
   {
-    name: 'уровни, разрыв абзацем, маркеры',
+    name: 'nesting, paragraph breaks, and markers',
     outline: [
       '1. Alpha',
       '  1. Nested one',
@@ -72,7 +72,7 @@ const SAVED_LIST_DOCUMENTS: SavedListDocument[] = [
     },
   },
   {
-    name: 'items из отдельных команд',
+    name: 'items created by separate commands',
     outline: ['1. Alpha', '2. Beta', '3. Gamma'],
     // Each command gives its item its own hidden list id, and saving splits
     // the run into three lists: 1, 1, 1.
@@ -80,8 +80,8 @@ const SAVED_LIST_DOCUMENTS: SavedListDocument[] = [
   },
 ];
 
-test.describe('DOC-14: нумерация списков', () => {
-  test('три ordered items нумеруются 1, 2, 3, а не 1, 1, 1', async ({
+test.describe('DOC-14: list numbering', () => {
+  test('numbers three ordered items as 1, 2, 3 instead of 1, 1, 1', async ({
     page,
   }) => {
     const editable = await openEmptyEditor(page);
@@ -91,7 +91,9 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Alpha', '2. Beta', '3. Gamma']);
   });
 
-  test('команда «Нумерованный список» создаёт серию', async ({ page }) => {
+  test('the «Нумерованный список» command creates a numbered sequence', async ({
+    page,
+  }) => {
     const editable = await openEmptyEditor(page);
 
     await page.keyboard.type('/нумер');
@@ -101,7 +103,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Alpha', '2. Beta', '3. Gamma']);
   });
 
-  test('абзацы, превращённые командой по одному, продолжают серию', async ({
+  test('paragraphs converted one by one continue the numbered sequence', async ({
     page,
   }) => {
     const editable = await openEmptyEditor(page);
@@ -111,7 +113,9 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Alpha', '2. Beta', '3. Gamma']);
   });
 
-  test('Enter в непустом item создаёт следующий sibling', async ({ page }) => {
+  test('Enter in a nonempty item creates the next sibling', async ({
+    page,
+  }) => {
     const editable = await openEmptyEditor(page);
 
     await typeBlocks(page, ['1. AlphaBeta', 'Gamma']);
@@ -122,7 +126,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Alpha', '2. Beta', '3. Gamma']);
   });
 
-  test('пустой Enter поднимает вложенный item, на уровне 1 выводит из списка', async ({
+  test('Enter in an empty item outdents nested items and exits top-level lists', async ({
     page,
   }) => {
     const editable = await openEmptyEditor(page);
@@ -144,7 +148,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectBlocks(editable, ['Alpha', 'Nested', 'Beta', 'After']);
   });
 
-  test('Backspace в начале поднимает вложенный item, затем выводит из списка', async ({
+  test('Backspace at the start outdents a nested item and then exits the list', async ({
     page,
   }) => {
     const editable = await openEmptyEditor(page);
@@ -168,7 +172,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectBlocks(editable, ['Alpha', 'Nested', 'Beta']);
   });
 
-  test('Tab вкладывает item без разрыва серии родителя, Shift+Tab поднимает', async ({
+  test('Tab indents an item without breaking parent numbering and Shift+Tab outdents it', async ({
     page,
   }) => {
     const editable = await openEmptyEditor(page);
@@ -185,7 +189,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Alpha', '2. Beta', '3. Gamma']);
   });
 
-  test('смена ordered → unordered завершает серию: 1 / • / 1', async ({
+  test('switching from ordered to unordered ends the sequence: 1 / • / 1', async ({
     page,
   }) => {
     // The editor continues the ordered run across the bullet: 1 / • / 2.
@@ -202,7 +206,9 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Alpha', '• Beta', '1. Gamma']);
   });
 
-  test('смена unordered → ordered снова объединяет серию', async ({ page }) => {
+  test('switching from unordered to ordered rejoins the numbered sequence', async ({
+    page,
+  }) => {
     const editable = await openEmptyEditor(page);
 
     await typeBlocks(page, ['1. Alpha', 'Beta', 'Gamma']);
@@ -219,7 +225,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Alpha', '2. Beta', '3. Gamma']);
   });
 
-  test('абзац разрывает серию, его удаление снова её объединяет', async ({
+  test('a paragraph breaks the numbered sequence and deleting it rejoins the sequence', async ({
     page,
   }) => {
     const editable = await openEmptyEditor(page);
@@ -235,7 +241,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Alpha', '2. Beta', '3. Gamma']);
   });
 
-  test('удаление item перенумеровывает серию', async ({ page }) => {
+  test('deleting an item renumbers the sequence', async ({ page }) => {
     const editable = await openEmptyEditor(page);
 
     await typeBlocks(page, ['1. Alpha', 'Beta', 'Gamma']);
@@ -245,9 +251,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Alpha', '2. Gamma']);
   });
 
-  test('перетаскивание одного item перенумеровывает серию', async ({
-    page,
-  }) => {
+  test('dragging an item renumbers the sequence', async ({ page }) => {
     const editable = await openEmptyEditor(page);
 
     await typeBlocks(page, ['1. Alpha', 'Beta', 'Gamma']);
@@ -260,9 +264,7 @@ test.describe('DOC-14: нумерация списков', () => {
     await expectOutline(editable, ['1. Gamma', '2. Alpha', '3. Beta']);
   });
 
-  test('перетаскивание выделенных items переносит их группой', async ({
-    page,
-  }) => {
+  test('dragging selected items moves them as a group', async ({ page }) => {
     // The editor drags only the block under the handle.
     test.fail(true, PENDING_DOC5);
 
@@ -291,7 +293,7 @@ test.describe('DOC-14: нумерация списков', () => {
   });
 
   for (const listDocument of SAVED_LIST_DOCUMENTS) {
-    test(`после Apply и повторного открытия номера те же: ${listDocument.name}`, async ({
+    test(`numbering survives Apply and reopening: ${listDocument.name}`, async ({
       page,
     }) => {
       test.fail(
@@ -309,7 +311,7 @@ test.describe('DOC-14: нумерация списков', () => {
       await expectOutline(await reopenEditor(page), listDocument.outline);
     });
 
-    test(`read-only показывает те же номера, что редактор: ${listDocument.name}`, async ({
+    test(`the read-only page shows the same numbering as the editor: ${listDocument.name}`, async ({
       page,
     }) => {
       test.fail(

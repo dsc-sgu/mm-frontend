@@ -12,7 +12,7 @@ describe('Document canonicalization', () => {
       })
     ),
   ])(
-    'канонизация идемпотентна для произвольных текстовых фрагментов',
+    'canonicalization is idempotent for arbitrary text fragments',
     (children) => {
       const once = readDocument([
         { id: 'p', type: 'paragraph', data: { formatVersion: 1, children } },
