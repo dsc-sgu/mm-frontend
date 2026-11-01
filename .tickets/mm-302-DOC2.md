@@ -1,7 +1,7 @@
 ---
 id: mm-302-DOC2
 status: open
-deps: [mm-301]
+deps: [mm-301, mm-328]
 links: []
 created: 2026-10-31T07:16:27Z
 type: task
