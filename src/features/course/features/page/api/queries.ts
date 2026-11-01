@@ -6,6 +6,7 @@ import type { CourseSlug } from '@/features/course/model/identity';
 import { deadlinesKeys } from '@/features/deadlines-calendar/api/queries';
 import { coursePageKeys } from '@/features/course/features/page-document/api/queries';
 import { saveCoursePage } from './mock';
+
 type SaveCoursePageVariables = SaveCoursePageInput & {
   /** The confirmed slug the editor was opened at, a shell context locator. */
   previousSlug: CourseSlug;
@@ -16,6 +17,7 @@ type SaveCoursePageVariables = SaveCoursePageInput & {
  * metadata are invalidated: the course list, deadlines and the shell context
  * at both the old and the new slug.
  */
+
 export function useSaveCoursePageMutation() {
   const queryClient = useQueryClient();
 

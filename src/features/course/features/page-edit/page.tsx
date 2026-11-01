@@ -244,6 +244,7 @@ export function CoursePageEditPage({
   const document = editDocument(course.content);
   if (document.status === 'unsupported-content')
     return <p>Содержимое не поддерживается редактором</p>;
+
   return (
     <CoursePageEditLoaded
       key={courseSlug}

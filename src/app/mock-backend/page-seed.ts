@@ -8,10 +8,12 @@ import type {
   TaskSummary,
   CourseContentBlockItem,
 } from '@/features/course/features/page/model/types';
+
 type CoursePageSummary = Omit<
   CoursePage,
   'description' | 'resources' | 'content' | 'taskSummaries'
 >;
+
 const COURSE_DESCRIPTIONS: Record<string, string> = {
   'algorithms-and-data-structures':
     'Практический курс о классических алгоритмах, структурах данных и способах оценивать сложность решений до того, как код попадёт в продакшен.',
@@ -50,6 +52,7 @@ export function createCoursePage(course: MockCourse): CoursePage {
     taskSummaries: buildTaskSummaries(),
   };
 }
+
 function buildCourseResources(course: CoursePageSummary): CoursePageResources {
   return {
     images: [
@@ -76,6 +79,7 @@ function buildCourseResources(course: CoursePageSummary): CoursePageResources {
     ],
   };
 }
+
 function buildTaskSummaries(): TaskSummary[] {
   return [
     {
@@ -93,6 +97,7 @@ function buildTaskSummaries(): TaskSummary[] {
     },
   ];
 }
+
 function buildCourseContent(
   course: CoursePageSummary
 ): CourseContentBlockItem[] {
@@ -378,6 +383,7 @@ function buildCourseContent(
 }
 
 // Stable fixture identities for the course-card teachers absent from login fixtures.
+
 export const pageTeachers = [
   ...new Map(
     seededCourses

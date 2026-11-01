@@ -9,6 +9,7 @@ import type { UserId } from '@/features/auth/model/identity';
 import { courseKeys } from '@/features/course/api/queries';
 import type { CourseId } from '@/features/course/model/identity';
 import { loadPublishedPage } from './load-published';
+
 export const coursePageKeys = {
   course: (courseId: CourseId) =>
     [...courseKeys.byId(courseId), 'page'] as const,
@@ -37,6 +38,7 @@ export function useCoursePageQuery(courseId: CourseId) {
 export function coursePageQueries(courseId: CourseId, viewerId: UserId) {
   return { document: coursePageQueryOptions(courseId, viewerId) };
 }
+
 export function prefetchCoursePage(
   client: QueryClient,
   courseId: CourseId,

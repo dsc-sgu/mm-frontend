@@ -21,6 +21,7 @@ import {
 import { UserRefSchema } from '@/features/auth/model/user-ref';
 import { RichTextNodeSchema } from '@/features/course/model/rich-text';
 import { GradeSchema } from '@/features/course/model/grade';
+
 const summary = {
   taskId: v.string(),
   title: v.string(),
@@ -28,10 +29,12 @@ const summary = {
   dueDate: v.optional(v.string()),
   maxGrade: v.optional(GradeSchema),
 };
+
 const unavailable = v.object({
   status: v.literal('unavailable'),
   taskId: v.string(),
 });
+
 const student = v.variant('status', [
   unavailable,
   v.object({ ...summary, status: v.literal('open') }),
@@ -41,10 +44,12 @@ const student = v.variant('status', [
     prerequisite: v.string(),
   }),
 ]);
+
 const teacher = v.variant('status', [
   unavailable,
   v.object({ ...summary, status: v.literal('teacher') }),
 ]);
+
 const metadata = {
   status: v.literal('found'),
   courseId: CourseIdSchema,
@@ -76,6 +81,7 @@ const metadata = {
     })
   ),
 };
+
 const PublishedPageSchema = v.variant('role', [
   v.object({
     ...metadata,
@@ -88,7 +94,9 @@ const PublishedPageSchema = v.variant('role', [
     taskSummaries: v.array(teacher),
   }),
 ]);
+
 export type PublishedPage = v.InferOutput<typeof PublishedPageSchema>;
+
 export function loadPublishedPage(
   courseId: CourseId,
   signal?: AbortSignal
