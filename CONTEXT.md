@@ -26,7 +26,7 @@ _По-русски_: курс
 _Avoid_: using course slug as Course identity
 
 **Course Membership**:
-The presence of a User in a Course with exactly one course-local role: Student or Teacher. Absence of the membership means no course access.
+The presence of a User in a Course with exactly one course-local role: Student or Teacher. Absence of the membership means no course access; expiry or revocation of the Invite Link used to join does not end the membership.
 _По-русски_: участие в курсе
 _Avoid_: deriving course permissions from a global session role
 
@@ -39,12 +39,12 @@ A User participating in a particular Course with the Teacher role.
 _По-русски_: преподаватель
 
 **Student Group**:
-An academic grouping of Students inside a Course. A Course's Student Groups are flat: a lab subgroup is simply another Student Group of that Course. Every Course has at least one Student Group, starting with a single one, and every Student belongs to exactly one Student Group of the Course.
+An academic grouping of Students inside a Course, with a stable identity and a name unique within that Course regardless of letter case or surrounding whitespace. Student Groups are flat, with no nested group level: every Course starts with one and always has at least one, and every Student belongs to exactly one of them in that Course.
 _По-русски_: подгруппа — it is the Student Group itself, not a level nested inside one
 _Avoid_: учебная группа, which means an official university group; a nested level inside a Student Group; a Course or Student without a Student Group
 
 **Invite Link**:
-A link by which a User joins a Course. An Invite Link for Students always leads into one particular Student Group of the Course: a Student who follows it joins the Course already in that Student Group. An Invite Link for Teachers leads into the Course without a Student Group, and only the User who created the Course can make one. An Invite Link can expire and can be revoked.
+A reusable link by which a User joins a Course, with a recorded creator and an intended role, target Student Group (if any), and expiry (or no expiry) fixed at creation; its record remains in history after expiry or permanent revocation. A Student joins directly into the link's Student Group and any Course Teacher can revoke that link; Teacher links lead into the Course without a Student Group, and only the Course's creator can view, create, copy or revoke them.
 _По-русски_: ссылка-приглашение
 _Avoid_: an Invite Link for Students without a Student Group; an Invite Link for Teachers made by anyone but the Course's creator
 
@@ -56,7 +56,7 @@ _По-русски_: страница курса
 _Avoid_: Assignment as the name of a Task
 
 **Course Snapshot**:
-An immutable version of Course configuration visible after publication. Attempts and student progress are not part of it, though they can refer to it. The Course slug is not part of it either.
+An immutable version of Course configuration visible after publication, excluding the Course slug, Student Groups and Invite Links. Attempts and student progress are not part of it, though they can refer to it.
 _По-русски_: снапшот курса
 
 **Course Draft Snapshot**:
@@ -75,7 +75,7 @@ _По-русски_: рабочая копия страницы курса
 _Avoid_: treating the Working Copy as authoritative server state
 
 **Course Access State**:
-The Course is either `draft` or `open`. Opening permits Student access; returning to `draft` is allowed only while the Course has no Student memberships.
+The Course is either `draft` or `open`: Students can join while it is `draft`, but its content becomes accessible to them only when it is `open`. Returning from `open` to `draft` is allowed only while the Course has no Student memberships.
 _По-русски_: состояние доступа к курсу; `draft` — курс в подготовке, `open` — курс открыт
 _Avoid_: черновик for `draft`, since черновик курса is the Course Draft Snapshot
 
