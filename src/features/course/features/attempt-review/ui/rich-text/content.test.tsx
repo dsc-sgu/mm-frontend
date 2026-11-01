@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import { RichTextContent } from './content';
+
 test('REV-17: показывает форматирование и вложенные списки без HTML', () => {
   const { container } = render(
     <RichTextContent
@@ -40,6 +41,7 @@ test('REV-17: показывает форматирование и вложен�
       }}
     />
   );
+
   expect(container.querySelector('img')).toBeNull();
   expect(container.querySelector('strong')?.textContent).toBe('<img src=x>');
   expect(container.querySelector('s')?.textContent).toBe('<img src=x>');
@@ -76,6 +78,7 @@ test('элементы списка с уменьшением отступа н�
       }}
     />
   );
+
   expect(container.textContent).toContain('Вложенный');
   expect(container.textContent).toContain('Корневой');
 });

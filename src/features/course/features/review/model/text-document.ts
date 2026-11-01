@@ -9,12 +9,15 @@ const LeafSchema = v.strictObject({
   strikethrough: v.optional(v.literal(true)),
   code: v.optional(v.literal(true)),
 });
+
 const LinkSchema = v.strictObject({
   type: v.literal('a'),
   url: v.pipe(v.string(), v.check(isSafeReviewHref)),
   children: v.array(LeafSchema),
 });
+
 const inline = v.array(v.union([LeafSchema, LinkSchema]));
+
 const BlockSchema = v.variant('type', [
   v.strictObject({ type: v.literal('p'), children: inline }),
   v.strictObject({ type: v.literal('blockquote'), children: inline }),
@@ -26,11 +29,13 @@ const BlockSchema = v.variant('type', [
   }),
   v.strictObject({ type: v.literal('code'), text: v.string() }),
 ]);
+
 export const ReviewTextDocumentSchema = v.strictObject({
   version: v.literal(1),
   children: v.array(BlockSchema),
 });
 export type ReviewTextDocument = v.InferOutput<typeof ReviewTextDocumentSchema>;
+
 export function isReviewTextEmpty(
   document: ReviewTextDocument | null
 ): boolean {
@@ -45,9 +50,11 @@ export function isReviewTextEmpty(
                 : node.children.map((leaf) => leaf.text).join('')
             )
             .join('');
+
     return text.replace(/\s/gu, '').length > 0;
   });
 }
+
 export function normalizeReviewText(
   document: ReviewTextDocument
 ): ReviewTextDocument | null {
@@ -59,6 +66,7 @@ export function normalizeReviewText(
         !isReviewTextEmpty({ version: 1, children: [block] })
     ),
   };
+
   return isReviewTextEmpty(normalized) ? null : normalized;
 }
 
@@ -81,4 +89,5 @@ export function areReviewTextsEqual(
 ): boolean {
   return equal(first, second);
 }
+
 export type ReviewTextLeaf = v.InferOutput<typeof LeafSchema>;

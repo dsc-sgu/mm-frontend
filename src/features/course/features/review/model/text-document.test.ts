@@ -38,10 +38,12 @@ const document: ReviewTextDocument = {
     { type: 'code', text: 'const a = 1;\nprint(a)' },
   ],
 };
+
 describe('REV-13—REV-15: документ текста проверки', () => {
   it('сохраняет профиль при редактировании в Plate', () => {
     expect(fromReviewPlate(toReviewPlate(document))).toEqual(document);
   });
+
   it.each([
     { ...document, version: 2 },
     { ...document, extra: true },
@@ -61,6 +63,7 @@ describe('REV-13—REV-15: документ текста проверки', () =
   ])('отклоняет неизвестную версию, узлы, поля и форматирование', (value) => {
     expect(v.safeParse(ReviewTextDocumentSchema, value).success).toBe(false);
   });
+
   it.each([
     '//example.com',
     '#frag',
@@ -82,14 +85,17 @@ describe('REV-13—REV-15: документ текста проверки', () =
       }).success
     ).toBe(false);
   });
+
   it('очищенный отзыв становится null и не сохраняется как комментарий', () => {
     const empty: ReviewTextDocument = {
       version: 1,
       children: [{ type: 'p', children: [{ text: ' \n\u00a0\t' }] }],
     };
+
     expect(normalizeReviewText(empty)).toBeNull();
     expect(v.safeParse(NonemptyReviewTextSchema, empty).success).toBe(false);
   });
+
   it('сравнивает содержимое независимо от порядка полей', () => {
     expect(
       areReviewTextsEqual(document, { children: document.children, version: 1 })
@@ -105,6 +111,7 @@ it('пустые абзацы остаются только в локально�
       { type: 'p', children: [{ text: '\n ' }] },
     ],
   };
+
   expect(normalizeReviewText(value)?.children).toHaveLength(1);
   expect(v.safeParse(NonemptyReviewTextSchema, value).success).toBe(false);
 });

@@ -4,6 +4,7 @@ import { normalizeReviewText } from './text-document';
 
 type Block = ReviewTextDocument['children'][number];
 type Inline = Exclude<Block, { type: 'code' }>['children'][number];
+
 export function toReviewPlate(document: ReviewTextDocument | null): Value {
   return (
     document?.children.map((block) => {
@@ -26,10 +27,12 @@ export function toReviewPlate(document: ReviewTextDocument | null): Value {
           indent: block.indent + 1,
           children: block.children,
         };
+
       return block;
     }) ?? [{ type: 'p', children: [{ text: '' }] }]
   );
 }
+
 function inline(nodes: Value[number]['children']): Inline[] {
   return nodes.flatMap((node, index): Inline[] => {
     if (TextApi.isText(node)) {
@@ -43,6 +46,7 @@ function inline(nodes: Value[number]['children']): Inline[] {
         },
       ];
     }
+
     if (node.type === 'a')
       return [
         {
@@ -53,10 +57,13 @@ function inline(nodes: Value[number]['children']): Inline[] {
           ),
         },
       ];
+
     const children = inline(node.children);
+
     return index > 0 ? [{ text: '\n' }, ...children] : children;
   });
 }
+
 export function fromReviewPlate(value: Value): ReviewTextDocument | null {
   const children: Block[] = value.map((node) => {
     if (node.type === 'code_block')
@@ -72,7 +79,9 @@ export function fromReviewPlate(value: Value): ReviewTextDocument | null {
           )
           .join('\n'),
       };
+
     const children = inline(node.children);
+
     if (node.listStyleType)
       return {
         type: 'list-item',
@@ -82,5 +91,6 @@ export function fromReviewPlate(value: Value): ReviewTextDocument | null {
       };
     return { type: node.type === 'blockquote' ? 'blockquote' : 'p', children };
   });
+
   return normalizeReviewText({ version: 1, children });
 }

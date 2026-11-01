@@ -53,6 +53,7 @@ type RichTextEditorProps = {
   onSubmitShortcut?: () => void;
   onCancelShortcut?: () => void;
 };
+
 export function RichTextEditor({
   value,
   editable = true,
@@ -68,6 +69,7 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const last = useRef(value);
   const pendingValues = useRef<(ReviewTextDocument | null)[]>([]);
+
   const editor = usePlateEditor({
     plugins: [
       BoldPlugin.withComponent(BoldLeaf),
@@ -94,32 +96,41 @@ export function RichTextEditor({
     ],
     value: toReviewPlate(value),
   });
+
   useEffect(() => {
     // Parent state keeps the emitted object: content equality alone would
     // confuse an external reset with an older local value.
     const echoedIndex = pendingValues.current.lastIndexOf(value);
+
     if (echoedIndex >= 0) {
       pendingValues.current.splice(0, echoedIndex + 1);
       return;
     }
+
     if (!areReviewTextsEqual(value, last.current)) {
       pendingValues.current = [];
       last.current = value;
       editor.tf.setValue(toReviewPlate(value));
     }
   }, [editor, value]);
+
   useEffect(() => {
     if (autoFocus && editable) editor.tf.focus({ edge: 'end' });
   }, [autoFocus, editable, editor]);
+
   if (!editable) return <RichTextContent text={value} className={className} />;
+
   return (
     <div className={cn('rounded-xl border bg-card', className)}>
       <Plate
         editor={editor}
         onValueChange={({ value: children }) => {
           const next = fromReviewPlate(children);
+
           if (areReviewTextsEqual(last.current, next)) return;
+
           last.current = next;
+
           if (onChange) {
             pendingValues.current.push(next);
             onChange(next);
@@ -137,7 +148,9 @@ export function RichTextEditor({
           )}
           onPaste={(event) => {
             if (!editor.selection) editor.tf.focus({ edge: 'end' });
+
             const html = event.clipboardData.getData('text/html');
+
             if (html) {
               event.preventDefault();
               editor.tf.insertFragment(reviewClipboardHtml(html));
@@ -156,6 +169,7 @@ export function RichTextEditor({
               event.preventDefault();
               onSubmitShortcut();
             }
+
             if (
               onCancelShortcut &&
               matchesShortcut(event.nativeEvent, commentCancelShortcut)

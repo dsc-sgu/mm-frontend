@@ -1,5 +1,6 @@
 import { areReviewTextsEqual } from '@/features/course/features/review/model/text-document';
 import type { ReviewTextDocument } from '@/features/course/features/review/model/text-document';
+
 // Text typed into a comment or reply editor and not sent yet. CodeView
 // unmounts a comment card when its file leaves the rendered window or
 // switches between the source and rendered views, so the card keeps its

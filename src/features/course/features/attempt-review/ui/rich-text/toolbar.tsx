@@ -15,10 +15,12 @@ import {
 type LinkState =
   | { status: 'closed' }
   | { status: 'open'; url: string; error: string | null };
+
 export function RichTextEditorToolbar() {
   const editor = useEditorRef();
   const savedSelection = useRef(editor.selection);
   const [link, setLink] = useState<LinkState>({ status: 'closed' });
+
   return (
     <div
       className="flex flex-wrap gap-1 border-b p-1.5"
@@ -30,7 +32,9 @@ export function RichTextEditorToolbar() {
               suppressThrow: true,
             })
           : null;
+
         const range = domRange ?? editor.selection ?? savedSelection.current;
+
         if (range) {
           savedSelection.current = range;
           editor.tf.select(range);
@@ -138,6 +142,7 @@ export function RichTextEditorToolbar() {
             <form
               onSubmit={(event) => {
                 event.preventDefault();
+
                 if (!isSafeReviewHref(link.url)) {
                   setLink({
                     ...link,
@@ -145,6 +150,7 @@ export function RichTextEditorToolbar() {
                   });
                   return;
                 }
+
                 upsertLink(editor, { url: link.url, skipValidation: true });
                 setLink({ status: 'closed' });
               }}
