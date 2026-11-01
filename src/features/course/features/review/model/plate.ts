@@ -14,6 +14,11 @@ export function toReviewPlate(document: ReviewTextDocument | null): Value {
             .split('\n')
             .map((text) => ({ type: 'code_line', children: [{ text }] })),
         };
+      if (block.type === 'blockquote')
+        return {
+          type: 'blockquote',
+          children: [{ type: 'p', children: block.children }],
+        };
       if (block.type === 'list-item')
         return {
           type: 'p',
@@ -26,29 +31,30 @@ export function toReviewPlate(document: ReviewTextDocument | null): Value {
   );
 }
 function inline(nodes: Value[number]['children']): Inline[] {
-  return nodes.map((node) => {
+  return nodes.flatMap((node, index): Inline[] => {
     if (TextApi.isText(node)) {
-      return {
-        text: node.text,
-        ...(node.bold ? { bold: true as const } : {}),
-        ...(node.italic ? { italic: true as const } : {}),
-        ...(node.strikethrough ? { strikethrough: true as const } : {}),
-        ...(node.code ? { code: true as const } : {}),
-      };
+      return [
+        {
+          text: node.text,
+          ...(node.bold ? { bold: true as const } : {}),
+          ...(node.italic ? { italic: true as const } : {}),
+          ...(node.strikethrough ? { strikethrough: true as const } : {}),
+          ...(node.code ? { code: true as const } : {}),
+        },
+      ];
     }
     if (node.type === 'a')
-      return {
-        type: 'a',
-        url: String(node.url),
-        children: inline(node.children).flatMap((child) =>
-          'text' in child ? [child] : child.children
-        ),
-      };
-    return {
-      text: node.children
-        .map((child) => ('text' in child ? child.text : ''))
-        .join(''),
-    };
+      return [
+        {
+          type: 'a',
+          url: String(node.url),
+          children: inline(node.children).flatMap((child) =>
+            'text' in child ? [child] : child.children
+          ),
+        },
+      ];
+    const children = inline(node.children);
+    return index > 0 ? [{ text: '\n' }, ...children] : children;
   });
 }
 export function fromReviewPlate(value: Value): ReviewTextDocument | null {

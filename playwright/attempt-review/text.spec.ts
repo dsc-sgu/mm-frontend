@@ -98,4 +98,6 @@ test('форматирование, цитата и блок кода досту
     .first()
     .click();
   await expect(editor.locator('pre')).toContainText('Проверка форматирования');
+  await page.getByRole('button', { name: 'Сбросить', exact: true }).click();
+  await expect(editor).toContainText('Решение стало устойчивее.');
 });

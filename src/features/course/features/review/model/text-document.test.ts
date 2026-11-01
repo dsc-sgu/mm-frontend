@@ -13,6 +13,10 @@ const document: ReviewTextDocument = {
   version: 1,
   children: [
     {
+      type: 'blockquote',
+      children: [{ text: 'Цитата', bold: true, strikethrough: true }],
+    },
+    {
       type: 'p',
       children: [
         { text: 'Проверка', bold: true },
@@ -103,4 +107,30 @@ it('пустые абзацы остаются только в локально�
   };
   expect(normalizeReviewText(value)?.children).toHaveLength(1);
   expect(v.safeParse(NonemptyReviewTextSchema, value).success).toBe(false);
+});
+
+it('сохраняет границы абзацев цитаты как жёсткие переносы', () => {
+  expect(
+    fromReviewPlate([
+      {
+        type: 'blockquote',
+        children: [
+          { type: 'p', children: [{ text: 'Первая', bold: true }] },
+          { type: 'p', children: [{ text: 'Вторая' }] },
+        ],
+      },
+    ])
+  ).toEqual({
+    version: 1,
+    children: [
+      {
+        type: 'blockquote',
+        children: [
+          { text: 'Первая', bold: true },
+          { text: '\n' },
+          { text: 'Вторая' },
+        ],
+      },
+    ],
+  });
 });

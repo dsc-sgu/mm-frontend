@@ -67,6 +67,7 @@ export function RichTextEditor({
   onCancelShortcut,
 }: RichTextEditorProps) {
   const last = useRef(value);
+  const pendingValues = useRef<(ReviewTextDocument | null)[]>([]);
   const editor = usePlateEditor({
     plugins: [
       BoldPlugin.withComponent(BoldLeaf),
@@ -94,9 +95,18 @@ export function RichTextEditor({
     value: toReviewPlate(value),
   });
   useEffect(() => {
-    if (!areReviewTextsEqual(value, last.current))
+    // Parent state keeps the emitted object: content equality alone would
+    // confuse an external reset with an older local value.
+    const echoedIndex = pendingValues.current.lastIndexOf(value);
+    if (echoedIndex >= 0) {
+      pendingValues.current.splice(0, echoedIndex + 1);
+      return;
+    }
+    if (!areReviewTextsEqual(value, last.current)) {
+      pendingValues.current = [];
+      last.current = value;
       editor.tf.setValue(toReviewPlate(value));
-    last.current = value;
+    }
   }, [editor, value]);
   useEffect(() => {
     if (autoFocus && editable) editor.tf.focus({ edge: 'end' });
@@ -108,8 +118,12 @@ export function RichTextEditor({
         editor={editor}
         onValueChange={({ value: children }) => {
           const next = fromReviewPlate(children);
+          if (areReviewTextsEqual(last.current, next)) return;
           last.current = next;
-          onChange?.(next);
+          if (onChange) {
+            pendingValues.current.push(next);
+            onChange(next);
+          }
         }}
       >
         <RichTextEditorToolbar />

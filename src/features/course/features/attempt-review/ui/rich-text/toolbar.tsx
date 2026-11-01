@@ -1,5 +1,5 @@
 import { toggleCodeBlock } from '@platejs/code-block';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useEditorRef } from 'platejs/react';
 import { upsertLink, unwrapLink } from '@platejs/link';
 import { toggleList } from '@platejs/list';
@@ -17,18 +17,24 @@ type LinkState =
   | { status: 'open'; url: string; error: string | null };
 export function RichTextEditorToolbar() {
   const editor = useEditorRef();
+  const savedSelection = useRef(editor.selection);
   const [link, setLink] = useState<LinkState>({ status: 'closed' });
   return (
     <div
       className="flex flex-wrap gap-1 border-b p-1.5"
       onMouseDownCapture={() => {
         const selection = window.getSelection();
-        if (!selection?.rangeCount) return;
-        const range = editor.api.toSlateRange(selection, {
-          exactMatch: false,
-          suppressThrow: true,
-        });
-        if (range) editor.tf.select(range);
+        const domRange = selection?.rangeCount
+          ? editor.api.toSlateRange(selection, {
+              exactMatch: false,
+              suppressThrow: true,
+            })
+          : null;
+        const range = domRange ?? editor.selection ?? savedSelection.current;
+        if (range) {
+          savedSelection.current = range;
+          editor.tf.select(range);
+        }
       }}
     >
       {[
@@ -69,6 +75,10 @@ export function RichTextEditorToolbar() {
         size="sm"
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => {
+          editor.tf.unwrapNodes({
+            match: (node) => node.type === 'blockquote',
+            split: true,
+          });
           toggleCodeBlock(editor);
           editor.tf.focus();
         }}
