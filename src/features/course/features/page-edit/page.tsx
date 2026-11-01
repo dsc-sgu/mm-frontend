@@ -4,10 +4,8 @@ import { useNavigate, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
 import { cn } from '@/shadcn/lib/utils';
-import {
-  useCoursePageQuery,
-  useSaveCoursePageMutation,
-} from '@/features/course/features/page/api/queries';
+import { useSaveCoursePageMutation } from '@/features/course/features/page/api/queries';
+import { useCoursePageQuery } from '@/features/course/features/page-document/api/queries';
 import { CoursePageLoading } from '@/features/course/features/page/ui/page';
 import { createCoursePageEditStore } from '@/features/course/features/page-edit/model/editor-store';
 import {
@@ -239,7 +237,7 @@ export function CoursePageEditPage({
     return <CoursePageLoading />;
   }
 
-  if (!course || 'status' in course) {
+  if (!course || course.status === 'not-found') {
     return null;
   }
 

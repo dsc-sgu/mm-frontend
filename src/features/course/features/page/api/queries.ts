@@ -1,44 +1,11 @@
-import type { UserId } from '@/features/auth/model/identity';
-import { sessionOptions } from '@/features/auth/api/queries';
-import { useSuspenseQuery, type QueryClient } from '@tanstack/react-query';
-import { loadPublishedPage } from '@/features/course/features/page-document/api/load-published';
-import {
-  queryOptions,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-
-import { courseKeys, coursesKeys } from '@/features/course/api/queries';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { coursesKeys } from '@/features/course/api/queries';
 import { invalidateCourseContextsAfterMetadataSave } from '@/features/course/features/access/api/queries';
 import type { SaveCoursePageInput } from '@/features/course/features/page/model/types';
-import type { CourseId, CourseSlug } from '@/features/course/model/identity';
+import type { CourseSlug } from '@/features/course/model/identity';
 import { deadlinesKeys } from '@/features/deadlines-calendar/api/queries';
+import { coursePageKeys } from '@/features/course/features/page-document/api/queries';
 import { saveCoursePage } from './mock';
-
-export const coursePageKeys = {
-  detail: (courseId: CourseId, viewerId: UserId) =>
-    [...courseKeys.byId(courseId), 'page', viewerId] as const,
-};
-
-export function coursePageQueryOptions(courseId: CourseId, viewerId: UserId) {
-  return queryOptions({
-    queryKey: coursePageKeys.detail(courseId, viewerId),
-    queryFn: ({ signal }) => loadPublishedPage(courseId, signal),
-    staleTime: 0,
-    retry: false,
-    gcTime: 10 * 60 * 1000,
-  });
-}
-
-export function useCoursePageQuery(courseId: CourseId) {
-  const { data: session } = useSuspenseQuery(sessionOptions);
-  if (session.status !== 'authorized')
-    throw new Error('Authorized session required');
-  const viewerId = session.session.userId;
-  return useQuery(coursePageQueryOptions(courseId, viewerId));
-}
-
 type SaveCoursePageVariables = SaveCoursePageInput & {
   /** The confirmed slug the editor was opened at, a shell context locator. */
   previousSlug: CourseSlug;
@@ -58,7 +25,7 @@ export function useSaveCoursePageMutation() {
     onSuccess: async (savedPage, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: [...courseKeys.byId(variables.courseId), 'page'],
+          queryKey: coursePageKeys.course(variables.courseId),
         }),
         queryClient.invalidateQueries({ queryKey: coursesKeys.all }),
         queryClient.invalidateQueries({ queryKey: deadlinesKeys.all }),
@@ -70,17 +37,4 @@ export function useSaveCoursePageMutation() {
       ]);
     },
   });
-}
-
-export function coursePageQueries(courseId: CourseId, viewerId: UserId) {
-  return { document: coursePageQueryOptions(courseId, viewerId) };
-}
-export function prefetchCoursePage(
-  client: QueryClient,
-  courseId: CourseId,
-  viewerId: UserId
-) {
-  void client
-    .query(coursePageQueries(courseId, viewerId).document)
-    .catch(() => {});
 }

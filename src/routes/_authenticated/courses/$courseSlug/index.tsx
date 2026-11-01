@@ -1,9 +1,9 @@
-import { prefetchCoursePage } from '@/features/course/features/page/api/queries';
+import { prefetchCoursePage } from '@/features/course/features/page-document/api/queries';
 import {
   CoursePage,
   CoursePageLoading,
 } from '@/features/course/features/page/ui/page';
-import { useCoursePageQuery } from '@/features/course/features/page/api/queries';
+import { useCoursePageQuery } from '@/features/course/features/page-document/api/queries';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authenticated/courses/$courseSlug/')({
@@ -44,7 +44,7 @@ function RouteComponent() {
     return <CoursePageLoading />;
   }
 
-  if (!course || 'status' in course) {
+  if (!course || course.status === 'not-found') {
     return null;
   }
 

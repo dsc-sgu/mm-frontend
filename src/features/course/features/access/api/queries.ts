@@ -1,3 +1,4 @@
+import { coursePageKeys } from '@/features/course/features/page-document/api/queries';
 import { queryOptions, type QueryClient } from '@tanstack/react-query';
 import type { UserId } from '@/features/auth/model/identity';
 import { courseKeys } from '@/features/course/api/queries';
@@ -29,7 +30,7 @@ export function courseContextOptions(userId: UserId, courseSlug: CourseSlug) {
         previous.role !== result.role
       ) {
         await client.invalidateQueries({
-          queryKey: [...courseKeys.byId(result.course.id), 'page'],
+          queryKey: coursePageKeys.course(result.course.id),
         });
       }
       return result;

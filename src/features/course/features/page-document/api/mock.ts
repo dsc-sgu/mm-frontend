@@ -1,3 +1,4 @@
+import { pageTeachers } from '@/app/mock-backend/page-seed';
 import { gradeToNumber } from '@/features/course/model/grade';
 import { http, HttpResponse } from 'msw';
 import { mockBackend } from '@/app/mock-backend/state';
@@ -12,7 +13,7 @@ export const pageDocumentHandlers = [
       (m) => m.courseId === course?.id && m.userId === session.userId
     );
     if (!course || !member) return new HttpResponse(null, { status: 404 });
-    const { page, versions } = getPageDocument(course);
+    const { page, versions, studentTaskSummaries } = getPageDocument(course);
     const latest = new Map<string, (typeof versions)[number]>();
     for (const version of versions) {
       if (version.publication !== 'published') continue;
@@ -29,22 +30,30 @@ export const pageDocumentHandlers = [
       }));
     return HttpResponse.json({
       ...page,
+      status: 'found',
       courseId: course.id,
       slug: course.slug,
       role: member.role,
-      teachers: course.teachers.flatMap((t) =>
-        users
-          .filter((u) => u.username === t.username)
-          .map((u) => ({
-            id: u.id,
-            username: u.username,
-            firstName: u.firstName,
-            lastName: u.lastName,
-            patronymic: u.patronymic,
-          }))
-      ),
+      teachers: course.teachers.flatMap((teacher) => {
+        const user =
+          users.find((u) => u.username === teacher.username) ??
+          pageTeachers.find((u) => u.username === teacher.username);
+        return user
+          ? [
+              {
+                id: user.id,
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                patronymic: user.patronymic,
+              },
+            ]
+          : [];
+      }),
       content,
-      taskSummaries: page.taskSummaries
+      taskSummaries: (
+        studentTaskSummaries[session.userId] ?? page.taskSummaries
+      )
         .map((s) =>
           s.status === 'unavailable'
             ? s
@@ -53,7 +62,14 @@ export const pageDocumentHandlers = [
         .map((s) =>
           s.status === 'unavailable' || member.role === 'student'
             ? s
-            : { ...s, status: 'teacher' }
+            : {
+                taskId: s.taskId,
+                title: s.title,
+                description: s.description,
+                dueDate: s.dueDate,
+                maxGrade: s.maxGrade,
+                status: 'teacher',
+              }
         ),
     });
   }),

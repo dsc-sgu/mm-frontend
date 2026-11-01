@@ -1,3 +1,5 @@
+import { createQueryClient } from '@/app/remote-data/query-client';
+import { coursePageQueryOptions } from '@/features/course/features/page-document/api/queries';
 import { describe, expect, test } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/app/mock-backend/node';
@@ -43,7 +45,7 @@ describe('DRF-22: опубликованная страница', () => {
       deleted: true,
     });
     const result = await loadPublishedPage(course.id);
-    if ('status' in result) throw new Error('Page denied');
+    if (result.status === 'not-found') throw new Error('Page denied');
     expect(result?.courseId).toBe(course.id);
     expect(result?.content[0]).toMatchObject({
       id: first.id,
@@ -106,6 +108,54 @@ describe('DRF-22: опубликованная страница', () => {
 
 async function pageFor(id: Parameters<typeof loadPublishedPage>[0]) {
   const result = await loadPublishedPage(id);
-  if ('status' in result) throw new Error('Page denied');
+  if (result.status === 'not-found') throw new Error('Page denied');
   return result;
 }
+
+test('отмена остаётся отменой', async () => {
+  const { course } = setup();
+  const controller = new AbortController();
+  controller.abort();
+  await expect(
+    loadPublishedPage(course.id, controller.signal)
+  ).rejects.toMatchObject({ name: 'AbortError' });
+});
+
+test('кэш саммари не переносит доступ между участниками', async () => {
+  const { course, document } = setup();
+  const vera = accessWorld.users.vera.id;
+  const sasha = accessWorld.users.sasha.id;
+  const membership = mockBackend.state.memberships.find(
+    (m) => m.courseId === course.id && m.userId === vera
+  )!;
+  mockBackend.state.memberships.push({
+    ...membership,
+    userId: sasha,
+    role: 'student',
+  });
+  document.studentTaskSummaries[vera] = [
+    { status: 'open', taskId: '1', title: 'Задание' },
+  ];
+  document.studentTaskSummaries[sasha] = [
+    {
+      status: 'locked',
+      taskId: '1',
+      title: 'Задание',
+      prerequisite: 'Предыдущее задание',
+    },
+  ];
+  const client = createQueryClient();
+  const first = await client.query(coursePageQueryOptions(course.id, vera));
+  mockBackend.state.session = { userId: sasha, expiresAt: SESSION_EXPIRES_AT };
+  const second = await client.query(coursePageQueryOptions(course.id, sasha));
+  expect(first.status === 'found' && first.taskSummaries[0].status).toBe(
+    'open'
+  );
+  expect(second.status === 'found' && second.taskSummaries[0].status).toBe(
+    'locked'
+  );
+  expect(
+    client.getQueryData(coursePageQueryOptions(course.id, vera).queryKey)
+  ).toEqual(first);
+  client.clear();
+});

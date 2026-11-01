@@ -10,7 +10,11 @@ export type MockBlockVersion = {
   deleted: boolean;
   block: unknown;
 };
-type PublishedPage = { page: CoursePage; versions: MockBlockVersion[] };
+type PublishedPage = {
+  page: CoursePage;
+  versions: MockBlockVersion[];
+  studentTaskSummaries: Record<string, CoursePage['taskSummaries']>;
+};
 const documents = new WeakMap<MockCourse, PublishedPage>();
 export function getPageDocument(course: MockCourse): PublishedPage {
   let document = documents.get(course);
@@ -18,6 +22,7 @@ export function getPageDocument(course: MockCourse): PublishedPage {
     const page = createCoursePage(course);
     document = {
       page,
+      studentTaskSummaries: {},
       versions: page.content.map((block, position) => ({
         position,
         id: block.id,
@@ -64,5 +69,5 @@ export function setPublishedPage(course: MockCourse, page: CoursePage) {
       position,
       block,
     });
-  documents.set(course, { page: structuredClone(page), versions });
+  documents.set(course, { ...previous, page: structuredClone(page), versions });
 }

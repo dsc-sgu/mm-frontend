@@ -15,10 +15,11 @@ import {
   onlineManager,
   QueryClientProvider,
 } from '@tanstack/react-query';
+import { useSaveCoursePageMutation } from '@/features/course/features/page/api/queries';
 import {
   coursePageQueryOptions,
-  useSaveCoursePageMutation,
-} from '@/features/course/features/page/api/queries';
+  coursePageQueries,
+} from '@/features/course/features/page-document/api/queries';
 import { holdResponse, networkFailure } from '@/app/mock-backend/failures';
 import { server } from '@/app/mock-backend/node';
 import {
@@ -266,7 +267,7 @@ test('saved Course metadata replaces the confirmed Header title without changing
   const page = await queryClient.ensureQueryData(
     coursePageQueryOptions(DATABASES_ID, accessWorld.users.vera.id)
   );
-  if (!page || 'status' in page) {
+  if (!page || page.status === 'not-found') {
     throw new Error('The Course fixture has no published Page');
   }
   const mutation = renderHook(() => useSaveCoursePageMutation(), {
@@ -300,7 +301,7 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
   const page = await queryClient.ensureQueryData(
     coursePageQueryOptions(DATABASES_ID, accessWorld.users.vera.id)
   );
-  if (!page || 'status' in page) {
+  if (!page || page.status === 'not-found') {
     throw new Error('The Course fixture has no published Page');
   }
   const mutation = renderHook(() => useSaveCoursePageMutation(), {
@@ -525,3 +526,21 @@ function supportedContent(content: readonly unknown[]) {
   if (result.status !== 'supported') throw new Error('Unsupported fixture');
   return result.blocks;
 }
+
+test('предзагрузка страницы запускает все чтения без перехода', async () => {
+  const { router, queryClient } = renderRoutes([], ALGORITHMS_PATH, {
+    appRoutes: true,
+  });
+  await screen.findByRole('heading', { name: 'Алгоритмы' });
+  await router.preloadRoute({
+    to: '/courses/$courseSlug',
+    params: { courseSlug: accessWorld.courses.databases.slug },
+  });
+  const queries = coursePageQueries(DATABASES_ID, accessWorld.users.vera.id);
+  for (const query of Object.values(queries)) {
+    await waitFor(() =>
+      expect(queryClient.getQueryState(query.queryKey)?.status).toBe('success')
+    );
+  }
+  expect(router.history.location.href).toBe(ALGORITHMS_PATH);
+});

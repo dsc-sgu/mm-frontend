@@ -1,3 +1,4 @@
+import { seededCourses } from './courses';
 import * as v from 'valibot';
 import type { MockCourse } from './state';
 import { GradeSchema } from '@/features/course/model/grade';
@@ -375,3 +376,16 @@ function buildCourseContent(
     },
   ];
 }
+
+// Stable fixture identities for the course-card teachers absent from login fixtures.
+export const pageTeachers = [
+  ...new Map(
+    seededCourses
+      .flatMap((course) => course.teachers)
+      .map((teacher) => [teacher.username, teacher])
+  ).values(),
+].map((teacher, index) => ({
+  ...teacher,
+  id: `40000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+  patronymic: teacher.patronymic ?? undefined,
+}));

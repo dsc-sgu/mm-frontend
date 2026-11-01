@@ -4,13 +4,7 @@ import { cn } from '@/shadcn/lib/utils';
 import { CourseContentBlocks } from '@/features/course/features/page-document/ui/blocks';
 import type { PublishedPage as CoursePageModel } from '@/features/course/features/page-document/api/load-published';
 import { COURSE_COLORS } from '@/features/course/ui/theme';
-import type { Teacher } from '@/features/course/model/types';
-
-function teacherFullName(teacher: Teacher) {
-  return [teacher.lastName, teacher.firstName, teacher.patronymic || '']
-    .filter(Boolean)
-    .join(' ');
-}
+import { formatFullName } from '@/features/auth/model/full-name';
 
 export function CoursePage({ course }: { course: CoursePageModel }) {
   const theme = COURSE_COLORS[course.color];
@@ -66,7 +60,7 @@ export function CoursePage({ course }: { course: CoursePageModel }) {
           >
             {course.teachers.map((teacher) => (
               <a
-                key={teacher.username}
+                key={teacher.id}
                 href={`/@${teacher.username}`}
                 className={cn(
                   'max-w-full truncate rounded-lg bg-background/70 px-3 py-2',
@@ -75,7 +69,7 @@ export function CoursePage({ course }: { course: CoursePageModel }) {
                   'focus-visible:ring-ring focus-visible:outline-none'
                 )}
               >
-                {teacherFullName(teacher)}
+                {formatFullName(teacher)}
               </a>
             ))}
           </div>

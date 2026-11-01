@@ -1,3 +1,7 @@
+import {
+  readResourceDenial,
+  type ResourceDenial,
+} from '@/features/course/features/access/api/resource-denial';
 import * as v from 'valibot';
 import { apiPath } from '@/app/remote-data/api-path';
 import {
@@ -42,6 +46,7 @@ const teacher = v.variant('status', [
   v.object({ ...summary, status: v.literal('teacher') }),
 ]);
 const metadata = {
+  status: v.literal('found'),
   courseId: CourseIdSchema,
   slug: CourseSlugSchema,
   title: v.string(),
@@ -66,7 +71,7 @@ const metadata = {
     v.object({
       id: v.pipe(v.string(), v.nonEmpty()),
       version: v.pipe(v.number(), v.integer(), v.minValue(1)),
-      type: v.string(),
+      type: v.unknown(),
       data: v.unknown(),
     })
   ),
@@ -87,7 +92,7 @@ export type PublishedPage = v.InferOutput<typeof PublishedPageSchema>;
 export function loadPublishedPage(
   courseId: CourseId,
   signal?: AbortSignal
-): Promise<PublishedPage | { status: 'not-found' }> {
+): Promise<PublishedPage | ResourceDenial> {
   return runHttpOperation(
     {
       name: 'load-published-page',
@@ -96,8 +101,8 @@ export function loadPublishedPage(
       signal,
     },
     async (context) => {
-      if (context.response.status === 404)
-        return { status: 'not-found' as const };
+      const denial = readResourceDenial(context);
+      if (denial) return denial;
       if (context.response.status !== 200) throw unexpectedHttpStatus(context);
       return readJson(context, PublishedPageSchema);
     }

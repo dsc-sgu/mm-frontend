@@ -27,7 +27,7 @@ import { courseAttemptsKeys } from '@/features/course/features/attempts/api/quer
 import {
   coursePageKeys,
   coursePageQueryOptions,
-} from '@/features/course/features/page/api/queries';
+} from '@/features/course/features/page-document/api/queries';
 import { repositoryLocatorKeys } from '@/features/course/features/repository/api/queries';
 import { taskKeys } from '@/features/course/features/task/api/queries';
 import { reviewKeys } from '@/features/course/features/review/api/keys';
