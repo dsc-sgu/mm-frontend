@@ -14,7 +14,8 @@ import re
 import secrets
 import subprocess
 import sys
-from collections import Counter, defaultdict
+import textwrap
+from collections import Counter, defaultdict, deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -941,6 +942,124 @@ def cmd_refs(store: Store, args) -> None:
                 print(f"{other.id}:{body_line(other, index)}: {snippet}")
 
 
+def ticket_graph(store: Store, args) -> dict:
+    """Select roots, then follow deps; filters never discard their prerequisites."""
+    if args.depth is not None and args.depth < 0:
+        raise TkError("--depth must be non-negative")
+    if store.broken:
+        raise TkError("cannot graph malformed tickets; run `tk check`")
+    candidates = [store.get(ref) for ref in args.ids] if args.ids else scope(store, args)
+    if args.ids and args.parent:
+        descendants = {t.id for t in scope(store, args)}
+        candidates = [t for t in candidates if t.id in descendants]
+    roots = {
+        t.id for t in candidates
+        if matches(t, args)
+        and (args.priority is None or t.priority == args.priority)
+        and (args.status == "all" or t.status == args.status or args.status == "active" and t.active)
+    }
+    dependencies, dependents = defaultdict(set), defaultdict(set)
+    for t in store.tickets.values():
+        for ref in t.items("deps"):
+            dependency = store.label(ref)
+            dependencies[t.id].add(dependency)
+            dependents[dependency].add(t.id)
+
+    def visible(ticket_id: str) -> bool:
+        t = store.tickets.get(ticket_id)
+        return not t or t.status != "closed" or args.include_closed or ticket_id in roots
+
+    selected = set(roots)
+    pending = deque((ticket_id, 0) for ticket_id in sorted(roots))
+    while pending:
+        ticket_id, depth = pending.popleft()
+        if args.depth is not None and depth >= args.depth:
+            continue
+        adjacent = set()
+        if args.direction in ("blockers", "both"):
+            adjacent.update(dependencies[ticket_id])
+        if args.direction in ("dependents", "both"):
+            adjacent.update(dependents[ticket_id])
+        for neighbor in sorted(adjacent):
+            if neighbor not in store.tickets:
+                raise TkError(f"unresolved dependency {neighbor!r} of {ticket_id}; run `tk check`")
+            if visible(neighbor) and neighbor not in selected:
+                selected.add(neighbor)
+                pending.append((neighbor, depth + 1))
+
+    tickets = store.sorted(store.tickets[ticket_id] for ticket_id in selected)
+    nodes = [
+        {"id": t.id, "title": t.title, "priority": t.priority, "status": t.status,
+         "path": str(t.path), "root": t.id in roots,
+         "ready": t.active and not store.blockers(t)}
+        for t in tickets
+    ]
+    edges = sorted({
+        (dependency, ticket_id) for ticket_id in selected
+        for dependency in dependencies[ticket_id] if dependency in selected
+    })
+    outgoing = {ticket_id: [] for ticket_id in sorted(selected)}
+    for source, target in edges:
+        outgoing[source].append(target)
+    found_cycles = cycles(outgoing)
+    # Mermaid uses generated identifiers and encoded labels: ticket text must
+    # never become syntax, HTML, or a Mermaid directive.
+    def label(text: str) -> str:
+        return "".join(f"#{ord(char)};" if char in '&<>"#;{}\\\n\r' else char for char in text)
+
+    identifiers = {node["id"]: f"t{index}" for index, node in enumerate(nodes)}
+    diagram = [f"flowchart {args.layout}"]
+    if not nodes:
+        diagram.append('  empty["Нет подходящих тикетов"]')
+    for node in nodes:
+        identifier = identifiers[node["id"]]
+        text = f'{node["id"]} · P{node["priority"]} · {node["status"]}'
+        title = "<br/>".join(label(part) for part in textwrap.wrap(node["title"], width=48, break_long_words=False, break_on_hyphens=False))
+        diagram.append(f'  {identifier}["{label(text)}<br/>{title}"]')
+        diagram.append(f'  class {identifier} p{node["priority"]}')
+        if node["root"]:
+            diagram.append(f"  class {identifier} root")
+        if node["status"] == "closed":
+            diagram.append(f"  class {identifier} closed")
+    for source, target in edges:
+        diagram.append(f"  {identifiers[source]} --> {identifiers[target]}")
+    diagram.extend([
+        "  classDef p0 fill:#ede9fe,stroke:#7c3aed,color:#2e1065",
+        "  classDef p1 fill:#fef3c7,stroke:#d97706,color:#451a03",
+        "  classDef p2 fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e",
+        "  classDef p3 fill:#f1f5f9,stroke:#64748b,color:#0f172a",
+        "  classDef p4 fill:#f1f5f9,stroke:#64748b,color:#0f172a",
+        "  classDef root stroke-width:3px",
+        "  classDef closed opacity:0.5",
+    ])
+    for cycle in found_cycles:
+        for ticket_id in cycle:
+            diagram.append(f"  style {identifiers[ticket_id]} stroke:#dc2626,stroke-width:4px")
+    summary = {"roots": len(roots), "nodes": len(nodes), "edges": len(edges),
+               "cycles": len(found_cycles), "ready_roots": sum(n["root"] and n["ready"] for n in nodes)}
+    return {"summary": summary, "roots": sorted(roots), "direction": args.direction,
+            "depth": args.depth, "include_closed": args.include_closed, "nodes": nodes,
+            "edges": [{"from": source, "to": target} for source, target in edges],
+            "cycles": found_cycles, "mermaid": "\n".join(diagram)}
+
+
+def cmd_graph(store: Store, args) -> None:
+    graph = ticket_graph(store, args)
+    content = json.dumps(graph, ensure_ascii=False, indent=2) + "\n"
+    if not args.output:
+        print(content, end="")
+        return
+    output = Path(args.output).expanduser().resolve()
+    if output == Path(__file__).resolve() or output.is_relative_to(store.root):
+        raise TkError("graph output must not overwrite the tracker or ticket files")
+    try:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(content, encoding="utf-8")
+    except OSError as error:
+        raise TkError(f"cannot write graph: {error}") from error
+    print(json.dumps({"path": str(output), **graph["summary"]}, ensure_ascii=False))
+
+
 def cmd_query(store: Store, args) -> None:
     for t in sorted(store.tickets.values(), key=order):
         record = dict(t.meta, title=t.title, path=str(t.path))
@@ -1144,6 +1263,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("id")
     p = command("query", cmd_query, "print every ticket as a JSON line (pipe into jq)")
     p.add_argument("--body", action="store_true", help="include the body")
+    p = command("graph", cmd_graph, "build a dependency graph as JSON with ready-to-render Mermaid")
+    p.add_argument("ids", nargs="*", help="root tickets (default: all matching tickets)")
+    add_filters(p)
+    p.add_argument("-p", "--priority", type=int, choices=range(5), help="root priority; dependencies may have any priority")
+    p.add_argument("--status", choices=("active", "all", *STATUSES), default="active", help="root status (default: active)")
+    p.add_argument("--direction", choices=("blockers", "dependents", "both"), default="blockers")
+    p.add_argument("--include-closed", action="store_true", help="also traverse closed tickets (default: stop at them)")
+    p.add_argument("--depth", type=int, help="maximum traversal depth; 0 shows roots and edges between them")
+    p.add_argument("--layout", choices=("LR", "TB"), default="LR")
+    p.add_argument("-o", "--output", help="save JSON and print only its path and counts; stdout is full JSON otherwise")
     command("check", cmd_check, "validate every ticket; exit 1 on problems")
     command("sync", cmd_sync, "pull, give new tickets their numbers, and push")
     command("help", None, "show this help")

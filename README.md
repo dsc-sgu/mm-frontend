@@ -77,10 +77,49 @@ EOF
 tk close 228 --reason completed
 tk code 228 REV6.4                     # rename mm-228-REV6.2 to mm-228-REV6.4
 tk query | jq -r 'select(.status == "open") | .id'
+tk graph --priority 0 --output /tmp/p0.json # P0 and their transitive open blockers
 tk help
 ```
 
 `tk sync` is the only command that talks to the remote. Each write is committed alone (`tk: close mm-228 (completed)`), so `git log --follow -- .tickets/mm-228-REV6.2.md` is the ticket's history across code changes. Set `TK_AUTOCOMMIT=0` to skip it. `tk sync` pulls with rebase, numbers new tickets and pushes; nothing is pushed otherwise. Your name, for `tk claim` and comments, is `$TICKET_AUTHOR`, else `git config tk.author`, else `git config user.name`; set it once to your forge login: `git config --global tk.author t3m8ch`.
+
+## Графы тикетов
+
+`tk graph` строит граф по `deps`, разрешает сокращённые ID и возвращает JSON
+с `nodes`, `edges`, `roots`, `cycles`, `summary` и готовой диаграммой `mermaid`.
+Стрелка всегда направлена от блокера к зависимому тикету; `links` и `parent`
+не превращаются в рёбра. Толстая рамка отмечает исходные тикеты, цвет — приоритет,
+полупрозрачность — закрытый тикет, красная рамка — цикл.
+
+```bash
+tk graph --priority 0 --output /tmp/p0.json
+tk graph mm-288 --output /tmp/blockers.json
+tk graph mm-269 --direction dependents --output /tmp/unblocks.json
+tk graph mm-288 --direction both --depth 2 --include-closed --output /tmp/context.json
+tk graph --parent mm-218 --tag ready-for-agent --unassigned --output /tmp/frontier.json
+```
+
+Позиционные ID и фильтры `--priority`, `--status`, `--parent`, `--tag`,
+`--assignee`, `--unassigned` выбирают только исходные тикеты. По умолчанию
+это все открытые и выполняемые тикеты (`--status active`). При обходе
+зависимости добавляются с любым приоритетом, исполнителем и тегами.
+`--status all` снимает фильтр состояния исходных тикетов.
+
+Обход идёт к блокерам (`--direction blockers`), к зависимым тикетам
+(`dependents`) или в обе стороны (`both`). По умолчанию закрытые тикеты
+останавливают обход и не попадают в граф, если не выбраны исходными;
+`--include-closed` добавляет их и продолжает обход через них. `--depth 0`
+оставляет только исходные тикеты и рёбра между ними; без `--depth`
+обход не ограничен. `--layout TB` меняет расположение слева направо на сверху вниз.
+
+С `--output` команда сохраняет артефакт и печатает только абсолютный путь
+и счётчики: модели не нужно читать и повторять все названия и связи.
+Без `--output` полный JSON выводится в stdout. Для BB сохраняйте файл
+в `$BB_THREAD_STORAGE`, затем передавайте `Load(путь).mermaid` в `Diagram`
+внутри `Card`. Сводка `summary` содержит число исходных тикетов, узлов,
+рёбер, циклов и исходных тикетов без открытых блокеров (`ready_roots`).
+Циклы не прерывают обход, а возвращаются отдельно; повреждённые тикеты
+и неразрешённые зависимости в обходе завершают команду с ошибкой.
 
 ## Development
 
