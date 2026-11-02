@@ -196,7 +196,7 @@ function getGradeClassName(attempt: CourseAttempt): string {
   return 'font-semibold text-amber-700 dark:text-amber-300';
 }
 
-export function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
+function AttemptDetails({ attempt }: { attempt: CourseAttempt }) {
   const timing = getTimingLabel(attempt);
 
   return (
