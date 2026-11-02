@@ -2,7 +2,7 @@
 id: mm-qst8n
 status: open
 deps: []
-links: []
+links: [mm-167]
 created: 2026-11-02T09:22:00Z
 type: epic
 priority: 2
