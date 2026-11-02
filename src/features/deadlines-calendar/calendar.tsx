@@ -85,7 +85,7 @@ function WeekRow({ weekIndex }: { weekIndex: number }) {
   const { data, isError, isPending, refetch } = useDeadlinesQuery({
     weekStart,
   });
-  if (isError)
+  if (isError) {
     return (
       <div role="alert" className="p-4">
         Не удалось загрузить дедлайны.{' '}
@@ -94,12 +94,14 @@ function WeekRow({ weekIndex }: { weekIndex: number }) {
         </Button>
       </div>
     );
-  if (isPending)
+  }
+  if (isPending) {
     return (
       <div role="status" className="p-4">
         Загрузка дедлайнов
       </div>
     );
+  }
 
   const allDays = Array.from({ length: 7 }, (_, dayOffset) => {
     const date = new Date(weekStart);

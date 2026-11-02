@@ -1,7 +1,7 @@
 import {
   prefetchDashboard,
   dashboardQueries,
-} from '@/features/deadlines-calendar/api/prefetch';
+} from '@/features/dashboard/api/prefetch';
 import { useQuery } from '@tanstack/react-query';
 import { CourseCard, CourseCardSkeleton } from '@/features/course/ui/card';
 import { coursesFailureText } from '@/features/course/ui/failure-text';

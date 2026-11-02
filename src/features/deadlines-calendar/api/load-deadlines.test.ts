@@ -7,7 +7,7 @@ import { loadDeadlines } from './load-deadlines';
 const start = new Date('2026-05-25T00:00:00Z');
 const end = new Date('2026-05-31T23:59:59Z');
 
-test('читает дедлайны канонических заданий и отражает изменение курса и срока', async () => {
+test('reads canonical task deadlines with updated course metadata and due date', async () => {
   const task = mockBackend.state.tasks[0];
   const course = mockBackend.state.courses.find(
     ({ id }) => id === task.courseId
@@ -20,7 +20,9 @@ test('читает дедлайны канонических заданий и �
   };
   course.shortTitle = 'Новый курс';
   task.deadlineAt = '2026-05-28T12:00:00.000Z';
+
   const days = await loadDeadlines(start, end);
+
   expect(Object.values(days).flat()).toContainEqual(
     expect.objectContaining({
       courseId: course.id,
@@ -30,35 +32,43 @@ test('читает дедлайны канонических заданий и �
       dueDate: new Date(task.deadlineAt),
     })
   );
-  expect(
-    await loadDeadlines(new Date('2100-01-01'), new Date('2100-01-02'))
-  ).toEqual({});
+});
+
+test('returns an empty result for a period without deadlines', async () => {
+  const days = await loadDeadlines(
+    new Date('2100-01-01'),
+    new Date('2100-01-02')
+  );
+
+  expect(days).toEqual({});
 });
 
 test.each([401, 403, 500, 204])(
-  'отказ HTTP %i не становится пустым результатом',
+  'rejects HTTP %i instead of returning an empty result',
   async (status) => {
     server.use(
       http.get('/api/v1/deadlines', () => new HttpResponse(null, { status }))
     );
+
     await expect(loadDeadlines(start, end)).rejects.toMatchObject({
       kind: 'unexpected-http-status',
     });
   }
 );
 
-test('невалидный ответ отклоняется целиком', async () => {
+test('rejects an invalid response as a whole', async () => {
   server.use(
     http.get('/api/v1/deadlines', () =>
       HttpResponse.json([{ dueDate: 'yesterday' }])
     )
   );
+
   await expect(loadDeadlines(start, end)).rejects.toMatchObject({
     kind: 'invalid-response',
   });
 });
 
-test('передаёт границы периода и сохраняет отмену', async () => {
+test('passes the requested period boundaries', async () => {
   server.use(
     http.get('/api/v1/deadlines', ({ request }) => {
       const url = new URL(request.url);
@@ -67,9 +77,14 @@ test('передаёт границы периода и сохраняет от�
       return HttpResponse.json([]);
     })
   );
+
   expect(await loadDeadlines(start, end)).toEqual({});
+});
+
+test('preserves cancellation from an already aborted signal', async () => {
   const controller = new AbortController();
   controller.abort();
+
   await expect(
     loadDeadlines(start, end, controller.signal)
   ).rejects.toMatchObject({ name: 'AbortError' });

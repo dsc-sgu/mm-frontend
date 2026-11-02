@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { selectAccessSession } from './control';
 
-test('календарь читает дедлайны через HTTP из общего мок-бэкенда', async ({
+test('loads calendar deadlines through HTTP from the shared mock backend', async ({
   page,
 }) => {
   await page.clock.setFixedTime(new Date('2026-05-25T12:00:00Z'));

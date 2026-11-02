@@ -29,17 +29,23 @@ export function loadDeadlines(
   const url = new URL(apiPath('deadlines'), location.origin);
   url.searchParams.set('start', start.toISOString());
   url.searchParams.set('end', end.toISOString());
+
   return runHttpOperation(
     { name: 'load-deadlines', url, signal },
     async (context) => {
-      if (context.response.status !== 200) throw unexpectedHttpStatus(context);
+      if (context.response.status !== 200) {
+        throw unexpectedHttpStatus(context);
+      }
+
       const deadlines = await readJson(context, v.array(DeadlineDtoSchema));
+
       const days: DeadlinesByDay = {};
       for (const dto of deadlines) {
         const dueDate = new Date(dto.dueDate);
         const key = dueDate.toLocaleDateString('ru-RU');
         (days[key] ??= []).push({ ...dto, dueDate });
       }
+
       return days;
     }
   );
