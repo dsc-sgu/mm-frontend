@@ -17,10 +17,15 @@ export function reviewClipboardHtml(html: string): Value {
     node: Node,
     marks: Omit<Leaf, 'text'> = {}
   ): Value[number]['children'] {
-    if (node.nodeType === Node.TEXT_NODE)
+    if (node.nodeType === Node.TEXT_NODE) {
       return [{ text: node.textContent ?? '', ...marks }];
-    if (!(node instanceof HTMLElement)) return [];
-    if (node.tagName === 'BR') return [{ text: '\n', ...marks }];
+    }
+    if (!(node instanceof HTMLElement)) {
+      return [];
+    }
+    if (node.tagName === 'BR') {
+      return [{ text: '\n', ...marks }];
+    }
 
     const mark = (
       {
@@ -37,8 +42,9 @@ export function reviewClipboardHtml(html: string): Value {
       inline(child, mark ? { ...marks, [mark]: true } : marks)
     );
     const url = node.getAttribute('href');
-    if (node.tagName === 'A' && url && isSafeReviewHref(url))
+    if (node.tagName === 'A' && url && isSafeReviewHref(url)) {
       return [{ type: 'a', url, children }];
+    }
 
     return children;
   }
@@ -49,7 +55,9 @@ export function reviewClipboardHtml(html: string): Value {
     let pending: Value[number]['children'] = [];
 
     function flush() {
-      if (pending.length) blocks.push({ type: 'p', children: pending });
+      if (pending.length) {
+        blocks.push({ type: 'p', children: pending });
+      }
       pending = [];
     }
 
@@ -74,12 +82,13 @@ export function reviewClipboardHtml(html: string): Value {
             children: content.length ? content : [{ text: '' }],
           });
 
-          for (const nested of li.children)
+          for (const nested of li.children) {
             if (/^(UL|OL)$/.test(nested.tagName)) {
               const wrapper = document.createElement('div');
               wrapper.append(nested.cloneNode(true));
               visit(wrapper, indent + 1);
             }
+          }
         }
       } else if (child.tagName === 'PRE') {
         flush();
@@ -98,7 +107,9 @@ export function reviewClipboardHtml(html: string): Value {
           type: child.tagName === 'BLOCKQUOTE' ? 'blockquote' : 'p',
           children: inline(child),
         });
-      } else pending.push(...inline(child));
+      } else {
+        pending.push(...inline(child));
+      }
     }
 
     flush();

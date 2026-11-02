@@ -3,30 +3,34 @@ import type { ReviewTextDocument } from './text-document';
 import { normalizeReviewText } from './text-document';
 
 type Block = ReviewTextDocument['children'][number];
+
 type Inline = Exclude<Block, { type: 'code' }>['children'][number];
 
 export function toReviewPlate(document: ReviewTextDocument | null): Value {
   return (
     document?.children.map((block) => {
-      if (block.type === 'code')
+      if (block.type === 'code') {
         return {
           type: 'code_block',
           children: block.text
             .split('\n')
             .map((text) => ({ type: 'code_line', children: [{ text }] })),
         };
-      if (block.type === 'blockquote')
+      }
+      if (block.type === 'blockquote') {
         return {
           type: 'blockquote',
           children: [{ type: 'p', children: block.children }],
         };
-      if (block.type === 'list-item')
+      }
+      if (block.type === 'list-item') {
         return {
           type: 'p',
           listStyleType: block.variant === 'ordered' ? 'decimal' : 'disc',
           indent: block.indent + 1,
           children: block.children,
         };
+      }
 
       return block;
     }) ?? [{ type: 'p', children: [{ text: '' }] }]
@@ -47,7 +51,7 @@ function inline(nodes: Value[number]['children']): Inline[] {
       ];
     }
 
-    if (node.type === 'a')
+    if (node.type === 'a') {
       return [
         {
           type: 'a',
@@ -57,6 +61,7 @@ function inline(nodes: Value[number]['children']): Inline[] {
           ),
         },
       ];
+    }
 
     const children = inline(node.children);
 
@@ -66,7 +71,7 @@ function inline(nodes: Value[number]['children']): Inline[] {
 
 export function fromReviewPlate(value: Value): ReviewTextDocument | null {
   const children: Block[] = value.map((node) => {
-    if (node.type === 'code_block')
+    if (node.type === 'code_block') {
       return {
         type: 'code',
         text: node.children
@@ -79,16 +84,18 @@ export function fromReviewPlate(value: Value): ReviewTextDocument | null {
           )
           .join('\n'),
       };
+    }
 
     const children = inline(node.children);
 
-    if (node.listStyleType)
+    if (node.listStyleType) {
       return {
         type: 'list-item',
         variant: node.listStyleType === 'decimal' ? 'ordered' : 'unordered',
         indent: Math.max(0, Number(node.indent ?? 1) - 1),
         children,
       };
+    }
     return { type: node.type === 'blockquote' ? 'blockquote' : 'p', children };
   });
 

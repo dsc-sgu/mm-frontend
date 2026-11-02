@@ -319,7 +319,7 @@ describe('TR-05: load-review statuses', () => {
   test.each([
     ['an unknown status', { status: 'draft' }],
     [
-      'неизвестная версия текста',
+      'an unknown text version',
       {
         status: 'published',
         review: {
@@ -329,7 +329,7 @@ describe('TR-05: load-review statuses', () => {
       },
     ],
     [
-      'неизвестное форматирование текста',
+      'an unknown text mark',
       {
         status: 'published',
         review: {
@@ -344,7 +344,7 @@ describe('TR-05: load-review statuses', () => {
       },
     ],
     [
-      'запрещённый адрес ссылки',
+      'an unsafe link URL',
       {
         status: 'published',
         review: {

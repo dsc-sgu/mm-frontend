@@ -128,7 +128,9 @@ export function RichTextEditorToolbar() {
       <Dialog
         open={link.status === 'open'}
         onOpenChange={(open) => {
-          if (!open) setLink({ status: 'closed' });
+          if (!open) {
+            setLink({ status: 'closed' });
+          }
         }}
       >
         <DialogContent

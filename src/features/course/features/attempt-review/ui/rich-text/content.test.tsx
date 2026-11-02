@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import { RichTextContent } from './content';
 
-test('REV-17: показывает форматирование и вложенные списки без HTML', () => {
+test('REV-17: renders marks and nested lists without HTML', () => {
   const { container } = render(
     <RichTextContent
       text={{
@@ -56,7 +56,7 @@ test('REV-17: показывает форматирование и вложен�
   );
 });
 
-test('элементы списка с уменьшением отступа не теряются', () => {
+test('preserves list items when indentation decreases', () => {
   const { container } = render(
     <RichTextContent
       text={{

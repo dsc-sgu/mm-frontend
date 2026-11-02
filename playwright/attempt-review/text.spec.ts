@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const URL =
   '/courses/modern-information-technologies/tasks/1/attempts/student/2/review';
 
-test('REV-16: вставка очищает HTML и сохраняет простой текст без ссылок', async ({
+test('REV-16: paste sanitizes HTML and preserves plain text without links', async ({
   page,
 }) => {
   test.slow();
@@ -49,7 +49,9 @@ test('REV-16: вставка очищает HTML и сохраняет прос�
   await expect(editor.locator('a,[data-slate-type="a"]')).toHaveCount(0);
 });
 
-test('REV-18: диалог отклоняет адрес и возвращает фокус', async ({ page }) => {
+test('REV-18: the link dialog rejects an unsafe URL and restores focus', async ({
+  page,
+}) => {
   test.slow();
 
   await page.goto(URL);
@@ -80,7 +82,7 @@ test('REV-18: диалог отклоняет адрес и возвращает
   await expect(editor).toBeFocused();
 });
 
-test('форматирование, цитата и блок кода доступны в редакторе проверки', async ({
+test('supports marks, quotes and code blocks in the Review editor', async ({
   page,
 }) => {
   test.slow();

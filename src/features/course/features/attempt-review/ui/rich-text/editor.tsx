@@ -115,10 +115,14 @@ export function RichTextEditor({
   }, [editor, value]);
 
   useEffect(() => {
-    if (autoFocus && editable) editor.tf.focus({ edge: 'end' });
+    if (autoFocus && editable) {
+      editor.tf.focus({ edge: 'end' });
+    }
   }, [autoFocus, editable, editor]);
 
-  if (!editable) return <RichTextContent text={value} className={className} />;
+  if (!editable) {
+    return <RichTextContent text={value} className={className} />;
+  }
 
   return (
     <div className={cn('rounded-xl border bg-card', className)}>
@@ -127,7 +131,9 @@ export function RichTextEditor({
         onValueChange={({ value: children }) => {
           const next = fromReviewPlate(children);
 
-          if (areReviewTextsEqual(last.current, next)) return;
+          if (areReviewTextsEqual(last.current, next)) {
+            return;
+          }
 
           last.current = next;
 
@@ -147,7 +153,9 @@ export function RichTextEditor({
             minHeightClassName
           )}
           onPaste={(event) => {
-            if (!editor.selection) editor.tf.focus({ edge: 'end' });
+            if (!editor.selection) {
+              editor.tf.focus({ edge: 'end' });
+            }
 
             const html = event.clipboardData.getData('text/html');
 
@@ -183,4 +191,5 @@ export function RichTextEditor({
     </div>
   );
 }
+
 export { RichTextContent } from './content';

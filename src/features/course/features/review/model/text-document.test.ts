@@ -39,8 +39,8 @@ const document: ReviewTextDocument = {
   ],
 };
 
-describe('REV-13—REV-15: документ текста проверки', () => {
-  it('сохраняет профиль при редактировании в Plate', () => {
+describe('REV-13—REV-15: Review text document', () => {
+  it('preserves the profile when editing in Plate', () => {
     expect(fromReviewPlate(toReviewPlate(document))).toEqual(document);
   });
 
@@ -60,7 +60,7 @@ describe('REV-13—REV-15: документ текста проверки', () =
       children: [{ type: 'p', children: [{ text: 'Текст', bold: false }] }],
     },
     { version: 1, children: [{ type: 'code', text: 'код', language: 'ts' }] },
-  ])('отклоняет неизвестную версию, узлы, поля и форматирование', (value) => {
+  ])('rejects unknown versions, nodes, fields and marks', (value) => {
     expect(v.safeParse(ReviewTextDocumentSchema, value).success).toBe(false);
   });
 
@@ -72,7 +72,7 @@ describe('REV-13—REV-15: документ текста проверки', () =
     'javascript:alert(1)',
     'data:text/plain,test',
     'ftp://example.com',
-  ])('отклоняет адрес %s', (url) => {
+  ])('rejects URL %s', (url) => {
     expect(
       v.safeParse(ReviewTextDocumentSchema, {
         version: 1,
@@ -86,7 +86,7 @@ describe('REV-13—REV-15: документ текста проверки', () =
     ).toBe(false);
   });
 
-  it('очищенный отзыв становится null и не сохраняется как комментарий', () => {
+  it('normalizes cleared feedback to null and rejects it as a comment', () => {
     const empty: ReviewTextDocument = {
       version: 1,
       children: [{ type: 'p', children: [{ text: ' \n\u00a0\t' }] }],
@@ -96,14 +96,14 @@ describe('REV-13—REV-15: документ текста проверки', () =
     expect(v.safeParse(NonemptyReviewTextSchema, empty).success).toBe(false);
   });
 
-  it('сравнивает содержимое независимо от порядка полей', () => {
+  it('compares content independently of field order', () => {
     expect(
       areReviewTextsEqual(document, { children: document.children, version: 1 })
     ).toBe(true);
   });
 });
 
-it('пустые абзацы остаются только в локальном редакторе', () => {
+it('allows empty paragraphs only in the local editor', () => {
   const value: ReviewTextDocument = {
     version: 1,
     children: [
@@ -116,7 +116,7 @@ it('пустые абзацы остаются только в локально�
   expect(v.safeParse(NonemptyReviewTextSchema, value).success).toBe(false);
 });
 
-it('сохраняет границы абзацев цитаты как жёсткие переносы', () => {
+it('preserves quote paragraph boundaries as hard breaks', () => {
   expect(
     fromReviewPlate([
       {

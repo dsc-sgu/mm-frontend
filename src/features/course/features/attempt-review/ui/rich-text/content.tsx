@@ -12,12 +12,13 @@ type Inline = Exclude<
 function renderInline(node: Inline, index: number): ReactNode {
   if ('url' in node) {
     const children = node.children.map(renderInline);
-    if (node.url.startsWith('/'))
+    if (node.url.startsWith('/')) {
       return (
         <Link key={index} to={node.url}>
           {children}
         </Link>
       );
+    }
     return (
       <a key={index} href={node.url} target="_blank" rel="noopener noreferrer">
         {children}
@@ -26,15 +27,24 @@ function renderInline(node: Inline, index: number): ReactNode {
   }
 
   let children: ReactNode = node.text;
-  if (node.bold) children = <strong>{children}</strong>;
-  if (node.italic) children = <em>{children}</em>;
-  if (node.strikethrough) children = <s>{children}</s>;
-  if (node.code) children = <code>{children}</code>;
+  if (node.bold) {
+    children = <strong>{children}</strong>;
+  }
+  if (node.italic) {
+    children = <em>{children}</em>;
+  }
+  if (node.strikethrough) {
+    children = <s>{children}</s>;
+  }
+  if (node.code) {
+    children = <code>{children}</code>;
+  }
 
   return <span key={index}>{children}</span>;
 }
 
 type Block = ReviewTextDocument['children'][number];
+
 type ListBlock = Extract<Block, { type: 'list-item' }>;
 
 function renderBlocks(blocks: Block[]): ReactNode[] {
@@ -47,8 +57,9 @@ function renderBlocks(blocks: Block[]): ReactNode[] {
 
     if (block.type === 'list-item') {
       const items: ListBlock[] = [];
-      while (index < blocks.length && blocks[index].type === 'list-item')
+      while (index < blocks.length && blocks[index].type === 'list-item') {
         items.push(blocks[index++] as ListBlock);
+      }
 
       let cursor = 0;
 
@@ -77,7 +88,9 @@ function renderBlocks(blocks: Block[]): ReactNode[] {
               </li>
             );
 
-            if (cursor < items.length && items[cursor].indent < depth) break;
+            if (cursor < items.length && items[cursor].indent < depth) {
+              break;
+            }
           }
 
           const Tag = variant === 'ordered' ? 'ol' : 'ul';
@@ -88,7 +101,9 @@ function renderBlocks(blocks: Block[]): ReactNode[] {
       }
 
       const groups: ReactNode[] = [];
-      while (cursor < items.length) groups.push(...list(items[cursor].indent));
+      while (cursor < items.length) {
+        groups.push(...list(items[cursor].indent));
+      }
 
       rendered.push(<div key={key}>{groups}</div>);
       continue;
@@ -96,17 +111,19 @@ function renderBlocks(blocks: Block[]): ReactNode[] {
 
     index++;
 
-    if (block.type === 'code')
+    if (block.type === 'code') {
       rendered.push(
         <pre key={key}>
           <code>{block.text}</code>
         </pre>
       );
-    else if (block.type === 'blockquote')
+    } else if (block.type === 'blockquote') {
       rendered.push(
         <blockquote key={key}>{block.children.map(renderInline)}</blockquote>
       );
-    else rendered.push(<p key={key}>{block.children.map(renderInline)}</p>);
+    } else {
+      rendered.push(<p key={key}>{block.children.map(renderInline)}</p>);
+    }
   }
 
   return rendered;
@@ -119,12 +136,13 @@ export function RichTextContent({
   text: ReviewTextDocument | null;
   className?: string;
 }) {
-  if (!text)
+  if (!text) {
     return (
       <p className={cn('text-sm text-muted-foreground', className)}>
         Нет сохранённого текста.
       </p>
     );
+  }
 
   return (
     <div className={cn('whitespace-pre-wrap', styles.readonly, className)}>

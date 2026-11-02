@@ -34,6 +34,7 @@ export const ReviewTextDocumentSchema = v.strictObject({
   version: v.literal(1),
   children: v.array(BlockSchema),
 });
+
 export type ReviewTextDocument = v.InferOutput<typeof ReviewTextDocumentSchema>;
 
 export function isReviewTextEmpty(
