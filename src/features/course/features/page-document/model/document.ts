@@ -89,6 +89,8 @@ type UnsupportedBlock = { id: string; type: 'unsupported' };
 
 export type ReadBlock = DocumentBlock | UnsupportedBlock;
 
+export type PublishedReadBlock = ReadBlock & { version: number };
+
 function normalizeBlocks(blocks: DocumentBlock[]): DocumentBlock[] {
   let previousIndent: number | null = null;
   return blocks.map((item): DocumentBlock => {

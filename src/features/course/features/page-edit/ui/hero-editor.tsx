@@ -232,9 +232,9 @@ export function CoursePageEditHeroEditor({
             </span>
             <input
               id="course-edit-slug"
-              value={course.courseId}
+              value={course.slug}
               onChange={(event) =>
-                onChange({ ...course, courseId: event.target.value })
+                onChange({ ...course, slug: event.target.value })
               }
               aria-invalid={!!errors.courseId}
               className={cn(

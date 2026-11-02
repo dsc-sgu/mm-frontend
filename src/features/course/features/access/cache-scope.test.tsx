@@ -88,7 +88,13 @@ async function loadVeraCaches(queryClient: QueryClient) {
   await Promise.all([
     queryClient.query(courseContextOptions(vera.id, databases.slug)),
     queryClient.query(coursesQueryOptions(vera.id)),
-    queryClient.query(coursePageQueryOptions(databases.id)),
+    queryClient.query(
+      coursePageQueryOptions({
+        courseId: databases.id,
+        viewerId: vera.id,
+        role: 'teacher',
+      })
+    ),
   ]);
   expect(sessionBoundQueries(queryClient)).toHaveLength(3);
 }
@@ -139,7 +145,10 @@ describe('ACC-06: a session change clears every session-bound family', () => {
         role: 'teacher',
       }
     );
-    queryClient.setQueryData(coursePageKeys.detail(databases.id), null);
+    queryClient.setQueryData(
+      coursePageKeys.detail(databases.id, vera.id, 'teacher'),
+      null
+    );
     const watch = watchSessionChanges(queryClient);
 
     try {
@@ -158,7 +167,9 @@ describe('ACC-06: a session change clears every session-bound family', () => {
       )
     ).toBeUndefined();
     expect(
-      queryClient.getQueryData(coursePageKeys.detail(databases.id))
+      queryClient.getQueryData(
+        coursePageKeys.detail(databases.id, vera.id, 'teacher')
+      )
     ).toBeUndefined();
   });
 
@@ -198,9 +209,16 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
     const queryClient = createQueryClient();
     try {
       const page = await queryClient.query(
-        coursePageQueryOptions(databases.id)
+        coursePageQueryOptions({
+          courseId: databases.id,
+          viewerId: vera.id,
+          role: 'teacher',
+        })
       );
-      expect(page).toMatchObject({ title: 'Базы данных' });
+      expect(page).toMatchObject({
+        status: 'found',
+        page: { title: 'Базы данных' },
+      });
 
       // DRF1 owns the rename operation; the contract renames in backend state.
       const renamed = v.parse(CourseSlugSchema, 'relational-databases');
@@ -222,15 +240,24 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
         course: { id: databases.id },
       });
       expect(
-        queryClient.getQueryState(coursePageKeys.detail(databases.id))
+        queryClient.getQueryState(
+          coursePageKeys.detail(databases.id, vera.id, 'teacher')
+        )
       ).toMatchObject({ status: 'success', data: page });
-      // The RAM Page addresses the same CourseId the lookup returned.
+      // The published Page addresses the same CourseId the lookup returned.
       await expect(
         queryClient.query({
-          ...coursePageQueryOptions(databases.id),
+          ...coursePageQueryOptions({
+            courseId: databases.id,
+            viewerId: vera.id,
+            role: 'teacher',
+          }),
           staleTime: 0,
         })
-      ).resolves.toMatchObject({ title: 'Базы данных' });
+      ).resolves.toMatchObject({
+        status: 'found',
+        page: { title: 'Базы данных' },
+      });
     } finally {
       queryClient.clear();
     }
@@ -272,7 +299,7 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
     const attemptId = reviewWorld.attempts[0].id;
     const one = 1 as AttemptNumber;
     const keys = [
-      coursePageKeys.detail(algorithms.id),
+      coursePageKeys.detail(algorithms.id, vera.id, 'student'),
       taskKeys.page(algorithms.id, '1'),
       taskKeys.attemptHistory(vera.id, algorithms.id, '1', sasha.id),
       courseAttemptsKeys.list(algorithms.id, {
@@ -306,8 +333,20 @@ describe('a confirmed Membership loss', () => {
     const queryClient = createQueryClient();
     try {
       await queryClient.query(courseContextOptions(vera.id, algorithms.slug));
-      await queryClient.query(coursePageQueryOptions(algorithms.id));
-      await queryClient.query(coursePageQueryOptions(databases.id));
+      await queryClient.query(
+        coursePageQueryOptions({
+          courseId: algorithms.id,
+          viewerId: vera.id,
+          role: 'student',
+        })
+      );
+      await queryClient.query(
+        coursePageQueryOptions({
+          courseId: databases.id,
+          viewerId: vera.id,
+          role: 'teacher',
+        })
+      );
       mockBackend.state.memberships = mockBackend.state.memberships.filter(
         ({ courseId, userId }) =>
           !(courseId === algorithms.id && userId === vera.id)
@@ -326,8 +365,13 @@ describe('a confirmed Membership loss', () => {
           .findAll({ queryKey: courseKeys.byId(algorithms.id) })
       ).toEqual([]);
       expect(
-        queryClient.getQueryData(coursePageKeys.detail(databases.id))
-      ).toMatchObject({ title: 'Базы данных' });
+        queryClient.getQueryData(
+          coursePageKeys.detail(databases.id, vera.id, 'teacher')
+        )
+      ).toMatchObject({
+        status: 'found',
+        page: { title: 'Базы данных' },
+      });
     } finally {
       queryClient.clear();
     }
@@ -339,7 +383,13 @@ describe('a confirmed Membership loss', () => {
     const queryClient = createQueryClient();
     try {
       await queryClient.query(courseContextOptions(vera.id, algorithms.slug));
-      await queryClient.query(coursePageQueryOptions(algorithms.id));
+      await queryClient.query(
+        coursePageQueryOptions({
+          courseId: algorithms.id,
+          viewerId: vera.id,
+          role: 'student',
+        })
+      );
       mockBackend.state.courses = mockBackend.state.courses.filter(
         ({ id }) => id !== algorithms.id
       );

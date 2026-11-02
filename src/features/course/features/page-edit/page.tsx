@@ -3,6 +3,9 @@ import { useNavigate, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
 import { cn } from '@/shadcn/lib/utils';
+import type { UserId } from '@/features/auth/model/identity';
+import type { CourseRole } from '@/features/course/features/access/model/types';
+import { editDocument } from '@/features/course/features/page-document/model/document';
 import {
   useCoursePageQuery,
   useSaveCoursePageMutation,
@@ -44,9 +47,13 @@ function focusFirstInvalidField(errors: Record<string, string | undefined>) {
 function CoursePageEditContent({
   courseId,
   courseSlug,
+  viewerId,
+  role,
 }: {
   courseId: CourseId;
   courseSlug: CourseSlug;
+  viewerId: UserId;
+  role: CourseRole;
 }) {
   const navigate = useNavigate();
   const router = useRouter();
@@ -85,8 +92,10 @@ function CoursePageEditContent({
 
     await saveMutation.mutateAsync({
       courseId,
+      viewerId,
+      role,
       previousSlug: courseSlug,
-      slug: submittedWorkingCopy.courseId,
+      slug: submittedWorkingCopy.slug,
       title: submittedWorkingCopy.title,
       shortTitle: submittedWorkingCopy.shortTitle,
       description: submittedWorkingCopy.description,
@@ -100,10 +109,10 @@ function CoursePageEditContent({
 
     await router.invalidate();
 
-    if (submittedWorkingCopy.courseId !== courseSlug) {
+    if (submittedWorkingCopy.slug !== courseSlug) {
       await navigate({
         to: '/courses/$courseSlug/edit',
-        params: { courseSlug: submittedWorkingCopy.courseId },
+        params: { courseSlug: submittedWorkingCopy.slug },
         replace: true,
       });
     }
@@ -113,6 +122,8 @@ function CoursePageEditContent({
     canApply,
     courseId,
     courseSlug,
+    viewerId,
+    role,
     errors,
     isDirty,
     markWorkingCopySaved,
@@ -179,7 +190,7 @@ function CoursePageEditContent({
           canApply={canApply}
           isSaving={saveMutation.isPending}
           oldSlug={courseSlug}
-          newSlug={workingCopy.courseId}
+          newSlug={workingCopy.slug}
           onReset={resetWorkingCopy}
           onApply={apply}
         />
@@ -191,17 +202,26 @@ function CoursePageEditContent({
 function CoursePageEditLoaded({
   courseId,
   courseSlug,
+  viewerId,
+  role,
   course,
 }: {
   courseId: CourseId;
   courseSlug: CourseSlug;
+  viewerId: UserId;
+  role: CourseRole;
   course: CoursePage;
 }) {
   const [editStore] = useState(() => createCoursePageEditStore({ course }));
 
   return (
     <CoursePageEditStoreProvider store={editStore}>
-      <CoursePageEditContent courseId={courseId} courseSlug={courseSlug} />
+      <CoursePageEditContent
+        courseId={courseId}
+        courseSlug={courseSlug}
+        viewerId={viewerId}
+        role={role}
+      />
     </CoursePageEditStoreProvider>
   );
 }
@@ -209,17 +229,28 @@ function CoursePageEditLoaded({
 export function CoursePageEditPage({
   courseId,
   courseSlug,
+  viewerId,
+  role,
 }: {
   courseId: CourseId;
   courseSlug: CourseSlug;
+  viewerId: UserId;
+  role: CourseRole;
 }) {
-  const { data: course, isPending } = useCoursePageQuery(courseId);
+  const { data: outcome, isPending } = useCoursePageQuery({
+    courseId,
+    viewerId,
+    role,
+  });
 
   if (isPending) {
     return <CoursePageLoading />;
   }
-
-  if (!course) {
+  if (outcome?.status !== 'found') {
+    return null;
+  }
+  const document = editDocument(outcome.page.content);
+  if (document.status !== 'supported') {
     return null;
   }
 
@@ -228,9 +259,9 @@ export function CoursePageEditPage({
       key={courseSlug}
       courseId={courseId}
       courseSlug={courseSlug}
-      // A Page cached by CourseId may predate a slug change; the working copy
-      // starts from the slug the route has just confirmed.
-      course={{ ...course, courseId: courseSlug }}
+      viewerId={viewerId}
+      role={role}
+      course={{ ...outcome.page, content: document.blocks }}
     />
   );
 }

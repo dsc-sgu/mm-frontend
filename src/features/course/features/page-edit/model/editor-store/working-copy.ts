@@ -20,7 +20,7 @@ function getCoursePageEditDerivedState(
   const errors = validateCoursePageEdit({
     title: workingCopy.title,
     shortTitle: workingCopy.shortTitle,
-    courseId: workingCopy.courseId,
+    courseId: workingCopy.slug,
     description: workingCopy.description,
   });
   const isDirty = !equal(initialCourse, workingCopy);

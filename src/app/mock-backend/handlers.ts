@@ -5,8 +5,10 @@ import { repositoryHandlers } from '@/features/course/features/repository/api/mo
 import { attemptReviewHandlers } from '@/features/course/features/attempt-review/api/mock';
 import { reviewHandlers } from '@/features/course/features/review/api/mock';
 import { taskHandlers } from '@/features/course/features/task/api/mock';
+import { publishedCoursePageHandlers } from '@/features/course/features/page-document/api/mock';
 
 export const handlers = [
+  ...publishedCoursePageHandlers,
   ...authHandlers,
   ...courseHandlers,
   ...courseContextHandlers,

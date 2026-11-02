@@ -42,9 +42,10 @@ function cloneCoursePage(course: CoursePage): CoursePage {
   return structuredClone(course);
 }
 
-function createCoursePage(course: MockCourse): CoursePage {
+export function createCoursePage(course: MockCourse): CoursePage {
   const summary: CoursePageSummary = {
-    courseId: course.slug,
+    courseId: course.id,
+    slug: course.slug,
     title: course.title,
     shortTitle: course.shortTitle,
     color: course.color,
@@ -93,14 +94,14 @@ function buildCourseResources(course: CoursePageSummary): CoursePageResources {
       {
         id: `${course.courseId}:files:syllabus`,
         name: 'Силлабус курса.pdf',
-        href: `/courses/${course.courseId}/files`,
+        href: `/courses/${course.slug}/files`,
         size: '420 KB',
         mimeType: 'application/pdf',
       },
       {
         id: `${course.courseId}:files:rubric`,
         name: 'Критерии оценивания.md',
-        href: `/courses/${course.courseId}/files`,
+        href: `/courses/${course.slug}/files`,
         size: '18 KB',
         mimeType: 'text/markdown',
       },
@@ -331,7 +332,7 @@ function buildCourseContent(
                 {
                   type: 'link',
                   text: 'страницу файлов курса',
-                  href: `/courses/${course.courseId}/files`,
+                  href: `/courses/${course.slug}/files`,
                 },
                 {
                   type: 'text',
@@ -410,14 +411,6 @@ function buildCourseContent(
   ];
 }
 
-export async function fetchCoursePage(
-  courseId: CourseId
-): Promise<CoursePage | null> {
-  await new Promise((resolve) => setTimeout(resolve, 150));
-  const page = ensureCoursePage(courseId);
-  return page ? cloneCoursePage(page) : null;
-}
-
 export async function saveCoursePage(
   input: SaveCoursePageInput
 ): Promise<CoursePage> {
@@ -428,7 +421,8 @@ export async function saveCoursePage(
     throw new Error(`Course page not found: ${input.courseId}`);
   }
   const nextCourseSummary: CoursePageSummary = {
-    courseId: input.slug,
+    courseId: input.courseId,
+    slug: input.slug,
     title: input.title,
     shortTitle: input.shortTitle,
     color: input.color,

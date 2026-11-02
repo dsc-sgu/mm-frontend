@@ -2,7 +2,7 @@ import { DynamicIcon } from 'lucide-react/dynamic';
 
 import { cn } from '@/shadcn/lib/utils';
 import { CourseContentBlocks } from '@/features/course/features/page-document/ui/blocks';
-import type { CoursePage as CoursePageModel } from '@/features/course/features/page/model/types';
+import type { PublishedCoursePage } from '@/features/course/features/page/model/types';
 import { COURSE_COLORS } from '@/features/course/ui/theme';
 import type { Teacher } from '@/features/course/model/types';
 
@@ -12,13 +12,7 @@ function teacherFullName(teacher: Teacher) {
     .join(' ');
 }
 
-export function CoursePage({
-  course,
-  role = 'student',
-}: {
-  course: CoursePageModel;
-  role?: 'student' | 'teacher';
-}) {
+export function CoursePage({ course }: { course: PublishedCoursePage }) {
   const theme = COURSE_COLORS[course.color];
 
   return (
@@ -96,12 +90,8 @@ export function CoursePage({
       >
         <CourseContentBlocks
           blocks={course.content}
-          taskSummaries={course.taskSummaries.map((summary) =>
-            role === 'teacher' && summary.status !== 'unavailable'
-              ? { ...summary, status: 'teacher' }
-              : summary
-          )}
-          courseSlug={course.courseId}
+          taskSummaries={course.taskSummaries}
+          courseSlug={course.slug}
           resources={course.resources}
         />
       </article>

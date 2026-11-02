@@ -15,6 +15,7 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import {
+  coursePageQueries,
   coursePageQueryOptions,
   useSaveCoursePageMutation,
 } from '@/features/course/features/page/api/queries';
@@ -54,6 +55,29 @@ function expectNeutralCourseShell() {
   expect(screen.queryByText('Алгоритмы')).toBeNull();
   expect(screen.queryByRole('link', { name: 'Редактирование' })).toBeNull();
 }
+
+test('preloading the Course route starts every published Page read without navigating', async () => {
+  const { queryClient, router } = renderRoutes([], '/', { appRoutes: true });
+  const queries = coursePageQueries({
+    courseId: DATABASES_ID,
+    viewerId: accessWorld.users.vera.id,
+    role: 'teacher',
+  });
+
+  await router.preloadRoute({
+    to: '/courses/$courseSlug',
+    params: { courseSlug: accessWorld.courses.databases.slug },
+  });
+
+  await waitFor(() =>
+    expect(queryClient.getQueryState(queries.published.queryKey)).toMatchObject(
+      {
+        status: 'success',
+      }
+    )
+  );
+  expect(router.state.location.pathname).toBe('/');
+});
 
 describe('ACC-10: confirmed Course context controls the real shell', () => {
   test('a first held lookup renders neutral loading at the requested URL', async () => {
@@ -262,12 +286,17 @@ test('saved Course metadata replaces the confirmed Header title without changing
     appRoutes: true,
   });
   await screen.findByRole('heading', { name: 'Базы данных' });
-  const page = await queryClient.ensureQueryData(
-    coursePageQueryOptions(DATABASES_ID)
+  const outcome = await queryClient.ensureQueryData(
+    coursePageQueryOptions({
+      courseId: DATABASES_ID,
+      viewerId: accessWorld.users.vera.id,
+      role: 'teacher',
+    })
   );
-  if (!page) {
+  if (outcome.status !== 'found') {
     throw new Error('The Course fixture has no published Page');
   }
+  const page = outcome.page;
   const mutation = renderHook(() => useSaveCoursePageMutation(), {
     wrapper: ({ children }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -277,7 +306,10 @@ test('saved Course metadata replaces the confirmed Header title without changing
   await act(async () => {
     await mutation.result.current.mutateAsync({
       ...page,
+      content: [],
       courseId: DATABASES_ID,
+      viewerId: accessWorld.users.vera.id,
+      role: 'teacher',
       previousSlug: accessWorld.courses.databases.slug,
       slug: 'databases',
       title: 'Базы данных — обновлённое название',
@@ -295,12 +327,17 @@ test('saved Course metadata replaces the confirmed Header title without changing
 test('saving a UUID-shaped slug rejects without changing Course metadata or its published Page', async () => {
   const { queryClient } = renderRoutes([], DATABASES_PATH, { appRoutes: true });
   await screen.findByRole('heading', { name: 'Базы данных' });
-  const page = await queryClient.ensureQueryData(
-    coursePageQueryOptions(DATABASES_ID)
+  const outcome = await queryClient.ensureQueryData(
+    coursePageQueryOptions({
+      courseId: DATABASES_ID,
+      viewerId: accessWorld.users.vera.id,
+      role: 'teacher',
+    })
   );
-  if (!page) {
+  if (outcome.status !== 'found') {
     throw new Error('The Course fixture has no published Page');
   }
+  const page = outcome.page;
   const mutation = renderHook(() => useSaveCoursePageMutation(), {
     wrapper: ({ children }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -311,7 +348,10 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
     await expect(
       mutation.result.current.mutateAsync({
         ...page,
+        content: [],
         courseId: DATABASES_ID,
+        viewerId: accessWorld.users.vera.id,
+        role: 'teacher',
         previousSlug: accessWorld.courses.databases.slug,
         slug: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
         title: 'Rejected UUID rename',
@@ -320,8 +360,17 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
   });
 
   await expect(
-    queryClient.fetchQuery(coursePageQueryOptions(DATABASES_ID))
-  ).resolves.toMatchObject({ courseId: 'databases', title: 'Базы данных' });
+    queryClient.fetchQuery(
+      coursePageQueryOptions({
+        courseId: DATABASES_ID,
+        viewerId: accessWorld.users.vera.id,
+        role: 'teacher',
+      })
+    )
+  ).resolves.toMatchObject({
+    status: 'found',
+    page: { courseId: DATABASES_ID, slug: 'databases', title: 'Базы данных' },
+  });
   await queryClient.invalidateQueries();
   await screen.findByRole('heading', { name: 'Базы данных' });
   expect(screen.getByRole('link', { name: 'Редактирование' })).toBeDefined();
