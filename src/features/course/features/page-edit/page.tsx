@@ -219,7 +219,7 @@ export function CoursePageEditPage({
     refetch,
   } = useCoursePageQuery(courseId);
 
-  if (isError)
+  if (isError) {
     return (
       <div role="alert">
         Не удалось загрузить страницу{' '}
@@ -232,6 +232,7 @@ export function CoursePageEditPage({
         </button>
       </div>
     );
+  }
 
   if (isPending) {
     return <CoursePageLoading />;
@@ -242,8 +243,9 @@ export function CoursePageEditPage({
   }
 
   const document = editDocument(course.content);
-  if (document.status === 'unsupported-content')
+  if (document.status === 'unsupported-content') {
     return <p>Содержимое не поддерживается редактором</p>;
+  }
 
   return (
     <CoursePageEditLoaded

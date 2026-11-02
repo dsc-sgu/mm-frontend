@@ -29,8 +29,9 @@ export function coursePageQueryOptions(courseId: CourseId, viewerId: UserId) {
 
 export function useCoursePageQuery(courseId: CourseId) {
   const { data: session } = useSuspenseQuery(sessionOptions);
-  if (session.status !== 'authorized')
+  if (session.status !== 'authorized') {
     throw new Error('Authorized session required');
+  }
   const viewerId = session.session.userId;
   return useQuery(coursePageQueries(courseId, viewerId).document);
 }

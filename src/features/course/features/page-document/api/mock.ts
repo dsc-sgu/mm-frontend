@@ -7,21 +7,27 @@ import { getPageDocument } from '@/app/mock-backend/page-documents';
 export const pageDocumentHandlers = [
   http.get('/api/v1/courses/:courseId/page', ({ params }) => {
     const { session, users, courses, memberships } = mockBackend.state;
-    if (!session || !users.some((u) => u.id === session.userId))
+    if (!session || !users.some((u) => u.id === session.userId)) {
       return new HttpResponse(null, { status: 401 });
+    }
 
     const course = courses.find((c) => c.id === params.courseId);
     const member = memberships.find(
       (m) => m.courseId === course?.id && m.userId === session.userId
     );
-    if (!course || !member) return new HttpResponse(null, { status: 404 });
+    if (!course || !member) {
+      return new HttpResponse(null, { status: 404 });
+    }
 
     const { page, versions, studentTaskSummaries } = getPageDocument(course);
     const latest = new Map<string, (typeof versions)[number]>();
     for (const version of versions) {
-      if (version.publication !== 'published') continue;
-      if ((latest.get(version.id)?.version ?? 0) < version.version)
+      if (version.publication !== 'published') {
+        continue;
+      }
+      if ((latest.get(version.id)?.version ?? 0) < version.version) {
         latest.set(version.id, version);
+      }
     }
 
     const content = [...latest.values()]

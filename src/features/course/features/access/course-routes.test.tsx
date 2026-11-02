@@ -523,11 +523,13 @@ test('an unmatched nested route remains a resource 404 inside the confirmed Cour
 
 function supportedContent(content: readonly unknown[]) {
   const result = editDocument(content);
-  if (result.status !== 'supported') throw new Error('Unsupported fixture');
+  if (result.status !== 'supported') {
+    throw new Error('Unsupported fixture');
+  }
   return result.blocks;
 }
 
-test('предзагрузка страницы запускает все чтения без перехода', async () => {
+test('preloading the page starts every read without navigation', async () => {
   const { router, queryClient } = renderRoutes([], ALGORITHMS_PATH, {
     appRoutes: true,
   });

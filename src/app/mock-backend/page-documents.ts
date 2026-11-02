@@ -2,7 +2,7 @@ import type { MockCourse } from './state';
 import { createCoursePage } from './page-seed';
 import type { CoursePage } from '@/features/course/features/page/model/types';
 
-export type MockBlockVersion = {
+type MockBlockVersion = {
   id: string;
   version: number;
   position: number;
@@ -52,7 +52,7 @@ export function setPublishedPage(course: MockCourse, page: CoursePage) {
   const versions = [...previous.versions];
 
   for (const block of previous.page.content) {
-    if (!page.content.some(({ id }) => id === block.id))
+    if (!page.content.some(({ id }) => id === block.id)) {
       versions.push({
         id: block.id,
         version:
@@ -64,9 +64,10 @@ export function setPublishedPage(course: MockCourse, page: CoursePage) {
         position: 0,
         block,
       });
+    }
   }
 
-  for (const [position, block] of page.content.entries())
+  for (const [position, block] of page.content.entries()) {
     versions.push({
       id: block.id,
       version:
@@ -79,6 +80,7 @@ export function setPublishedPage(course: MockCourse, page: CoursePage) {
       position,
       block,
     });
+  }
 
   documents.set(course, { ...previous, page: structuredClone(page), versions });
 }

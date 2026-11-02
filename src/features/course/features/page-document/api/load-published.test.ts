@@ -24,8 +24,8 @@ function setup() {
   return { course, document: getPageDocument(course) };
 }
 
-describe('DRF-22: опубликованная страница', () => {
-  test('читает последнюю опубликованную версию, игнорируя более новый черновик', async () => {
+describe('DRF-22: published page', () => {
+  test('reads the latest published version and ignores a newer draft', async () => {
     const { course, document } = setup();
     const first = document.versions[0];
     document.versions.push({
@@ -52,7 +52,7 @@ describe('DRF-22: опубликованная страница', () => {
     });
   });
 
-  test('не возвращает блок с опубликованной версией удаления', async () => {
+  test('omits a block whose latest published version deletes it', async () => {
     const { course, document } = setup();
     const block = document.versions[1];
     document.versions.push({ ...block, version: 2, deleted: true });
@@ -62,7 +62,7 @@ describe('DRF-22: опубликованная страница', () => {
     expect(result.content.some(({ id }) => id === block.id)).toBe(false);
   });
 
-  test('возвращает состояния доступа студента в саммари заданий', async () => {
+  test('returns student access states in task summaries', async () => {
     const { course, document } = setup();
     document.page.taskSummaries = taskSummaries();
 
@@ -76,7 +76,7 @@ describe('DRF-22: опубликованная страница', () => {
     ]);
   });
 
-  test('возвращает саммари преподавателя без состояний доступа студента', async () => {
+  test('returns teacher summaries without student access states', async () => {
     const { course, document } = setup();
     document.page.taskSummaries = taskSummaries();
     const membership = mockBackend.state.memberships.find(
@@ -95,7 +95,7 @@ describe('DRF-22: опубликованная страница', () => {
     expect(result.taskSummaries[1]).not.toHaveProperty('prerequisite');
   });
 
-  test('потеря участия даёт отказ в доступе к существующему курсу', async () => {
+  test('denies access to an existing course after membership loss', async () => {
     const { course } = setup();
     mockBackend.state.memberships = [];
 
@@ -104,7 +104,7 @@ describe('DRF-22: опубликованная страница', () => {
     expect(result).toEqual({ status: 'not-found' });
   });
 
-  test('отсутствующий курс даёт отказ в доступе при сохранённом участии', async () => {
+  test('denies access to a missing course while membership remains', async () => {
     const { course } = setup();
     mockBackend.state.courses = [];
 
@@ -113,7 +113,7 @@ describe('DRF-22: опубликованная страница', () => {
     expect(result).toEqual({ status: 'not-found' });
   });
 
-  test('невалидный DTO отклоняет операцию', async () => {
+  test('rejects an invalid response DTO', async () => {
     const { course } = setup();
     server.use(
       http.get('/api/v1/courses/:id/page', () => HttpResponse.json({}))
@@ -124,7 +124,7 @@ describe('DRF-22: опубликованная страница', () => {
     });
   });
 
-  test('неожиданный HTTP 503 отклоняет операцию', async () => {
+  test('rejects an unexpected HTTP 503', async () => {
     const { course } = setup();
     server.use(
       http.get(
@@ -155,12 +155,14 @@ function taskSummaries(): TaskSummary[] {
 async function pageFor(id: Parameters<typeof loadPublishedPage>[0]) {
   const result = await loadPublishedPage(id);
 
-  if (result.status === 'not-found') throw new Error('Page denied');
+  if (result.status === 'not-found') {
+    throw new Error('Page denied');
+  }
 
   return result;
 }
 
-test('отмена остаётся отменой', async () => {
+test('preserves cancellation', async () => {
   const { course } = setup();
   const controller = new AbortController();
   controller.abort();
@@ -170,7 +172,7 @@ test('отмена остаётся отменой', async () => {
   ).rejects.toMatchObject({ name: 'AbortError' });
 });
 
-test('кэш саммари не переносит доступ между участниками', async () => {
+test('does not reuse cached summary access between participants', async () => {
   const { course, document } = setup();
   const vera = accessWorld.users.vera.id;
   const sasha = accessWorld.users.sasha.id;

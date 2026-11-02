@@ -26,7 +26,7 @@ function RouteComponent() {
     refetch,
   } = useCoursePageQuery(confirmed.id);
 
-  if (isError)
+  if (isError) {
     return (
       <div role="alert">
         Не удалось загрузить страницу{' '}
@@ -39,6 +39,7 @@ function RouteComponent() {
         </button>
       </div>
     );
+  }
 
   if (isPending) {
     return <CoursePageLoading />;
