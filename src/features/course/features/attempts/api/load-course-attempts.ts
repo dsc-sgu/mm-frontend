@@ -14,6 +14,7 @@ import {
   type CourseId,
 } from '@/features/course/model/identity';
 import { normalizeCourseAttemptsFilters } from '@/features/course/features/attempts/model/filters';
+
 const Timestamp = v.pipe(v.string(), v.isoTimestamp());
 const Task = v.object({
   id: TaskIdSchema,
@@ -45,10 +46,12 @@ const ResponseSchema = v.object({
     })
   ),
 });
+
 export type LoadCourseAttemptsInput = {
   courseId: CourseId;
   filters: ReturnType<typeof normalizeCourseAttemptsFilters>;
 };
+
 export function loadCourseAttempts(
   { courseId, filters }: LoadCourseAttemptsInput,
   signal?: AbortSignal
@@ -69,7 +72,9 @@ export function loadCourseAttempts(
       signal,
     },
     async (context) => {
-      if (context.response.status !== 200) throw unexpectedHttpStatus(context);
+      if (context.response.status !== 200) {
+        throw unexpectedHttpStatus(context);
+      }
       return readJson(context, ResponseSchema);
     }
   );

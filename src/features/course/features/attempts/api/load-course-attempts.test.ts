@@ -4,14 +4,18 @@ import { mockBackend, reviewWorld } from '@/app/mock-backend/state';
 import { server } from '@/app/mock-backend/node';
 import { loadCourseAttempts } from './load-course-attempts';
 import { courseAttemptsKeys } from './queries';
+
 const courseId = reviewWorld.courses.algorithms.id;
 const filters = { tasks: [], students: [], graded: 'any' } as const;
+
 const input = () => ({
   courseId,
   filters: { ...filters, tasks: [], students: [] },
 });
+
 beforeEach(() => mockBackend.reset('world:review'));
-test('ATT-04: список включает историю в порядке отправки и каталоги всего курса', async () => {
+
+test('ATT-04: includes history in submission order and course-wide catalogs', async () => {
   const result = await loadCourseAttempts(input());
   expect(result.attempts.map((a) => a.id)).toEqual([
     reviewWorld.attempts[1].id,
@@ -21,7 +25,8 @@ test('ATT-04: список включает историю в порядке о�
   expect(result.totalAttemptsCount).toBe(3);
   expect(result.students).toHaveLength(3);
 });
-test('ATT-02: один невалидный элемент отклоняет весь список', async () => {
+
+test('ATT-02: rejects the entire list when one item is invalid', async () => {
   server.use(
     http.get('/api/v1/courses/:courseId/attempts', () =>
       HttpResponse.json({
@@ -36,7 +41,8 @@ test('ATT-02: один невалидный элемент отклоняет в
     kind: 'invalid-response',
   });
 });
-test('ATT-01: порядок и дубликаты стабильных id не меняют ключ', () => {
+
+test('ATT-01: ID order and duplicates do not change the key', () => {
   const a = reviewWorld.users.sasha.id;
   const b = reviewWorld.users.petya.id;
   expect(
@@ -49,7 +55,7 @@ test('ATT-01: порядок и дубликаты стабильных id не 
   );
 });
 
-test('ATT-04: равное время упорядочено по AttemptId, фильтрация сохраняет каталоги', async () => {
+test('ATT-04: breaks timestamp ties by AttemptId and preserves catalogs when filtered', async () => {
   mockBackend.state.attempts.forEach((attempt) => {
     attempt.submittedAt = '2026-05-22T09:00:00.000Z';
   });
@@ -65,7 +71,8 @@ test('ATT-04: равное время упорядочено по AttemptId, ф�
   expect(filtered.students).toHaveLength(3);
   expect(filtered.totalAttemptsCount).toBe(3);
 });
-test('отмена остаётся отменой', async () => {
+
+test('preserves cancellation', async () => {
   const controller = new AbortController();
   controller.abort();
   await expect(

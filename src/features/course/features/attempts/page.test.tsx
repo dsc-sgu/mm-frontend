@@ -5,7 +5,7 @@ import { renderRoutes } from '@/app/testing/render-routes';
 import { attemptsPageQueries } from '@/features/course/features/attempts/api/queries';
 import { reviewWorld } from '@/app/mock-backend/state';
 
-test('маршрут предзагружает все чтения списка до монтирования страницы', async () => {
+test('the route preloads every list read before mounting the page', async () => {
   mockBackend.reset('world:review');
   const { router, queryClient } = renderRoutes([], '/courses/algorithms', {
     appRoutes: true,

@@ -9,7 +9,9 @@ import type { SaveQuickGradesInput } from '@/features/course/features/attempts/m
 export const courseAttemptsHandlers = [
   http.get('/api/v1/courses/:courseId/attempts', ({ params, request }) => {
     const state = mockBackend.state;
-    if (!state.session) return new HttpResponse(null, { status: 401 });
+    if (!state.session) {
+      return new HttpResponse(null, { status: 401 });
+    }
     if (
       !state.memberships.some(
         (m) =>
@@ -17,13 +19,18 @@ export const courseAttemptsHandlers = [
           m.userId === state.session?.userId &&
           m.role === 'teacher'
       )
-    )
+    ) {
       return new HttpResponse(null, { status: 403 });
+    }
+
     const ref = (id: string) => {
       const user = state.users.find((u) => u.id === id);
-      if (!user) throw new Error('Missing mock User');
+      if (!user) {
+        throw new Error('Missing mock User');
+      }
       return { id: user.id, username: user.username, ...mockUserName(user) };
     };
+
     const tasks = state.tasks
       .filter((t) => t.courseId === params.courseId)
       .map((t) => ({ ...t, maxGrade: gradeToNumber(t.maxGrade) }));
@@ -39,7 +46,9 @@ export const courseAttemptsHandlers = [
       )
       .map((a) => {
         const task = tasks.find((t) => t.id === a.taskId);
-        if (!task) throw new Error('Missing mock Task');
+        if (!task) {
+          throw new Error('Missing mock Task');
+        }
         const review = state.reviews.find(
           (r) => r.attemptId === a.id
         )?.revision;
@@ -76,12 +85,14 @@ export const courseAttemptsHandlers = [
     });
   }),
 ];
+
 export function createMockReviewLockUpdates(
   _courseId: CourseId
 ): CourseAttemptReviewLockUpdate[] {
   void _courseId;
   return [];
 }
+
 export async function saveQuickGrades({
   courseId,
   updates,
@@ -90,7 +101,9 @@ export async function saveQuickGrades({
     const attempt = mockBackend.state.attempts.find(
       (a) => a.courseId === courseId && a.id === update.attemptId
     );
-    if (!attempt) throw new Error('Missing mock Attempt');
+    if (!attempt) {
+      throw new Error('Missing mock Attempt');
+    }
     const revision = mockBackend.state.reviews.find(
       (r) => r.attemptId === attempt.id
     )?.revision;
