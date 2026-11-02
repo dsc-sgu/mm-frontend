@@ -68,13 +68,23 @@ Members of the team do not open pull requests. Pull requests are for people with
 1. Start with `tk claim <id> && tk sync`: the claim is visible to others only once pushed. A wave claims all its tickets, then syncs once.
 2. Work on a branch off a fresh `origin/main` whose name holds the ticket id (`mm-228-review-draft`, `mm-218-wave2`), so `git branch -r --list '*mm-228*'` finds it; the ticket needs no note about the branch. Push the branch: CI checks every pushed branch (`gh run list --branch <branch>`).
 3. When CI passes, the ticket says what was done and what to check: `tk comment <id>` with the summary, like a PR description used to.
-4. The change lands as a fast-forward of `main`, without checking `main` out:
+4. Rebase the working branch onto a fresh `origin/main`:
 
    ```bash
-   git fetch origin && git rebase origin/main && git push origin HEAD:main
+   git fetch origin && git rebase origin/main
    ```
 
-   If the rebase changed anything, push the branch and wait for CI again first.
+   If the rebase changed any commits, push the working branch and wait for CI to pass for the new `HEAD` first.
+
+   Then fast-forward local `main` to the tested `HEAD` before pushing local `main` to the remote:
+
+   ```bash
+   git fetch . HEAD:refs/heads/main && git push origin main:main
+   ```
+
+   Here `git fetch .` reads from the current local repository. Without `+`, it only allows a fast-forward and refuses to overwrite a diverged `main`. This updates local `main` without switching the current worktree to it. After a successful push, local `main` and `origin/main` point to the same commit, keeping BB's diff base current.
+
+   If `main` is checked out in another worktree, respect Git's protection: in that worktree, with a clean working tree, run `git merge --ff-only <tested-sha>`, then `git push origin main:main`. If the histories diverge or the push is rejected, fetch and resolve the divergence without force. Rerun CI if the commits to be pushed change.
 
 5. Close the tickets with `tk close <id> --reason completed` and run `tk sync`, then delete the branch: `git push origin --delete <branch>`.
 
