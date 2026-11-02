@@ -67,15 +67,11 @@ export function validateCourseAttemptsSearch(
 export function filtersFromCourseAttemptsSearch(
   search: CourseAttemptsRouteSearch
 ): CourseAttemptsFilters {
-  return {
-    tasks: normalizeTokenList(search.tasks).map((id) =>
-      v.parse(TaskIdSchema, id)
-    ),
-    students: normalizeTokenList(search.students)
-      .filter((id) => v.is(UserIdSchema, id))
-      .map((id) => v.parse(UserIdSchema, id)),
-    graded: normalizeGraded(search.graded),
-  };
+  return normalizeCourseAttemptsFilters({
+    tasks: normalizeTokenList(search.tasks),
+    students: normalizeTokenList(search.students),
+    graded: search.graded,
+  });
 }
 
 export function searchFromCourseAttemptsFilters(

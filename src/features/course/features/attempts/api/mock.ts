@@ -2,7 +2,8 @@ import { gradeToNumber } from '@/features/course/model/grade';
 import { saveReview } from '@/features/course/features/review/api/mock';
 import { http, HttpResponse } from 'msw';
 import { mockBackend, mockUserName } from '@/app/mock-backend/state';
-import type { CourseId } from '@/features/course/model/identity';
+import type { UserId } from '@/features/auth/model/identity';
+import type { AttemptId, CourseId } from '@/features/course/model/identity';
 import type { CourseAttemptReviewLockUpdate } from '@/features/course/features/attempts/model/lock-updates';
 import type { SaveQuickGradesInput } from '@/features/course/features/attempts/model/types';
 
@@ -12,14 +13,15 @@ export const courseAttemptsHandlers = [
     if (!state.session) {
       return new HttpResponse(null, { status: 401 });
     }
-    if (
-      !state.memberships.some(
-        (m) =>
-          m.courseId === params.courseId &&
-          m.userId === state.session?.userId &&
-          m.role === 'teacher'
-      )
-    ) {
+    const course = state.courses.find(({ id }) => id === params.courseId);
+    const membership = state.memberships.find(
+      ({ courseId, userId }) =>
+        courseId === course?.id && userId === state.session?.userId
+    );
+    if (!course || !membership) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    if (membership.role !== 'teacher') {
       return new HttpResponse(null, { status: 403 });
     }
 
@@ -96,7 +98,10 @@ export function createMockReviewLockUpdates(
 export async function saveQuickGrades({
   courseId,
   updates,
-}: SaveQuickGradesInput): Promise<void> {
+}: SaveQuickGradesInput): Promise<
+  Array<{ attemptId: AttemptId; taskId: string; studentId: UserId }>
+> {
+  const saved = [];
   for (const update of updates) {
     const attempt = mockBackend.state.attempts.find(
       (a) => a.courseId === courseId && a.id === update.attemptId
@@ -114,5 +119,11 @@ export async function saveQuickGrades({
       overallFeedbackHtml: revision?.overallFeedbackHtml ?? '',
       comments: revision?.comments ?? [],
     });
+    saved.push({
+      attemptId: attempt.id,
+      taskId: attempt.taskId,
+      studentId: attempt.studentId,
+    });
   }
+  return saved;
 }

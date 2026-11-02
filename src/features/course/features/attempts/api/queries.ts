@@ -1,3 +1,6 @@
+import { attemptReviewKeys } from '@/features/course/features/attempt-review/api/keys';
+import { reviewKeys } from '@/features/course/features/review/api/keys';
+import { taskKeys } from '@/features/course/features/task/api/queries';
 import { loadCourseAttempts } from './load-course-attempts';
 import { normalizeCourseAttemptsFilters } from '@/features/course/features/attempts/model/filters';
 import {
@@ -66,10 +69,26 @@ export function useSaveQuickGradesMutation() {
 
   return useMutation({
     mutationFn: (input: SaveQuickGradesInput) => saveQuickGrades(input),
-    onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: courseKeys.byId(variables.courseId),
-      });
+    onSuccess: async (saved, { courseId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: courseAttemptsKeys.course(courseId),
+        }),
+        ...saved.flatMap(({ attemptId, taskId, studentId }) => [
+          queryClient.invalidateQueries({
+            queryKey: reviewKeys.attempt(courseId, attemptId),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: attemptReviewKeys.summaries(courseId, attemptId),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: attemptReviewKeys.student(courseId, taskId, studentId),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: taskKeys.student(courseId, taskId, studentId),
+          }),
+        ]),
+      ]);
     },
   });
 }

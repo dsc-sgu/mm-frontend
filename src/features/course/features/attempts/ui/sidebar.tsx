@@ -187,9 +187,9 @@ export function AttemptsFiltersContent({
           context={filterSectionContext}
           search={studentSearch}
           students={visibleStudents}
-          selectedStudentUsernames={draftFilters.students}
+          selectedStudentIds={draftFilters.students}
           onSearchChange={setStudentSearch}
-          onSelectedStudentUsernamesChange={(students) =>
+          onSelectedStudentIdsChange={(students) =>
             onDraftFiltersChange({
               ...draftFilters,
               students,
@@ -380,16 +380,16 @@ function StudentsFilterSection({
   context,
   search,
   students,
-  selectedStudentUsernames,
+  selectedStudentIds,
   onSearchChange,
-  onSelectedStudentUsernamesChange,
+  onSelectedStudentIdsChange,
 }: {
   context: FilterSectionContext;
   search: string;
   students: CourseAttempt['student'][];
-  selectedStudentUsernames: string[];
+  selectedStudentIds: string[];
   onSearchChange: (search: string) => void;
-  onSelectedStudentUsernamesChange: (studentUsernames: string[]) => void;
+  onSelectedStudentIdsChange: (studentIds: string[]) => void;
 }) {
   const { idPrefix, loading, filterActionsDisabled, variant } = context;
 
@@ -408,10 +408,10 @@ function StudentsFilterSection({
           size="xs"
           disabled={
             filterActionsDisabled ||
-            (selectedStudentUsernames.length === 0 && search.length === 0)
+            (selectedStudentIds.length === 0 && search.length === 0)
           }
           onClick={() => {
-            onSelectedStudentUsernamesChange([]);
+            onSelectedStudentIdsChange([]);
             onSearchChange('');
           }}
         >
@@ -429,18 +429,18 @@ function StudentsFilterSection({
           label: `${formatFullName(student)} · `,
         }))}
         selectedOptions={context.students
-          .filter((student) => selectedStudentUsernames.includes(student.id))
+          .filter((student) => selectedStudentIds.includes(student.id))
           .map((student) => ({
             value: student.id,
             label: `${formatFullName(student)} · `,
           }))}
-        selectedValues={selectedStudentUsernames}
+        selectedValues={selectedStudentIds}
         loading={loading}
         listClassName={
           variant === 'drawer' ? 'max-h-[clamp(8rem,24dvh,12rem)]' : 'max-h-56'
         }
         onSearchChange={onSearchChange}
-        onSelectedValuesChange={onSelectedStudentUsernamesChange}
+        onSelectedValuesChange={onSelectedStudentIdsChange}
       />
     </section>
   );

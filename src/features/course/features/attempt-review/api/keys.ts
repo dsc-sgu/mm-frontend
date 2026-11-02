@@ -17,12 +17,10 @@ export const attemptReviewKeys = {
     [...courseKeys.byId(courseId), 'attempt-review'] as const,
   attempt: (courseId: CourseId, attemptId: AttemptId) =>
     [...attemptReviewKeys.course(courseId), 'attempt', attemptId] as const,
+  summaries: (courseId: CourseId, attemptId: AttemptId) =>
+    [...attemptReviewKeys.attempt(courseId, attemptId), 'summary'] as const,
   summary: (viewerId: UserId, courseId: CourseId, attemptId: AttemptId) =>
-    [
-      ...attemptReviewKeys.attempt(courseId, attemptId),
-      'summary',
-      viewerId,
-    ] as const,
+    [...attemptReviewKeys.summaries(courseId, attemptId), viewerId] as const,
   material: (viewerId: UserId, courseId: CourseId, attemptId: AttemptId) =>
     [
       ...attemptReviewKeys.attempt(courseId, attemptId),
