@@ -5,7 +5,7 @@ import {
   runHttpOperation,
   unexpectedHttpStatus,
 } from '@/app/remote-data/http';
-import { UsernameSchema } from '@/features/auth/model/identity';
+import { UserRefSchema } from '@/features/auth/model/user-ref';
 import {
   readResourceDenial,
   type ResourceDenial,
@@ -23,13 +23,6 @@ import {
   CourseColorSchema,
   CourseIconNameSchema,
 } from '@/features/course/model/types';
-
-const TeacherSchema = v.object({
-  username: UsernameSchema,
-  firstName: v.string(),
-  lastName: v.string(),
-  patronymic: v.optional(v.nullable(v.string())),
-});
 
 const ResourceSchema = v.object({
   images: v.array(v.object({ id: v.string(), src: v.string() })),
@@ -89,7 +82,7 @@ const PublishedPageSchema = v.intersect([
     description: v.string(),
     color: CourseColorSchema,
     iconName: CourseIconNameSchema,
-    teachers: v.array(TeacherSchema),
+    teachers: v.array(UserRefSchema),
     resources: ResourceSchema,
     blocks: v.array(PublishedBlockSchema),
   }),

@@ -79,6 +79,29 @@ test('preloading the Course route starts every published Page read without navig
   expect(router.state.location.pathname).toBe('/');
 });
 
+test('preloading the Course edit route starts every published Page read without navigating', async () => {
+  const { queryClient, router } = renderRoutes([], '/', { appRoutes: true });
+  const queries = coursePageQueries({
+    courseId: DATABASES_ID,
+    viewerId: accessWorld.users.vera.id,
+    role: 'teacher',
+  });
+
+  await router.preloadRoute({
+    to: '/courses/$courseSlug/edit',
+    params: { courseSlug: accessWorld.courses.databases.slug },
+  });
+
+  await waitFor(() =>
+    expect(queryClient.getQueryState(queries.published.queryKey)).toMatchObject(
+      {
+        status: 'success',
+      }
+    )
+  );
+  expect(router.state.location.pathname).toBe('/');
+});
+
 describe('ACC-10: confirmed Course context controls the real shell', () => {
   test('a first held lookup renders neutral loading at the requested URL', async () => {
     const held = holdResponse();

@@ -60,15 +60,14 @@ export function useSaveCoursePageMutation() {
     mutationFn: (variables: SaveCoursePageVariables) =>
       saveCoursePage(variables),
     onSuccess: async (savedPage, variables) => {
-      queryClient.setQueryData(
-        coursePageKeys.detail(
-          variables.courseId,
-          variables.viewerId,
-          variables.role
-        ),
-        { status: 'found', page: savedPage }
-      );
       await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: coursePageKeys.detail(
+            variables.courseId,
+            variables.viewerId,
+            variables.role
+          ),
+        }),
         queryClient.invalidateQueries({ queryKey: coursesKeys.all }),
         queryClient.invalidateQueries({ queryKey: deadlinesKeys.all }),
         invalidateCourseContextsAfterMetadataSave(

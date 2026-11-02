@@ -29,6 +29,7 @@ function validDto() {
   return {
     ...page,
     viewerRole: 'student',
+    teachers: [accessWorld.users.anna],
     blocks,
     taskSummaries: [{ status: 'open', taskId: '1', title: 'Открытое задание' }],
   };
@@ -126,6 +127,19 @@ describe('DRF-22: published Course Page reading', () => {
     await expect(loadPublishedCoursePage(COURSE.id)).rejects.toMatchObject({
       name: 'OperationFailure',
       kind: 'invalid-response',
+    });
+  });
+
+  it('rejects an unexpected HTTP status', async () => {
+    server.use(
+      http.get(URL, () =>
+        HttpResponse.json({ message: 'Unavailable' }, { status: 503 })
+      )
+    );
+
+    await expect(loadPublishedCoursePage(COURSE.id)).rejects.toMatchObject({
+      name: 'OperationFailure',
+      kind: 'unexpected-http-status',
     });
   });
 

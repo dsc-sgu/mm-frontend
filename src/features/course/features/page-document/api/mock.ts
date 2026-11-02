@@ -154,7 +154,15 @@ export const publishedCoursePageHandlers = [
       description: page.description,
       color: page.color,
       iconName: page.iconName,
-      teachers: page.teachers,
+      teachers: page.teachers.map((teacher) => {
+        const user = users.find(
+          ({ username }) => username === teacher.username
+        );
+        if (!user) {
+          throw new Error(`Unknown Teacher fixture: ${teacher.username}`);
+        }
+        return user;
+      }),
       resources: page.resources,
       viewerRole: membership.role,
       blocks,
