@@ -46,9 +46,11 @@ test('REV-17: renders marks and nested lists without HTML', () => {
   expect(container.querySelector('strong')?.textContent).toBe('<img src=x>');
   expect(container.querySelector('s')?.textContent).toBe('<img src=x>');
   expect(screen.getByText('<img src=x>')).toBeTruthy();
+
   const link = screen.getByRole('link', { name: 'Источник' });
   expect(link.getAttribute('target')).toBe('_blank');
   expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+
   expect(container.querySelectorAll('ol')).toHaveLength(1);
   expect(container.querySelectorAll('ol > li')).toHaveLength(2);
   expect(container.querySelector('ol > li > ul > li')?.textContent).toBe(

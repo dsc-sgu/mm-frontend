@@ -3,7 +3,10 @@ import { useState, useRef } from 'react';
 import { useEditorRef } from 'platejs/react';
 import { upsertLink, unwrapLink } from '@platejs/link';
 import { toggleList } from '@platejs/list';
-import { isSafeReviewHref } from '@/features/course/model/links';
+import {
+  transitionLinkDialog,
+  type LinkDialogState,
+} from '@/features/course/features/attempt-review/model/link-dialog';
 import { Button } from '@/shadcn/components/ui/button';
 import { Input } from '@/shadcn/components/ui/input';
 import {
@@ -12,14 +15,10 @@ import {
   DialogTitle,
 } from '@/shadcn/components/ui/dialog';
 
-type LinkState =
-  | { status: 'closed' }
-  | { status: 'open'; url: string; error: string | null };
-
 export function RichTextEditorToolbar() {
   const editor = useEditorRef();
   const savedSelection = useRef(editor.selection);
-  const [link, setLink] = useState<LinkState>({ status: 'closed' });
+  const [link, setLink] = useState<LinkDialogState>({ status: 'closed' });
 
   return (
     <div
@@ -109,7 +108,9 @@ export function RichTextEditorToolbar() {
         variant="ghost"
         size="sm"
         onMouseDown={(event) => event.preventDefault()}
-        onClick={() => setLink({ status: 'open', url: '', error: null })}
+        onClick={() =>
+          setLink((current) => transitionLinkDialog(current, { type: 'open' }))
+        }
       >
         Ссылка
       </Button>
@@ -129,7 +130,9 @@ export function RichTextEditorToolbar() {
         open={link.status === 'open'}
         onOpenChange={(open) => {
           if (!open) {
-            setLink({ status: 'closed' });
+            setLink((current) =>
+              transitionLinkDialog(current, { type: 'close' })
+            );
           }
         }}
       >
@@ -145,16 +148,12 @@ export function RichTextEditorToolbar() {
               onSubmit={(event) => {
                 event.preventDefault();
 
-                if (!isSafeReviewHref(link.url)) {
-                  setLink({
-                    ...link,
-                    error: 'Введите http, https или путь от корня сайта',
-                  });
-                  return;
-                }
+                const next = transitionLinkDialog(link, { type: 'submit' });
+                setLink(next);
 
-                upsertLink(editor, { url: link.url, skipValidation: true });
-                setLink({ status: 'closed' });
+                if (next.status === 'closed') {
+                  upsertLink(editor, { url: link.url, skipValidation: true });
+                }
               }}
             >
               <label htmlFor="review-link">Адрес ссылки</label>
@@ -163,9 +162,12 @@ export function RichTextEditorToolbar() {
                 value={link.url}
                 aria-invalid={Boolean(link.error)}
                 aria-describedby={link.error ? 'review-link-error' : undefined}
-                onChange={(event) =>
-                  setLink({ ...link, url: event.target.value, error: null })
-                }
+                onChange={(event) => {
+                  const url = event.target.value;
+                  setLink((current) =>
+                    transitionLinkDialog(current, { type: 'change-url', url })
+                  );
+                }}
               />
               {link.error && (
                 <p id="review-link-error" role="alert">

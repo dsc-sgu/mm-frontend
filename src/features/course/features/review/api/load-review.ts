@@ -1,7 +1,4 @@
-import {
-  NonemptyReviewTextSchema,
-  isReviewTextEmpty,
-} from '@/features/course/features/review/model/text-document';
+import { NonemptyReviewTextSchema } from '@/features/course/features/review/model/text-document';
 import * as v from 'valibot';
 import { apiPath } from '@/app/remote-data/api-path';
 import {
@@ -41,20 +38,14 @@ const ReviewResultSchema = v.variant('status', [
           author: UserRefSchema,
           filePath: v.string(),
           range: v.object({ start: DiffLineSchema, end: DiffLineSchema }),
-          text: v.pipe(
-            NonemptyReviewTextSchema,
-            v.check((document) => !isReviewTextEmpty(document))
-          ),
+          text: NonemptyReviewTextSchema,
           createdAt: v.pipe(v.string(), v.isoTimestamp()),
           updatedAt: v.pipe(v.string(), v.isoTimestamp()),
           replies: v.array(
             v.object({
               id: v.string(),
               author: UserRefSchema,
-              text: v.pipe(
-                NonemptyReviewTextSchema,
-                v.check((document) => !isReviewTextEmpty(document))
-              ),
+              text: NonemptyReviewTextSchema,
               createdAt: v.pipe(v.string(), v.isoTimestamp()),
               updatedAt: v.pipe(v.string(), v.isoTimestamp()),
             })

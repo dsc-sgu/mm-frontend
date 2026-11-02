@@ -136,6 +136,7 @@ export async function saveReview(input: SaveReviewInput): Promise<void> {
   const now = new Date().toISOString();
   const comments = input.comments.map((comment): MockReviewComment => {
     v.parse(NonemptyReviewTextSchema, comment.text);
+
     const saved = previousComments.get(comment.id);
     return {
       ...comment,

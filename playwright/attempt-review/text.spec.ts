@@ -1,22 +1,25 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const URL =
   '/courses/modern-information-technologies/tasks/1/attempts/student/2/review';
 
-test('REV-16: paste sanitizes HTML and preserves plain text without links', async ({
-  page,
-}) => {
-  test.slow();
-
+async function openEmptyReviewEditor(page: Page) {
   await page.goto(URL);
 
   const editor = page.locator('[contenteditable="true"]').first();
-
   await expect(editor).toBeVisible({ timeout: 30000 });
 
   await editor.click();
   await editor.press('ControlOrMeta+a');
   await editor.press('Backspace');
+
+  return editor;
+}
+
+test('REV-16: paste sanitizes HTML', async ({ page }) => {
+  test.slow();
+
+  const editor = await openEmptyReviewEditor(page);
 
   await editor.evaluate((element) => {
     const data = new DataTransfer();
@@ -28,15 +31,18 @@ test('REV-16: paste sanitizes HTML and preserves plain text without links', asyn
     Object.defineProperty(event, 'clipboardData', { value: data });
     element.dispatchEvent(event);
   });
+
   await expect(editor).toContainText('Первый жирный');
   await expect(editor).toContainText('Второй');
   await expect(editor.locator('strong')).toHaveText('жирный');
   await expect(editor.locator('img,script,style,h1')).toHaveCount(0);
   await expect(editor).not.toContainText('bad()');
+});
 
-  await editor.click();
-  await editor.press('ControlOrMeta+a');
-  await editor.press('Backspace');
+test('REV-16: paste preserves plain text without links', async ({ page }) => {
+  test.slow();
+
+  const editor = await openEmptyReviewEditor(page);
 
   await editor.evaluate((element) => {
     const data = new DataTransfer();
@@ -45,6 +51,7 @@ test('REV-16: paste sanitizes HTML and preserves plain text without links', asyn
     Object.defineProperty(event, 'clipboardData', { value: data });
     element.dispatchEvent(event);
   });
+
   await expect(editor).toContainText('https://example.com');
   await expect(editor.locator('a,[data-slate-type="a"]')).toHaveCount(0);
 });
