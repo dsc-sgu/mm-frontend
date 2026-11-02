@@ -20,6 +20,7 @@ import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
 import type { CoursePage } from '@/features/course/features/page/model/types';
 import type { CourseId, CourseSlug } from '@/features/course/model/identity';
+import type { UserId } from '@/features/auth/model/identity';
 
 import styles from './page.module.css';
 
@@ -209,19 +210,24 @@ function CoursePageEditLoaded({
 export function CoursePageEditPage({
   courseId,
   courseSlug,
+  viewerId,
 }: {
   courseId: CourseId;
   courseSlug: CourseSlug;
+  viewerId: UserId;
 }) {
   const {
     data: course,
     isPending,
     isError,
+    isFetching,
+    errorUpdatedAt,
     refetch,
-  } = useCoursePageQuery(courseId);
+  } = useCoursePageQuery({ courseId, viewerId });
 
-  if (isError) {
-    return <CoursePageLoadError onRetry={refetch} />;
+  // A no-data retry resets Query to pending; keep the failure screen visible.
+  if (isError || (isPending && errorUpdatedAt > 0)) {
+    return <CoursePageLoadError isRetrying={isFetching} onRetry={refetch} />;
   }
 
   if (isPending) {

@@ -265,7 +265,10 @@ test('saved Course metadata replaces the confirmed Header title without changing
   });
   await screen.findByRole('heading', { name: 'Базы данных' });
   const page = await queryClient.ensureQueryData(
-    coursePageQueryOptions(DATABASES_ID, accessWorld.users.vera.id)
+    coursePageQueryOptions({
+      courseId: DATABASES_ID,
+      viewerId: accessWorld.users.vera.id,
+    })
   );
   if (!page || page.status === 'not-found') {
     throw new Error('The Course fixture has no published Page');
@@ -299,7 +302,10 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
   const { queryClient } = renderRoutes([], DATABASES_PATH, { appRoutes: true });
   await screen.findByRole('heading', { name: 'Базы данных' });
   const page = await queryClient.ensureQueryData(
-    coursePageQueryOptions(DATABASES_ID, accessWorld.users.vera.id)
+    coursePageQueryOptions({
+      courseId: DATABASES_ID,
+      viewerId: accessWorld.users.vera.id,
+    })
   );
   if (!page || page.status === 'not-found') {
     throw new Error('The Course fixture has no published Page');
@@ -325,7 +331,10 @@ test('saving a UUID-shaped slug rejects without changing Course metadata or its 
 
   await expect(
     queryClient.fetchQuery(
-      coursePageQueryOptions(DATABASES_ID, accessWorld.users.vera.id)
+      coursePageQueryOptions({
+        courseId: DATABASES_ID,
+        viewerId: accessWorld.users.vera.id,
+      })
     )
   ).resolves.toMatchObject({ courseId: DATABASES_ID, title: 'Базы данных' });
   await queryClient.invalidateQueries();
@@ -542,7 +551,10 @@ test.each(['/courses/$courseSlug', '/courses/$courseSlug/edit'] as const)(
       params: { courseSlug: accessWorld.courses.databases.slug },
     });
 
-    const queries = coursePageQueries(DATABASES_ID, accessWorld.users.vera.id);
+    const queries = coursePageQueries({
+      courseId: DATABASES_ID,
+      viewerId: accessWorld.users.vera.id,
+    });
     for (const query of Object.values(queries)) {
       await waitFor(() =>
         expect(queryClient.getQueryState(query.queryKey)?.status).toBe(

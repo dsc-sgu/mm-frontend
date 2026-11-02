@@ -197,10 +197,14 @@ test('does not reuse cached summary access between participants', async () => {
   ];
 
   const client = createQueryClient();
-  const first = await client.query(coursePageQueryOptions(course.id, vera));
+  const first = await client.query(
+    coursePageQueryOptions({ courseId: course.id, viewerId: vera })
+  );
 
   mockBackend.state.session = { userId: sasha, expiresAt: SESSION_EXPIRES_AT };
-  const second = await client.query(coursePageQueryOptions(course.id, sasha));
+  const second = await client.query(
+    coursePageQueryOptions({ courseId: course.id, viewerId: sasha })
+  );
 
   expect(first.status === 'found' && first.taskSummaries[0].status).toBe(
     'open'
@@ -209,7 +213,9 @@ test('does not reuse cached summary access between participants', async () => {
     'locked'
   );
   expect(
-    client.getQueryData(coursePageQueryOptions(course.id, vera).queryKey)
+    client.getQueryData(
+      coursePageQueryOptions({ courseId: course.id, viewerId: vera }).queryKey
+    )
   ).toEqual(first);
 
   client.clear();

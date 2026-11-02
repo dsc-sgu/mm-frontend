@@ -9,26 +9,31 @@ import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authenticated/courses/$courseSlug/')({
   loader: ({ context }) => {
-    prefetchCoursePage(
-      context.queryClient,
-      context.course.id,
-      context.session.userId
-    );
+    prefetchCoursePage(context.queryClient, {
+      courseId: context.course.id,
+      viewerId: context.session.userId,
+    });
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { course: confirmed, courseSlug } = Route.useRouteContext();
+  const { course: confirmed, courseSlug, session } = Route.useRouteContext();
   const {
     data: course,
     isPending,
     isError,
+    isFetching,
+    errorUpdatedAt,
     refetch,
-  } = useCoursePageQuery(confirmed.id);
+  } = useCoursePageQuery({
+    courseId: confirmed.id,
+    viewerId: session.userId,
+  });
 
-  if (isError) {
-    return <CoursePageLoadError onRetry={refetch} />;
+  // A no-data retry resets Query to pending; keep the failure screen visible.
+  if (isError || (isPending && errorUpdatedAt > 0)) {
+    return <CoursePageLoadError isRetrying={isFetching} onRetry={refetch} />;
   }
 
   if (isPending) {

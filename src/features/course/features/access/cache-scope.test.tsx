@@ -89,7 +89,10 @@ async function loadVeraCaches(queryClient: QueryClient) {
     queryClient.query(courseContextOptions(vera.id, databases.slug)),
     queryClient.query(coursesQueryOptions(vera.id)),
     queryClient.query(
-      coursePageQueryOptions(databases.id, accessWorld.users.vera.id)
+      coursePageQueryOptions({
+        courseId: databases.id,
+        viewerId: accessWorld.users.vera.id,
+      })
     ),
   ]);
   expect(sessionBoundQueries(queryClient)).toHaveLength(3);
@@ -205,7 +208,10 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
     const queryClient = createQueryClient();
     try {
       const page = await queryClient.query(
-        coursePageQueryOptions(databases.id, accessWorld.users.vera.id)
+        coursePageQueryOptions({
+          courseId: databases.id,
+          viewerId: accessWorld.users.vera.id,
+        })
       );
       expect(page).toMatchObject({ title: 'Базы данных' });
 
@@ -236,7 +242,10 @@ describe('ACC-07: course-scoped operations and keys address CourseId', () => {
       // The RAM Page addresses the same CourseId the lookup returned.
       await expect(
         queryClient.query({
-          ...coursePageQueryOptions(databases.id, accessWorld.users.vera.id),
+          ...coursePageQueryOptions({
+            courseId: databases.id,
+            viewerId: accessWorld.users.vera.id,
+          }),
           staleTime: 0,
         })
       ).resolves.toMatchObject({ title: 'Базы данных' });
@@ -316,10 +325,16 @@ describe('a confirmed Membership loss', () => {
     try {
       await queryClient.query(courseContextOptions(vera.id, algorithms.slug));
       await queryClient.query(
-        coursePageQueryOptions(algorithms.id, accessWorld.users.vera.id)
+        coursePageQueryOptions({
+          courseId: algorithms.id,
+          viewerId: accessWorld.users.vera.id,
+        })
       );
       await queryClient.query(
-        coursePageQueryOptions(databases.id, accessWorld.users.vera.id)
+        coursePageQueryOptions({
+          courseId: databases.id,
+          viewerId: accessWorld.users.vera.id,
+        })
       );
       mockBackend.state.memberships = mockBackend.state.memberships.filter(
         ({ courseId, userId }) =>
@@ -355,7 +370,10 @@ describe('a confirmed Membership loss', () => {
     try {
       await queryClient.query(courseContextOptions(vera.id, algorithms.slug));
       await queryClient.query(
-        coursePageQueryOptions(algorithms.id, accessWorld.users.vera.id)
+        coursePageQueryOptions({
+          courseId: algorithms.id,
+          viewerId: accessWorld.users.vera.id,
+        })
       );
       mockBackend.state.courses = mockBackend.state.courses.filter(
         ({ id }) => id !== algorithms.id

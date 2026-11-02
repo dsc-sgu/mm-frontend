@@ -1,10 +1,8 @@
 import {
   queryOptions,
   useQuery,
-  useSuspenseQuery,
   type QueryClient,
 } from '@tanstack/react-query';
-import { sessionOptions } from '@/features/auth/api/queries';
 import type { UserId } from '@/features/auth/model/identity';
 import { courseKeys } from '@/features/course/api/queries';
 import type { CourseId } from '@/features/course/model/identity';
@@ -17,7 +15,15 @@ export const coursePageKeys = {
     [...courseKeys.byId(courseId), 'page', viewerId] as const,
 };
 
-export function coursePageQueryOptions(courseId: CourseId, viewerId: UserId) {
+export type CoursePageQueryInput = {
+  courseId: CourseId;
+  viewerId: UserId;
+};
+
+export function coursePageQueryOptions({
+  courseId,
+  viewerId,
+}: CoursePageQueryInput) {
   return queryOptions({
     queryKey: coursePageKeys.detail(courseId, viewerId),
     queryFn: ({ signal }) => loadPublishedPage(courseId, signal),
@@ -27,27 +33,17 @@ export function coursePageQueryOptions(courseId: CourseId, viewerId: UserId) {
   });
 }
 
-export function useCoursePageQuery(courseId: CourseId) {
-  const { data: session } = useSuspenseQuery(sessionOptions);
-
-  if (session.status !== 'authorized') {
-    throw new Error('Authorized session required');
-  }
-
-  const viewerId = session.session.userId;
-  return useQuery(coursePageQueries(courseId, viewerId).document);
+export function useCoursePageQuery(input: CoursePageQueryInput) {
+  return useQuery(coursePageQueries(input).document);
 }
 
-export function coursePageQueries(courseId: CourseId, viewerId: UserId) {
-  return { document: coursePageQueryOptions(courseId, viewerId) };
+export function coursePageQueries(input: CoursePageQueryInput) {
+  return { document: coursePageQueryOptions(input) };
 }
 
 export function prefetchCoursePage(
   client: QueryClient,
-  courseId: CourseId,
-  viewerId: UserId
+  input: CoursePageQueryInput
 ) {
-  void client
-    .query(coursePageQueries(courseId, viewerId).document)
-    .catch(() => {});
+  void client.query(coursePageQueries(input).document).catch(() => {});
 }

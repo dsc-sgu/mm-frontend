@@ -16,17 +16,22 @@ export const Route = createFileRoute(
     },
   },
   loader: ({ context }) => {
-    prefetchCoursePage(
-      context.queryClient,
-      context.course.id,
-      context.session.userId
-    );
+    prefetchCoursePage(context.queryClient, {
+      courseId: context.course.id,
+      viewerId: context.session.userId,
+    });
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { course, courseSlug } = Route.useRouteContext();
+  const { course, courseSlug, session } = Route.useRouteContext();
 
-  return <CoursePageEditPage courseId={course.id} courseSlug={courseSlug} />;
+  return (
+    <CoursePageEditPage
+      courseId={course.id}
+      courseSlug={courseSlug}
+      viewerId={session.userId}
+    />
+  );
 }
