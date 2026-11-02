@@ -1,3 +1,4 @@
+import { CoursePageLoadError } from '@/features/course/features/page/ui/load-error';
 import { prefetchCoursePage } from '@/features/course/features/page-document/api/queries';
 import {
   CoursePage,
@@ -27,18 +28,7 @@ function RouteComponent() {
   } = useCoursePageQuery(confirmed.id);
 
   if (isError) {
-    return (
-      <div role="alert">
-        Не удалось загрузить страницу{' '}
-        <button
-          onClick={() => {
-            void refetch();
-          }}
-        >
-          Повторить
-        </button>
-      </div>
-    );
+    return <CoursePageLoadError onRetry={refetch} />;
   }
 
   if (isPending) {

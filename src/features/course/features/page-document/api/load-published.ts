@@ -113,9 +113,11 @@ export function loadPublishedPage(
       if (denial) {
         return denial;
       }
+
       if (context.response.status !== 200) {
         throw unexpectedHttpStatus(context);
       }
+
       return readJson(context, PublishedPageSchema);
     }
   );

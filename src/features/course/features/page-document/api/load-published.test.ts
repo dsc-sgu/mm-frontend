@@ -198,6 +198,7 @@ test('does not reuse cached summary access between participants', async () => {
 
   const client = createQueryClient();
   const first = await client.query(coursePageQueryOptions(course.id, vera));
+
   mockBackend.state.session = { userId: sasha, expiresAt: SESSION_EXPIRES_AT };
   const second = await client.query(coursePageQueryOptions(course.id, sasha));
 

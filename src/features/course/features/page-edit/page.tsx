@@ -1,3 +1,4 @@
+import { CoursePageLoadError } from '@/features/course/features/page/ui/load-error';
 import { editDocument } from '@/features/course/features/page-document/model/document';
 import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
@@ -220,18 +221,7 @@ export function CoursePageEditPage({
   } = useCoursePageQuery(courseId);
 
   if (isError) {
-    return (
-      <div role="alert">
-        Не удалось загрузить страницу{' '}
-        <button
-          onClick={() => {
-            void refetch();
-          }}
-        >
-          Повторить
-        </button>
-      </div>
-    );
+    return <CoursePageLoadError onRetry={refetch} />;
   }
 
   if (isPending) {

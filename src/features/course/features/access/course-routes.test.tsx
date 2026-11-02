@@ -529,20 +529,30 @@ function supportedContent(content: readonly unknown[]) {
   return result.blocks;
 }
 
-test('preloading the page starts every read without navigation', async () => {
-  const { router, queryClient } = renderRoutes([], ALGORITHMS_PATH, {
-    appRoutes: true,
-  });
-  await screen.findByRole('heading', { name: 'Алгоритмы' });
-  await router.preloadRoute({
-    to: '/courses/$courseSlug',
-    params: { courseSlug: accessWorld.courses.databases.slug },
-  });
-  const queries = coursePageQueries(DATABASES_ID, accessWorld.users.vera.id);
-  for (const query of Object.values(queries)) {
-    await waitFor(() =>
-      expect(queryClient.getQueryState(query.queryKey)?.status).toBe('success')
-    );
+test.each(['/courses/$courseSlug', '/courses/$courseSlug/edit'] as const)(
+  'preloading %s starts every read without navigation',
+  async (to) => {
+    const { router, queryClient } = renderRoutes([], ALGORITHMS_PATH, {
+      appRoutes: true,
+    });
+    await screen.findByRole('heading', { name: 'Алгоритмы' });
+
+    await router.preloadRoute({
+      to,
+      params: { courseSlug: accessWorld.courses.databases.slug },
+    });
+
+    const queries = coursePageQueries(DATABASES_ID, accessWorld.users.vera.id);
+    for (const query of Object.values(queries)) {
+      await waitFor(() =>
+        expect(queryClient.getQueryState(query.queryKey)?.status).toBe(
+          'success'
+        )
+      );
+    }
+
+    expect(screen.getByRole('heading', { name: 'Алгоритмы' })).toBeDefined();
+    expect(screen.queryByRole('heading', { name: 'Базы данных' })).toBeNull();
+    expect(router.history.location.href).toBe(ALGORITHMS_PATH);
   }
-  expect(router.history.location.href).toBe(ALGORITHMS_PATH);
-});
+);
