@@ -13,7 +13,7 @@ import {
   TaskIdSchema,
   type CourseId,
 } from '@/features/course/model/identity';
-import { normalizeCourseAttemptsFilters } from '@/features/course/features/attempts/model/filters';
+import type { normalizeCourseAttemptsFilters } from '@/features/course/features/attempts/model/filters';
 
 const Timestamp = v.pipe(v.string(), v.isoTimestamp());
 
@@ -58,15 +58,14 @@ export function loadCourseAttempts(
   { courseId, filters }: LoadCourseAttemptsInput,
   signal?: AbortSignal
 ) {
-  const normalized = normalizeCourseAttemptsFilters(filters);
   const url = new URL(
     apiPath('courses', courseId, 'attempts'),
     location.origin
   );
 
-  url.searchParams.set('tasks', normalized.tasks.join(','));
-  url.searchParams.set('students', normalized.students.join(','));
-  url.searchParams.set('status', normalized.graded);
+  url.searchParams.set('tasks', filters.tasks.join(','));
+  url.searchParams.set('students', filters.students.join(','));
+  url.searchParams.set('status', filters.graded);
 
   return runHttpOperation(
     {
