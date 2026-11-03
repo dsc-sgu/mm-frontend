@@ -16,11 +16,13 @@ import {
 import { normalizeCourseAttemptsFilters } from '@/features/course/features/attempts/model/filters';
 
 const Timestamp = v.pipe(v.string(), v.isoTimestamp());
+
 const Task = v.object({
   id: TaskIdSchema,
   title: v.string(),
   maxGrade: GradeSchema,
 });
+
 const ResponseSchema = v.object({
   totalAttemptsCount: v.pipe(v.number(), v.integer(), v.minValue(0)),
   tasks: v.array(Task),
@@ -61,9 +63,11 @@ export function loadCourseAttempts(
     apiPath('courses', courseId, 'attempts'),
     location.origin
   );
+
   url.searchParams.set('tasks', normalized.tasks.join(','));
   url.searchParams.set('students', normalized.students.join(','));
   url.searchParams.set('status', normalized.graded);
+
   return runHttpOperation(
     {
       name: 'load-course-attempts',
