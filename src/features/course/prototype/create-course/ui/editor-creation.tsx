@@ -5,7 +5,7 @@
 // `/courses/$courseSlug/edit`), where the content editor opens.
 import { useEffect, useEffectEvent, useState } from 'react';
 import { useBlocker } from '@tanstack/react-router';
-import { Check, FileText, Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -325,23 +325,8 @@ function CreationEditor() {
             />
           }
         />
-        {/* Content is edited only after creation: until then the Course
-            has no Page to hold images, files or Tasks. */}
-        <section
-          aria-label="Содержимое курса"
-          className={cn(
-            'mt-6 flex flex-col items-center gap-2 rounded-3xl border border-dashed',
-            'border-border px-6 py-12 text-center text-muted-foreground',
-            'md:-mx-12 md:mt-8 lg:-mx-10'
-          )}
-        >
-          <FileText className="size-8 opacity-60" aria-hidden="true" />
-          <p className="font-medium text-foreground">Содержимое курса</p>
-          <p className="max-w-md text-sm">
-            Материалы и задания можно будет добавить сразу после создания курса
-            — редактор откроется на этом же месте.
-          </p>
-        </section>
+        {/* Only the hero until creation: the content editor appears on
+            `/courses/$courseSlug/edit`, once the Course has a Page. */}
       </div>
       <CreationBar slug={slug} blocked={reserved || taken} />
       <PrototypeBarControls>
