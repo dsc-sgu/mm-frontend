@@ -1,5 +1,7 @@
 // PROTOTYPE mm-277: шесть компоновок создания курса на главной странице.
+// Вариант G окна не открывает: кнопка ведёт в редактор `/courses/new`.
 import { useEffect, useRef, type ReactNode } from 'react';
+import { Link } from '@tanstack/react-router';
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,12 +23,13 @@ import { Button } from '@/shadcn/components/ui/button';
 import { Input } from '@/shadcn/components/ui/input';
 import { useCreationPrototype } from '@/features/course/prototype/create-course/hooks/use-creation-prototype';
 import type { Scenario } from '@/features/course/prototype/create-course/model/creation';
+import { useEditorCreation } from '@/features/course/prototype/create-course/model/editor-creation';
 import { SHORT_TITLE_MAX_LENGTH } from '@/features/course/model/short-title';
 import { CharacterCount } from '@/features/course/ui/character-count';
 import styles from './creation.module.css';
 
 type Controller = ReturnType<typeof useCreationPrototype>;
-const variants = ['A', 'B', 'C', 'D', 'E', 'F'];
+const variants = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 const names: Record<string, string> = {
   A: 'Короткая форма',
   B: 'Сначала название',
@@ -34,6 +37,7 @@ const names: Record<string, string> = {
   D: 'Без подсказок',
   E: 'Название — заголовок',
   F: 'С иконкой',
+  G: 'Сразу редактор',
 };
 const scenarios: [Scenario, string][] = [
   ['success', 'Успешное создание'],
@@ -44,6 +48,8 @@ const scenarios: [Scenario, string][] = [
 ];
 
 function PrototypeBar({ control }: { control: Controller }) {
+  const editor = control.variant === 'G';
+  const editorScenario = useEditorCreation((state) => state.scenario);
   function cycle(direction: number) {
     control.setVariant(
       variants[
@@ -101,11 +107,16 @@ function PrototypeBar({ control }: { control: Controller }) {
       </div>
       <select
         aria-label="Сценарий прототипа"
-        value={control.scenario}
+        value={editor ? editorScenario : control.scenario}
         disabled={control.phase !== 'editing'}
-        onChange={(event) =>
-          control.setScenario(event.target.value as Scenario)
-        }
+        onChange={(event) => {
+          const next = event.target.value as Scenario;
+          if (editor) {
+            useEditorCreation.setState({ scenario: next });
+          } else {
+            control.setScenario(next);
+          }
+        }}
       >
         {scenarios.map(([value, name]) => (
           <option key={value} value={value}>
@@ -525,18 +536,26 @@ export function CreateCoursePrototype({
 }) {
   const control = useCreationPrototype();
   const openerRef = useRef<HTMLButtonElement | null>(null);
-  const trigger = (
-    <Button
-      variant="outline"
-      onClick={(event) => {
-        openerRef.current = event.currentTarget;
-        control.setOpen(true);
-      }}
-    >
-      <Plus />
-      Создать курс
-    </Button>
-  );
+  const trigger =
+    control.variant === 'G' ? (
+      <Button variant="outline" asChild>
+        <Link to="/courses/new">
+          <Plus />
+          Создать курс
+        </Link>
+      </Button>
+    ) : (
+      <Button
+        variant="outline"
+        onClick={(event) => {
+          openerRef.current = event.currentTarget;
+          control.setOpen(true);
+        }}
+      >
+        <Plus />
+        Создать курс
+      </Button>
+    );
   const emptyState = (
     <div className={styles.empty}>
       <div className={styles.emptyIcon}>
@@ -550,6 +569,14 @@ export function CreateCoursePrototype({
       </p>
     </div>
   );
+  if (control.variant === 'G') {
+    return (
+      <>
+        {children({ trigger, emptyState })}
+        <PrototypeBar control={control} />
+      </>
+    );
+  }
   const variant = {
     A: VariantA,
     B: VariantB,

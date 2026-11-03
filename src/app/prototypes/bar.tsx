@@ -27,7 +27,7 @@ const PROTOTYPE_ONLY_ROUTES: readonly string[] = [
 ];
 
 const SCREEN_ROUTES: Record<PrototypeId, readonly string[]> = {
-  'create-course': ['/_authenticated/'],
+  'create-course': ['/_authenticated/', '/_authenticated/courses/new'],
   'quick-grading': ['/_authenticated/courses/$courseSlug/attempts'],
   'task-deadlines': [
     '/_authenticated/courses/$courseSlug/',

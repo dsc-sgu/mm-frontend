@@ -43,8 +43,8 @@ export async function registerMockCourse(command: CreatedCourse) {
     slug,
     title: command.name,
     shortTitle: command.shortTitle,
-    color: 'blue',
-    iconName: 'book-open',
+    color: command.page?.color ?? 'blue',
+    iconName: command.page?.iconName ?? 'book-open',
     teachers: [teacher],
     accessState: 'draft',
     subgroups: [{ id: crypto.randomUUID(), name: 'Подгруппа 1' }],
@@ -53,11 +53,13 @@ export async function registerMockCourse(command: CreatedCourse) {
       title: command.name,
       shortTitle: command.shortTitle,
       description: command.description,
-      color: 'blue',
-      iconName: 'book-open',
+      color: command.page?.color ?? 'blue',
+      iconName: command.page?.iconName ?? 'book-open',
       teachers: [teacher],
-      resources: { images: [], files: [], assignments: [] },
-      content: [],
+      resources: structuredClone(
+        command.page?.resources ?? { images: [], files: [], assignments: [] }
+      ),
+      content: structuredClone(command.page?.content ?? []),
     },
   };
   // All parts are assembled before the synchronous commit to the shared world.

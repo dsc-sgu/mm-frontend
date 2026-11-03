@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Check } from 'lucide-react';
 import { DynamicIcon } from 'lucide-react/dynamic';
 
@@ -148,10 +149,13 @@ export function CoursePageEditHeroEditor({
   course,
   errors,
   onChange,
+  slugHint,
 }: {
   course: CoursePage;
   errors: CoursePageEditValidationErrors;
   onChange: (course: CoursePage) => void;
+  /** PROTOTYPE (mm-277 G): slug availability while creating a Course. */
+  slugHint?: ReactNode;
 }) {
   const theme = COURSE_COLORS[course.color];
 
@@ -255,6 +259,7 @@ export function CoursePageEditHeroEditor({
             />
           </div>
           <FieldError>{errors.courseId}</FieldError>
+          {slugHint}
         </div>
 
         <div className="max-w-2xl space-y-2">

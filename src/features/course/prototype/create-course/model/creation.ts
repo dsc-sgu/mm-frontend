@@ -1,4 +1,6 @@
 // PROTOTYPE mm-277: local simulation; no backend or durable commands.
+import type { CoursePage } from '@/features/course/features/page/model/types';
+
 export type Scenario =
   | 'success'
   | 'conflict'
@@ -11,6 +13,8 @@ export type CreatedCourse = {
   shortTitle: string;
   description: string;
   slug: string;
+  /** Variant G: what the Teacher wrote in the editor before creation. */
+  page?: Pick<CoursePage, 'color' | 'iconName' | 'content' | 'resources'>;
 };
 export type CreationState =
   | { phase: 'editing'; conflict: boolean }
@@ -98,9 +102,13 @@ export function suggestSlug(name: string) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 }
+/** Variant G: `/courses/new` is the creation editor, so no Course may own it. */
+export const RESERVED_SLUGS: readonly string[] = ['new'];
+
 export function validSlug(slug: string) {
   return (
     /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) &&
+    !RESERVED_SLUGS.includes(slug) &&
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(slug)
   );
 }
