@@ -36,9 +36,15 @@ function normalizeGraded(value: unknown): CourseAttemptGradedFilter {
   return value === 'graded' || value === 'submitted' ? value : 'any';
 }
 
+type FiltersInput = {
+  tasks?: string[];
+  students?: string[];
+  graded?: CourseAttemptGradedFilter;
+};
+
 export function normalizeCourseAttemptsFilters(
-  filters: Partial<CourseAttemptsFilters>
-) {
+  filters: FiltersInput
+): CourseAttemptsFilters {
   return {
     tasks: normalizeTokenList(filters.tasks).map((id) =>
       v.parse(TaskIdSchema, id)

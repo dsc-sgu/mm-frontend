@@ -36,11 +36,7 @@ function courseAttemptsQueryOptions({
 }) {
   return queryOptions({
     queryKey: courseAttemptsKeys.list(courseId, filters),
-    queryFn: ({ signal }) =>
-      loadCourseAttempts(
-        { courseId, filters: normalizeCourseAttemptsFilters(filters) },
-        signal
-      ),
+    queryFn: ({ signal }) => loadCourseAttempts({ courseId, filters }, signal),
     staleTime: 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

@@ -1,3 +1,4 @@
+import { normalizeCourseAttemptsFilters } from '@/features/course/features/attempts/model/filters';
 import { formatFullName } from '@/features/auth/model/full-name';
 import { useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
@@ -176,10 +177,12 @@ export function AttemptsFiltersContent({
           selectedTaskIds={draftFilters.tasks}
           onSearchChange={setTaskSearch}
           onSelectedTaskIdsChange={(tasks) =>
-            onDraftFiltersChange({
-              ...draftFilters,
-              tasks,
-            })
+            onDraftFiltersChange(
+              normalizeCourseAttemptsFilters({
+                ...draftFilters,
+                tasks,
+              })
+            )
           }
         />
 
@@ -190,10 +193,12 @@ export function AttemptsFiltersContent({
           selectedStudentIds={draftFilters.students}
           onSearchChange={setStudentSearch}
           onSelectedStudentIdsChange={(students) =>
-            onDraftFiltersChange({
-              ...draftFilters,
-              students,
-            })
+            onDraftFiltersChange(
+              normalizeCourseAttemptsFilters({
+                ...draftFilters,
+                students,
+              })
+            )
           }
         />
 

@@ -1,3 +1,5 @@
+import * as v from 'valibot';
+import { TaskIdSchema } from '@/features/course/model/identity';
 import { runHttpOperation } from '@/app/remote-data/http';
 import { beforeEach, expect, test } from 'vitest';
 import { http, HttpResponse } from 'msw';
@@ -111,4 +113,36 @@ test.each([
 
   expect(response.status).toBe(status);
   expect(response.body).toBe('');
+});
+
+test('normalizes filters before sending a request when called directly', async () => {
+  const firstStudent = reviewWorld.users.sasha.id;
+  const secondStudent = reviewWorld.users.petya.id;
+  const firstTask = v.parse(TaskIdSchema, '1');
+  const secondTask = v.parse(TaskIdSchema, '2');
+  let search: URLSearchParams | undefined;
+  server.use(
+    http.get('/api/v1/courses/:courseId/attempts', ({ request }) => {
+      search = new URL(request.url).searchParams;
+      return HttpResponse.json({
+        totalAttemptsCount: 0,
+        attempts: [],
+        tasks: [],
+        students: [],
+      });
+    })
+  );
+
+  await loadCourseAttempts({
+    courseId,
+    filters: {
+      tasks: [secondTask, firstTask, secondTask],
+      students: [secondStudent, firstStudent, secondStudent],
+      graded: 'submitted',
+    },
+  });
+
+  expect(search?.get('tasks')).toBe('1,2');
+  expect(search?.get('students')).toBe(`${firstStudent},${secondStudent}`);
+  expect(search?.get('status')).toBe('submitted');
 });

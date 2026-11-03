@@ -1,3 +1,4 @@
+import type { UserId } from '@/features/auth/model/identity';
 import type { UserRef } from '@/features/auth/model/user-ref';
 import type { Grade } from '@/features/course/model/grade';
 import type {
@@ -9,8 +10,8 @@ import type {
 export type CourseAttemptGradedFilter = 'any' | 'submitted' | 'graded';
 
 export type CourseAttemptsFilters = {
-  tasks: string[];
-  students: string[];
+  tasks: TaskId[];
+  students: UserId[];
   graded: CourseAttemptGradedFilter;
 };
 
