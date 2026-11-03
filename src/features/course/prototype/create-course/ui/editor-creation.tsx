@@ -1,10 +1,11 @@
 // PROTOTYPE mm-277, variant G: «Создать курс» opens the real Course Page
 // editor at `/courses/new` instead of a dialog. The four required fields are
-// the editor's hero; the first save creates the Course, and only then the
-// URL gets its slug (`replace` to `/courses/$courseSlug/edit`).
+// the editor's hero; the page content stays locked until the first save
+// creates the Course, and only then the URL gets its slug (`replace` to
+// `/courses/$courseSlug/edit`), where the content editor opens.
 import { useEffect, useEffectEvent, useState } from 'react';
 import { useBlocker } from '@tanstack/react-router';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -21,7 +22,6 @@ import {
   useCoursePageEditStore,
 } from '@/features/course/features/page-edit/hooks/use-editor-store';
 import { saveShortcut } from '@/features/course/features/page-edit/model/shortcuts';
-import { CoursePageContentEditor } from '@/features/course/features/page-edit/ui/content-editor';
 import { CoursePageEditHeroEditor } from '@/features/course/features/page-edit/ui/hero-editor';
 import pageStyles from '@/features/course/features/page-edit/page.module.css';
 import { useEditorCreationActions } from '@/features/course/prototype/create-course/hooks/use-editor-creation';
@@ -325,14 +325,23 @@ function CreationEditor() {
             />
           }
         />
-        <article
+        {/* Content is edited only after creation: until then the Course
+            has no Page to hold images, files or Tasks. */}
+        <section
+          aria-label="Содержимое курса"
           className={cn(
-            'px-5 pt-2 pb-8 md:mt-8 md:rounded-3xl md:border md:border-border',
-            'md:-mx-12 md:bg-card md:px-20 lg:-mx-10'
+            'mt-6 flex flex-col items-center gap-2 rounded-3xl border border-dashed',
+            'border-border px-6 py-12 text-center text-muted-foreground',
+            'md:-mx-12 md:mt-8 lg:-mx-10'
           )}
         >
-          <CoursePageContentEditor />
-        </article>
+          <FileText className="size-8 opacity-60" aria-hidden="true" />
+          <p className="font-medium text-foreground">Содержимое курса</p>
+          <p className="max-w-md text-sm">
+            Материалы и задания можно будет добавить сразу после создания курса
+            — редактор откроется на этом же месте.
+          </p>
+        </section>
       </div>
       <CreationBar slug={slug} blocked={reserved || taken} />
       <PrototypeBarControls>
