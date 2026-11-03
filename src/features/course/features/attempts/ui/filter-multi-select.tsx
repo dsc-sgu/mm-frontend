@@ -15,27 +15,27 @@ import {
 } from '@/shadcn/components/ui/popover';
 import { cn } from '@/shadcn/lib/utils';
 
-type FilterMultiSelectOption = {
-  value: string;
+type FilterMultiSelectOption<Id extends string> = {
+  value: Id;
   label: string;
 };
 
-type FilterMultiSelectProps = {
+type FilterMultiSelectProps<Id extends string> = {
   id: string;
   labelId: string;
   search: string;
   placeholder: string;
   emptyMessage: string;
-  options: FilterMultiSelectOption[];
-  selectedOptions: FilterMultiSelectOption[];
-  selectedValues: string[];
+  options: FilterMultiSelectOption<Id>[];
+  selectedOptions: FilterMultiSelectOption<Id>[];
+  selectedValues: Id[];
   loading: boolean;
   listClassName?: string;
   onSearchChange: (search: string) => void;
-  onSelectedValuesChange: (values: string[]) => void;
+  onSelectedValuesChange: (values: Id[]) => void;
 };
 
-export function FilterMultiSelect({
+export function FilterMultiSelect<Id extends string>({
   id,
   labelId,
   search,
@@ -48,7 +48,7 @@ export function FilterMultiSelect({
   listClassName,
   onSearchChange,
   onSelectedValuesChange,
-}: FilterMultiSelectProps) {
+}: FilterMultiSelectProps<Id>) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [insertionIndex, setInsertionIndex] = useState(selectedOptions.length);
@@ -80,7 +80,7 @@ export function FilterMultiSelect({
     });
   }, [open, selectableActiveIndex]);
 
-  function selectValue(value: string) {
+  function selectValue(value: Id) {
     if (selectedValues.includes(value)) {
       return;
     }

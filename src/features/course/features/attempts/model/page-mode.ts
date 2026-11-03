@@ -1,4 +1,5 @@
 export type CourseAttemptsPageMode =
+  | 'failed'
   | 'loading'
   | 'empty'
   | 'quick-grading'
@@ -7,15 +8,21 @@ export type CourseAttemptsPageMode =
 
 export function getCourseAttemptsPageMode({
   loading,
+  failed,
   attemptsCount,
   quickGrading,
   selectedAttemptsCount,
 }: {
   loading: boolean;
+  failed: boolean;
   attemptsCount: number;
   quickGrading: boolean;
   selectedAttemptsCount: number;
 }): CourseAttemptsPageMode {
+  if (failed) {
+    return 'failed';
+  }
+
   if (loading) {
     return 'loading';
   }

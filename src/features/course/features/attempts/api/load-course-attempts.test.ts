@@ -21,6 +21,10 @@ beforeEach(() => mockBackend.reset('world:review'));
 test('ATT-04: includes history in submission order and course-wide catalogs', async () => {
   const result = await loadCourseAttempts(input());
 
+  if (result.status !== 'found') {
+    throw new Error('Expected found');
+  }
+
   expect(result.attempts.map((a) => a.id)).toEqual([
     reviewWorld.attempts[1].id,
     reviewWorld.attempts[2].id,
@@ -68,6 +72,10 @@ test('ATT-04: breaks timestamp ties by AttemptId', async () => {
 
   const result = await loadCourseAttempts(input());
 
+  if (result.status !== 'found') {
+    throw new Error('Expected found');
+  }
+
   expect(result.attempts.map((a) => a.id)).toEqual(
     reviewWorld.attempts.map((a) => a.id)
   );
@@ -78,6 +86,10 @@ test('ATT-04: preserves course-wide catalogs when filtered', async () => {
     ...input(),
     filters: { ...input().filters, students: [reviewWorld.users.sasha.id] },
   });
+
+  if (filtered.status !== 'found') {
+    throw new Error('Expected found');
+  }
 
   expect(filtered.attempts).toHaveLength(2);
   expect(filtered.students).toHaveLength(3);
@@ -145,4 +157,16 @@ test('normalizes filters before sending a request when called directly', async (
   expect(search?.get('tasks')).toBe('1,2');
   expect(search?.get('students')).toBe(`${firstStudent},${secondStudent}`);
   expect(search?.get('status')).toBe('submitted');
+});
+
+test('returns a resource denial when Course membership is lost', async () => {
+  mockBackend.state.memberships = mockBackend.state.memberships.filter(
+    (membership) =>
+      membership.courseId !== courseId ||
+      membership.userId !== mockBackend.state.session?.userId
+  );
+
+  await expect(loadCourseAttempts(input())).resolves.toEqual({
+    status: 'not-found',
+  });
 });

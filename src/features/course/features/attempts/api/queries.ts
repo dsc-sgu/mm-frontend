@@ -11,7 +11,7 @@ import {
 } from '@tanstack/react-query';
 import { courseKeys } from '@/features/course/api/queries';
 import type { CourseId } from '@/features/course/model/identity';
-import { saveQuickGrades } from './mock';
+import { saveQuickGrade } from '@/features/course/features/review/api/save-quick-grade';
 import type {
   CourseAttemptsFilters,
   SaveQuickGradesInput,
@@ -64,27 +64,33 @@ export function useSaveQuickGradesMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: SaveQuickGradesInput) => saveQuickGrades(input),
-    onSuccess: async (saved, { courseId }) => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: courseAttemptsKeys.course(courseId),
-        }),
-        ...saved.flatMap(({ attemptId, taskId, studentId }) => [
+    retry: false,
+    mutationFn: async ({ courseId, updates }: SaveQuickGradesInput) => {
+      for (const { attemptId, grade } of updates) {
+        const saved = await saveQuickGrade(courseId, attemptId, grade);
+        // Refresh each confirmed write even if a later item fails.
+        await Promise.all([
           queryClient.invalidateQueries({
-            queryKey: reviewKeys.attempt(courseId, attemptId),
+            queryKey: courseAttemptsKeys.course(courseId),
           }),
           queryClient.invalidateQueries({
-            queryKey: attemptReviewKeys.summaries(courseId, attemptId),
+            queryKey: reviewKeys.attempt(courseId, saved.attemptId),
           }),
           queryClient.invalidateQueries({
-            queryKey: attemptReviewKeys.student(courseId, taskId, studentId),
+            queryKey: attemptReviewKeys.summaries(courseId, saved.attemptId),
           }),
           queryClient.invalidateQueries({
-            queryKey: taskKeys.student(courseId, taskId, studentId),
+            queryKey: attemptReviewKeys.student(
+              courseId,
+              saved.taskId,
+              saved.studentId
+            ),
           }),
-        ]),
-      ]);
+          queryClient.invalidateQueries({
+            queryKey: taskKeys.student(courseId, saved.taskId, saved.studentId),
+          }),
+        ]);
+      }
     },
   });
 }

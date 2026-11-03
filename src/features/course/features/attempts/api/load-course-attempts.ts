@@ -1,3 +1,7 @@
+import {
+  readResourceDenial,
+  type ResourceDenial,
+} from '@/features/course/features/access/api/resource-denial';
 import * as v from 'valibot';
 import { apiPath } from '@/app/remote-data/api-path';
 import {
@@ -15,7 +19,10 @@ import {
 } from '@/features/course/model/identity';
 import { normalizeCourseAttemptsFilters } from '@/features/course/features/attempts/model/filters';
 
-import type { CourseAttemptsFilters } from '@/features/course/features/attempts/model/types';
+import type {
+  CourseAttemptsFilters,
+  CourseAttemptsListResult,
+} from '@/features/course/features/attempts/model/types';
 
 const Timestamp = v.pipe(v.string(), v.isoTimestamp());
 
@@ -51,6 +58,10 @@ const ResponseSchema = v.object({
   ),
 });
 
+export type LoadCourseAttemptsResult =
+  | ({ status: 'found' } & CourseAttemptsListResult)
+  | ResourceDenial;
+
 export type LoadCourseAttemptsInput = {
   courseId: CourseId;
   filters: CourseAttemptsFilters;
@@ -59,7 +70,7 @@ export type LoadCourseAttemptsInput = {
 export function loadCourseAttempts(
   { courseId, filters }: LoadCourseAttemptsInput,
   signal?: AbortSignal
-) {
+): Promise<LoadCourseAttemptsResult> {
   const normalized = normalizeCourseAttemptsFilters(filters);
   const url = new URL(
     apiPath('courses', courseId, 'attempts'),
@@ -70,7 +81,7 @@ export function loadCourseAttempts(
   url.searchParams.set('students', normalized.students.join(','));
   url.searchParams.set('status', normalized.graded);
 
-  return runHttpOperation(
+  return runHttpOperation<LoadCourseAttemptsResult>(
     {
       name: 'load-course-attempts',
       url: url.toString(),
@@ -78,10 +89,17 @@ export function loadCourseAttempts(
       signal,
     },
     async (context) => {
+      const denial = readResourceDenial(context);
+      if (denial) {
+        return denial;
+      }
       if (context.response.status !== 200) {
         throw unexpectedHttpStatus(context);
       }
-      return readJson(context, ResponseSchema);
+      return {
+        status: 'found' as const,
+        ...(await readJson(context, ResponseSchema)),
+      };
     }
   );
 }

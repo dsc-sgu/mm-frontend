@@ -1,8 +1,8 @@
+import type { LoadCourseAttemptsResult } from '@/features/course/features/attempts/api/load-course-attempts';
 import { useMemo } from 'react';
 
 import type {
   CourseAttempt,
-  CourseAttemptsListResult,
   CourseAttemptStudent,
   CourseAttemptTask,
 } from '@/features/course/features/attempts/model/types';
@@ -12,8 +12,9 @@ const EMPTY_TASKS: CourseAttemptTask[] = [];
 const EMPTY_STUDENTS: CourseAttemptStudent[] = [];
 
 export function useCourseAttemptsData(
-  data: CourseAttemptsListResult | undefined
+  result: LoadCourseAttemptsResult | undefined
 ) {
+  const data = result?.status === 'found' ? result : undefined;
   const attempts = data?.attempts ?? EMPTY_ATTEMPTS;
   const tasks = data?.tasks ?? EMPTY_TASKS;
   const students = data?.students ?? EMPTY_STUDENTS;

@@ -76,7 +76,6 @@ const fetchMessage = `Call Fetch only through runHttpOperation from ${TRANSPORT_
 // Production code that still imports in-memory mocks. Each slice that moves a
 // feature to Fetch and MSW removes its files; the final slice removes the list.
 const RAM_MOCK_IMPORTERS = [
-  'src/features/course/features/attempts/api/queries.ts',
   'src/features/course/features/attempts/hooks/use-lock-updates.ts',
   'src/features/course/features/page/api/queries.ts',
   // Writes the canonical MSW state until the HTTP cutover of REV5 and REV6.2.

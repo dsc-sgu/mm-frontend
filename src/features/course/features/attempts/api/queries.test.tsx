@@ -1,3 +1,5 @@
+import { http, HttpResponse } from 'msw';
+import { server } from '@/app/mock-backend/node';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { expect, test } from 'vitest';
@@ -71,6 +73,52 @@ test('quick grading invalidates affected projections while preserving unrelated 
       false
     );
   }
+
+  unmount();
+  client.clear();
+});
+
+test('keeps confirmed cache effects when a later quick grade fails without retrying it', async () => {
+  mockBackend.reset('world:review');
+  const client = new QueryClient();
+  const courseId = reviewWorld.courses.algorithms.id;
+  const [first, second] = reviewWorld.attempts;
+  const viewer = reviewWorld.users.anna.id;
+  const firstKey = reviewKeys.detail(viewer, courseId, first.id);
+  client.setQueryData(firstKey, { cached: true });
+  let failedRequests = 0;
+  server.use(
+    http.post(
+      `/api/v1/courses/${courseId}/attempts/${second.id}/review/quick-grade`,
+      () => {
+        failedRequests++;
+        return new HttpResponse(null, { status: 503 });
+      }
+    )
+  );
+  const { result, unmount } = renderHook(() => useSaveQuickGradesMutation(), {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    ),
+  });
+
+  await act(async () => {
+    await expect(
+      result.current.mutateAsync({
+        courseId,
+        updates: [first, second].map((attempt) => ({
+          attemptId: attempt.id,
+          grade: v.parse(GradeSchema, 8),
+        })),
+      })
+    ).rejects.toMatchObject({ kind: 'unexpected-http-status' });
+  });
+
+  expect(client.getQueryState(firstKey)?.isInvalidated).toBe(true);
+  expect(failedRequests).toBe(1);
+  expect(mockBackend.state.reviews.some((r) => r.attemptId === second.id)).toBe(
+    false
+  );
 
   unmount();
   client.clear();

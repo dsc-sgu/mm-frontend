@@ -8,7 +8,7 @@ import {
   applyReviewLockUpdatesToAttempts,
   type CourseAttemptReviewLockUpdate,
 } from '@/features/course/features/attempts/model/lock-updates';
-import type { CourseAttemptsListResult } from '@/features/course/features/attempts/model/types';
+import type { LoadCourseAttemptsResult } from '@/features/course/features/attempts/api/load-course-attempts';
 
 const MOCK_REVIEW_LOCK_UPDATE_INTERVAL = 4_500;
 
@@ -35,10 +35,10 @@ export function useCourseAttemptReviewLockUpdates({
         return;
       }
 
-      queryClient.setQueriesData<CourseAttemptsListResult>(
+      queryClient.setQueriesData<LoadCourseAttemptsResult>(
         { queryKey: courseAttemptsKeys.course(courseId) },
         (current) => {
-          if (!current) {
+          if (current?.status !== 'found') {
             return current;
           }
 

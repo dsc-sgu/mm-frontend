@@ -80,6 +80,7 @@ export function CourseAttemptsPage({
   const hasSelectableAttempts = attempts.some(isAttemptSelectable);
   const pageMode = getCourseAttemptsPageMode({
     loading: attemptsQuery.isPending,
+    failed: attemptsQuery.isError && !attemptsQuery.data,
     attemptsCount: attempts.length,
     quickGrading: grading.quickGrading,
     selectedAttemptsCount,
@@ -101,22 +102,20 @@ export function CourseAttemptsPage({
   };
 
   function renderAttempts() {
-    if (attemptsQuery.isError && !attemptsQuery.data) {
-      return (
-        <div role="alert" className="p-6">
-          <p>Не удалось загрузить попытки курса.</p>
-          <button
-            type="button"
-            className="mt-3 underline"
-            onClick={() => void attemptsQuery.refetch()}
-          >
-            Повторить загрузку
-          </button>
-        </div>
-      );
-    }
-
     switch (pageMode) {
+      case 'failed':
+        return (
+          <div role="alert" className="p-6">
+            <p>Не удалось загрузить попытки курса.</p>
+            <button
+              type="button"
+              className="mt-3 underline"
+              onClick={() => void attemptsQuery.refetch()}
+            >
+              Повторить загрузку
+            </button>
+          </div>
+        );
       case 'loading':
         return <AttemptsSkeleton />;
       case 'empty':
@@ -180,6 +179,8 @@ export function CourseAttemptsPage({
             onSaveSelectedMaxGrade={grading.saveSelectedMaxGrade}
           />
         );
+      case 'failed':
+        return null;
       case 'loading':
       case 'empty':
       case 'idle':

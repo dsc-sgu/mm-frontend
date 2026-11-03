@@ -11,7 +11,12 @@ import {
   type MockReviewComment,
 } from '@/app/mock-backend/state';
 import type { UserId } from '@/features/auth/model/identity';
-import { gradeToNumber, type Grade } from '@/features/course/model/grade';
+import {
+  GradeSchema,
+  compareGrades,
+  gradeToNumber,
+  type Grade,
+} from '@/features/course/model/grade';
 import type { AttemptId, CourseId } from '@/features/course/model/identity';
 import { ReviewRevisionSchema } from '@/features/course/features/review/model/revision';
 import type {
@@ -21,7 +26,58 @@ import type {
 } from '@/features/course/features/review/model/types';
 
 // Working Review wire contract pending backend confirmation #113.
+const QuickGradeRequestSchema = v.object({ grade: GradeSchema });
+
 export const reviewHandlers = [
+  http.post(
+    '/api/v1/courses/:courseId/attempts/:attemptId/review/quick-grade',
+    async ({ params, request }) => {
+      const access = resolveAttemptAccess(
+        String(params.courseId),
+        String(params.attemptId)
+      );
+      if (access.status !== 'found') {
+        return accessDenial(access.status);
+      }
+      const state = mockBackend.state;
+      if (
+        !state.memberships.some(
+          (m) =>
+            m.courseId === access.attempt.courseId &&
+            m.userId === state.session?.userId &&
+            m.role === 'teacher'
+        )
+      ) {
+        return new HttpResponse(null, { status: 404 });
+      }
+      const body = v.safeParse(QuickGradeRequestSchema, await request.json());
+      const task = state.tasks.find(
+        (t) =>
+          t.courseId === access.attempt.courseId &&
+          t.id === access.attempt.taskId
+      );
+      if (
+        !body.success ||
+        !task ||
+        compareGrades(body.output.grade, task.maxGrade) > 0
+      ) {
+        return new HttpResponse(null, { status: 400 });
+      }
+      const revision = findReview(access.attempt.id)?.revision;
+      await saveReview({
+        courseId: access.attempt.courseId,
+        attemptId: access.attempt.id,
+        grade: body.output.grade,
+        overallFeedbackHtml: revision?.overallFeedbackHtml ?? '',
+        comments: revision?.comments ?? [],
+      });
+      return HttpResponse.json({
+        attemptId: access.attempt.id,
+        taskId: access.attempt.taskId,
+        studentId: access.attempt.studentId,
+      });
+    }
+  ),
   http.get(
     '/api/v1/courses/:courseId/attempts/:attemptId/review',
     ({ params }) => {

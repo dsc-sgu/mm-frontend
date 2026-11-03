@@ -1,4 +1,5 @@
-import { normalizeCourseAttemptsFilters } from '@/features/course/features/attempts/model/filters';
+import type { TaskId } from '@/features/course/model/identity';
+import type { UserId } from '@/features/auth/model/identity';
 import { formatFullName } from '@/features/auth/model/full-name';
 import { useMemo, useState } from 'react';
 import { Filter } from 'lucide-react';
@@ -177,12 +178,7 @@ export function AttemptsFiltersContent({
           selectedTaskIds={draftFilters.tasks}
           onSearchChange={setTaskSearch}
           onSelectedTaskIdsChange={(tasks) =>
-            onDraftFiltersChange(
-              normalizeCourseAttemptsFilters({
-                ...draftFilters,
-                tasks,
-              })
-            )
+            onDraftFiltersChange({ ...draftFilters, tasks })
           }
         />
 
@@ -193,12 +189,7 @@ export function AttemptsFiltersContent({
           selectedStudentIds={draftFilters.students}
           onSearchChange={setStudentSearch}
           onSelectedStudentIdsChange={(students) =>
-            onDraftFiltersChange(
-              normalizeCourseAttemptsFilters({
-                ...draftFilters,
-                students,
-              })
-            )
+            onDraftFiltersChange({ ...draftFilters, students })
           }
         />
 
@@ -322,9 +313,9 @@ function TasksFilterSection({
   context: FilterSectionContext;
   search: string;
   tasks: CourseAttempt['task'][];
-  selectedTaskIds: string[];
+  selectedTaskIds: TaskId[];
   onSearchChange: (search: string) => void;
-  onSelectedTaskIdsChange: (taskIds: string[]) => void;
+  onSelectedTaskIdsChange: (taskIds: TaskId[]) => void;
 }) {
   const { idPrefix, loading, filterActionsDisabled, variant } = context;
 
@@ -392,9 +383,9 @@ function StudentsFilterSection({
   context: FilterSectionContext;
   search: string;
   students: CourseAttempt['student'][];
-  selectedStudentIds: string[];
+  selectedStudentIds: UserId[];
   onSearchChange: (search: string) => void;
-  onSelectedStudentIdsChange: (studentIds: string[]) => void;
+  onSelectedStudentIdsChange: (studentIds: UserId[]) => void;
 }) {
   const { idPrefix, loading, filterActionsDisabled, variant } = context;
 

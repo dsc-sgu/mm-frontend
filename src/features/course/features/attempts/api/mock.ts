@@ -1,11 +1,8 @@
 import { gradeToNumber } from '@/features/course/model/grade';
-import { saveReview } from '@/features/course/features/review/api/mock';
 import { http, HttpResponse } from 'msw';
 import { mockBackend, mockUserName } from '@/app/mock-backend/state';
-import type { UserId } from '@/features/auth/model/identity';
-import type { AttemptId, CourseId } from '@/features/course/model/identity';
+import type { CourseId } from '@/features/course/model/identity';
 import type { CourseAttemptReviewLockUpdate } from '@/features/course/features/attempts/model/lock-updates';
-import type { SaveQuickGradesInput } from '@/features/course/features/attempts/model/types';
 
 export const courseAttemptsHandlers = [
   http.get('/api/v1/courses/:courseId/attempts', ({ params, request }) => {
@@ -93,37 +90,4 @@ export function createMockReviewLockUpdates(
 ): CourseAttemptReviewLockUpdate[] {
   void _courseId;
   return [];
-}
-
-export async function saveQuickGrades({
-  courseId,
-  updates,
-}: SaveQuickGradesInput): Promise<
-  Array<{ attemptId: AttemptId; taskId: string; studentId: UserId }>
-> {
-  const saved = [];
-  for (const update of updates) {
-    const attempt = mockBackend.state.attempts.find(
-      (a) => a.courseId === courseId && a.id === update.attemptId
-    );
-    if (!attempt) {
-      throw new Error('Missing mock Attempt');
-    }
-    const revision = mockBackend.state.reviews.find(
-      (r) => r.attemptId === attempt.id
-    )?.revision;
-    await saveReview({
-      courseId,
-      attemptId: attempt.id,
-      grade: update.grade,
-      overallFeedbackHtml: revision?.overallFeedbackHtml ?? '',
-      comments: revision?.comments ?? [],
-    });
-    saved.push({
-      attemptId: attempt.id,
-      taskId: attempt.taskId,
-      studentId: attempt.studentId,
-    });
-  }
-  return saved;
 }
